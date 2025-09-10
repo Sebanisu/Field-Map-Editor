@@ -28,14 +28,15 @@ class TestBatchRendering
      }
 
    private:
-     glengine::VertexBuffer        m_vertex_buffer         = {};
-     glengine::IndexBuffer         m_index_buffer          = {};
-     glengine::Shader              m_shader                = {};
-     glengine::VertexArray         m_vertex_array          = {};
-     mutable glm::vec3             view_offset             = { 0.F, 0.F, 0.F };
-     glengine::ImGuiViewPortWindow m_imgui_viewport_window = { "Test Batch Rendering" };
-     void                          render_frame_buffer() const;
-     void                          set_uniforms() const;
+     glengine::VertexBuffer        m_vertex_buffer = {};
+     glengine::IndexBuffer         m_index_buffer  = {};
+     glengine::Shader              m_shader        = {};
+     glengine::VertexArray         m_vertex_array  = {};
+     mutable glm::vec3             view_offset     = { 0.F, 0.F, 0.F };
+     glengine::ImGuiViewPortWindow m_imgui_viewport_window
+       = { "Test Batch Rendering" };
+     void render_frame_buffer() const;
+     void set_uniforms() const;
 };
 }// namespace test
 

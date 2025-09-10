@@ -65,7 +65,11 @@ class Window final
      void full_screen_mode(GLFWmonitor *monitor) const
      {
           const auto *current_mode = glfwGetVideoMode(monitor);
-          full_screen_mode(monitor, current_mode->width, current_mode->height, current_mode->refreshRate);
+          full_screen_mode(
+            monitor,
+            current_mode->width,
+            current_mode->height,
+            current_mode->refreshRate);
      }
      void full_screen_mode(
        GLFWmonitor *monitor,
@@ -73,7 +77,8 @@ class Window final
        int          height,
        int          refresh_rate = GLFW_DONT_CARE) const
      {
-          glfwSetWindowMonitor(m_window.get(), monitor, 0, 0, width, height, refresh_rate);
+          glfwSetWindowMonitor(
+            m_window.get(), monitor, 0, 0, width, height, refresh_rate);
 
           auto &data   = get_window_data(m_window.get());
           data.monitor = monitor;
@@ -113,8 +118,9 @@ class Window final
 
    private:
      Window(WindowData);
-     WindowData m_data                                                  = {};
-     constexpr inline static void (*const destroy_window)(GLFWwindow *) = [](GLFWwindow *window)
+     WindowData m_data = {};
+     constexpr inline static void (*const destroy_window)(GLFWwindow *)
+       = [](GLFWwindow *window)
      {
           // Cleanup
           ImGui_ImplOpenGL3_Shutdown();
@@ -123,11 +129,13 @@ class Window final
           Input::m_window = nullptr;
           glfwDestroyWindow(window);
      };
-     std::unique_ptr<GLFWwindow, decltype(destroy_window)> m_window{ nullptr, destroy_window };
-     void                                                  init_callbacks() const;
-     void                                                  init_im_gui(const char *glsl_version) const;
-     void                                                  init_glfw();
-     static WindowData                                    &get_window_data(GLFWwindow *window);
+     std::unique_ptr<GLFWwindow, decltype(destroy_window)> m_window{
+          nullptr, destroy_window
+     };
+     void               init_callbacks() const;
+     void               init_im_gui(const char *glsl_version) const;
+     void               init_glfw();
+     static WindowData &get_window_data(GLFWwindow *window);
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_WINDOW_HPP

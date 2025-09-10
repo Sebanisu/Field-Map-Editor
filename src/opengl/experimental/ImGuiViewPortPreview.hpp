@@ -25,7 +25,8 @@ inline namespace impl
           void on_update(float) const
           {
                m_drawn = false;
-               ImGuiViewPortWindow::set_preview_aspect_ratio(view_port_aspect_ratio());
+               ImGuiViewPortWindow::set_preview_aspect_ratio(
+                 view_port_aspect_ratio());
                // m_camera_controller.SetZoom(m_preview_view_port.ViewPortDims().y);
           }
           // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or
@@ -37,9 +38,12 @@ inline namespace impl
                if (!m_drawn && window.has_hover())
                {
                     m_preview_view_port.sync_open_gl_view_port();
-                    m_preview_view_port.m_clear_impl.Color(window.get_background_color());
-                    m_preview_view_port.m_background_color = window.get_background_color();
-                    m_preview_view_port.on_render(std::forward<decltype(callable)>(callable));
+                    m_preview_view_port.m_clear_impl.Color(
+                      window.get_background_color());
+                    m_preview_view_port.m_background_color
+                      = window.get_background_color();
+                    m_preview_view_port.on_render(
+                      std::forward<decltype(callable)>(callable));
                     m_drawn = true;
                }
           }
@@ -50,7 +54,9 @@ inline namespace impl
                {
                     m_preview_view_port.m_background_color = {};
                     m_preview_view_port.m_clear_impl.Color({});
-                    m_preview_view_port.on_render([]() {});// might need a function to draw the empty window.
+                    m_preview_view_port.on_render(
+                      []() {});// might need a function to draw the empty
+                               // window.
                }
           }
           void on_event(const event::Item &) const {}

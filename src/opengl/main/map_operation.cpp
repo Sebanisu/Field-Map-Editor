@@ -57,21 +57,38 @@ void compact_map_order_ffnx(map_group::Map &map)
        {
             // dest_coords_for_horizontal_tile_index_swizzle
 
-            auto filtered_tiles             = tiles | std::ranges::views::enumerate;
-            using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+            auto filtered_tiles = tiles | std::ranges::views::enumerate;
+            using tile_t        = std::remove_cvref_t<
+                     std::ranges::range_value_t<decltype(tiles)>>;
+            const auto with_depth_operation
+              = ff_8::tile_operations::WithDepth<tile_t>{
+                     open_viii::graphics::BPPT::BPP4_CONST()
+                };
             for (auto &&[tile_index, tile] : filtered_tiles)
             {
                  if (!not_invalid(tile))
                  {
                       continue;
                  }
-                 const auto new_pos                   = dest_coords_for_horizontal_tile_index_swizzle(tile_index, std::ranges::size(tiles));
-                 const auto source_x                  = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(new_pos.source_xy.x);
-                 const auto source_y                  = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(new_pos.source_xy.y);
-                 const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ new_pos.texture_page };
-                 const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
-                 tile                                 = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+                 const auto new_pos
+                   = dest_coords_for_horizontal_tile_index_swizzle(
+                     tile_index, std::ranges::size(tiles));
+                 const auto source_x
+                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
+                     new_pos.source_xy.x);
+                 const auto source_y
+                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
+                     new_pos.source_xy.y);
+                 const auto with_texture_id_operation
+                   = ff_8::tile_operations::WithTextureId<tile_t>{
+                          new_pos.texture_page
+                     };
+                 const auto with_source_xy_operation
+                   = ff_8::tile_operations::WithSourceXY<tile_t>{
+                          { source_x, source_y }
+                     };
+                 tile = tile | with_depth_operation | with_source_xy_operation
+                        | with_texture_id_operation;
             }
        });
 }
@@ -84,15 +101,22 @@ void compact_move_conflicts_only(
        [&conflicts](auto &&tiles)
        {
             std::vector<ff_8::source_tile_conflicts::location> empty_locations
-              = conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
-            auto range_of_conflicts         = conflicts.range_of_conflicts();
-            // auto filtered_tiles             = tiles | std::views::filter(not_invalid);
-            using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+              = conflicts.range_of_empty_locations()
+                | std::ranges::to<std::vector>();
+            auto range_of_conflicts = conflicts.range_of_conflicts();
+            // auto filtered_tiles             = tiles |
+            // std::views::filter(not_invalid);
+            using tile_t            = std::remove_cvref_t<
+                         std::ranges::range_value_t<decltype(tiles)>>;
+            const auto with_depth_operation
+              = ff_8::tile_operations::WithDepth<tile_t>{
+                     open_viii::graphics::BPPT::BPP4_CONST()
+                };
 
             for (const auto &indieces : range_of_conflicts)
             {
-                 for (const auto &index : indieces | std::ranges::views::drop(1))
+                 for (const auto &index :
+                      indieces | std::ranges::views::drop(1))
                  {
                       // these are the tiles we need to relocate.
                       auto &tile = [&]() -> decltype(auto)
@@ -103,16 +127,30 @@ void compact_move_conflicts_only(
                       }();
                       const auto remove_e_index = [&]() -> std::ptrdiff_t
                       {
-                           for (const auto &[e_index, location] : empty_locations | std::ranges::views::enumerate)
+                           for (const auto &[e_index, location] :
+                                empty_locations | std::ranges::views::enumerate)
                            {
                                 // filter out any locations you don't want here.
 
-                                const auto texture_page              = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(location.t);
-                                const auto source_x                  = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(location.x);
-                                const auto source_y                  = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(location.y);
-                                const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
-                                const auto with_source_xy_operation = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
-                                tile = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+                                const auto texture_page = static_cast<
+                                  ff_8::tile_operations::TextureIdT<tile_t>>(
+                                  location.t);
+                                const auto source_x = static_cast<
+                                  ff_8::tile_operations::SourceXT<tile_t>>(
+                                  location.x);
+                                const auto source_y = static_cast<
+                                  ff_8::tile_operations::SourceYT<tile_t>>(
+                                  location.y);
+                                const auto with_texture_id_operation
+                                  = ff_8::tile_operations::WithTextureId<
+                                    tile_t>{ texture_page };
+                                const auto with_source_xy_operation
+                                  = ff_8::tile_operations::WithSourceXY<tile_t>{
+                                         { source_x, source_y }
+                                    };
+                                tile = tile | with_depth_operation
+                                       | with_source_xy_operation
+                                       | with_texture_id_operation;
 
                                 return e_index;
                            }
@@ -120,7 +158,8 @@ void compact_move_conflicts_only(
                       }();
                       if (remove_e_index > -1)
                       {
-                           empty_locations.erase(empty_locations.begin() + remove_e_index);
+                           empty_locations.erase(
+                             empty_locations.begin() + remove_e_index);
                       }
                  }
             }
@@ -131,21 +170,38 @@ void compact_map_order(map_group::Map &map)
      map.visit_tiles(
        [](auto &&tiles)
        {
-            auto filtered_tiles             = tiles | std::views::filter(not_invalid);
-            using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+            auto filtered_tiles = tiles | std::views::filter(not_invalid);
+            using tile_t        = std::remove_cvref_t<
+                     std::ranges::range_value_t<decltype(tiles)>>;
+            const auto with_depth_operation
+              = ff_8::tile_operations::WithDepth<tile_t>{
+                     open_viii::graphics::BPPT::BPP4_CONST()
+                };
             for (std::size_t tile_index = {}; tile_t &tile : filtered_tiles)
             {
-                 const auto texture_page    = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(tile_index / 256);
+                 const auto texture_page
+                   = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(
+                     tile_index / 256);
                  const auto file_tile_index = tile_index % 256;
-                 const auto source_x        = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
-                   (file_tile_index % ff_8::map_group::TILE_SIZE) * ff_8::map_group::TILE_SIZE);
-                 const auto source_y = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
-                   (file_tile_index / ff_8::map_group::TILE_SIZE) * ff_8::map_group::TILE_SIZE);
+                 const auto source_x
+                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
+                     (file_tile_index % ff_8::map_group::TILE_SIZE)
+                     * ff_8::map_group::TILE_SIZE);
+                 const auto source_y
+                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
+                     (file_tile_index / ff_8::map_group::TILE_SIZE)
+                     * ff_8::map_group::TILE_SIZE);
                  ++tile_index;
-                 const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
-                 const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
-                 tile                                 = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+                 const auto with_texture_id_operation
+                   = ff_8::tile_operations::WithTextureId<tile_t>{
+                          texture_page
+                     };
+                 const auto with_source_xy_operation
+                   = ff_8::tile_operations::WithSourceXY<tile_t>{
+                          { source_x, source_y }
+                     };
+                 tile = tile | with_depth_operation | with_source_xy_operation
+                        | with_texture_id_operation;
             }
        });
 }
@@ -161,11 +217,12 @@ static auto generate_map(
   value_lambdaT &&value_lambda,
   filterT       &&filter = {})
 {
-     using tile_t  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
+     using tile_t
+       = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
      using key_t   = decltype(key_lambda(tile_t{}));
      using value_t = decltype(value_lambda(tile_t{}));
      std::map<key_t, std::vector<value_t>> map{};
-     auto                                  filtered_tiles = tiles | std::views::filter(filter);
+     auto filtered_tiles = tiles | std::views::filter(filter);
      std::ranges::for_each(
        filtered_tiles,
        [&map, &key_lambda, &value_lambda](auto &&tile)
@@ -200,10 +257,13 @@ template<
      map.visit_tiles(
        [&key_lambda, &weight_lambda, &passes](auto &&tiles)
        {
-            for (int pass = passes; pass != 0; --pass)// at least 2 passes needed as things might get shifted to
-                                                      // other texture pages and then the keys are less valuable.
+            for (int pass = passes; pass != 0;
+                 --pass)// at least 2 passes needed as things might get shifted
+                        // to other texture pages and then the keys are less
+                        // valuable.
             {
-                 auto         pointers   = generate_map(tiles, key_lambda, [](auto &&tile) { return &tile; });
+                 auto pointers = generate_map(
+                   tiles, key_lambda, [](auto &&tile) { return &tile; });
                  std::uint8_t col        = {};
                  std::uint8_t row        = {};
                  std::uint8_t page       = {};
@@ -214,27 +274,37 @@ template<
 
                       if (
                         std::cmp_greater_equal(col, ff_8::map_group::TILE_SIZE)
-                        || std::cmp_greater_equal(row_weight, ff_8::map_group::TILE_SIZE)
-                        || std::cmp_greater(row_weight + weight, ff_8::map_group::TILE_SIZE))
+                        || std::cmp_greater_equal(
+                          row_weight, ff_8::map_group::TILE_SIZE)
+                        || std::cmp_greater(
+                          row_weight + weight, ff_8::map_group::TILE_SIZE))
                       {
                            ++row;
                            col        = {};
                            row_weight = {};
                       }
 
-                      if (std::cmp_greater_equal(row, ff_8::map_group::TILE_SIZE))
+                      if (std::cmp_greater_equal(
+                            row, ff_8::map_group::TILE_SIZE))
                       {
                            ++page;
                            row = {};
                       }
 
-                      using tile_t = std::remove_cvref_t<typename std::remove_cvref_t<decltype(tiles)>::value_type>;
+                      using tile_t
+                        = std::remove_cvref_t<typename std::remove_cvref_t<
+                          decltype(tiles)>::value_type>;
                       for (tile_t *const tp : tps)
                       {
-                           *tp = tp->with_source_xy(
-                                     static_cast<decltype(tile_t{}.source_x())>(col * ff_8::map_group::TILE_SIZE),
-                                     static_cast<decltype(tile_t{}.source_y())>(row * ff_8::map_group::TILE_SIZE))
-                                   .with_texture_id(static_cast<decltype(tile_t{}.texture_id())>(page));
+                           *tp
+                             = tp->with_source_xy(
+                                   static_cast<decltype(tile_t{}.source_x())>(
+                                     col * ff_8::map_group::TILE_SIZE),
+                                   static_cast<decltype(tile_t{}.source_y())>(
+                                     row * ff_8::map_group::TILE_SIZE))
+                                 .with_texture_id(
+                                   static_cast<decltype(tile_t{}.texture_id())>(
+                                     page));
                       }
 
                       row_weight += weight;
@@ -257,7 +327,8 @@ void compact_rows(map_group::Map &map)
               tile.source_x(),
               tile.palette_id());
        },
-       [](const auto &key, const auto &) { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
+       [](const auto &key, const auto &)
+       { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
 }
 void compact_all(map_group::Map &map)
 {
@@ -272,7 +343,8 @@ void compact_all(map_group::Map &map)
               tile.source_x(),
               tile.palette_id());
        },
-       [](const auto &key, const auto &) { return static_cast<std::uint8_t>(1U << (3U - std::get<0>(key))); });
+       [](const auto &key, const auto &)
+       { return static_cast<std::uint8_t>(1U << (3U - std::get<0>(key))); });
 }
 
 
@@ -284,8 +356,12 @@ void compact_all(map_group::Map &map)
   bool                  skip_filters,
   bool                  find_all)
 {
-     return map.visit_tiles([&](const auto &tiles)
-                            { return find_intersecting_swizzle(tiles, filters, pixel_pos, texture_page, skip_filters, find_all); });
+     return map.visit_tiles(
+       [&](const auto &tiles)
+       {
+            return find_intersecting_swizzle(
+              tiles, filters, pixel_pos, texture_page, skip_filters, find_all);
+       });
 }
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
   const map_group::Map &map,
@@ -294,8 +370,12 @@ void compact_all(map_group::Map &map)
   bool                  skip_filters,
   bool                  find_all)
 {
-     return map.visit_tiles([&](const auto &tiles)
-                            { return find_intersecting_deswizzle(tiles, filters, pixel_pos, skip_filters, find_all); });
+     return map.visit_tiles(
+       [&](const auto &tiles)
+       {
+            return find_intersecting_deswizzle(
+              tiles, filters, pixel_pos, skip_filters, find_all);
+       });
 }
 QuadStrip get_triangle_strip(
   const glm::vec2 &source_tile_size,
@@ -305,13 +385,17 @@ QuadStrip get_triangle_strip(
   const glm::vec2 &destination_position)
 
 {
-     // source_position and destination_position are in TILE_SIZE cordinates. TILE_SIZE default is 16x16.
-     // So we pass in the scaled up source_tile_size and destination_tile_size and do the conversion.
-     constexpr static auto tile_size      = static_cast<float>(map_group::TILE_SIZE);
-     const glm::vec2       aligned_source = glm::floor(source_position / tile_size);
-     return { .uv_min   = (aligned_source * source_tile_size) / source_texture_size,
-              .uv_max   = ((aligned_source + glm::vec2(1)) * source_tile_size) / source_texture_size,
-              .draw_pos = (destination_position / tile_size) * destination_tile_size };
+     // source_position and destination_position are in TILE_SIZE cordinates.
+     // TILE_SIZE default is 16x16. So we pass in the scaled up source_tile_size
+     // and destination_tile_size and do the conversion.
+     constexpr static auto tile_size = static_cast<float>(map_group::TILE_SIZE);
+     const glm::vec2 aligned_source  = glm::floor(source_position / tile_size);
+     return { .uv_min
+              = (aligned_source * source_tile_size) / source_texture_size,
+              .uv_max = ((aligned_source + glm::vec2(1)) * source_tile_size)
+                        / source_texture_size,
+              .draw_pos
+              = (destination_position / tile_size) * destination_tile_size };
 }
 bool test_if_map_same(
   const std::filesystem::path &saved_path,
@@ -325,8 +409,12 @@ bool test_if_map_same(
           spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return return_value;
      }
-     const auto raw_map   = map_group::Map{ type, field->get_entry_data({ saved_path.filename().string() }), false };
-     auto       saved_map = map_group::Map{ type, open_viii::tools::read_entire_file(saved_path), false };
+     const auto raw_map = map_group::Map{
+          type, field->get_entry_data({ saved_path.filename().string() }), false
+     };
+     auto saved_map
+       = map_group::Map{ type, open_viii::tools::read_entire_file(saved_path),
+                         false };
 
      raw_map.visit_tiles(
        [&](const auto &raw_tiles)
@@ -334,14 +422,20 @@ bool test_if_map_same(
             saved_map.visit_tiles(
               [&](const auto &saved_tiles)
               {
-                   if constexpr (std::is_same_v<std::remove_cvref_t<decltype(raw_tiles)>, std::remove_cvref_t<decltype(saved_tiles)>>)
+                   if constexpr (std::is_same_v<
+                                   std::remove_cvref_t<decltype(raw_tiles)>,
+                                   std::remove_cvref_t<decltype(saved_tiles)>>)
                    {
-                        if (std::ranges::size(raw_tiles) != std::ranges::size(saved_tiles))
+                        if (
+                          std::ranges::size(raw_tiles)
+                          != std::ranges::size(saved_tiles))
                         {
                              if (std::ranges::empty(raw_tiles))
                              {
                                   spdlog::warn(
-                                    "[{}:{}] The saved .map may have defaulted to '_en' because a generic .map file didn't exist: {}",
+                                    "[{}:{}] The saved .map may have defaulted "
+                                    "to '_en' because a generic .map file "
+                                    "didn't exist: {}",
                                     __FILE__,
                                     __LINE__,
                                     saved_path.filename().string());
@@ -349,7 +443,8 @@ bool test_if_map_same(
                              }
 
                              spdlog::warn(
-                               "[{}:{}] Maps are different, raw_tiles_size({}) != saved_tiles_size({}).",
+                               "[{}:{}] Maps are different, raw_tiles_size({}) "
+                               "!= saved_tiles_size({}).",
                                __FILE__,
                                __LINE__,
                                std::ranges::size(raw_tiles),
@@ -361,13 +456,19 @@ bool test_if_map_same(
                           raw_tiles,
                           saved_tiles,
                           std::back_inserter(pairs_dont_match),
-                          [](const auto &raw_tile, const auto &saved_tile) { return raw_tile != saved_tile; });
+                          [](const auto &raw_tile, const auto &saved_tile)
+                          { return raw_tile != saved_tile; });
                         pairs_dont_match.erase(
-                          std::remove(pairs_dont_match.begin(), pairs_dont_match.end(), false), pairs_dont_match.end());
+                          std::remove(
+                            pairs_dont_match.begin(),
+                            pairs_dont_match.end(),
+                            false),
+                          pairs_dont_match.end());
                         if (!std::ranges::empty(pairs_dont_match))
                         {
                              spdlog::warn(
-                               "[{}:{}] Maps are different, count {} different tiles, total {} tiles",
+                               "[{}:{}] Maps are different, count {} different "
+                               "tiles, total {} tiles",
                                __FILE__,
                                __LINE__,
                                std::ranges::size(pairs_dont_match),
@@ -375,7 +476,8 @@ bool test_if_map_same(
                         }
                         // else
                         // {
-                        //      spdlog::info("maps are the same, total {} tiles.", std::ranges::size(raw_tiles));
+                        //      spdlog::info("maps are the same, total {}
+                        //      tiles.", std::ranges::size(raw_tiles));
                         // }
                    }
               });
@@ -402,7 +504,8 @@ void save_modified_map(
                       tile = tile.shift_xy(map_changed.offset());
                  }
                  // save tile
-                 const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+                 const auto data
+                   = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
                  os.write(data.data(), data.size());
             };
             const auto append_imported_tiles = [&]()
@@ -413,7 +516,9 @@ void save_modified_map(
                       imported->visit_tiles(
                         [&append](const auto &import_tiles)
                         {
-                             spdlog::info("Saving imported tiles {} count", std::ranges::size(import_tiles));
+                             spdlog::info(
+                               "Saving imported tiles {} count",
+                               std::ranges::size(import_tiles));
                              for (const auto &import_tile : import_tiles)
                              {
                                   if (not_invalid(import_tile))
@@ -435,13 +540,16 @@ void save_modified_map(
                           auto it_changed  = tiles_changed.cbegin();
                           auto end_const   = tiles_const.cend();
                           auto end_changed = tiles_changed.cend();
-                          for (; it_const != end_const && it_changed != end_changed; (void)++it_const, ++it_changed)
+                          for (; it_const != end_const
+                                 && it_changed != end_changed;
+                               (void)++it_const, ++it_changed)
                           {
-                               const auto &tile_const    = *it_const;
-                               const auto &tile          = *it_changed;
-                               bool const  valid_const   = not_invalid(tile_const);
-                               bool const  valid_changed = not_invalid(tile);
-                               if (valid_const || valid_changed)// one of these is valid.
+                               const auto &tile_const = *it_const;
+                               const auto &tile       = *it_changed;
+                               bool const valid_const = not_invalid(tile_const);
+                               bool const valid_changed = not_invalid(tile);
+                               if (valid_const || valid_changed)// one of these
+                                                                // is valid.
                                {
                                     if (valid_changed)
                                     {

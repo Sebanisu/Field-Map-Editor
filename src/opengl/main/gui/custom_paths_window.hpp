@@ -30,54 +30,59 @@ struct custom_paths_window
      using Callback = std::move_only_function<void(ConfigKey)>;
 
    private:
-     static constexpr std::uint32_t                      s_options_size_value      = { 4U };
-     static constexpr std::size_t                        s_input_string_size_value = { 256U };
-     static constexpr auto                               m_index_values = std::ranges::views::iota(std::uint32_t{}, s_options_size_value);
+     static constexpr std::uint32_t s_options_size_value      = { 4U };
+     static constexpr std::size_t   s_input_string_size_value = { 256U };
+     static constexpr auto          m_index_values
+       = std::ranges::views::iota(std::uint32_t{}, s_options_size_value);
 
-     std::weak_ptr<Selections>                           m_selections   = {};
-     mutable bool                                        m_changed      = {};
-     mutable std::array<char, s_input_string_size_value> m_input_pattern_string = {};
-     mutable std::vector<std::string>                    m_output_tests         = {};
-     mutable ImVec2                                      m_scrolling_child_size = {};
-     mutable std::vector<Callback>                       callbacks              = {};
+     std::weak_ptr<Selections>                           m_selections = {};
+     mutable bool                                        m_changed    = {};
+     mutable std::array<char, s_input_string_size_value> m_input_pattern_string
+       = {};
+     mutable std::vector<std::string>  m_output_tests         = {};
+     mutable ImVec2                    m_scrolling_child_size = {};
+     mutable std::vector<Callback>     callbacks              = {};
 
 
      /**
-      * @brief Retrieves a pointer to a string at the given index, with clamping and selection handling.
+      * @brief Retrieves a pointer to a string at the given index, with clamping
+      * and selection handling.
       *
       * This function returns a pointer to the string at the specified index,
-      * clamping the index into the valid range `[0, size-1]`. If the index is `-1`
-      * (indicating that nothing is currently selected) or if the vector is empty,
-      * the function returns `nullptr`.
+      * clamping the index into the valid range `[0, size-1]`. If the index is
+      * `-1` (indicating that nothing is currently selected) or if the vector is
+      * empty, the function returns `nullptr`.
       *
       * @param strings Reference to the vector of strings to access.
-      * @param index   The index of the string to retrieve. A value of `-1` indicates no selection.
+      * @param index   The index of the string to retrieve. A value of `-1`
+      * indicates no selection.
       *
       * @return Pointer to the string at the clamped index, or `nullptr` if
       *         `index == -1` or `strings` is empty.
       *
       * @note The returned pointer remains valid only as long as the underlying
-      *       vector is not modified in a way that invalidates references/pointers
-      *       (e.g., reallocation).
+      *       vector is not modified in a way that invalidates
+      * references/pointers (e.g., reallocation).
       */
-     [[nodiscard]] static std::string                   *get_current_string_value_from_index(
-                         std::vector<std::string> &strings,
-                         const int                 index);
+     [[nodiscard]] static std::string *get_current_string_value_from_index(
+       std::vector<std::string> &strings,
+       const int                 index);
 
      /**
       * @brief Retrieves the currently selected string (mutable).
       *
-      * Returns a pointer to the currently selected string, allowing modification.
-      * The returned pointer may either reference a string stored in an internal
-      * vector or a standalone string.
+      * Returns a pointer to the currently selected string, allowing
+      * modification. The returned pointer may either reference a string stored
+      * in an internal vector or a standalone string.
       *
-      * @return Pointer to the selected string, or `nullptr` if nothing is selected.
+      * @return Pointer to the selected string, or `nullptr` if nothing is
+      * selected.
       *
       * @note The pointer remains valid only as long as the owning container
       *       (vector or standalone storage) is not modified in a way that
       *       invalidates references/pointers.
       */
-     [[nodiscard]] std::string                    *get_current_string_value_mutable() const;
+     [[nodiscard]] std::string       *get_current_string_value_mutable() const;
 
      /**
       * @brief Retrieves the currently selected string (read-only).
@@ -86,13 +91,14 @@ struct custom_paths_window
       * modification. The returned pointer may either reference a string stored
       * in an internal vector or a standalone string.
       *
-      * @return Const pointer to the selected string, or `nullptr` if nothing is selected.
+      * @return Const pointer to the selected string, or `nullptr` if nothing is
+      * selected.
       *
       * @note The pointer remains valid only as long as the owning container
       *       (vector or standalone storage) is not modified in a way that
       *       invalidates references/pointers.
       */
-     [[nodiscard]] const std::string              *get_current_string_value() const;
+     [[nodiscard]] const std::string *get_current_string_value() const;
 
      /**
       * @brief Retrieves the currently selected vector of strings.
@@ -108,7 +114,8 @@ struct custom_paths_window
       *       container is not modified in a way that invalidates references
       *       or pointers.
       */
-     [[nodiscard]] const std::vector<std::string> *get_current_string_vector() const;
+     [[nodiscard]] const std::vector<std::string> *
+       get_current_string_vector() const;
 
      /**
       * @brief Retrieves the currently selected vector of strings (mutable).
@@ -124,10 +131,12 @@ struct custom_paths_window
       *       vector, and remains valid only as long as the owning container
       *       is not modified in a way that invalidates references or pointers.
       */
-     [[nodiscard]] std::vector<std::string>       *get_current_string_vector_mutable() const;
+     [[nodiscard]] std::vector<std::string>                            *
+       get_current_string_vector_mutable() const;
 
      /**
-      * @brief Determines whether the current selection is a vector or a single string.
+      * @brief Determines whether the current selection is a vector or a single
+      * string.
       *
       * This function inspects the current selection (via the associated
       * PatternSelector) and classifies it as either a vector of strings
@@ -136,7 +145,8 @@ struct custom_paths_window
       *
       * @return A VectorOrString value indicating the type of the current
       *         selection:
-      *         - VectorOrString::vector  if the selection is a vector of strings
+      *         - VectorOrString::vector  if the selection is a vector of
+      * strings
       *         - VectorOrString::string  if the selection is a single string
       *
       * @throws std::runtime_error If the selection cannot be classified
@@ -147,7 +157,7 @@ struct custom_paths_window
       *       instead of throwing, if graceful handling of unexpected values
       *       is desired.
       */
-     [[nodiscard]] VectorOrString                  vector_or_string() const;
+     [[nodiscard]] VectorOrString vector_or_string() const;
 
      /**
       * @brief Saves the current pattern.
@@ -160,7 +170,7 @@ struct custom_paths_window
       *         encountered. This indicates a coding error and should be
       *         highly unlikely during normal execution.
       */
-     void                                          save_pattern() const;
+     void                         save_pattern() const;
 
      /**
       * @brief Populates ImGui controls for pattern input.
@@ -168,7 +178,7 @@ struct custom_paths_window
       * Sets up the input-related ImGui controls based on the current
       * pattern state. This prepares the UI for editing or selecting patterns.
       */
-     void                                          populate_input_pattern() const;
+     void                         populate_input_pattern() const;
 
      /**
       * @brief Populates ImGui controls with test or sample output data.
@@ -176,7 +186,7 @@ struct custom_paths_window
       * Uses the current pattern to generate example/test data and updates
       * the ImGui UI to display it.
       */
-     void                                          populate_test_output() const;
+     void                         populate_test_output() const;
 
      /**
       * @brief Renders a combo box to select the type of pattern.
@@ -186,7 +196,7 @@ struct custom_paths_window
       *
       * @return True if the user changed the selection, false otherwise.
       */
-     [[nodiscard]] bool                            combo_selected_pattern() const;
+     [[nodiscard]] bool           combo_selected_pattern() const;
 
      /**
       * @brief Renders a text box for editing a single string pattern.
@@ -195,7 +205,7 @@ struct custom_paths_window
       *
       * @return True if the text box value was modified, false otherwise.
       */
-     [[nodiscard]] bool                            textbox_pattern() const;
+     [[nodiscard]] bool           textbox_pattern() const;
 
      /**
       * @brief Renders a table for editing a vector of strings pattern.
@@ -204,7 +214,7 @@ struct custom_paths_window
       *
       * @return True if any value in the table was modified, false otherwise.
       */
-     [[nodiscard]] bool                            vector_pattern() const;
+     [[nodiscard]] bool           vector_pattern() const;
 
      /**
       * @brief Adds a separator character to the pattern.
@@ -214,7 +224,7 @@ struct custom_paths_window
       *
       * @return True if the separator button was clicked, false otherwise.
       */
-     [[nodiscard]] bool                            button_add_seperator() const;
+     [[nodiscard]] bool           button_add_seperator() const;
 
      /**
       * @brief Removes the last key from the pattern.
@@ -224,7 +234,7 @@ struct custom_paths_window
       *
       * @return True if a key was removed, false otherwise.
       */
-     [[nodiscard]] bool                            button_remove_last_key() const;
+     [[nodiscard]] bool           button_remove_last_key() const;
 
      /**
       * @brief Shows a scrollable ImGui child containing available keys.
@@ -234,7 +244,7 @@ struct custom_paths_window
       * @return True if the user clicked any key to modify the pattern,
       *         false otherwise.
       */
-     [[nodiscard]] bool                            child_keys() const;
+     [[nodiscard]] bool           child_keys() const;
 
      /**
       * @brief Shows a scrollable ImGui child containing generated test output.
@@ -243,11 +253,12 @@ struct custom_paths_window
       *
       * @return True if any interaction modifies the UI state, false otherwise.
       */
-     [[nodiscard]] bool                            child_test_output() const;
+     [[nodiscard]] bool           child_test_output() const;
 
    public:
      /**
-      * @brief Registers a callback to be notified when configuration keys change.
+      * @brief Registers a callback to be notified when configuration keys
+      * change.
       *
       * This function stores the provided callback so that it will be invoked
       * whenever a configuration change is notified through @ref notify.

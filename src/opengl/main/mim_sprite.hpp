@@ -17,18 +17,19 @@ namespace fme
 struct mim_sprite
 {
    private:
-     std::weak_ptr<open_viii::archive::FIFLFS<false>>            m_field        = {};
-     open_viii::LangT                                            m_coo          = {};
-     mutable std::string                                         m_mim_path     = {};
-     open_viii::graphics::background::Mim                        m_mim          = {};
-     open_viii::graphics::BPPT                                   m_bpp          = {};
-     std::uint8_t                                                m_palette      = {};
-     bool                                                        m_draw_palette = { false };
-     std::vector<open_viii::graphics::Color32RGBA>               m_colors       = {};
-     std::shared_ptr<glengine::Texture>                          m_texture      = {};
-     [[nodiscard]] open_viii::graphics::background::Mim          get_mim() const;
-     [[nodiscard]] static open_viii::graphics::BPPT              get_bpp(const open_viii::graphics::BPPT &in_bpp);
-     [[nodiscard]] std::shared_ptr<glengine::Texture>            find_texture() const;
+     std::weak_ptr<open_viii::archive::FIFLFS<false>> m_field     = {};
+     open_viii::LangT                                 m_coo       = {};
+     mutable std::string                              m_mim_path  = {};
+     open_viii::graphics::background::Mim             m_mim       = {};
+     open_viii::graphics::BPPT                        m_bpp       = {};
+     std::uint8_t                                     m_palette   = {};
+     bool                                          m_draw_palette = { false };
+     std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
+     std::shared_ptr<glengine::Texture>            m_texture      = {};
+     [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
+     [[nodiscard]] static open_viii::graphics::BPPT
+       get_bpp(const open_viii::graphics::BPPT &in_bpp);
+     [[nodiscard]] std::shared_ptr<glengine::Texture> find_texture() const;
      [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA> get_colors();
 
    public:
@@ -48,68 +49,72 @@ struct mim_sprite
        const open_viii::graphics::BPPT                 &in_bpp,
        const std::uint8_t                              &in_palette,
        open_viii::LangT                                 in_coo,
-       bool                                             force_draw_palette = false);
+       bool force_draw_palette = false);
 
      /**
       * create a new object with a new field and the same settings
       * @param in_field
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite                                  with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
+     [[nodiscard]] mim_sprite with_field(
+       std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
 
      /**
       * create a new object with a new bits per pixel and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite                                  with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
+     [[nodiscard]] mim_sprite
+       with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
 
      /**
       * create a new object with a new palette and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite                                  with_palette(const std::uint8_t &in_palette) const;
+     [[nodiscard]] mim_sprite
+       with_palette(const std::uint8_t &in_palette) const;
 
      /**
       * create a new object and change coo.
       */
-     [[nodiscard]] mim_sprite                                  with_coo(open_viii::LangT in_coo) const;
+     [[nodiscard]] mim_sprite    with_coo(open_viii::LangT in_coo) const;
 
      /**
       * create a new object and Toggle drawing palette.
       */
-     [[nodiscard]] mim_sprite                                  with_draw_palette(bool in_draw_palette) const;
+     [[nodiscard]] mim_sprite    with_draw_palette(bool in_draw_palette) const;
 
      /**
       * @return width in px
       */
-     [[nodiscard]] std::uint32_t                               width() const noexcept;
+     [[nodiscard]] std::uint32_t width() const noexcept;
 
      /**
       * @return height in px
       */
-     [[nodiscard]] std::uint32_t                               height() const noexcept;
+     [[nodiscard]] std::uint32_t height() const noexcept;
 
      /**
       * If in draw palette mode
       * @return true or false
       */
-     [[nodiscard]] bool                                        draw_palette() const noexcept;
+     [[nodiscard]] bool          draw_palette() const noexcept;
 
      /**
       * If failed state
       * @return true or false
       */
-     [[nodiscard]] bool                                        fail() const noexcept;
+     [[nodiscard]] bool          fail() const noexcept;
 
-     [[nodiscard]] const open_viii::graphics::background::Mim &mim() const noexcept;
+     [[nodiscard]] const open_viii::graphics::background::Mim           &
+       mim() const noexcept;
 
-     void                                                      save(const std::filesystem::path &dest_path) const;
+     void        save(const std::filesystem::path &dest_path) const;
 
-     std::string                                               mim_filename() const;
+     std::string mim_filename() const;
 
-     void                                                      mim_save(const std::filesystem::path &dest_path) const;
+     void        mim_save(const std::filesystem::path &dest_path) const;
 };
 }// namespace fme
 #endif

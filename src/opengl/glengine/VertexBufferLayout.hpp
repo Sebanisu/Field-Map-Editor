@@ -190,6 +190,7 @@ class VertexBufferLayout
 };
 template<is_VertexBufferElementType... Ts>
 VertexBufferLayout(Ts &&...) -> VertexBufferLayout<sizeof...(Ts)>;
-static_assert(std::movable<VertexBufferLayout<1>> && std::copyable<VertexBufferLayout<1>>);
+static_assert(
+  std::movable<VertexBufferLayout<1>> && std::copyable<VertexBufferLayout<1>>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP

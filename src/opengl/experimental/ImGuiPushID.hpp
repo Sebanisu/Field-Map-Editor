@@ -25,8 +25,8 @@ class [[nodiscard]] ImGuiPushIdImpl
           return ScopeGuard{ &ImGui::PopID };
      }
      /**
-      * reset() must be called once per frame usually at the beginning or the end.
-      * It resets an int to 0.
+      * reset() must be called once per frame usually at the beginning or the
+      * end. It resets an int to 0.
       */
      void reset() const noexcept;
 

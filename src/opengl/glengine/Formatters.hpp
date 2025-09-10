@@ -21,7 +21,13 @@ struct fmt::formatter<std::stacktrace>
           fmt::format_to(out, "Stacktrace ({} frames):\n", st.size());
           for (const auto &[i, frame] : st | std::views::enumerate)
           {
-               fmt::format_to(out, "{:>3}: {} [{}:{}]\n", i, frame.description(), frame.source_file(), frame.source_line());
+               fmt::format_to(
+                 out,
+                 "{:>3}: {} [{}:{}]\n",
+                 i,
+                 frame.description(),
+                 frame.source_file(),
+                 frame.source_line());
           }
           return out;
      }

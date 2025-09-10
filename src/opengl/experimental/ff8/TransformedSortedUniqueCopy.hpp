@@ -26,16 +26,21 @@ static inline auto TransformedSortedUniqueCopy(
   rangeT &&...range)
 {
 
-     std::vector<typename std::projected<std::ranges::iterator_t<glengine::first_t<rangeT...>>, transformT>::value_type> out = {};
+     std::vector<typename std::projected<
+       std::ranges::iterator_t<glengine::first_t<rangeT...>>,
+       transformT>::value_type>
+       out = {};
      (
        [&]()
        {
-            auto transformed_range = std::forward<rangeT>(range) | std::views::transform(transform);
+            auto transformed_range
+              = std::forward<rangeT>(range) | std::views::transform(transform);
             std::ranges::copy(transformed_range, std::back_inserter(out));
        }(),
        ...);
      std::ranges::sort(out, sort_compare, projection);
-     const auto [first, last] = std::ranges::unique(out, unique_comp, projection);
+     const auto [first, last]
+       = std::ranges::unique(out, unique_comp, projection);
      out.erase(first, last);
      return out;
 }

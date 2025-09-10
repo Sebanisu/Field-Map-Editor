@@ -80,11 +80,16 @@ class OrthographicCamera
        float zoom,
        float aspect)
      {
-          set_projection(-(zoom * aspect) / half, (zoom * aspect) / half, -zoom / half, zoom / half);
+          set_projection(
+            -(zoom * aspect) / half,
+            (zoom * aspect) / half,
+            -zoom / half,
+            zoom / half);
      }
      void set_projection(glm::vec2 size)
      {
-          set_projection(-size.x / half, size.x / half, -size.y / half, size.y / half);
+          set_projection(
+            -size.x / half, size.x / half, -size.y / half, size.y / half);
      }
      void set_position(glm::vec3 position)
      {
@@ -95,7 +100,10 @@ class OrthographicCamera
      void set_rotation(float rotation)
      {
           m_rotation     = rotation;
-          m_model_matrix = glm::rotate(identity_matrix, glm::radians(m_rotation), glm::vec3(0.F, 0.F, 1.F));
+          m_model_matrix = glm::rotate(
+            identity_matrix,
+            glm::radians(m_rotation),
+            glm::vec3(0.F, 0.F, 1.F));
           recalculate_mvp();
      }
 
@@ -106,7 +114,8 @@ class OrthographicCamera
      }
      const glm::mat4 inverse_view_projection_matrix() const
      {
-          return glm::inverse(glm::translate(m_view_projection_matrix, -m_position));
+          return glm::inverse(
+            glm::translate(m_view_projection_matrix, -m_position));
      }
      const auto &view_matrix() const
      {
@@ -133,11 +142,8 @@ class OrthographicCamera
      // {
      //      const auto fmt_mat_4 = [](glm::mat4 in) -> std::string {
      //           return fmt::format(
-     //             "[{},{},{},{}], [{},{},{},{}], [{},{},{},{}], [{},{},{},{}]",
-     //             in[0][0],
-     //             in[0][1],
-     //             in[0][2],
-     //             in[0][3],
+     //             "[{},{},{},{}], [{},{},{},{}], [{},{},{},{}],
+     //             [{},{},{},{}]", in[0][0], in[0][1], in[0][2], in[0][3],
      //             in[1][0],
      //             in[1][1],
      //             in[1][2],
@@ -155,9 +161,10 @@ class OrthographicCamera
      //      ImGui::Text(
      //        "%s",
      //        fmt::format(
-     //          "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X: {}, Y: "
-     //          "{}, Z: {}\nRotation: {}\nPre-transform bounds - left: {}, right: {}, "
-     //          "bottom: {}, top: {}\n",
+     //          "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X:
+     //          {}, Y: "
+     //          "{}, Z: {}\nRotation: {}\nPre-transform bounds - left: {},
+     //          right: {}, " "bottom: {}, top: {}\n",
      //          fmt_mat_4(m_projection_matrix),
      //          fmt_mat_4(m_view_matrix),
      //          fmt_mat_4(m_model_matrix),
@@ -176,17 +183,18 @@ class OrthographicCamera
    private:
      void recalculate_mvp()
      {
-          m_view_projection_matrix = m_projection_matrix * m_view_matrix * m_model_matrix;
+          m_view_projection_matrix
+            = m_projection_matrix * m_view_matrix * m_model_matrix;
      }
-     static constexpr float near                     = -1.0F;
-     static constexpr float far                      = 1.0F;
-     glm::mat4              m_projection_matrix      = identity_matrix;
-     glm::mat4              m_view_matrix            = identity_matrix;
-     glm::mat4              m_model_matrix           = identity_matrix;
-     glm::mat4              m_view_projection_matrix = m_projection_matrix * m_view_matrix;
-     glm::vec3              m_position               = {};
-     float                  m_rotation               = {};
-     glm::vec4              m_bounds                 = {};
+     static constexpr float near                = -1.0F;
+     static constexpr float far                 = 1.0F;
+     glm::mat4              m_projection_matrix = identity_matrix;
+     glm::mat4              m_view_matrix       = identity_matrix;
+     glm::mat4              m_model_matrix      = identity_matrix;
+     glm::mat4 m_view_projection_matrix = m_projection_matrix * m_view_matrix;
+     glm::vec3 m_position               = {};
+     float     m_rotation               = {};
+     glm::vec4 m_bounds                 = {};
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERA_HPP

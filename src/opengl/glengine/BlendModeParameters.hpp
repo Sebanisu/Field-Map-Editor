@@ -14,7 +14,8 @@ inline namespace impl
           static constexpr auto strings = []()
           {
                using namespace std::string_view_literals;
-               return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv, "dstAlpha"sv };
+               return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv,
+                                  "dstAlpha"sv };
           }();
 
         public:
@@ -23,7 +24,8 @@ inline namespace impl
                return strings;
           }
      };
-     using BlendModeParameters = BlendModeGenerics<BlendModeParametersStrings, BlendModeParameter>;
+     using BlendModeParameters
+       = BlendModeGenerics<BlendModeParametersStrings, BlendModeParameter>;
 }// namespace impl
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEPARAMETERS_HPP

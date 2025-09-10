@@ -7,16 +7,17 @@
 #include <test/LayerTests.hpp>
 #include <TimeStep.hpp>
 
-[[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow    = nullptr;
-static constinit ff_8::Fields                      *GlobalFields           = nullptr;
-static constinit ff_8::MapHistoryData              *GlobalMapHistory       = nullptr;
-static constinit ff_8::MimData                     *GlobalMim              = nullptr;
-static constinit glengine::ImGuiViewPortPreview    *GlobalPreview          = {};
-static constinit bool                               GlobalRunning          = true;
-static constinit bool                               GlobalMinimize         = false;
-[[maybe_unused]] static ImVec2                      GlobalViewportSize     = {};
-[[maybe_unused]] static constinit glm::vec4         GlobalViewportMousePos = {};
-static bool                                         OnWindowClose(const glengine::event::WindowClose &)
+[[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow
+  = nullptr;
+static constinit ff_8::Fields                   *GlobalFields       = nullptr;
+static constinit ff_8::MapHistoryData           *GlobalMapHistory   = nullptr;
+static constinit ff_8::MimData                  *GlobalMim          = nullptr;
+static constinit glengine::ImGuiViewPortPreview *GlobalPreview      = {};
+static constinit bool                            GlobalRunning      = true;
+static constinit bool                            GlobalMinimize     = false;
+[[maybe_unused]] static ImVec2                   GlobalViewportSize = {};
+[[maybe_unused]] static constinit glm::vec4      GlobalViewportMousePos = {};
+static bool OnWindowClose(const glengine::event::WindowClose &)
 {
      GlobalRunning = false;
      return true;
@@ -33,39 +34,44 @@ Application::Application(
   int         height)
   : window(
       glengine::Window::create(
-        glengine::Window::WindowData{ .title          = std::move(title),
-                                      .width          = std::move(width),
-                                      .height         = std::move(height),
-                                      .event_callback = [&](const glengine::event::Item &e)
-                                      {
-                                           const glengine::event::Dispatcher dispatcher = { e };
-                                           //      [[maybe_unused]]const bool skip
-                                           //            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
-                                           //                         && ImGui::GetIO().WantCaptureMouse)
-                                           //                        ||
-                                           //                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
-                                           //                            && ImGui::GetIO().WantCaptureKeyboard);
+        glengine::Window::WindowData{
+          .title          = std::move(title),
+          .width          = std::move(width),
+          .height         = std::move(height),
+          .event_callback = [&](const glengine::event::Item &e)
+          {
+               const glengine::event::Dispatcher dispatcher = { e };
+               //      [[maybe_unused]]const bool skip
+               //            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
+               //                         && ImGui::GetIO().WantCaptureMouse)
+               //                        ||
+               //                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
+               //                            &&
+               //                            ImGui::GetIO().WantCaptureKeyboard);
 
-                                           dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
-                                           dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
-                                           dispatcher.Dispatch<glengine::event::Reload>(
-                                             [](const glengine::event::Reload &reload) -> bool
-                                             {
-                                                  if (reload)
-                                                  {
-                                                       ReloadMimAndMap();
-                                                  }
-                                                  return true;
-                                             });
-                                           layers.on_event(e);
-                                           local_preview.on_event(e);
-                                           local_tile_display.on_event(e);
-                                           //      if (skip)
-                                           //      {
-                                           //        return;
-                                           //      }
-                                           spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
-                                      } }))
+               dispatcher.Dispatch<glengine::event::WindowClose>(
+                 &OnWindowClose);
+               dispatcher.Dispatch<glengine::event::WindowResize>(
+                 &OnWindowResize);
+               dispatcher.Dispatch<glengine::event::Reload>(
+                 [](const glengine::event::Reload &reload) -> bool
+                 {
+                      if (reload)
+                      {
+                           ReloadMimAndMap();
+                      }
+                      return true;
+                 });
+               layers.on_event(e);
+               local_preview.on_event(e);
+               local_tile_display.on_event(e);
+               //      if (skip)
+               //      {
+               //        return;
+               //      }
+               spdlog::debug(
+                 "event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
+          } }))
 {
      local_mim        = ff_8::MimData(local_fields);
      local_map        = ff_8::MapHistoryData(local_fields, local_mim);
@@ -98,7 +104,8 @@ void Application::run() const
 #else
                // constinit static std::size_t test_number = 0U;
                {
-                    float step = time_step;// takes the current time when you get a float.
+                    float step = time_step;// takes the current time when you
+                                           // get a float.
                     local_tile_display.on_update(step);
                     local_preview.on_update(step);
                     layers.on_im_gui_update();
@@ -117,7 +124,8 @@ void Application::run() const
           {
                window->end_frame();
           }
-          window->update_view_ports();// for multi viewports run after render loop.
+          window
+            ->update_view_ports();// for multi viewports run after render loop.
           std::cout << std::flush;
      }
      GlobalRunning = true;

@@ -72,11 +72,17 @@ std::int32_t CompShader::get_uniform_location(std::string_view name) const
           return m_cache.at(name);
      }
 
-     std::int32_t location = GlCall{}(glGetUniformLocation, m_program_id, std::ranges::data(name));
+     std::int32_t location
+       = GlCall{}(glGetUniformLocation, m_program_id, std::ranges::data(name));
 
      if (location == -1)
      {
-          spdlog::warn("{}:{} uniform name {} doesn't exist, Invalid uniform location {}", __FILE__, __LINE__, name, location);
+          spdlog::warn(
+            "{}:{} uniform name {} doesn't exist, Invalid uniform location {}",
+            __FILE__,
+            __LINE__,
+            name,
+            location);
      }
 
      m_cache.emplace(std::move(name), location);
@@ -114,7 +120,12 @@ void CompShader::set_uniform(
      const int32_t location = get_uniform_location(name);
      if (location == -1)
           return;
-     GlCall{}(glUniformMatrix4fv, location, 1, GLboolean{ GL_FALSE }, glm::value_ptr(matrix));
+     GlCall{}(
+       glUniformMatrix4fv,
+       location,
+       1,
+       GLboolean{ GL_FALSE },
+       glm::value_ptr(matrix));
 }
 
 GLuint CompShader::create(const std::filesystem::path &path)
@@ -126,14 +137,23 @@ GLuint CompShader::create(const std::filesystem::path &path)
           const auto st = std::filesystem::status(path);
           if (!std::filesystem::is_regular_file(st))
           {
-               spdlog::error("{}:{} - Shader path is invalid (not a regular file)\n\t\"{}\"", __FILE__, __LINE__, path.string());
+               spdlog::error(
+                 "{}:{} - Shader path is invalid (not a regular "
+                 "file)\n\t\"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 path.string());
                return {};
           }
 
           std::ifstream fs(path, std::ios::binary | std::ios::in);
           if (!fs.is_open())
           {
-               spdlog::error("{}:{} - Failed to open shader\n\t\"{}\"", __FILE__, __LINE__, path.string());
+               spdlog::error(
+                 "{}:{} - Failed to open shader\n\t\"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 path.string());
                return {};
           }
 
@@ -143,7 +163,11 @@ GLuint CompShader::create(const std::filesystem::path &path)
 
           if (!fs)
           {
-               spdlog::error("{}:{} - Failed to read shader file\n\t\"{}\"", __FILE__, __LINE__, path.string());
+               spdlog::error(
+                 "{}:{} - Failed to read shader file\n\t\"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 path.string());
                return {};
           }
 
@@ -155,12 +179,21 @@ GLuint CompShader::create(const std::filesystem::path &path)
           }
           else
           {
-               spdlog::error("{}:{} - Failed to create compute shader\n\t\"{}\"", __FILE__, __LINE__, path.string());
+               spdlog::error(
+                 "{}:{} - Failed to create compute shader\n\t\"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 path.string());
           }
      }
      catch (const std::filesystem::filesystem_error &e)
      {
-          spdlog::error("{}:{} - Filesystem error: {}\n\t\"{}\"", __FILE__, __LINE__, e.what(), path.string());
+          spdlog::error(
+            "{}:{} - Filesystem error: {}\n\t\"{}\"",
+            __FILE__,
+            __LINE__,
+            e.what(),
+            path.string());
      }
      return temp_program_id;
 }

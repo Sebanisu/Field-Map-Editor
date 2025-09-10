@@ -36,7 +36,8 @@ std::optional<const std::array<
           return std::nullopt;
      std::array<double, 2U> pos{};
      glfwGetCursorPos(m_window, &pos[0], &pos[1]);
-     return std::array{ static_cast<float>(pos[0]), static_cast<float>(pos[1]) };
+     return std::array{ static_cast<float>(pos[0]),
+                        static_cast<float>(pos[1]) };
 }
 std::optional<const float> Input::get_mouse_x()
 {

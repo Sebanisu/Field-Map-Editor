@@ -30,12 +30,17 @@ void Shader::unbind()
      GlCall{}(glUseProgram, 0U);
 }
 
-Shader::ShaderProgramSource Shader::parse_shader(const std::filesystem::path &path)
+Shader::ShaderProgramSource
+  Shader::parse_shader(const std::filesystem::path &path)
 {
      std::ifstream fs(path, std::ios::binary | std::ios::in);
      if (!fs.is_open())
      {
-          spdlog::error("{}:{} - Failed to open shader \n\t\"{}\"", __FILE__, __LINE__, path.string());
+          spdlog::error(
+            "{}:{} - Failed to open shader \n\t\"{}\"",
+            __FILE__,
+            __LINE__,
+            path.string());
           return {};
      }
      enum class ShaderType
@@ -65,7 +70,8 @@ Shader::ShaderProgramSource Shader::parse_shader(const std::filesystem::path &pa
                }
                else
                {
-                    if (std::string::size_type pos = line.find("#"); pos != std::string::npos)
+                    if (std::string::size_type pos = line.find("#");
+                        pos != std::string::npos)
                     {
                          line.erase(0, pos);
                     }
@@ -93,13 +99,15 @@ std::uint32_t Shader::compile_shader(
      {
           int length{};
           GlCall{}(glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length);
-          std::string message(static_cast<std::string::size_type>(length), '\0');
+          std::string message(
+            static_cast<std::string::size_type>(length), '\0');
           GlCall{}(glGetShaderInfoLog, id, length, &length, std::data(message));
           spdlog::error(
             "Error {}:{} - Failed to compile shader {} - {}",
             __FILE__,
             __LINE__,
-            (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv : "GL_FRAGMENT_SHADER"sv),
+            (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv
+                                      : "GL_FRAGMENT_SHADER"sv),
             message);
           GlCall{}(glDeleteShader, id);
           spdlog::error("{}", std::stacktrace::current());
@@ -112,8 +120,9 @@ std::uint32_t Shader::create_shader(
   const std::string_view vertex_shader,
   const std::string_view fragment_shader)
 {
-     const std::uint32_t vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-     const std::uint32_t fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
+     const std::uint32_t vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+     const std::uint32_t fs
+       = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
      const std::uint32_t program = GlCall{}(glCreateProgram);
      GlCall{}(glAttachShader, program, vs);
      GlCall{}(glAttachShader, program, fs);
@@ -130,11 +139,17 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
           return m_cache.at(name);
      }
 
-     std::int32_t location = GlCall{}(glGetUniformLocation, m_renderer_id, std::ranges::data(name));
+     std::int32_t location
+       = GlCall{}(glGetUniformLocation, m_renderer_id, std::ranges::data(name));
 
      if (location == -1)
      {
-          spdlog::warn("{}:{} uniform name {} doesn't exist, Invalid uniform location {}", __FILE__, __LINE__, name, location);
+          spdlog::warn(
+            "{}:{} uniform name {} doesn't exist, Invalid uniform location {}",
+            __FILE__,
+            __LINE__,
+            name,
+            location);
      }
 
      m_cache.emplace(std::move(name), location);
@@ -172,6 +187,11 @@ void Shader::set_uniform(
      const int32_t location = get_uniform_location(name);
      if (location == -1)
           return;
-     GlCall{}(glUniformMatrix4fv, location, 1, GLboolean{ GL_FALSE }, glm::value_ptr(matrix));
+     GlCall{}(
+       glUniformMatrix4fv,
+       location,
+       1,
+       GLboolean{ GL_FALSE },
+       glm::value_ptr(matrix));
 }
 }// namespace glengine

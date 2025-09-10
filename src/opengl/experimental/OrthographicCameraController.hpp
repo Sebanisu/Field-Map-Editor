@@ -31,15 +31,17 @@ class OrthographicCameraController
      {
      }
 
-     // should be after CheckInput and only have things that should trigger always.
-     void                                on_update(float) const;
-     // check for keyboard or mouse inputs must recommend to check for focus first.
-     void                                check_input(float ts) const;
-     bool                                on_im_gui_update() const;
-     constexpr void                      on_render() const {}
-     void                                on_event(const event::Item &) const;
+     // should be after CheckInput and only have things that should trigger
+     // always.
+     void           on_update(float) const;
+     // check for keyboard or mouse inputs must recommend to check for focus
+     // first.
+     void           check_input(float ts) const;
+     bool           on_im_gui_update() const;
+     constexpr void on_render() const {}
+     void           on_event(const event::Item &) const;
      // check for keyboard or mouse events. Use Dispatcher::Filter.
-     void                                check_event(const event::Item &e) const;
+     void           check_event(const event::Item &e) const;
      const glengine::OrthographicCamera &camera() const
      {
           return m_camera;
@@ -63,7 +65,8 @@ class OrthographicCameraController
           }
           ReturnValues operator*(float multiplier) const noexcept
           {
-               return { left * multiplier, right * multiplier, bottom * multiplier, top * multiplier };
+               return { left * multiplier, right * multiplier,
+                        bottom * multiplier, top * multiplier };
           }
      };
      ReturnValues                current_bounds() const;
@@ -72,11 +75,11 @@ class OrthographicCameraController
      void                        set_image_bounds(glm::vec2 dims) const;
      void                        disable_bounds() const;
      // void                         RefreshAspectRatio() const;
-     void                        refresh_aspect_ratio(float new_aspect_ratio) const;
-     void                        fit_both() const;
-     void                        fit_height() const;
-     void                        fit_width() const;
-     [[nodiscard]] float         zoom_level() const
+     void                refresh_aspect_ratio(float new_aspect_ratio) const;
+     void                fit_both() const;
+     void                fit_height() const;
+     void                fit_width() const;
+     [[nodiscard]] float zoom_level() const
      {
           return m_zoom_level;
      }
@@ -90,7 +93,8 @@ class OrthographicCameraController
      [[nodiscard]] glm::vec2 top_right_screen_space() const
      {
           auto clip_space_pos
-            = m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
+            = m_camera.projection_matrix()
+              * (m_camera.view_matrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
           glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
           ndc_space_pos /= clip_space_pos.w;
           return ndc_space_pos;
@@ -100,7 +104,8 @@ class OrthographicCameraController
      glm::vec2 bottom_left_screen_space() const
      {
           auto clip_space_pos
-            = m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
+            = m_camera.projection_matrix()
+              * (m_camera.view_matrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
           glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
           ndc_space_pos /= clip_space_pos.w;
           return ndc_space_pos;
@@ -123,7 +128,8 @@ class OrthographicCameraController
      mutable std::optional<ReturnValues>  m_bounds                = {};
      void                                 zoom(const float offset = 0.F) const;
 };
-void MakeViewPortMatchBounds(const OrthographicCameraController::ReturnValues &bounds);
+void MakeViewPortMatchBounds(
+  const OrthographicCameraController::ReturnValues &bounds);
 static_assert(Renderable<OrthographicCameraController>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP

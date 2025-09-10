@@ -23,7 +23,7 @@ template<typename... B>
   const open_viii::graphics::background::Map::variant_tile &original_tile,
   const open_viii::graphics::background::Map::variant_tile &working_tile,
   const tile_button_options                                &options = {},
-  const std::size_t                                         index   = std::numeric_limits<size_t>::max());
+  const std::size_t index = std::numeric_limits<size_t>::max());
 bool browse_for_image_display_preview();
 }// namespace fme
 #endif /* D6C77062_9D81_4B19_94F6_558AE8A3D90C */

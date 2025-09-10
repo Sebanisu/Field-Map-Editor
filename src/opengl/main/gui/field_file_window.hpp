@@ -48,7 +48,8 @@ struct field_file_window
           const auto selections = m_selections.lock();
           if (!selections)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock m_selections: shared_ptr is expired.");
                return;
           }
           if (!selections->get<ConfigKey::DisplayFieldFileWindow>())
@@ -62,21 +63,25 @@ struct field_file_window
                spdlog::error("Failed to lock m_field: shared_ptr is expired.");
                return;
           }
-          bool      &visible     = selections->get<ConfigKey::DisplayFieldFileWindow>();
-          const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
-                                                         {
-                                                              if (was_visable != visible)
-                                                              {
-                                                                   selections->update<ConfigKey::DisplayFieldFileWindow>();
-                                                              }
-                                                         } };
+          bool &visible = selections->get<ConfigKey::DisplayFieldFileWindow>();
+          const auto pop_visible = glengine::ScopeGuard{
+               [&selections, &visible, was_visable = visible]
+               {
+                    if (was_visable != visible)
+                    {
+                         selections
+                           ->update<ConfigKey::DisplayFieldFileWindow>();
+                    }
+               }
+          };
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           if (!ImGui::Begin(gui_labels::field_file_window.data(), &visible))
           {
                return;
           }
-          const auto                      pop_changed = glengine::ScopeGuard([this]() { m_changed = false; });
-          static std::vector<std::string> paths       = {};
+          const auto pop_changed
+            = glengine::ScopeGuard([this]() { m_changed = false; });
+          static std::vector<std::string> paths = {};
 
           if (std::ranges::empty(paths) || m_changed)
           {
@@ -86,7 +91,8 @@ struct field_file_window
           {
                const auto pop_id = PushPopID();
                (void)ImGui::Selectable(path.data());
-               if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+               if (ImGui::BeginPopupContextItem())// <-- use last item id as
+                                                  // popup id
                {
                     if (ImGui::Selectable("Copy Path"))
                     {
@@ -95,7 +101,9 @@ struct field_file_window
                     if (ImGui::Selectable("Copy All Paths"))
                     {
                          using namespace std::string_literals;
-                         auto combined_paths = paths | std::ranges::views::join_with("\n"s) | std::ranges::to<std::string>();
+                         auto combined_paths
+                           = paths | std::ranges::views::join_with("\n"s)
+                             | std::ranges::to<std::string>();
                          ImGui::SetClipboardText(combined_paths.data());
                     }
                     if (ImGui::Button("Close"))

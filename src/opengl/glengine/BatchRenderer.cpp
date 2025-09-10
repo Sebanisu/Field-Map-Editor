@@ -57,7 +57,8 @@ void BatchRenderer::draw_vertices() const
      {
           return;
      }
-     Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
+     Renderer::Draw(
+       index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
      ++draw_count;
 }
 void BatchRenderer::clear() const
@@ -116,21 +117,38 @@ void BatchRenderer::draw_quad(
   int               id,
   unsigned int      pupu_id) const
 {
-     if (const auto result = std::ranges::find(m_texture_slots, texture.id()); result != std::ranges::end(m_texture_slots))
+     if (const auto result = std::ranges::find(m_texture_slots, texture.id());
+         result != std::ranges::end(m_texture_slots))
      {
           draw(CreateQuad(
-            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id, pupu_id));
+            offset,
+            color,
+            static_cast<int>(result - std::ranges::begin(m_texture_slots)),
+            tiling_factor,
+            texture.uv(),
+            size,
+            id,
+            pupu_id));
      }
      else
      {
-          if (std::cmp_equal(std::ranges::size(m_texture_slots), m_max_textures))
+          if (std::cmp_equal(
+                std::ranges::size(m_texture_slots), m_max_textures))
           {
-               // when we reach the max amount of unique textures we go ahead and empty the queue and draw to the frame buffer.
+               // when we reach the max amount of unique textures we go ahead
+               // and empty the queue and draw to the frame buffer.
                flush_vertices();
           }
           m_texture_slots.push_back(texture.id());
           draw(CreateQuad(
-            offset, color, static_cast<int>(std::ranges::size(m_texture_slots) - 1U), tiling_factor, texture.uv(), size, id, pupu_id));
+            offset,
+            color,
+            static_cast<int>(std::ranges::size(m_texture_slots) - 1U),
+            tiling_factor,
+            texture.uv(),
+            size,
+            id,
+            pupu_id));
      }
 }
 void BatchRenderer::draw_quad(
@@ -150,14 +168,17 @@ void BatchRenderer::draw_quad(
        color,
        {},
        1.F,
-       std::array<glm::vec2, 4U>{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } },
+       std::array<glm::vec2, 4U>{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F },
+                                  glm::vec2{ 1.F, 1.F },
+                                  glm::vec2{ 0.F, 1.F } },
        size));
 }
 const Shader &BatchRenderer::shader() const
 {
      return m_shader;
 }
-[[maybe_unused]] const std::vector<std::uint32_t> &BatchRenderer::texture_slots() const
+[[maybe_unused]] const std::vector<std::uint32_t> &
+  BatchRenderer::texture_slots() const
 {
      return m_texture_slots;
 }

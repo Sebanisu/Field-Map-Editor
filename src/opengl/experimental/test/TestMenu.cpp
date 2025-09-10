@@ -18,11 +18,16 @@ test::TestMenu::TestMenu()
       "Examples",
       glengine::Menu::MenuElementType<TestClearColor>{ "Test Clear Color" },
       glengine::Menu::MenuElementType<TestTexture2D>{ "Test Texture2D" },
-      glengine::Menu::MenuElementType<TestBatchRendering>{ "Test Batch Rendering" },
-      glengine::Menu::MenuElementType<TestBatchRenderingTexture2D>{ "Test Batch Rendering with Texture2D" },
-      glengine::Menu::MenuElementType<TestBatchRenderingTexture2DDynamic>{ "Test Batch Rendering with Texture2D Dynamic" },
-      glengine::Menu::MenuElementType<TestBatchQuads>{ "Test Batch Rendering with Quads" },
-      glengine::Menu::MenuElementType<TestBatchRenderer>{ "Test Batch Renderer Class" })
+      glengine::Menu::MenuElementType<TestBatchRendering>{
+        "Test Batch Rendering" },
+      glengine::Menu::MenuElementType<TestBatchRenderingTexture2D>{
+        "Test Batch Rendering with Texture2D" },
+      glengine::Menu::MenuElementType<TestBatchRenderingTexture2DDynamic>{
+        "Test Batch Rendering with Texture2D Dynamic" },
+      glengine::Menu::MenuElementType<TestBatchQuads>{
+        "Test Batch Rendering with Quads" },
+      glengine::Menu::MenuElementType<TestBatchRenderer>{
+        "Test Batch Renderer Class" })
 {
      MenuLoadToggles(m_menu);
 }

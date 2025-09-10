@@ -19,7 +19,9 @@ VertexBufferDynamic::VertexBufferDynamic(size_t count)
                         GlCall{}(glGenBuffers, 1, &tmp);
                         GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);
                         GlCall{}(
-                          glBufferData, GL_ARRAY_BUFFER, static_cast<std::ptrdiff_t>(count * sizeof(Quad)), nullptr, GL_DYNAMIC_DRAW);
+                          glBufferData, GL_ARRAY_BUFFER,
+                          static_cast<std::ptrdiff_t>(count * sizeof(Quad)),
+                          nullptr, GL_DYNAMIC_DRAW);
                         return tmp;
                    }(),
                    [](const std::uint32_t id)

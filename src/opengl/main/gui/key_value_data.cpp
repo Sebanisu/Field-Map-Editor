@@ -12,24 +12,25 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
   const std::filesystem::path                  &selected_path) const
 {
      using namespace std::string_view_literals;
-     std::string copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
-     auto        matches          = searcher(copy_for_matches);
-     int         layers_deep      = 10;
+     std::string copy_for_matches
+       = keyed_string;// copy so data won't get lost when we change it.
+     auto matches     = searcher(copy_for_matches);
+     int  layers_deep = 10;
      do
      {
           for ([[maybe_unused]] const auto &match : matches)
           {
 
 
-               const auto       full = match.get<0>();// full match text, always works
-               const auto       key1 = match.get<"key1">();
-               const auto       key2 = match.get<"key2">();
-               const auto       key3 = match.get<"key3">();
-               const auto       alt  = match.get<"alt_pattern">();
-               const auto       pre1 = match.get<"prefix1">();
-               const auto       suf1 = match.get<"suffix1">();
-               const auto       pre2 = match.get<"prefix2">();
-               const auto       suf2 = match.get<"suffix2">();
+               const auto full = match.get<0>();// full match text, always works
+               const auto key1 = match.get<"key1">();
+               const auto key2 = match.get<"key2">();
+               const auto key3 = match.get<"key3">();
+               const auto alt  = match.get<"alt_pattern">();
+               const auto pre1 = match.get<"prefix1">();
+               const auto suf1 = match.get<"suffix1">();
+               const auto pre2 = match.get<"prefix2">();
+               const auto suf2 = match.get<"suffix2">();
 
                std::string_view key;
                std::string_view prefix;
@@ -75,21 +76,25 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 
                          if (alt && !alt_pattern.empty())
                          {
-                              // Use alt pattern literally (will be expanded in a later pass)
+                              // Use alt pattern literally (will be expanded in
+                              // a later pass)
                               return std::string{ alt_pattern };
                          }
                     }
                     return temp;
                }();
 
-               keyed_string = keyed_string | std::views::split(full) | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix))
+               keyed_string = keyed_string | std::views::split(full)
+                              | std::views::join_with(
+                                fmt::format("{}{}{}", prefix, value, suffix))
                               | std::ranges::to<std::string>();
           }
           // check for nested keys.
           copy_for_matches = keyed_string;
           matches          = searcher(copy_for_matches);
      } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
-     tl::string::replace_slashes(keyed_string);// fixes slashes to be windows or linux based.
+     tl::string::replace_slashes(
+       keyed_string);// fixes slashes to be windows or linux based.
      return keyed_string;
 }
 
@@ -99,23 +104,24 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
   const std::shared_ptr<const fme::Selections> &selections)
 {
      using namespace std::string_view_literals;
-     std::string copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
-     auto        matches          = searcher(copy_for_matches);
-     int         layers_deep      = 10;
+     std::string copy_for_matches
+       = keyed_string;// copy so data won't get lost when we change it.
+     auto matches     = searcher(copy_for_matches);
+     int  layers_deep = 10;
      do
      {
           for ([[maybe_unused]] const auto &match : matches)
           {
 
-               const auto       full = match.get<0>();// full match text, always works
-               const auto       key1 = match.get<"key1">();
-               const auto       key2 = match.get<"key2">();
-               const auto       key3 = match.get<"key3">();
-               const auto       alt  = match.get<"alt_pattern">();
-               const auto       pre1 = match.get<"prefix1">();
-               const auto       suf1 = match.get<"suffix1">();
-               const auto       pre2 = match.get<"prefix2">();
-               const auto       suf2 = match.get<"suffix2">();
+               const auto full = match.get<0>();// full match text, always works
+               const auto key1 = match.get<"key1">();
+               const auto key2 = match.get<"key2">();
+               const auto key3 = match.get<"key3">();
+               const auto alt  = match.get<"alt_pattern">();
+               const auto pre1 = match.get<"prefix1">();
+               const auto suf1 = match.get<"suffix1">();
+               const auto pre2 = match.get<"prefix2">();
+               const auto suf2 = match.get<"suffix2">();
 
                std::string_view key;
                std::string_view prefix;
@@ -149,20 +155,24 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 
                     if (alt && !alt_pattern.empty())
                     {
-                         // Use alt pattern literally (will be expanded in a later pass)
+                         // Use alt pattern literally (will be expanded in a
+                         // later pass)
                          value = std::string{ alt_pattern };
                     }
                }
 
 
-               keyed_string = keyed_string | std::views::split(full) | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix))
+               keyed_string = keyed_string | std::views::split(full)
+                              | std::views::join_with(
+                                fmt::format("{}{}{}", prefix, value, suffix))
                               | std::ranges::to<std::string>();
           }
           // check for nested keys.
           copy_for_matches = keyed_string;
           matches          = searcher(copy_for_matches);
      } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
-     tl::string::replace_slashes(keyed_string);// fixes slashes to be windows or linux based.
+     tl::string::replace_slashes(
+       keyed_string);// fixes slashes to be windows or linux based.
      return keyed_string;
 }
 
@@ -198,7 +208,8 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string fme::key_value_data::static_replace_tag(std::string_view key)
+[[nodiscard]] std::string
+  fme::key_value_data::static_replace_tag(std::string_view key)
 {
 
      if (keys::current_path == key)
@@ -207,7 +218,13 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
           auto            path = std::filesystem::current_path(ec);
           if (ec)
           {
-               spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, ec.value(), ec.message(), path);
+               spdlog::warn(
+                 "{}:{} - {}: {} path: \"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 ec.value(),
+                 ec.message(),
+                 path);
                ec.clear();
           }
 
@@ -215,47 +232,59 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
      }
 
      if (key == keys::ffnx_map)
-          return "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
+          return "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/"
+                 "{field_name}/{field_name}{_{2_letter_lang}}{ext}";
 
      if (key == keys::demaster_mod_path)
           return "DEMASTER_EXP";
 
      if (key == keys::ffnx_multi_texture)
-          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{_{pupu_id}}{ext}";
+          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/"
+                 "{field_name}{_{2_letter_lang}}_{texture_page}{_{pupu_id}}{"
+                 "ext}";
 
      if (key == keys::ffnx_single_texture)
-          return "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{_{pupu_id}}{ext}";
+          return "{ffnx_mod_path}/field/mapdata/{field_name}/"
+                 "{field_name}{_{2_letter_lang}}{_{pupu_id}}{ext}";
 
      if (key == keys::demaster)
-          return "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
-                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}";
+          return "{demaster_mod_path}/textures/field_bg/{field_prefix}/"
+                 "{field_name}/"
+                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_"
+                 "{pupu_id}}{ext}";
 
      if (key == keys::ffnx_multi_texture_full)
-          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{full_filename}";
+          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/"
+                 "{full_filename}";
 
      if (key == keys::ffnx_single_texture_full)
           return "{ffnx_mod_path}/field/mapdata/{field_name}/{full_filename}";
 
      if (key == keys::demaster_full)
-          return "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/{full_filename}";
+          return "{demaster_mod_path}/textures/field_bg/{field_prefix}/"
+                 "{field_name}/{full_filename}";
 
      if (key == keys::field_main)
           return "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}";
 
      if (key == keys::field_lang)
-          return "field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
+          return "field/mapdata/{field_prefix}/{field_name}/"
+                 "{field_name}{_{2_letter_lang}}{ext}";
 
      if (key == keys::chara_main)
           return "field/mapdata/{field_prefix}/{field_name}/chara.one";
 
      if (key == keys::chara_lang)
-          return "field/mapdata/{field_prefix}/{field_name}/chara{_{2_letter_lang}}.one";
+          return "field/mapdata/{field_prefix}/{field_name}/"
+                 "chara{_{2_letter_lang}}.one";
 
      if (key == keys::field_3lang_main)
-          return "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/{field_name}{ext}";
+          return "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/"
+                 "{field_name}{ext}";
 
      if (key == keys::chara_3lang_main)
-          return "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/chara.one";
+          return "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/"
+                 "chara.one";
      return {};
 }
 
@@ -273,7 +302,8 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string fme::key_value_data::replace_tag(std::string_view key) const
+[[nodiscard]] std::string
+  fme::key_value_data::replace_tag(std::string_view key) const
 {
      // First try static replacements
      if (auto result = static_replace_tag(key); !result.empty())
@@ -288,7 +318,13 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
      {
           if (ext.size() < 2 || ext[0] != '.')
           {
-               spdlog::error("{}:{} ext \"{}\"must be ext.size(), {} >= 2 && ext[0] == '.' ", __FILE__, __LINE__, ext, ext.size());
+               spdlog::error(
+                 "{}:{} ext \"{}\"must be ext.size(), {} >= 2 && ext[0] == "
+                 "'.' ",
+                 __FILE__,
+                 __LINE__,
+                 ext,
+                 ext.size());
           }
           // assert(ext.size() >= 2 && ext[0] == '.');
           return fmt::format("{}", ext);
@@ -315,25 +351,32 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
           return fmt::format("{:08X}", pupu_id.value());
 
      if (key == keys::eng)
-          return { open_viii::LangCommon::ENG.begin(), open_viii::LangCommon::ENG.end() };
+          return { open_viii::LangCommon::ENG.begin(),
+                   open_viii::LangCommon::ENG.end() };
 
      if (key == keys::fre)
-          return { open_viii::LangCommon::FRE.begin(), open_viii::LangCommon::FRE.end() };
+          return { open_viii::LangCommon::FRE.begin(),
+                   open_viii::LangCommon::FRE.end() };
 
      if (key == keys::ger)
-          return { open_viii::LangCommon::GER.begin(), open_viii::LangCommon::GER.end() };
+          return { open_viii::LangCommon::GER.begin(),
+                   open_viii::LangCommon::GER.end() };
 
      if (key == keys::ita)
-          return { open_viii::LangCommon::ITA.begin(), open_viii::LangCommon::ITA.end() };
+          return { open_viii::LangCommon::ITA.begin(),
+                   open_viii::LangCommon::ITA.end() };
 
      if (key == keys::spa)
-          return { open_viii::LangCommon::SPA.begin(), open_viii::LangCommon::SPA.end() };
+          return { open_viii::LangCommon::SPA.begin(),
+                   open_viii::LangCommon::SPA.end() };
 
      if (key == keys::jp)
-          return { open_viii::LangCommon::JP.begin(), open_viii::LangCommon::JP.end() };
+          return { open_viii::LangCommon::JP.begin(),
+                   open_viii::LangCommon::JP.end() };
 
      if (key == keys::x)
-          return { open_viii::LangCommon::MISC.begin(), open_viii::LangCommon::MISC.end() };
+          return { open_viii::LangCommon::MISC.begin(),
+                   open_viii::LangCommon::MISC.end() };
 
      return {};
 }
@@ -346,7 +389,8 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
      return replace_tag(key, selections);
 }
 
-[[nodiscard]] std::string fme::key_value_data::operator()(std::string_view key) const
+[[nodiscard]] std::string
+  fme::key_value_data::operator()(std::string_view key) const
 {
      return replace_tag(key);
 }

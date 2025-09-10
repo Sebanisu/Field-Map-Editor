@@ -24,8 +24,10 @@ test::TestTexture2D::TestTexture2D()
     2U, 3U, 0U  // 1
       // clang-format on
     } }
-  , m_texture{ std::filesystem::current_path() / "res" / "textures" / "logo.png" }
-  , m_shader{ std::filesystem::current_path() / "res" / "shader" / "basic.shader" }
+  , m_texture{ std::filesystem::current_path() / "res" / "textures"
+               / "logo.png" }
+  , m_shader{ std::filesystem::current_path() / "res" / "shader"
+              / "basic.shader" }
 {
      m_vertex_array.bind();
      m_vertex_array.push_back(m_vertex_buffer, m_vertex_buffer_layout);
@@ -35,8 +37,9 @@ test::TestTexture2D::TestTexture2D()
 }
 void test::TestTexture2D::on_im_gui_update() const
 {
-     constexpr float window_width  = 16.F;
-     float           window_height = window_width / m_imgui_viewport_window.view_port_aspect_ratio();
+     constexpr float window_width = 16.F;
+     float           window_height
+       = window_width / m_imgui_viewport_window.view_port_aspect_ratio();
      m_imgui_viewport_window.set_image_bounds({ window_width, window_height });
      constexpr float clamp_width  = window_width / 2.F - 1.F;
      const float     clamp_height = window_height / 2.F - 1.F;
@@ -44,23 +47,29 @@ void test::TestTexture2D::on_im_gui_update() const
           const auto pop = glengine::ImGuiPushId();
           // glfwGetFramebufferSize(window, &window_width, &window_height);
 
-          if (ImGui::SliderFloat2("View Offset", &view_offset.x, -clamp_width, clamp_width))
+          if (ImGui::SliderFloat2(
+                "View Offset", &view_offset.x, -clamp_width, clamp_width))
           {
-               view_offset.y = std::clamp(view_offset.y, -clamp_height, clamp_height);
+               view_offset.y
+                 = std::clamp(view_offset.y, -clamp_height, clamp_height);
           }
      }
      {
           const auto pop_2 = glengine::ImGuiPushId();
-          if (ImGui::SliderFloat2("Model Offset 1", &model_offset.x, -clamp_width, clamp_width))
+          if (ImGui::SliderFloat2(
+                "Model Offset 1", &model_offset.x, -clamp_width, clamp_width))
           {
-               model_offset.y = std::clamp(model_offset.y, -clamp_height, clamp_height);
+               model_offset.y
+                 = std::clamp(model_offset.y, -clamp_height, clamp_height);
           }
      }
      {
           const auto pop_3 = glengine::ImGuiPushId();
-          if (ImGui::SliderFloat2("Model Offset 1", &model_2_offset.x, -clamp_width, clamp_width))
+          if (ImGui::SliderFloat2(
+                "Model Offset 1", &model_2_offset.x, -clamp_width, clamp_width))
           {
-               model_2_offset.y = std::clamp(model_2_offset.y, -clamp_height, clamp_height);
+               model_2_offset.y
+                 = std::clamp(model_2_offset.y, -clamp_height, clamp_height);
           }
      }
 }
@@ -97,8 +106,9 @@ void test::TestTexture2D::on_render() const
        m_imgui_viewport_window,
        [this]()
        {
-            const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
-            Preview                = true;
+            const auto pop_preview
+              = glengine::ScopeGuard([]() { Preview = false; });
+            Preview = true;
             render_frame_buffer();
        });
 }

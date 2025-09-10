@@ -60,7 +60,8 @@ class SubTexture
 
    private:
      static constexpr auto default_uv
-       = std::array{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } };
+       = std::array{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F },
+                     glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } };
      GlidCopy                                  m_render_id = {};
      GLint                                     m_width     = {};
      GLint                                     m_height    = {};

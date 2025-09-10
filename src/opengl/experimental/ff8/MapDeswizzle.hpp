@@ -10,11 +10,11 @@ namespace ff_8
 {
 struct TileFunctionsDeswizzle
 {
-     using X                                  = tile_operations::X;
-     using Y                                  = tile_operations::Y;
-     using TexturePage                        = tile_operations::TextureIdDefaultValue;
-     using UseTexturePage                     = std::true_type;
-     using UseBlending                        = std::true_type;
+     using X              = tile_operations::X;
+     using Y              = tile_operations::Y;
+     using TexturePage    = tile_operations::TextureIdDefaultValue;
+     using UseTexturePage = std::true_type;
+     using UseBlending    = std::true_type;
      static constexpr const char *const label = "Map (Deswizzle)";
 };
 using MapDeswizzle = Map<TileFunctionsDeswizzle>;

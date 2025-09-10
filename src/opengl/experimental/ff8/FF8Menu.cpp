@@ -16,7 +16,8 @@ void ff_8::Ff8Menu::on_render() const
 void ff_8::Ff8Menu::on_im_gui_update() const
 {
      {
-          auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+          auto const window_end
+            = glengine::ScopeGuard{ []() { ImGui::End(); } };
           if (ImGui::Begin("FF8 Controls"))
           {
                if (GetFields().on_im_gui_update())

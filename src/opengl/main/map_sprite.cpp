@@ -41,8 +41,10 @@ map_sprite::map_sprite(
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
-      !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
-                                                                                                    : ff_8::map_group{})
+      !require_coo
+          || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic)
+        ? std::move(map_group)
+        : ff_8::map_group{})
   , m_draw_swizzle(draw_swizzle)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
@@ -60,14 +62,17 @@ map_sprite::map_sprite(
           return;
      }
      const auto ps = ff_8::path_search{
-          .selections                          = m_selections.lock(),
-          .opt_coo                             = m_map_group.opt_coo,
-          .field_name                          = get_base_name(),
-          .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
-          .filters_full_filename_value_string  = m_filters.full_filename.value().string(),
-          .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
-          .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
-          .filters_map_value_string            = m_filters.map.value().string()
+          .selections = m_selections.lock(),
+          .opt_coo    = m_map_group.opt_coo,
+          .field_name = get_base_name(),
+          .filters_deswizzle_value_string
+          = m_filters.deswizzle.value().string(),
+          .filters_full_filename_value_string
+          = m_filters.full_filename.value().string(),
+          .filters_swizzle_value_string = m_filters.swizzle.value().string(),
+          .filters_swizzle_as_one_image_string
+          = m_filters.swizzle_as_one_image.value().string(),
+          .filters_map_value_string = m_filters.map.value().string()
           //.working_unique_pupu                = working_unique_pupu(),
           //.current_filenames                  = toml_filenames(),
           //.bpp_palette                        = uniques().palette(),
@@ -75,7 +80,8 @@ map_sprite::map_sprite(
      };
      if (m_filters.map.enabled())
      {
-          if (const auto paths = ps.generate_map_paths(".map"); !std::ranges::empty(paths))
+          if (const auto paths = ps.generate_map_paths(".map");
+              !std::ranges::empty(paths))
           {
                load_map(paths.front());// grab the first match.
           }
@@ -96,18 +102,22 @@ map_sprite::operator ff_8::path_search() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     return { .selections                          = std::move(selections),
-              .opt_coo                             = m_map_group.opt_coo,
-              .field_name                          = get_base_name(),
-              .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
-              .filters_full_filename_value_string  = m_filters.full_filename.value().string(),
-              .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
-              .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
-              .filters_map_value_string            = m_filters.map.value().string(),
-              .working_unique_pupu                 = working_unique_pupu(),
-              .current_filenames                   = toml_filenames(),
-              .bpp_palette                         = uniques().palette(),
-              .texture_page_id                     = uniques().texture_page_id() };
+     return { .selections = std::move(selections),
+              .opt_coo    = m_map_group.opt_coo,
+              .field_name = get_base_name(),
+              .filters_deswizzle_value_string
+              = m_filters.deswizzle.value().string(),
+              .filters_full_filename_value_string
+              = m_filters.full_filename.value().string(),
+              .filters_swizzle_value_string
+              = m_filters.swizzle.value().string(),
+              .filters_swizzle_as_one_image_string
+              = m_filters.swizzle_as_one_image.value().string(),
+              .filters_map_value_string = m_filters.map.value().string(),
+              .working_unique_pupu      = working_unique_pupu(),
+              .current_filenames        = toml_filenames(),
+              .bpp_palette              = uniques().palette(),
+              .texture_page_id          = uniques().texture_page_id() };
 }
 
 
@@ -119,28 +129,39 @@ map_sprite::operator ff_8::path_search() const
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return {
-          ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections, m_render_framebuffer
-     };
+     return { ff_8::map_group{ m_map_group.field, coo },
+              m_draw_swizzle,
+              m_filters,
+              m_disable_blends,
+              false,
+              m_selections,
+              m_render_framebuffer };
 }
 
 map_sprite map_sprite::with_field(
   map_sprite::WeakField  field,
   const open_viii::LangT coo) const
 {
-     return {
-          ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections, m_render_framebuffer
-     };
+     return { ff_8::map_group{ std::move(field), coo },
+              m_draw_swizzle,
+              m_filters,
+              m_disable_blends,
+              false,
+              m_selections,
+              m_render_framebuffer };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections, m_render_framebuffer };
+     return { m_map_group,         m_draw_swizzle, std::move(filters),
+              m_disable_blends,    false,          m_selections,
+              m_render_framebuffer };
 }
 
 bool map_sprite::empty() const
 {
-     return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
+     return m_map_group.maps.const_working().visit_tiles(
+       [](const auto &tiles) { return std::empty(tiles); });
 }
 
 map_sprite::colors_type map_sprite::get_colors(
@@ -148,7 +169,8 @@ map_sprite::colors_type map_sprite::get_colors(
   open_viii::graphics::BPPT                   bpp,
   std::uint8_t                                palette)
 {
-     return mim.get_colors<open_viii::graphics::Color32RGBA>(bpp, palette, false);
+     return mim.get_colors<open_viii::graphics::Color32RGBA>(
+       bpp, palette, false);
 }
 
 std::size_t map_sprite::get_texture_pos(
@@ -170,7 +192,8 @@ std::size_t map_sprite::get_texture_pos(
                }
                return BPP16_INDEX;// 16bpp doesn't have palettes.
           }
-          const size_t j = static_cast<size_t>(texture_page) * MAX_PALETTES + palette;
+          const size_t j
+            = static_cast<size_t>(texture_page) * MAX_PALETTES + palette;
 
           if (m_texture->at(j).height() == 0)
           {
@@ -195,13 +218,21 @@ const glengine::Texture *map_sprite::get_texture(
      const size_t size  = m_texture->size();
      if (index >= size)
      {
-          spdlog::debug("Increase texture array size. it is too small! index {} >= size {}", index, size);
-          spdlog::debug("bpp: {}, palette: {}, texture page: {}", static_cast<int>(bpp), palette, texture_page);
+          spdlog::debug(
+            "Increase texture array size. it is too small! index {} >= size {}",
+            index,
+            size);
+          spdlog::debug(
+            "bpp: {}, palette: {}, texture page: {}",
+            static_cast<int>(bpp),
+            palette,
+            texture_page);
      }
      return &m_texture->at(index);
 }
 
-glengine::Texture *map_sprite::get_texture_mutable(const ff_8::PupuID &pupu) const
+glengine::Texture *
+  map_sprite::get_texture_mutable(const ff_8::PupuID &pupu) const
 {
      const auto &values = original_unique_pupu();
      auto        it     = std::ranges::find(values, pupu);
@@ -210,7 +241,12 @@ glengine::Texture *map_sprite::get_texture_mutable(const ff_8::PupuID &pupu) con
           auto i = static_cast<std::size_t>(std::distance(values.begin(), it));
           if (i >= MAX_TEXTURES)
           {
-               spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, i, MAX_TEXTURES);
+               spdlog::error(
+                 "{}:{} - Index out of range {} / {}",
+                 __FILE__,
+                 __LINE__,
+                 i,
+                 MAX_TEXTURES);
                return nullptr;
           }
           return &m_texture->at(i);
@@ -224,25 +260,33 @@ const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
 }
 
 /**
- * @brief Loads textures for map sprites based on current filters and internal data.
+ * @brief Loads textures for map sprites based on current filters and internal
+ * data.
  *
- * This function handles multiple texture loading strategies depending on the state of the `deswizzle` and `upscale` filters.
- * It uses asynchronous operations wrapped in nested futures to schedule texture loading without blocking the main thread.
+ * This function handles multiple texture loading strategies depending on the
+ * state of the `deswizzle` and `upscale` filters. It uses asynchronous
+ * operations wrapped in nested futures to schedule texture loading without
+ * blocking the main thread.
  *
- * @return A shared pointer to an array of loaded glengine::Texture objects of size MAX_TEXTURES.
+ * @return A shared pointer to an array of loaded glengine::Texture objects of
+ * size MAX_TEXTURES.
  */
 void map_sprite::queue_texture_loading() const
 {
-     // Container to hold nested futures representing asynchronous texture load operations
+     // Container to hold nested futures representing asynchronous texture load
+     // operations
      std::vector<std::future<std::future<void>>> future_of_futures{};
 
 
-     const auto                                  fofh_consumer = glengine::ScopeGuard{ [&]()
-                                                      {
-                                                           // Consume the collected nested futures immediately to kick off the work
+     const auto                                  fofh_consumer
+       = glengine::ScopeGuard{ [&]()
+                               {
+                                    // Consume the collected nested futures
+                                    // immediately to kick off the work
 
-                                                           m_future_of_future_consumer = std::move(future_of_futures);
-                                                      } };
+                                    m_future_of_future_consumer
+                                      = std::move(future_of_futures);
+                               } };
 
      // Check if the deswizzle filter is enabled
      if (m_filters.deswizzle.enabled())
@@ -252,7 +296,8 @@ void map_sprite::queue_texture_loading() const
             working_unique_pupu(),
             [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable
             {
-                 future_of_futures.push_back(load_deswizzle_textures(pupu, pos));
+                 future_of_futures.push_back(
+                   load_deswizzle_textures(pupu, pos));
                  ++pos;
             });
           return;
@@ -266,33 +311,42 @@ void map_sprite::queue_texture_loading() const
           const auto operation = [&](const std::string &filename)
           {
                // Original
-               future_of_futures.push_back(load_full_filename_textures(filename));
+               future_of_futures.push_back(
+                 load_full_filename_textures(filename));
 
                // Mask variant Colorful Mask
                const std::filesystem::path p(filename);
-               auto                        mask_name = fmt::format("{}_mask{}", p.stem().string(), p.extension().string());
-               future_of_futures.push_back(load_full_filename_textures(mask_name));
+               auto                        mask_name = fmt::format(
+                 "{}_mask{}", p.stem().string(), p.extension().string());
+               future_of_futures.push_back(
+                 load_full_filename_textures(mask_name));
 
                m_full_filename_to_mask_name[filename] = mask_name;
 
-               // todo use pupu ids in the toml table for each entry instead of using all the unique pupu ids for each file.
+               // todo use pupu ids in the toml table for each entry instead of
+               // using all the unique pupu ids for each file.
                //  // Pupu Mask variant White on Black Mask.
                //  for (const auto &pupu : unique_pupu)
                //  {
-               //       auto pupu_name = fmt::format("{}_mask_{}{}", p.stem().string(), pupu, p.extension().string());
+               //       auto pupu_name = fmt::format("{}_mask_{}{}",
+               //       p.stem().string(), pupu, p.extension().string());
                //       future_of_futures.push_back(load_full_filename_textures(pupu_name));
                //  }
           };
           std::ranges::for_each(filenames, operation);
           spdlog::info(
-            "{}:{}, Queued up m_full_filename_textures.size() = {}", __FILE__, __LINE__, std::ranges::size(m_full_filename_textures));
+            "{}:{}, Queued up m_full_filename_textures.size() = {}",
+            __FILE__,
+            __LINE__,
+            std::ranges::size(m_full_filename_textures));
           return;
      }
 
 
      // Check if palette data exists for the given BPP
 
-     for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
+     for (const auto &[bpp, palette_set] :
+          m_all_unique_values_and_strings.palette())
      {
           if (bpp.bpp24())
           {
@@ -302,20 +356,25 @@ void map_sprite::queue_texture_loading() const
           {
                if (m_filters.swizzle_as_one_image.enabled())
                {
-                    future_of_futures.push_back(load_swizzle_as_one_image_textures(palette));
+                    future_of_futures.push_back(
+                      load_swizzle_as_one_image_textures(palette));
                }
                else if (m_filters.swizzle.enabled())
                {
                     // Schedule upscale texture loads for each texture page
-                    for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+                    for (const auto &texture_page :
+                         m_all_unique_values_and_strings.texture_page_id()
+                           .values())
                     {
-                         future_of_futures.push_back(load_swizzle_textures(texture_page, palette));
+                         future_of_futures.push_back(
+                           load_swizzle_textures(texture_page, palette));
                     }
                }
                else
                {
                     // Schedule normal MIM texture load (no upscale)
-                    future_of_futures.push_back(load_mim_textures(bpp, palette));
+                    future_of_futures.push_back(
+                      load_mim_textures(bpp, palette));
                }
           }
      }
@@ -328,7 +387,8 @@ void map_sprite::queue_texture_loading() const
      }
      else if (m_filters.swizzle.enabled())
      {
-          for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+          for (const auto &texture_page :
+               m_all_unique_values_and_strings.texture_page_id().values())
           {
                future_of_futures.push_back(load_swizzle_textures(texture_page));
           }
@@ -338,7 +398,8 @@ void map_sprite::queue_texture_loading() const
      return;
 }
 
-void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
+void map_sprite::consume_futures(
+  std::vector<std::future<std::future<void>>> &future_of_futures)
 {
      std::vector<std::future<void>> futures{};
      futures.reserve(std::ranges::size(future_of_futures));
@@ -423,19 +484,27 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
      }
      else
      {
-          std::size_t const                    pos     = get_texture_pos(bpp, palette, 0);
+          std::size_t const pos = get_texture_pos(bpp, palette, 0);
           open_viii::graphics::background::Mim mim     = *m_map_group.mim;
           glengine::Texture *const             texture = &(m_texture->at(pos));
-          spdlog::debug("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
+          spdlog::debug(
+            "Attempting to queue texture loading from .mim file : bpp {}, "
+            "palette {}",
+            bpp,
+            +palette);
           return { std::async(
             std::launch::async,
             [=]() -> std::future<void>
             {
-                 spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
+                 spdlog::debug(
+                   "Getting colors from .mim file : bpp {}, palette {}",
+                   bpp,
+                   +palette);
                  return { std::async(
                    std::launch::deferred,
-                   future_operations::LoadColorsIntoTexture{ texture, get_colors(mim, bpp, palette),
-                                                             glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
+                   future_operations::LoadColorsIntoTexture{
+                     texture, get_colors(mim, bpp, palette),
+                     glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
             }) };
      }
 }
@@ -446,7 +515,12 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
 {
      if (pos >= MAX_TEXTURES)
      {
-          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          spdlog::error(
+            "{}:{} - Index out of range {} / {}",
+            __FILE__,
+            __LINE__,
+            pos,
+            MAX_TEXTURES);
           return {};
      }
      auto selections = m_selections.lock();
@@ -458,10 +532,12 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_deswizzle_paths(std::move(selections), *this, pupu) }) };
+         &(m_texture->at(pos)),
+         fme::generate_deswizzle_paths(std::move(selections), *this, pupu) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_full_filename_textures(const std::string filename) const
+std::future<std::future<void>>
+  map_sprite::load_full_filename_textures(const std::string filename) const
 {
      auto selections = m_selections.lock();
      if (!selections)
@@ -472,17 +548,25 @@ std::future<std::future<void>> map_sprite::load_full_filename_textures(const std
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_full_filename_textures[filename]), fme::generate_full_filename_paths(std::move(selections), *this, filename) }) };
+         &(m_full_filename_textures[filename]),
+         fme::generate_full_filename_paths(
+           std::move(selections), *this, filename) }) };
 }
 
 std::future<std::future<void>> map_sprite::load_swizzle_textures(
   std::uint8_t texture_page,
   std::uint8_t palette) const
 {
-     const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
+     const std::size_t pos
+       = std::size_t{ texture_page } * MAX_PALETTES + palette;
      if (pos >= MAX_TEXTURES)
      {
-          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          spdlog::error(
+            "{}:{} - Index out of range {} / {}",
+            __FILE__,
+            __LINE__,
+            pos,
+            MAX_TEXTURES);
           return {};
      }
      auto selections = m_selections.lock();
@@ -494,15 +578,23 @@ std::future<std::future<void>> map_sprite::load_swizzle_textures(
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_swizzle_paths(std::move(selections), *this, texture_page, palette) }) };
+         &(m_texture->at(pos)),
+         fme::generate_swizzle_paths(
+           std::move(selections), *this, texture_page, palette) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page) const
+std::future<std::future<void>>
+  map_sprite::load_swizzle_textures(std::uint8_t texture_page) const
 {
      const std::size_t pos = START_OF_NO_PALETTE_INDEX + texture_page;
      if (pos >= MAX_TEXTURES)
      {
-          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          spdlog::error(
+            "{}:{} - Index out of range {} / {}",
+            __FILE__,
+            __LINE__,
+            pos,
+            MAX_TEXTURES);
           return {};
      }
      auto selections = m_selections.lock();
@@ -514,16 +606,24 @@ std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t te
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_swizzle_paths(std::move(selections), *this, texture_page) }) };
+         &(m_texture->at(pos)),
+         fme::generate_swizzle_paths(
+           std::move(selections), *this, texture_page) }) };
 }
 
 
-std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette) const
+std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(
+  std::optional<std::uint8_t> palette) const
 {
      const std::size_t pos = palette.has_value() ? palette.value() + 1U : 0U;
      if (pos >= MAX_TEXTURES)
      {
-          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          spdlog::error(
+            "{}:{} - Index out of range {} / {}",
+            __FILE__,
+            __LINE__,
+            pos,
+            MAX_TEXTURES);
           return {};
      }
      auto selections = m_selections.lock();
@@ -535,7 +635,8 @@ std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(st
      return { std::async(
        std::launch::deferred,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(std::move(selections), *this, palette) }) };
+         &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(
+                                  std::move(selections), *this, palette) }) };
 }
 
 enum struct texture_page_width : std::uint16_t
@@ -544,7 +645,8 @@ enum struct texture_page_width : std::uint16_t
      bit_8  = bit_4 >> 1U,
      bit_16 = bit_4 >> 2U,
 };
-static constexpr std::underlying_type_t<texture_page_width> operator+(texture_page_width input) noexcept
+static constexpr std::underlying_type_t<texture_page_width>
+  operator+(texture_page_width input) noexcept
 {
      return static_cast<std::underlying_type_t<texture_page_width>>(input);
 }
@@ -552,22 +654,26 @@ static constexpr std::underlying_type_t<texture_page_width> operator+(texture_pa
 
 void map_sprite::compact_rows()
 {
-     ff_8::compact_rows(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::rows)));
+     ff_8::compact_rows(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::rows)));
      update_render_texture();
 }
 void map_sprite::compact_all()
 {
-     ff_8::compact_all(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
+     ff_8::compact_all(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
      update_render_texture();
 }
 void map_sprite::flatten_bpp()
 {
-     ff_8::flatten_bpp(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::flatten, gui_labels::bpp)));
+     ff_8::flatten_bpp(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::flatten, gui_labels::bpp)));
      update_render_texture();
 }
 void map_sprite::flatten_palette()
 {
-     ff_8::flatten_palette(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
+     ff_8::flatten_palette(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
      update_render_texture();
 }
 
@@ -582,10 +688,18 @@ void map_sprite::update_position(
      }
      const Map &current_original = m_map_group.maps.original();
      Map       &current_map      = m_map_group.maps.copy_working(
-       fmt::format("{} ({},{}) -> ({},{})", gui_labels::update_position, pixel_pos.x, pixel_pos.y, down_pixel_pos.x, down_pixel_pos.y));
+       fmt::format(
+         "{} ({},{}) -> ({},{})",
+         gui_labels::update_position,
+         pixel_pos.x,
+         pixel_pos.y,
+         down_pixel_pos.x,
+         down_pixel_pos.y));
      const auto update_tile_positions
        = [this, &pixel_pos, &down_pixel_pos](
-           /*const auto &map, */ const auto &const_tiles, auto &&tiles, const std::vector<std::size_t> &indices)
+           /*const auto &map, */ const auto &const_tiles,
+           auto                            &&tiles,
+           const std::vector<std::size_t>   &indices)
      {
           for (auto i : indices)
           {
@@ -595,11 +709,17 @@ void map_sprite::update_position(
                {
                     const std::int32_t texture_page_width = 256;
                     const std::int32_t x_offset
-                      = (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(working_tile.source_x());
-                    const std::int32_t y_offset     = down_pixel_pos.y - static_cast<std::int32_t>(working_tile.source_y());
-                    const std::uint8_t x            = static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset)));
-                    const std::uint8_t y            = static_cast<std::uint8_t>(((pixel_pos.y - y_offset)));
-                    const std::uint8_t texture_page = static_cast<std::uint8_t>(pixel_pos.x / texture_page_width);
+                      = (down_pixel_pos.x % texture_page_width)
+                        - static_cast<std::int32_t>(working_tile.source_x());
+                    const std::int32_t y_offset
+                      = down_pixel_pos.y
+                        - static_cast<std::int32_t>(working_tile.source_y());
+                    const std::uint8_t x = static_cast<std::uint8_t>(
+                      (((pixel_pos.x % texture_page_width) - x_offset)));
+                    const std::uint8_t y
+                      = static_cast<std::uint8_t>(((pixel_pos.y - y_offset)));
+                    const std::uint8_t texture_page = static_cast<std::uint8_t>(
+                      pixel_pos.x / texture_page_width);
                     using namespace open_viii::graphics;
                     const BPPT bppt = [&]()
                     {
@@ -613,24 +733,38 @@ void map_sprite::update_position(
                          }
                          return original_tile.depth();
                     }();
-                    working_tile = working_tile.with_source_xy(x, y).with_texture_id(texture_page).with_depth(bppt);
+                    working_tile = working_tile.with_source_xy(x, y)
+                                     .with_texture_id(texture_page)
+                                     .with_depth(bppt);
                }
                else
                {
-                    const std::int32_t x_offset = down_pixel_pos.x - working_tile.x();
-                    const std::int32_t y_offset = down_pixel_pos.y - working_tile.y();
-                    working_tile                = working_tile.with_xy(
-                      static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
+                    const std::int32_t x_offset
+                      = down_pixel_pos.x - working_tile.x();
+                    const std::int32_t y_offset
+                      = down_pixel_pos.y - working_tile.y();
+                    working_tile = working_tile.with_xy(
+                      static_cast<std::int16_t>(pixel_pos.x - x_offset),
+                      static_cast<std::int16_t>(pixel_pos.y - y_offset));
                }
           }
      };
      current_original.visit_tiles(
        [&](const auto &const_tiles)
-       { current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ const_tiles, tiles, saved_indices); }); });
+       {
+            current_map.visit_tiles(
+              [&](auto &&tiles)
+              {
+                   update_tile_positions(
+                     /*current_map,*/ const_tiles, tiles, saved_indices);
+              });
+       });
      // if (!m_draw_swizzle)
      // {
      //      m_imported_tile_map.visit_tiles(
-     //        [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices);
+     //        [this, &update_tile_positions](auto &&tiles) {
+     //        update_tile_positions(m_imported_tile_map, tiles,
+     //        m_saved_imported_indices);
      //        });
      // }
      // m_saved_indices.clear();
@@ -643,7 +777,8 @@ void map_sprite::update_position(
   const glengine::BatchRenderer &target_renderer) const
 {
      const auto &shader             = target_renderer.shader();
-     const auto  reset_blend_at_end = glengine::ScopeGuard([] { glengine::BlendModeSettings::default_blend(); });
+     const auto  reset_blend_at_end = glengine::ScopeGuard(
+       [] { glengine::BlendModeSettings::default_blend(); });
      glengine::BlendModeSettings::default_blend();
      using open_viii::graphics::background::BlendModeT;
      [[maybe_unused]] BlendModeT last_blend_mode{ BlendModeT::none };
@@ -654,26 +789,37 @@ void map_sprite::update_position(
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles(
-            [&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id)
+            [&](
+              [[maybe_unused]] const auto &tile_const,
+              const auto                  &tile,
+              const ff_8::PupuID           pupu_id)
             {
                  if (pupu_id.raw() == 0)
                  {
-                      throw std::logic_error("pupu_id.raw() returned 0 — this indicates a coding error.");
+                      throw std::logic_error(
+                        "pupu_id.raw() returned 0 — this indicates a coding "
+                        "error.");
                  }
                  if (
                    m_filters.multi_animation_id.enabled()
                    && std::ranges::all_of(
-                     m_filters.multi_animation_id.value(), [&](const auto &test) -> bool { return test != tile.animation_id(); }))
+                     m_filters.multi_animation_id.value(),
+                     [&](const auto &test) -> bool
+                     { return test != tile.animation_id(); }))
                  {
                       return;
                  }
                  if (
                    m_filters.multi_pupu.enabled()
-                   && std::ranges::all_of(m_filters.multi_pupu.value(), [&](const auto &test) -> bool { return test != pupu_id; }))
+                   && std::ranges::all_of(
+                     m_filters.multi_pupu.value(),
+                     [&](const auto &test) -> bool { return test != pupu_id; }))
                  {
                       return;
                  }
-                 if (m_filters.pupu.enabled() && m_filters.pupu.value() != pupu_id)
+                 if (
+                   m_filters.pupu.enabled()
+                   && m_filters.pupu.value() != pupu_id)
                  {
                       return;
                  }
@@ -688,17 +834,24 @@ void map_sprite::update_position(
                  }
                  const auto *texture = [&]()
                  {
-                      if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
+                      if (
+                        m_filters.deswizzle.enabled()
+                        || m_filters.full_filename.enabled())
                       {
                            return get_texture(pupu_id);
                       }
                       else
                       {
-                           return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+                           return get_texture(
+                             tile_const.depth(),
+                             tile_const.palette_id(),
+                             tile_const.texture_id());
                       }
                  }();
 
-                 if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
+                 if (
+                   texture == nullptr || texture->height() == 0
+                   || texture->width() == 0)
                  {
                       return;
                  }
@@ -714,10 +867,12 @@ void map_sprite::update_position(
                            // {
                            switch (blend_mode)
                            {
-                                case open_viii::graphics::background::BlendModeT::half_add:
+                                case open_viii::graphics::background::
+                                  BlendModeT::half_add:
                                      m_uniform_color = s_half_color;
                                      break;
-                                case open_viii::graphics::background::BlendModeT::quarter_add:
+                                case open_viii::graphics::background::
+                                  BlendModeT::quarter_add:
                                      m_uniform_color = s_quarter_color;
                                      break;
                                 default:
@@ -728,59 +883,93 @@ void map_sprite::update_position(
                            // }
                            switch (blend_mode)
                            {
-                                case open_viii::graphics::background::BlendModeT::half_add:
-                                case open_viii::graphics::background::BlendModeT::quarter_add:
-                                case open_viii::graphics::background::BlendModeT::add:
+                                case open_viii::graphics::background::
+                                  BlendModeT::half_add:
+                                case open_viii::graphics::background::
+                                  BlendModeT::quarter_add:
+                                case open_viii::graphics::background::
+                                  BlendModeT::add:
                                 {
                                      // s_blends.set_add_blend();
                                      glengine::BlendModeSettings::add_blend();
                                 }
                                 break;
-                                case open_viii::graphics::background::BlendModeT ::subtract:
+                                case open_viii::graphics::background::
+                                  BlendModeT ::subtract:
                                 {
                                      // s_blends.set_subtract_blend();
-                                     glengine::BlendModeSettings::subtract_blend();
+                                     glengine::BlendModeSettings::
+                                       subtract_blend();
                                 }
                                 break;
                                 default:
-                                     glengine::BlendModeSettings::default_blend();
+                                     glengine::BlendModeSettings::
+                                       default_blend();
                            }
                       }
                  }
 
                  const auto destination_tile_size
-                   = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
-                 const auto            source_tile_size    = get_tile_texture_size(texture);
-                 const auto            source_texture_size = glm::uvec2{ texture->width(), texture->height() };
-                 const ff_8::QuadStrip quad
-                   = get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
+                   = glm::uvec2{ TILE_SIZE, TILE_SIZE }
+                     * static_cast<std::uint32_t>(target_framebuffer.scale());
+                 const auto source_tile_size = get_tile_texture_size(texture);
+                 const auto source_texture_size
+                   = glm::uvec2{ texture->width(), texture->height() };
+                 const ff_8::QuadStrip quad = get_triangle_strip(
+                   source_tile_size,
+                   destination_tile_size,
+                   source_texture_size,
+                   tile_const,
+                   tile);
 
                  //  Extract draw position (x, y) from quad[0] (top-left vertex)
-                 glm::vec3            draw_position = glm::vec3(quad.draw_pos, 0.F);
+                 glm::vec3 draw_position = glm::vec3(quad.draw_pos, 0.F);
 
                  // Create the SubTexture
-                 glengine::SubTexture subtexture(*texture, quad.uv_min, quad.uv_max);
+                 glengine::SubTexture subtexture(
+                   *texture, quad.uv_min, quad.uv_max);
 
-                 spdlog::trace("Target framebuffer scale: {}", target_framebuffer.scale());
-                 spdlog::trace("Destination tile size: ({}, {})", destination_tile_size.x, destination_tile_size.y);
-                 spdlog::trace("Source tile size: ({}, {})", source_tile_size.x, source_tile_size.y);
-                 spdlog::trace("Source texture size: ({}, {})", source_texture_size.x, source_texture_size.y);
-                 spdlog::trace("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
-                 spdlog::trace("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
-                 spdlog::trace("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
+                 spdlog::trace(
+                   "Target framebuffer scale: {}", target_framebuffer.scale());
+                 spdlog::trace(
+                   "Destination tile size: ({}, {})",
+                   destination_tile_size.x,
+                   destination_tile_size.y);
+                 spdlog::trace(
+                   "Source tile size: ({}, {})",
+                   source_tile_size.x,
+                   source_tile_size.y);
+                 spdlog::trace(
+                   "Source texture size: ({}, {})",
+                   source_texture_size.x,
+                   source_texture_size.y);
+                 spdlog::trace(
+                   "Draw position: ({}, {}, {})",
+                   draw_position.x,
+                   draw_position.y,
+                   draw_position.z);
+                 spdlog::trace(
+                   "UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
+                 spdlog::trace(
+                   "UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
                  const auto find_id = [&]()
                  {
-                      if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
+                      if (const auto it
+                          = std::ranges::find(unique_pupu_ids, pupu_id);
+                          it != std::ranges::end(unique_pupu_ids))
                       {
-                           return static_cast<int>(it - std::ranges::begin(unique_pupu_ids));
+                           return static_cast<int>(
+                             it - std::ranges::begin(unique_pupu_ids));
                       }
                       return -1;
                  };
                  target_renderer.draw_quad(
                    subtexture,
                    draw_position,
-                   glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                   static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                   glm::vec2{ static_cast<float>(
+                     TILE_SIZE * target_framebuffer.scale()) },
+                   static_cast<int>(
+                     m_map_group.maps.get_offset_from_working(tile)),
                    static_cast<GLuint>(find_id()));
                  drew = true;
             });
@@ -793,7 +982,8 @@ void map_sprite::update_position(
      return drew;
 }
 
-[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target_framebuffer) const
+[[nodiscard]] bool map_sprite::draw_imported(
+  [[maybe_unused]] const glengine::FrameBuffer &target_framebuffer) const
 {
      // todo fix imported
      return false;
@@ -802,20 +992,25 @@ void map_sprite::update_position(
      // namespace r = std::ranges;
 
      // if (
-     //   !m_using_imported_texture || m_imported_texture == nullptr || m_imported_texture->width() == 0 || m_imported_texture->height() ==
-     //   0)
+     //   !m_using_imported_texture || m_imported_texture == nullptr ||
+     //   m_imported_texture->width() == 0 || m_imported_texture->height() == 0)
      // {
      //      return false;
      // }
      // m_imported_texture->bind();
-     // const auto pop_unbind         = glengine::ScopeGuard{ [&]() { m_imported_texture->unbind(); } };
-     // bool       drew               = false;
-     // const auto draw_imported_tile = [this, &drew, &target_framebuffer](
-     //                                   const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile)
+     // const auto pop_unbind         = glengine::ScopeGuard{ [&]() {
+     // m_imported_texture->unbind(); } }; bool       drew               =
+     // false; const auto draw_imported_tile = [this, &drew,
+     // &target_framebuffer](
+     //                                   const std::integral auto
+     //                                   current_index, const is_tile auto
+     //                                   &tile_const, const is_tile auto &tile)
      //                                   {
      //      if (!m_saved_imported_indices.empty())
      //      {
-     //           const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
+     //           const auto find_index =
+     //           std::ranges::find_if(m_saved_imported_indices,
+     //           [&current_index](const auto search_index) {
      //                return std::cmp_equal(search_index, current_index);
      //           });
      //           if (find_index != m_saved_imported_indices.end())
@@ -827,39 +1022,54 @@ void map_sprite::update_position(
      //      {
      //           return;
      //      }
-     //      const auto source_tile_size      = get_tile_texture_size_for_import();
-     //      const auto destination_tile_size = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
-     //      const glm::uvec2 source_texture_size = { m_imported_texture->width(), m_imported_texture->height() };
-     //      ff_8::QuadStrip  quad =
-     //        get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
+     //      const auto source_tile_size      =
+     //      get_tile_texture_size_for_import(); const auto
+     //      destination_tile_size = glm::uvec2{ TILE_SIZE, TILE_SIZE } *
+     //      static_cast<std::uint32_t>(target_framebuffer.scale()); const
+     //      glm::uvec2 source_texture_size = { m_imported_texture->width(),
+     //      m_imported_texture->height() }; ff_8::QuadStrip  quad =
+     //        get_triangle_strip_for_imported(source_tile_size,
+     //        destination_tile_size, source_texture_size, tile_const, tile);
      //      /// TODO fix blend mode
      //      //   states.blendMode        = sf::BlendAlpha;
      //      //   if (!m_disable_blends)
      //      //   {
-     //      //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+     //      //        states.blendMode = set_blend_mode(tile.blend_mode(),
+     //      quad);
      //      //   }
      //      // apply the tileset texture
      //      /// TODO fix drawing quad
-     //      // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-     //      drew = true;
+     //      // target.draw(quad.data(), quad.size(), sf::TriangleStrip,
+     //      states); drew = true;
      // };
      // m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
      //      m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
-     //           for (const auto &z_axis : m_all_unique_values_and_strings.z().values())
+     //           for (const auto &z_axis :
+     //           m_all_unique_values_and_strings.z().values())
      //           {
-     //                const auto z_test = [&]([[maybe_unused]] const is_tile auto &tile_const, const is_tile auto &tile) {
+     //                const auto z_test = [&]([[maybe_unused]] const is_tile
+     //                auto &tile_const, const is_tile auto &tile) {
      //                     return std::cmp_equal(z_axis, tile.z());
      //                };
 
-     //                auto zipped_range = v::zip(unchanged_tiles, changed_tiles)
-     //                                    | v::filter([&](const auto &current) { return std::apply(Map::filter_invalid(), current); })
-     //                                    | v::filter([&](const auto &current) { return std::apply(z_test, current); });
+     //                auto zipped_range = v::zip(unchanged_tiles,
+     //                changed_tiles)
+     //                                    | v::filter([&](const auto &current)
+     //                                    { return
+     //                                    std::apply(Map::filter_invalid(),
+     //                                    current); }) | v::filter([&](const
+     //                                    auto &current) { return
+     //                                    std::apply(z_test, current); });
      //                for (decltype(auto) current : zipped_range)
      //                {
      //                     std::apply(
-     //                       [&](const is_tile auto &unchanged_tile, const is_tile auto &changed_tile) {
-     //                            const auto current_index = std::ranges::distance(&changed_tiles.front(), &changed_tile);
-     //                            draw_imported_tile(current_index, unchanged_tile, changed_tile);
+     //                       [&](const is_tile auto &unchanged_tile, const
+     //                       is_tile auto &changed_tile) {
+     //                            const auto current_index =
+     //                            std::ranges::distance(&changed_tiles.front(),
+     //                            &changed_tile);
+     //                            draw_imported_tile(current_index,
+     //                            unchanged_tile, changed_tile);
      //                       },
      //                       current);
      //                }
@@ -874,12 +1084,15 @@ glm::uvec2 map_sprite::get_tile_texture_size_for_import() const
      return glm::uvec2{ m_imported_tile_size, m_imported_tile_size };
 }
 
-glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const texture) const
+glm::uvec2 map_sprite::get_tile_texture_size(
+  const glengine::Texture *const texture) const
 {
      const auto raw_texture_size = texture->get_size();
      if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
      {
-          const auto local_scale = static_cast<std::uint32_t>(raw_texture_size.y) / m_canvas.height();
+          const auto local_scale
+            = static_cast<std::uint32_t>(raw_texture_size.y)
+              / m_canvas.height();
           return glm::uvec2{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
      }
      const auto i = static_cast<std::uint32_t>(raw_texture_size.y / TILE_SIZE);
@@ -907,8 +1120,9 @@ void map_sprite::clear_toml_cached_framebuffers() const
           return;
      }
      const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto                        config      = Configuration(config_path);
+     const std::filesystem::path config_path = config_path_values.replace_tags(
+       selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     auto config = Configuration(config_path);
      config.save(true);
      m_cache_framebuffer.clear();
      m_cache_framebuffer_tooltips.clear();
@@ -951,11 +1165,14 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           return;
      }
      // don't resize render texture till we have something to draw?
-     // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) { return texture.width() > 0 && texture.height() > 0; }))
-     // all tasks completed.
+     // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) {
+     // return texture.width() > 0 && texture.height() > 0; })) all tasks
+     // completed.
      if (m_future_of_future_consumer.done() && m_future_consumer.done())
      {
-          if (m_filters.full_filename.enabled() && !m_full_filename_textures.empty())
+          if (
+            m_filters.full_filename.enabled()
+            && !m_full_filename_textures.empty())
           {
                [&]() {// wrapped in lambda to allow early return will move to member function later.
                     std::erase_if(m_full_filename_textures, [](auto &pair) {
@@ -1204,10 +1421,12 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                }();
           }
 
-          if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
+          if (!fallback_textures())// see if no textures are loaded and fall
+                                   // back to .mim if not.
           {
                resize_render_texture();
-               assert(m_render_framebuffer && "m_render_framebuffer is nullptr");
+               assert(
+                 m_render_framebuffer && "m_render_framebuffer is nullptr");
                (void)generate_texture(*m_render_framebuffer);
           }
      }
@@ -1217,18 +1436,25 @@ void map_sprite::set_uniforms(
   const glengine::FrameBuffer &fbo,
   const glengine::Shader      &shader) const
 {
-     m_fixed_render_camera.set_projection(0.f, static_cast<float>(fbo.width()), 0.f, static_cast<float>(fbo.height()));
+     m_fixed_render_camera.set_projection(
+       0.f,
+       static_cast<float>(fbo.width()),
+       0.f,
+       static_cast<float>(fbo.height()));
      // if (m_offscreen_drawing || m_saving)
      // {
-     shader.set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+     shader.set_uniform(
+       "u_MVP", m_fixed_render_camera.view_projection_matrix());
      // }
      // else if (m_preview)
      // {
-     //      shader.set_uniform("u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
+     //      shader.set_uniform("u_MVP",
+     //      m_imgui_viewport_window.preview_view_projection_matrix());
      // }
      // else
      // {
-     //      shader.set_uniform("u_MVP", m_imgui_viewport_window.view_projection_matrix());
+     //      shader.set_uniform("u_MVP",
+     //      m_imgui_viewport_window.view_projection_matrix());
      // }
      shader.set_uniform("u_Grid", 0.F, 0.F);
      //    if (!s_draw_grid || m_offscreen_drawing || m_saving)
@@ -1249,7 +1475,8 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
           return;
      }
      consume_now();
-     std::future<void> task = save_image_pbo(path, m_render_framebuffer->clone());
+     std::future<void> task
+       = save_image_pbo(path, m_render_framebuffer->clone());
      task.wait();
 }
 bool map_sprite::fail() const
@@ -1304,9 +1531,11 @@ bool map_sprite::fail() const
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;// copy because coo is modified
-     const auto              map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
-     const auto              path = dest_path.string();
+     ff_8::map_group::OptCoo coo
+       = m_map_group.opt_coo;// copy because coo is modified
+     const auto map = ff_8::load_map(
+       m_map_group.field, coo, m_map_group.mim, nullptr, false);
+     const auto path = dest_path.string();
 
      open_viii::tools::write_buffer(
        [&map](std::ostream &os)
@@ -1317,8 +1546,10 @@ void map_sprite::map_save(const std::filesystem::path &dest_path) const
                    for (const auto &tile : tiles)
                    {
                         //          std::array<char, sizeof(tile)> data{};
-                        //          std::memcpy(data.data(), &tile, sizeof(tile));
-                        const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+                        //          std::memcpy(data.data(), &tile,
+                        //          sizeof(tile));
+                        const auto data
+                          = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
                         os.write(data.data(), data.size());
                    }
               });
@@ -1355,10 +1586,17 @@ void map_sprite::resize_render_texture() const
                return return_val;
           }();
 
-          while (std::cmp_greater(static_cast<int>(width()) * m_render_framebuffer->scale(), max_size)
-                 || std::cmp_greater(static_cast<int>(height()) * m_render_framebuffer->scale(), max_size))
+          while (std::cmp_greater(
+                   static_cast<int>(width()) * m_render_framebuffer->scale(),
+                   max_size)
+                 || std::cmp_greater(
+                   static_cast<int>(height()) * m_render_framebuffer->scale(),
+                   max_size))
           {
-               m_render_framebuffer->set_scale(static_cast<std::int32_t>(static_cast<std::uint32_t>(m_render_framebuffer->scale()) >> 1U));
+               m_render_framebuffer->set_scale(
+                 static_cast<std::int32_t>(
+                   static_cast<std::uint32_t>(m_render_framebuffer->scale())
+                   >> 1U));
                if (m_render_framebuffer->scale() <= 1)
                {
                     m_render_framebuffer->set_scale(1);
@@ -1369,12 +1607,18 @@ void map_sprite::resize_render_texture() const
      if (filtered_textures.begin() != filtered_textures.end())
      {
           const auto max_height
-            = (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
+            = (std::ranges::max)(filtered_textures
+                                 | std::ranges::views::transform(
+                                   [](const auto &texture)
+                                   { return texture.height(); }));
           static constexpr std::int16_t mim_texture_height = 256U;
 
-          if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled()) [[unlikely]]
+          if (
+            m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
+            [[unlikely]]
           {
-               m_render_framebuffer->set_scale(max_height / static_cast<std::int32_t>(m_canvas.height()));
+               m_render_framebuffer->set_scale(
+                 max_height / static_cast<std::int32_t>(m_canvas.height()));
           }
           else [[likely]]
           {
@@ -1385,16 +1629,22 @@ void map_sprite::resize_render_texture() const
      {
           m_render_framebuffer->set_scale(1U);
      }
-     if (const std::uint16_t tmp_scale = m_imported_tile_size / map_sprite::TILE_SIZE;
-         m_using_imported_texture && std::cmp_less(m_render_framebuffer->scale(), tmp_scale))
+     if (const std::uint16_t tmp_scale
+         = m_imported_tile_size / map_sprite::TILE_SIZE;
+         m_using_imported_texture
+         && std::cmp_less(m_render_framebuffer->scale(), tmp_scale))
      {
           m_render_framebuffer->set_scale(tmp_scale);
      }
      check_size();
-     auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width()) * m_render_framebuffer->scale(),
-                                                     .height = static_cast<int>(height()) * m_render_framebuffer->scale(),
-                                                     .scale  = m_render_framebuffer->scale() };
-     if (m_render_framebuffer->width() != spec.width || m_render_framebuffer->height() != spec.height)
+     auto spec = glengine::FrameBufferSpecification{
+          .width  = static_cast<int>(width()) * m_render_framebuffer->scale(),
+          .height = static_cast<int>(height()) * m_render_framebuffer->scale(),
+          .scale  = m_render_framebuffer->scale()
+     };
+     if (
+       m_render_framebuffer->width() != spec.width
+       || m_render_framebuffer->height() != spec.height)
      {
           *m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
      }
@@ -1402,7 +1652,8 @@ void map_sprite::resize_render_texture() const
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
-     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(m_map_group.maps.const_working().canvas());
+     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(
+       m_map_group.maps.const_working().canvas());
 }
 
 std::uint32_t map_sprite::width() const
@@ -1430,9 +1681,12 @@ std::uint32_t map_sprite::height() const
      return m_canvas.height();
 }
 
-ff_8::all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings() const
+ff_8::all_unique_values_and_strings
+  map_sprite::get_all_unique_values_and_strings() const
 {
-     return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return ff_8::all_unique_values_and_strings(tiles); });
+     return m_map_group.maps.const_working().visit_tiles(
+       [](const auto &tiles)
+       { return ff_8::all_unique_values_and_strings(tiles); });
 }
 
 const ff_8::filters &map_sprite::filter() const
@@ -1447,7 +1701,8 @@ map_sprite map_sprite::update(
   ff_8::map_group map_group,
   bool            draw_swizzle) const
 {
-     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false, m_selections };
+     return { std::move(map_group), draw_swizzle, m_filters,
+              m_disable_blends,     false,        m_selections };
 }
 const ff_8::all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -1482,7 +1737,9 @@ std::vector<std::tuple<
 {
      // side effect. we wait till pupu is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
-     return std::views::zip(m_map_group.maps.working_unique_pupu_color(), m_map_group.maps.working_unique_pupu())
+     return std::views::zip(
+              m_map_group.maps.working_unique_pupu_color(),
+              m_map_group.maps.working_unique_pupu())
             | std::ranges::to<std::vector>();
 }
 
@@ -1599,16 +1856,20 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 // }
 
 /**
- * @brief Saves swizzled texture pages (and optionally palettes) to disk asynchronously.
+ * @brief Saves swizzled texture pages (and optionally palettes) to disk
+ * asynchronously.
  *
- * Generates textures for each unique texture page (and conflicting palettes if needed) and saves them as PNG files.
- * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each conflicting
- * palette.
+ * Generates textures for each unique texture page (and conflicting palettes if
+ * needed) and saves them as PNG files. If the texture has palette conflicts
+ * (e.g., multiple palettes for the same texture page), generates separate files
+ * for each conflicting palette.
  *
  * @param path The base directory path where the images will be saved.
- * @return A vector of futures representing the save operations, allowing the caller to later wait or check for completion.
+ * @return A vector of futures representing the save operations, allowing the
+ * caller to later wait or check for completion.
  *
- * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
+ * @note Caller is responsible for consuming or waiting on the futures to ensure
+ * save completion.
  */
 [[nodiscard]] std::vector<std::future<void>> map_sprite::save_swizzle_textures(
   const std::string           &keyed_string,
@@ -1622,27 +1883,31 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
      consume_now();
 
-     // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto      unique_values           = get_all_unique_values_and_strings();
-     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
-     const auto     &unique_bpp              = unique_values.bpp().values();
+     // Extract unique texture page IDs and BPP (bits per pixel) values from the
+     // map.
+     const auto  unique_values = get_all_unique_values_and_strings();
+     const auto &unique_texture_page_ids
+       = unique_values.texture_page_id().values();
+     const auto     &unique_bpp = unique_values.bpp().values();
 
      // Backup and override current settings for exporting textures.
-     settings_backup settings                = get_backup_settings(true);
+     settings_backup settings   = get_backup_settings(true);
 
      // Adjust scale based on texture height or deswizzle state.
-     std::int32_t    height                  = static_cast<std::int32_t>(get_max_texture_height());
+     std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
-     if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
+     if (
+       unique_bpp.size() == 1U
+       && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
           return {};
      }
 
      // Prepare for gathering palette conflicts.
-     using map_type                                             = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
-     using mapped_type                                          = typename map_type::mapped_type;
-     const map_type                 conflicting_palettes_map    = get_conflicting_palettes();
+     using map_type = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
+     using mapped_type                       = typename map_type::mapped_type;
+     const map_type conflicting_palettes_map = get_conflicting_palettes();
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures           = {};
@@ -1651,55 +1916,76 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Create an off-screen render texture to draw into.
      const auto specification
-       = glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer->scale() };
+       = glengine::FrameBufferSpecification{ .width  = height,
+                                             .height = height,
+                                             .scale
+                                             = m_render_framebuffer->scale() };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
      {
-          settings.filters.value().texture_page_id.update(texture_page).enable();
-          const bool contains_conflicts = conflicting_palettes_map.contains(texture_page);
+          settings.filters.value()
+            .texture_page_id.update(texture_page)
+            .enable();
+          const bool contains_conflicts
+            = conflicting_palettes_map.contains(texture_page);
 
           if (contains_conflicts)
           {
-               // Handle palette conflicts: export each conflicting palette individually.
-               const mapped_type &conflicting_palettes = conflicting_palettes_map.at(texture_page);
+               // Handle palette conflicts: export each conflicting palette
+               // individually.
+               const mapped_type &conflicting_palettes
+                 = conflicting_palettes_map.at(texture_page);
                for (const auto &bpp : unique_bpp)
                {
-                    const auto &unique_palette = unique_values.palette().at(bpp).values();
+                    const auto &unique_palette
+                      = unique_values.palette().at(bpp).values();
 
-                    // Filter palettes that conflict with the current texture page.
-                    auto        filter_palette
+                    // Filter palettes that conflict with the current texture
+                    // page.
+                    auto filter_palette
                       = unique_palette
                         | std::views::filter(
                           [&conflicting_palettes](const std::uint8_t &palette)
                           {
                                return std::ranges::any_of(
-                                 conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
+                                 conflicting_palettes,
+                                 [&palette](const std::uint8_t &other)
+                                 { return palette == other; });
                           });
 
                     for (const auto &palette : filter_palette)
                     {
-                         settings.filters.value().palette.update(palette).enable();
+                         settings.filters.value()
+                           .palette.update(palette)
+                           .enable();
                          settings.filters.value().bpp.update(bpp).enable();
 
-                         auto out_framebuffer = glengine::FrameBuffer{ specification };
+                         auto out_framebuffer
+                           = glengine::FrameBuffer{ specification };
                          // Generate the texture.
                          if (generate_texture(out_framebuffer))
                          {
 
                               // Determine output path based on COO presence.
-                              const key_value_data  cpm      = { .field_name    = get_base_name(),
-                                                                 .ext           = ".png",
-                                                                 .language_code = m_map_group.opt_coo.has_value()
-                                                                                && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                                                    ? m_map_group.opt_coo
-                                                                                    : std::nullopt,
-                                                                 .palette       = palette,
-                                                                 .texture_page  = texture_page };
-                              std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                              const key_value_data cpm
+                                = { .field_name = get_base_name(),
+                                    .ext        = ".png",
+                                    .language_code
+                                    = m_map_group.opt_coo.has_value()
+                                          && m_map_group.opt_coo.value()
+                                               != open_viii::LangT::generic
+                                        ? m_map_group.opt_coo
+                                        : std::nullopt,
+                                    .palette      = palette,
+                                    .texture_page = texture_page };
+                              std::filesystem::path out_path = cpm.replace_tags(
+                                keyed_string, selections, selected_path);
 
                               // Start async save and store the future.
-                              future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+                              future_of_futures.push_back(save_image_pbo(
+                                std::move(out_path),
+                                std::move(out_framebuffer)));
                          }
                     }
                }
@@ -1717,12 +2003,16 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                const key_value_data cpm
                  = { .field_name    = get_base_name(),
                      .ext           = ".png",
-                     .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                     .language_code = m_map_group.opt_coo.has_value()
+                                          && m_map_group.opt_coo.value()
+                                               != open_viii::LangT::generic
                                         ? m_map_group.opt_coo
                                         : std::nullopt,
                      .texture_page  = texture_page };
-               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+               std::filesystem::path out_path
+                 = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(
+                 std::move(out_path), std::move(out_framebuffer)));
           }
      }
 
@@ -1733,20 +2023,25 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
 
 /**
- * @brief Saves swizzled texture pages (and optionally palettes) to disk asynchronously.
+ * @brief Saves swizzled texture pages (and optionally palettes) to disk
+ * asynchronously.
  *
- * Generates textures for each unique texture page (and conflicting palettes if needed) and saves them as PNG files.
- * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each
- * conflicting palette.
+ * Generates textures for each unique texture page (and conflicting palettes if
+ * needed) and saves them as PNG files. If the texture has palette conflicts
+ * (e.g., multiple palettes for the same texture page), generates separate files
+ * for each conflicting palette.
  *
  * @param path The base directory path where the images will be saved.
- * @return A vector of futures representing the save operations, allowing the caller to later wait or check for completion.
+ * @return A vector of futures representing the save operations, allowing the
+ * caller to later wait or check for completion.
  *
- * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
+ * @note Caller is responsible for consuming or waiting on the futures to ensure
+ * save completion.
  */
-[[nodiscard]] std::vector<std::future<void>> map_sprite::save_swizzle_as_one_image_textures(
-  const std::string           &keyed_string,
-  const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_swizzle_as_one_image_textures(
+    const std::string           &keyed_string,
+    const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1755,38 +2050,51 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return {};
      }
      consume_now();
-     // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto      unique_values           = get_all_unique_values_and_strings();
-     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
-     const auto     &unique_bpp              = unique_values.bpp().values();
-     const auto      max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
+     // Extract unique texture page IDs and BPP (bits per pixel) values from the
+     // map.
+     const auto  unique_values = get_all_unique_values_and_strings();
+     const auto &unique_texture_page_ids
+       = unique_values.texture_page_id().values();
+     const auto &unique_bpp         = unique_values.bpp().values();
+     const auto max_texture_page_id = std::ranges::max(unique_texture_page_ids);
 
      // Backup and override current settings for exporting textures.
-     settings_backup settings                = get_backup_settings(true);
-     settings.disable_texture_page_shift     = false;// Disable texture page shifts
-     std::int32_t height                     = static_cast<std::int32_t>(get_max_texture_height());
+     settings_backup settings       = get_backup_settings(true);
+     settings.disable_texture_page_shift = false;// Disable texture page shifts
+     std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
 
-     const auto   max_source_x               = m_map_group.maps.working().visit_tiles(
+     const auto   max_source_x = m_map_group.maps.working().visit_tiles(
        [&](const auto &tiles) -> std::uint8_t
        {
-            auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
-                             | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
+            auto f_t_range
+              = tiles
+                | std::ranges::views::filter(
+                  [&](const auto &tile)
+                  { return tile.texture_id() == max_texture_page_id; })
+                | std::ranges::views::transform([](const auto &tile)
+                                                { return tile.source_x(); });
             return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
        });
-     const std::int32_t width = height * static_cast<std::int32_t>(max_texture_page_id)
-                                + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id + 1);
+     const std::int32_t width
+       = height * static_cast<std::int32_t>(max_texture_page_id)
+         + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id
+                                                                        //+ 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
-     if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
+     if (
+       unique_bpp.size() == 1U
+       && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
           return {};
      }
 
      // Prepare for gathering palette conflicts.
-     const auto conflicting_palettes_map     = get_conflicting_palettes();
-     auto       conflicting_palettes_flatten = conflicting_palettes_map | std::ranges::views::values// Get the vectors (values of the map)
-                                         | std::ranges::views::join       // Flatten the vectors into a single range
-                                         | std::ranges::to<std::vector>();// merge to vector;
+     const auto conflicting_palettes_map = get_conflicting_palettes();
+     auto       conflicting_palettes_flatten
+       = conflicting_palettes_map
+         | std::ranges::views::values// Get the vectors (values of the map)
+         | std::ranges::views::join  // Flatten the vectors into a single range
+         | std::ranges::to<std::vector>();// merge to vector;
      sort_and_remove_duplicates(conflicting_palettes_flatten);
 
      // Prepare futures to track save operations.
@@ -1796,26 +2104,34 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Create an off-screen render texture to draw into.
      const auto specification
-       = glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer->scale() };
+       = glengine::FrameBufferSpecification{ .width  = width,
+                                             .height = height,
+                                             .scale
+                                             = m_render_framebuffer->scale() };
 
 
      // Loop over all unique texture pages.
 
      if (!std::ranges::empty(conflicting_palettes_flatten))
      {
-          // Handle palette conflicts: export each conflicting palette individually.
+          // Handle palette conflicts: export each conflicting palette
+          // individually.
           for (const auto &bpp : unique_bpp)
           {
-               const auto &unique_palette = unique_values.palette().at(bpp).values();
+               const auto &unique_palette
+                 = unique_values.palette().at(bpp).values();
 
                // Filter palettes that conflict with the current texture page.
-               auto        filter_palette
+               auto filter_palette
                  = unique_palette
                    | std::views::filter(
-                     [&conflicting_palettes_flatten](const std::uint8_t &palette)
+                     [&conflicting_palettes_flatten](
+                       const std::uint8_t &palette)
                      {
                           return std::ranges::any_of(
-                            conflicting_palettes_flatten, [&palette](const std::uint8_t &other) { return palette == other; });
+                            conflicting_palettes_flatten,
+                            [&palette](const std::uint8_t &other)
+                            { return palette == other; });
                      });
 
                for (const auto &palette : filter_palette)
@@ -1824,21 +2140,27 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     settings.filters.value().bpp.update(bpp).enable();
 
                     // Generate the texture.
-                    auto out_framebuffer = glengine::FrameBuffer{ specification };
+                    auto out_framebuffer
+                      = glengine::FrameBuffer{ specification };
                     if (generate_texture(out_framebuffer))
                     {
 
                          // Determine output path based on COO presence.
                          const key_value_data cpm
-                           = { .field_name    = get_base_name(),
-                               .ext           = ".png",
-                               .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                  ? m_map_group.opt_coo
-                                                  : std::nullopt,
-                               .palette       = palette };
-                         std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                           = { .field_name = get_base_name(),
+                               .ext        = ".png",
+                               .language_code
+                               = m_map_group.opt_coo.has_value()
+                                     && m_map_group.opt_coo.value()
+                                          != open_viii::LangT::generic
+                                   ? m_map_group.opt_coo
+                                   : std::nullopt,
+                               .palette = palette };
+                         std::filesystem::path out_path = cpm.replace_tags(
+                           keyed_string, selections, selected_path);
                          // Start async save and store the future.
-                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+                         future_of_futures.push_back(save_image_pbo(
+                           std::move(out_path), std::move(out_framebuffer)));
                     }
                }
           }
@@ -1855,13 +2177,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           const key_value_data cpm
             = { .field_name    = get_base_name(),
                 .ext           = ".png",
-                .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                .language_code = m_map_group.opt_coo.has_value()
+                                     && m_map_group.opt_coo.value()
+                                          != open_viii::LangT::generic
                                    ? m_map_group.opt_coo
                                    : std::nullopt };
-          std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+          std::filesystem::path out_path
+            = cpm.replace_tags(keyed_string, selections, selected_path);
 
           // Start async save and store the future.
-          future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+          future_of_futures.push_back(
+            save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
      }
 
 
@@ -1882,11 +2208,13 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
 
      const key_value_data cpm
-       = { .field_name    = get_base_name(),
-           .ext           = ".csv",
-           .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                              ? m_map_group.opt_coo
-                              : std::nullopt };
+       = { .field_name = get_base_name(),
+           .ext        = ".csv",
+           .language_code
+           = m_map_group.opt_coo.has_value()
+                 && m_map_group.opt_coo.value() != open_viii::LangT::generic
+               ? m_map_group.opt_coo
+               : std::nullopt };
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures = {};
@@ -1895,9 +2223,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
        std::async(
          std::launch::async,
          [map  = m_map_group.maps.const_working(),
-          pupu = m_map_group.maps.working_pupu() | std::views::transform([](const auto &pupu_id) { return pupu_id.raw(); })
+          pupu = m_map_group.maps.working_pupu()
+                 | std::views::transform([](const auto &pupu_id)
+                                         { return pupu_id.raw(); })
                  | std::ranges::to<std::vector>(),
-          path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable
+          path
+          = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable
          {
               ;
               map.unshift_from_origin();
@@ -1912,26 +2243,31 @@ std::string map_sprite::get_base_name() const
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};
      }
      return str_to_lower(field->get_base_name());
 }
 
 /**
- * @brief Saves unique "Pupu" textures for the map field to individual PNG files.
+ * @brief Saves unique "Pupu" textures for the map field to individual PNG
+ * files.
  *
- * This function sets up temporary settings specifically for Pupu texture rendering,
- * generates textures using the current map data, and asynchronously saves them to disk.
- * Each texture is saved under a specific file naming pattern based on the field name and Pupu ID.
+ * This function sets up temporary settings specifically for Pupu texture
+ * rendering, generates textures using the current map data, and asynchronously
+ * saves them to disk. Each texture is saved under a specific file naming
+ * pattern based on the field name and Pupu ID.
  *
- * @param path Filesystem path where the textures should be saved. Must be a directory.
- * @return A vector of futures, each wrapping a future task that will save one texture.
- *         Caller should consume or wait on these to ensure saving completes.
+ * @param path Filesystem path where the textures should be saved. Must be a
+ * directory.
+ * @return A vector of futures, each wrapping a future task that will save one
+ * texture. Caller should consume or wait on these to ensure saving completes.
  */
-[[nodiscard]] std::vector<std::future<void>> map_sprite::save_deswizzle_textures(
-  const std::string           &keyed_string,
-  const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_deswizzle_textures(
+    const std::string           &keyed_string,
+    const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1947,43 +2283,58 @@ std::string map_sprite::get_base_name() const
      const auto field    = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
-     const unsigned int               max_number_of_texture_pages = 13U;                  // Reserve space for futures
-     std::vector<std::future<void>>   future_of_futures           = {};
+     const std::string field_name
+       = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids
+       = working_unique_pupu();// Get list of unique Pupu IDs
+     const unsigned int max_number_of_texture_pages
+       = 13U;// Reserve space for futures
+     std::vector<std::future<void>> future_of_futures = {};
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
-     iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto       specification
-       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     iRectangle const canvas = m_map_group.maps.const_working().canvas()
+                               * m_render_framebuffer->scale();
+     const auto specification
+       = glengine::FrameBufferSpecification{ .width  = canvas.width(),
+                                             .height = canvas.height(),
+                                             .scale
+                                             = m_render_framebuffer->scale() };
 
 
      // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
-          settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
+          settings.filters.value()
+            .pupu.update(pupu)
+            .enable();// Enable this specific Pupu ID
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
                const key_value_data cpm
                  = { .field_name    = get_base_name(),
                      .ext           = ".png",
-                     .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                     .language_code = m_map_group.opt_coo.has_value()
+                                          && m_map_group.opt_coo.value()
+                                               != open_viii::LangT::generic
                                         ? m_map_group.opt_coo
                                         : std::nullopt,
                      .pupu_id       = pupu.raw() };
-               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+               std::filesystem::path out_path
+                 = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(
+                 std::move(out_path), std::move(out_framebuffer)));
           }
      }
 
      return future_of_futures;
-     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves
+     // to finish
 }
 void map_sprite::save_deswizzle_generate_toml(
   const std::string           &keyed_string,
@@ -1997,14 +2348,16 @@ void map_sprite::save_deswizzle_generate_toml(
           return;
      }
      open_viii::LangT used_coo  = {};
-     toml::table     *coo_table = get_deswizzle_combined_coo_table(&used_coo, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table     *coo_table = get_deswizzle_combined_coo_table(
+       &used_coo, selections->get<ConfigKey::TOMLFailOverForEditor>());
      spdlog::info("used_coo: {} ", used_coo);
      if (!coo_table)
      {
           spdlog::error("Failed to create coo_table");
           return;
      }
-     save_deswizzle_generate_toml(keyed_string, selected_path, *coo_table, selections);
+     save_deswizzle_generate_toml(
+       keyed_string, selected_path, *coo_table, selections);
 }
 
 void map_sprite::save_deswizzle_generate_toml(
@@ -2020,18 +2373,28 @@ void map_sprite::save_deswizzle_generate_toml(
      const auto field    = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return;// Field no longer exists, nothing to save
      }
 
-     const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
+     const std::string field_name
+       = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids
+       = working_unique_pupu();// Get list of unique Pupu IDs
      // Setup an off-screen render texture
-     iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto                       specification
-       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     iRectangle const canvas = m_map_group.maps.const_working().canvas()
+                               * m_render_framebuffer->scale();
+     const auto specification
+       = glengine::FrameBufferSpecification{ .width  = canvas.width(),
+                                             .height = canvas.height(),
+                                             .scale
+                                             = m_render_framebuffer->scale() };
      const auto coo
-       = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+       = m_map_group.opt_coo.has_value()
+             && m_map_group.opt_coo.value() != open_viii::LangT::generic
+           ? m_map_group.opt_coo
+           : std::nullopt;
      if (coo.has_value())
      {
           spdlog::info("coo: {} ", *coo);
@@ -2056,18 +2419,28 @@ void map_sprite::save_deswizzle_generate_toml(
      for (auto &&pupu : unique_pupu_ids)
      {
           auto &filters         = settings.filters.value();
-          auto  updated_filters = std::forward_as_tuple(filters.multi_pupu.update(std::vector{ pupu }).enable());
-          auto  out_framebuffer = glengine::FrameBuffer{ specification };
-          if (generate_texture(out_framebuffer))// todo make a if would pass filter with out generating textures.
+          auto  updated_filters = std::forward_as_tuple(
+            filters.multi_pupu.update(std::vector{ pupu }).enable());
+          auto out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(
+                out_framebuffer))// todo make a if would pass filter with out
+                                 // generating textures.
           {
                toml::table          file;
                const key_value_data cpm
-                 = { .field_name = field_name, .ext = ".png", .language_code = coo, .pupu_id = static_cast<std::uint32_t>(pupu) };
+                 = { .field_name    = field_name,
+                     .ext           = ".png",
+                     .language_code = coo,
+                     .pupu_id       = static_cast<std::uint32_t>(pupu) };
 
-               std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
-               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               std::apply(
+                 [&](auto &&...fns) { (fns.update(file), ...); },
+                 updated_filters);
+               std::filesystem::path out_path
+                 = cpm.replace_tags(keyed_string, selections, selected_path);
 
-               coo_table.insert_or_assign(out_path.filename().string(), std::move(file));
+               coo_table.insert_or_assign(
+                 out_path.filename().string(), std::move(file));
           }
      }
 }
@@ -2083,40 +2456,51 @@ void map_sprite::save_deswizzle_generate_toml(
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
-     const auto        coo
-       = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-     const key_value_data     cpm     = { .field_name = field_name, .ext = ".png", .language_code = coo };
+     const std::string field_name
+       = std::string{ str_to_lower(field->get_base_name()) };
+     const auto coo
+       = m_map_group.opt_coo.has_value()
+             && m_map_group.opt_coo.value() != open_viii::LangT::generic
+           ? m_map_group.opt_coo
+           : std::nullopt;
+     const key_value_data cpm
+       = { .field_name = field_name, .ext = ".png", .language_code = coo };
      static const std::string pattern = "{field_name}{_{2_letter_lang}}";
 
      return cpm.replace_tags(pattern, selections, "{current_path}");
 }
-[[nodiscard]] settings_backup map_sprite::get_backup_settings(const bool draw_swizzle)
+[[nodiscard]] settings_backup
+  map_sprite::get_backup_settings(const bool draw_swizzle)
 {
      auto settings = settings_backup{
-          m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends
+          m_filters, m_draw_swizzle, m_disable_texture_page_shift,
+          m_disable_blends
           //, m_render_framebuffer.mutable_scale()
      };
-     settings.filters                              = ff_8::filters{ false };
-     settings.filters.value().swizzle              = settings.filters.backup().swizzle;
-     settings.filters.value().swizzle_as_one_image = settings.filters.backup().swizzle_as_one_image;
-     settings.filters.value().deswizzle            = settings.filters.backup().deswizzle;
-     settings.filters.value().full_filename        = settings.filters.backup().full_filename;
-     settings.filters.value().map                  = settings.filters.backup().map;
-     settings.draw_swizzle                         = draw_swizzle;// No swizzling when saving
-     settings.disable_texture_page_shift           = true;        // Disable texture page shifts
-     settings.disable_blends                       = true;        // Disable blending
+     settings.filters                 = ff_8::filters{ false };
+     settings.filters.value().swizzle = settings.filters.backup().swizzle;
+     settings.filters.value().swizzle_as_one_image
+       = settings.filters.backup().swizzle_as_one_image;
+     settings.filters.value().deswizzle = settings.filters.backup().deswizzle;
+     settings.filters.value().full_filename
+       = settings.filters.backup().full_filename;
+     settings.filters.value().map = settings.filters.backup().map;
+     settings.draw_swizzle        = draw_swizzle;// No swizzling when saving
+     settings.disable_texture_page_shift = true; // Disable texture page shifts
+     settings.disable_blends             = true; // Disable blending
 
      return settings;
 }
 
-[[nodiscard]] std::vector<std::future<void>> map_sprite::save_deswizzle_full_filename_textures(
-  const std::string           &keyed_string,
-  const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_deswizzle_full_filename_textures(
+    const std::string           &keyed_string,
+    const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2132,19 +2516,26 @@ void map_sprite::save_deswizzle_generate_toml(
      const auto field    = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string              field_name        = std::string{ str_to_lower(field->get_base_name()) };
+     const std::string field_name
+       = std::string{ str_to_lower(field->get_base_name()) };
      std::vector<std::future<void>> future_of_futures = {};
 
      // Setup an off-screen render texture
-     iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto                     specification
-       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     open_viii::LangT   coo       = {};
-     const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, fme::FailOverLevels::All);
+     iRectangle const canvas = m_map_group.maps.const_working().canvas()
+                               * m_render_framebuffer->scale();
+     const auto specification
+       = glengine::FrameBufferSpecification{ .width  = canvas.width(),
+                                             .height = canvas.height(),
+                                             .scale
+                                             = m_render_framebuffer->scale() };
+     open_viii::LangT   coo = {};
+     const toml::table *coo_table
+       = get_deswizzle_combined_coo_table(&coo, fme::FailOverLevels::All);
 
      if (!coo_table)
      {
@@ -2162,34 +2553,45 @@ void map_sprite::save_deswizzle_generate_toml(
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data  cpm      = { .field_name    = field_name,
-                                                  .full_filename = std::string(file_name),
-                                                  .language_code = coo == open_viii::LangT::generic ? std::optional<open_viii::LangT>(coo)
-                                                                                                    : std::optional<open_viii::LangT>{} };
+               const key_value_data cpm
+                 = { .field_name    = field_name,
+                     .full_filename = std::string(file_name),
+                     .language_code = coo == open_viii::LangT::generic
+                                        ? std::optional<open_viii::LangT>(coo)
+                                        : std::optional<open_viii::LangT>{} };
 
-               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               std::filesystem::path out_path
+                 = cpm.replace_tags(keyed_string, selections, selected_path);
                if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
                {
                     std::filesystem::path mask_path
                       = out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
-                    spdlog::debug("Queued image save: mask='{}'", mask_path.string());
-                    const auto colors_to_pupu = [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>>
+                    spdlog::debug(
+                      "Queued image save: mask='{}'", mask_path.string());
+                    const auto colors_to_pupu =
+                      [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>>
                     {
-                         if (selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>())
+                         if (selections->get<
+                               ConfigKey::BatchGenerateWhiteOnBlackMask>())
                          {
                               return working_unique_color_pupu();
                          }
                          return {};
                     };
-                    future_of_futures.push_back(
-                      save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT1, colors_to_pupu()));
+                    future_of_futures.push_back(save_image_pbo(
+                      std::move(mask_path),
+                      out_framebuffer.clone(),
+                      GL_COLOR_ATTACHMENT1,
+                      colors_to_pupu()));
                }
                spdlog::debug("Queued image save: main='{}'", out_path.string());
-               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+               future_of_futures.push_back(save_image_pbo(
+                 std::move(out_path), std::move(out_framebuffer)));
           }
      }
      return future_of_futures;
-     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves
+     // to finish
 }
 
 [[nodiscard]] const std::map<
@@ -2241,14 +2643,17 @@ void map_sprite::save_deswizzle_generate_toml(
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          spdlog::error(
+            "Failed to lock m_map_group.field: shared_ptr is expired.");
           return m_cache_framebuffer;// Field no longer exists, nothing to save
      }
 
-     const std::string              field_name = std::string{ str_to_lower(field->get_base_name()) };
+     const std::string field_name
+       = std::string{ str_to_lower(field->get_base_name()) };
 
      std::vector<std::future<void>> futures;
-     const toml::table             *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     const toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return m_cache_framebuffer;
@@ -2265,7 +2670,8 @@ void map_sprite::save_deswizzle_generate_toml(
                continue;
           }
           // Insert placeholder entry in the map *synchronously*
-          auto [it, inserted] = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
+          auto [it, inserted]
+            = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
           if (!inserted)
                continue;
 
@@ -2276,27 +2682,39 @@ void map_sprite::save_deswizzle_generate_toml(
               {
                    const int scale = [&]()
                    {
-                        if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
+                        if (
+                          in_scale <= 0
+                          || !std::has_single_bit(
+                            static_cast<unsigned int>(in_scale)))
                         {
                              return m_render_framebuffer->scale();
                         }
                         return in_scale;
                    }();
                    // Setup an off-screen render texture
-                   iRectangle const canvas = m_map_group.maps.const_working().canvas() * scale;
-                   const auto       specification
-                     = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
-                   // Backup current settings and adjust for saving Pupu textures
+                   iRectangle const canvas
+                     = m_map_group.maps.const_working().canvas() * scale;
+                   const auto specification
+                     = glengine::FrameBufferSpecification{ .width
+                                                           = canvas.width(),
+                                                           .height
+                                                           = canvas.height(),
+                                                           .scale = scale };
+                   // Backup current settings and adjust for saving Pupu
+                   // textures
                    auto  settings = get_backup_settings(false);
                    auto &filters  = settings.filters.value();
                    filters.reload(*file_node.as_table());
 
                    // Generate
-                   m_cache_framebuffer_tooltips[it->first] = generate_deswizzle_combined_tool_tip(file_node.as_table());
+                   m_cache_framebuffer_tooltips[it->first]
+                     = generate_deswizzle_combined_tool_tip(
+                       file_node.as_table());
 
                    cache_pupuids(it->first, filters);
 
-                   if (glengine::FrameBuffer fb(specification); generate_texture(fb))
+                   if (glengine::FrameBuffer fb(specification);
+                       generate_texture(fb))
                    {
                         it->second = std::move(fb);// replace empty optional
                    }
@@ -2316,26 +2734,32 @@ void map_sprite::cache_pupuids(
 {
      if (filters.multi_pupu.enabled() && filters.pupu.enabled())
      {
-          m_cache_framebuffer_pupuids[file_name_str] = filters.multi_pupu.value();
-          m_cache_framebuffer_pupuids[file_name_str].push_back(filters.pupu.value());
+          m_cache_framebuffer_pupuids[file_name_str]
+            = filters.multi_pupu.value();
+          m_cache_framebuffer_pupuids[file_name_str].push_back(
+            filters.pupu.value());
      }
      else if (filters.multi_pupu.enabled())
      {
-          m_cache_framebuffer_pupuids[file_name_str] = filters.multi_pupu.value();
+          m_cache_framebuffer_pupuids[file_name_str]
+            = filters.multi_pupu.value();
      }
      else if (filters.pupu.enabled())
      {
-          m_cache_framebuffer_pupuids[file_name_str].push_back(filters.pupu.value());
+          m_cache_framebuffer_pupuids[file_name_str].push_back(
+            filters.pupu.value());
      }
 }
 // m_cache_framebuffer_pupuids
 
 
-std::vector<ff_8::PupuID> map_sprite::generate_deswizzle_combined_pupu_id(const toml::table *file_table) const
+std::vector<ff_8::PupuID> map_sprite::generate_deswizzle_combined_pupu_id(
+  const toml::table *file_table) const
 {
      std::vector<ff_8::PupuID> result{};
 
-     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array(); pupu_array)
+     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array();
+         pupu_array)
      {
           for (auto &elem : *pupu_array)
           {
@@ -2352,12 +2776,14 @@ std::vector<ff_8::PupuID> map_sprite::generate_deswizzle_combined_pupu_id(const 
      return result;
 };
 
-std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *file_table) const
+std::string map_sprite::generate_deswizzle_combined_tool_tip(
+  const toml::table *file_table) const
 {
      std::ostringstream ss{};
      ss << *file_table;
 
-     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array(); pupu_array)
+     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array();
+         pupu_array)
      {
           for (auto &elem : *pupu_array)
           {
@@ -2365,14 +2791,19 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
                {
                     ff_8::PupuID pupu_id{ *val };
 
-                    ss << fmt::format("\n\nPupu ID: {:08X} - {}\n{}\n", *val, *val, pupu_id.create_summary());
+                    ss << fmt::format(
+                      "\n\nPupu ID: {:08X} - {}\n{}\n",
+                      *val,
+                      *val,
+                      pupu_id.create_summary());
                }
           }
      }
      return ss.str();
 };
 
-open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover) const
+open_viii::LangT
+  map_sprite::get_used_coo(const fme::FailOverLevels max_failover) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2382,24 +2813,29 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
      if (!field)
           return open_viii::LangT::generic;
 
-     const std::string field_name        = str_to_lower(field->get_base_name());
+     const std::string field_name = str_to_lower(field->get_base_name());
 
-     const auto        coo_opt           = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                             ? m_map_group.opt_coo
-                                             : field->get_lang_from_fl_paths();
+     const auto        coo_opt
+       = m_map_group.opt_coo.has_value()
+             && m_map_group.opt_coo.value() != open_viii::LangT::generic
+           ? m_map_group.opt_coo
+           : field->get_lang_from_fl_paths();
 
-     const auto        failover_sequence = std::to_array(
-       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic, open_viii::LangT::en, open_viii::LangT::fr,
-                open_viii::LangT::de, open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
+     const auto failover_sequence = std::to_array(
+       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic,
+         open_viii::LangT::en, open_viii::LangT::fr, open_viii::LangT::de,
+         open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
 
      const key_value_data        config_path_values{ .ext = ".toml" };
-     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     const std::filesystem::path config_path = config_path_values.replace_tags(
+       selections->get<ConfigKey::OutputTomlPattern>(), selections);
 
-     auto                        config      = Configuration(config_path);
-     toml::table                &root_table  = config;
+     auto         config      = Configuration(config_path);
+     toml::table &root_table  = config;
 
-     toml::table                *field_table = nullptr;
-     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     toml::table *field_table = nullptr;
+     if (auto it_base = root_table.find(field_name);
+         it_base != root_table.end() && it_base->second.is_table())
      {
           field_table = it_base->second.as_table();
      }
@@ -2409,9 +2845,13 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
 
      auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table *
      {
-          const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
+          const std::string key
+            = (lang != open_viii::LangT::generic)
+                ? std::string(open_viii::LangCommon::to_string_3_char(lang))
+                : "x";
 
-          if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
+          if (auto it_coo = field_table->find(key);
+              it_coo != field_table->end() && it_coo->second.is_table())
                return it_coo->second.as_table();
 
           return nullptr;
@@ -2421,7 +2861,9 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
      {
           auto *coo_table = get_table_by_coo(lang);
 
-          if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
+          if (
+            coo_table
+            && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
                return lang;
 
           if (std::cmp_equal(index, std::to_underlying(max_failover)))
@@ -2449,13 +2891,14 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
           return nullptr;
      }
 
-     const std::string           field_name         = str_to_lower(field->get_base_name());
-     const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto                        config      = Configuration(config_path);
-     toml::table                &root_table  = config;
+     const std::string    field_name = str_to_lower(field->get_base_name());
+     const key_value_data config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path = config_path_values.replace_tags(
+       selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     auto         config     = Configuration(config_path);
+     toml::table &root_table = config;
 
-     const auto                  coo_opt     = [&]()
+     const auto   coo_opt    = [&]()
      {
           if (m_map_group.opt_coo.has_value())
           {
@@ -2469,7 +2912,8 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
      toml::table *coo_table   = nullptr;
 
 
-     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     if (auto it_base = root_table.find(field_name);
+         it_base != root_table.end() && it_base->second.is_table())
      {
           field_table = it_base->second.as_table();
      }
@@ -2478,7 +2922,8 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
           auto &&[it, inserted] = root_table.insert(field_name, toml::table{});
           if (inserted)
           {
-               field_table = it->second.is_table() ? it->second.as_table() : nullptr;
+               field_table
+                 = it->second.is_table() ? it->second.as_table() : nullptr;
           }
      }
      if (!field_table)
@@ -2486,34 +2931,41 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
           return nullptr;
      }
      const auto failover_sequence = std::to_array(
-       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic, open_viii::LangT::en, open_viii::LangT::fr,
-         open_viii::LangT::de, open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
+       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic,
+         open_viii::LangT::en, open_viii::LangT::fr, open_viii::LangT::de,
+         open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
      const auto get_key_str = [&](const open_viii::LangT lang)
      {
           if (lang != open_viii::LangT::generic)
           {
-               return std::string(open_viii::LangCommon::to_string_3_char(lang));
+               return std::string(
+                 open_viii::LangCommon::to_string_3_char(lang));
           }
           return std::string("x");
      };
      const auto get_table_by_coo = [&](const std::string &key) -> toml::table *
      {
-          if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
+          if (auto it_coo = field_table->find(key);
+              it_coo != field_table->end() && it_coo->second.is_table())
           {
                spdlog::trace("{}:{}, found key!: {}", __FILE__, __LINE__, key);
                return it_coo->second.as_table();
           }
-          spdlog::trace("{}:{}, NO! did not find key: {}", __FILE__, __LINE__, key);
+          spdlog::trace(
+            "{}:{}, NO! did not find key: {}", __FILE__, __LINE__, key);
           return nullptr;
      };
 
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
-          const std::string key        = get_key_str(lang);
-          coo_table                    = get_table_by_coo(key);
-          const bool has_valid_table   = (coo_table != nullptr && !std::ranges::empty(*coo_table));
-          const bool is_failover_match = std::cmp_equal(std::to_underlying(max_failover), index);
-          const bool matches_opt_coo   = (m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() == lang);
+          const std::string key = get_key_str(lang);
+          coo_table             = get_table_by_coo(key);
+          const bool has_valid_table
+            = (coo_table != nullptr && !std::ranges::empty(*coo_table));
+          const bool is_failover_match
+            = std::cmp_equal(std::to_underlying(max_failover), index);
+          const bool matches_opt_coo
+            = (m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() == lang);
 
           if (has_valid_table || is_failover_match || matches_opt_coo)
           {
@@ -2524,10 +2976,13 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
                if (!coo_table)
                {
                     spdlog::trace("{}:{}, key:{}", __FILE__, __LINE__, key);
-                    auto &&[it, inserted] = field_table->insert(key, toml::table{});
+                    auto &&[it, inserted]
+                      = field_table->insert(key, toml::table{});
                     if (inserted)
                     {
-                         coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
+                         coo_table = it->second.is_table()
+                                       ? it->second.as_table()
+                                       : nullptr;
                     }
                }
                break;
@@ -2539,7 +2994,8 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
 [[nodiscard]] std::vector<std::string> map_sprite::toml_filenames() const
 {
      std::vector<std::string> result{};
-     const toml::table       *coo_table = get_deswizzle_combined_coo_table({}, fme::FailOverLevels::All);
+     const toml::table       *coo_table
+       = get_deswizzle_combined_coo_table({}, fme::FailOverLevels::All);
      if (!coo_table)
      {
           return result;
@@ -2551,17 +3007,21 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
           {
                continue;
           }
-          if (auto key_str = key.str(); key_str.size() > 4 && key_str.ends_with(".png"))// todo case insensitive compare?
+          if (auto key_str = key.str();
+              key_str.size() > 4
+              && key_str.ends_with(".png"))// todo case insensitive compare?
           {
                result.emplace_back(std::move(key_str));
           }
      }
      std::ranges::sort(result);
-     result.erase(std::ranges::unique(result).begin(), std::ranges::end(result));
+     result.erase(
+       std::ranges::unique(result).begin(), std::ranges::end(result));
      return result;
 }
 
-toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str) const
+toml::table *map_sprite::get_deswizzle_combined_toml_table(
+  const std::string &file_name_str) const
 {
 
      const auto selections = m_selections.lock();
@@ -2570,12 +3030,14 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
           spdlog::error("Failed to lock m_selections.");
           return nullptr;
      }
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return nullptr;
      }
-     if (auto it_base = coo_table->find(file_name_str); it_base != coo_table->end() && it_base->second.is_table())
+     if (auto it_base = coo_table->find(file_name_str);
+         it_base != coo_table->end() && it_base->second.is_table())
      {
           return it_base->second.as_table();
      }
@@ -2592,7 +3054,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
           spdlog::error("Failed to lock m_selections.");
           return nullptr;
      }
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2602,7 +3065,9 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      // Check if new name already exists
      if (coo_table->contains(new_file_name))
      {
-          spdlog::warn("Cannot rename: new texture name '{}' already exists.", new_file_name);
+          spdlog::warn(
+            "Cannot rename: new texture name '{}' already exists.",
+            new_file_name);
           return nullptr;
      }
 
@@ -2610,49 +3075,63 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      auto it_old = coo_table->find(old_file_name);
      if (it_old == coo_table->end() || !it_old->second.is_table())
      {
-          spdlog::warn("Cannot rename: old texture '{}' not found or is not a table.", old_file_name);
+          spdlog::warn(
+            "Cannot rename: old texture '{}' not found or is not a table.",
+            old_file_name);
           return nullptr;
      }
 
      // Clone and insert under new name
-     toml::table new_table     = *it_old->second.as_table();
-     auto &&[it_new, inserted] = coo_table->insert_or_assign(new_file_name, std::move(new_table));
+     toml::table new_table = *it_old->second.as_table();
+     auto &&[it_new, inserted]
+       = coo_table->insert_or_assign(new_file_name, std::move(new_table));
 
      if (!inserted)
      {
-          spdlog::error("Unexpected: insert_or_assign returned false for '{}'.", new_file_name);
+          spdlog::error(
+            "Unexpected: insert_or_assign returned false for '{}'.",
+            new_file_name);
           return nullptr;
      }
 
-     spdlog::info("Renamed texture entry from '{}' to '{}'.", old_file_name, new_file_name);
+     spdlog::info(
+       "Renamed texture entry from '{}' to '{}'.",
+       old_file_name,
+       new_file_name);
 
      // Remove old entry
      coo_table->erase(old_file_name);
 
      // Move framebuffer cache
-     if (auto it_cache = m_cache_framebuffer.find(old_file_name); it_cache != m_cache_framebuffer.end())
+     if (auto it_cache = m_cache_framebuffer.find(old_file_name);
+         it_cache != m_cache_framebuffer.end())
      {
           m_cache_framebuffer[new_file_name] = std::move(it_cache->second);
           m_cache_framebuffer.erase(it_cache);
      }
 
      // Move tooltip cache
-     if (auto it_tooltip = m_cache_framebuffer_tooltips.find(old_file_name); it_tooltip != m_cache_framebuffer_tooltips.end())
+     if (auto it_tooltip = m_cache_framebuffer_tooltips.find(old_file_name);
+         it_tooltip != m_cache_framebuffer_tooltips.end())
      {
-          m_cache_framebuffer_tooltips[new_file_name] = std::move(it_tooltip->second);
+          m_cache_framebuffer_tooltips[new_file_name]
+            = std::move(it_tooltip->second);
           m_cache_framebuffer_tooltips.erase(it_tooltip);
      }
 
-     if (auto it_tooltip = m_cache_framebuffer_pupuids.find(old_file_name); it_tooltip != m_cache_framebuffer_pupuids.end())
+     if (auto it_tooltip = m_cache_framebuffer_pupuids.find(old_file_name);
+         it_tooltip != m_cache_framebuffer_pupuids.end())
      {
-          m_cache_framebuffer_pupuids[new_file_name] = std::move(it_tooltip->second);
+          m_cache_framebuffer_pupuids[new_file_name]
+            = std::move(it_tooltip->second);
           m_cache_framebuffer_pupuids.erase(it_tooltip);
      }
 
      return it_new->second.as_table();
 }
 
-[[nodiscard]] std::size_t map_sprite::remove_deswizzle_combined_toml_table(const std::string &name)
+[[nodiscard]] std::size_t
+  map_sprite::remove_deswizzle_combined_toml_table(const std::string &name)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2662,7 +3141,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      }
      size_t       removed_count = 0;
 
-     toml::table *coo_table     = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table     = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2686,7 +3166,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      return removed_count;
 }
 
-[[nodiscard]] toml::table *map_sprite::add_deswizzle_combined_toml_table(const std::string &new_file_name)
+[[nodiscard]] toml::table *map_sprite::add_deswizzle_combined_toml_table(
+  const std::string &new_file_name)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2694,7 +3175,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
           spdlog::error("Failed to lock m_selections.");
           return nullptr;
      }
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2703,7 +3185,9 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 
      if (coo_table->contains(new_file_name))
      {
-          spdlog::warn("Cannot insert: entry '{}' already exists in coo_table.", new_file_name);
+          spdlog::warn(
+            "Cannot insert: entry '{}' already exists in coo_table.",
+            new_file_name);
           return nullptr;
      }
 
@@ -2712,7 +3196,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      filter().update(new_table);// This mutates new_table directly
 
      // Insert into coo_table
-     auto [it, inserted] = coo_table->insert(new_file_name, std::move(new_table));
+     auto [it, inserted]
+       = coo_table->insert(new_file_name, std::move(new_table));
      if (!inserted)
      {
           spdlog::error("Failed to insert new entry '{}'.", new_file_name);
@@ -2720,7 +3205,8 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      }
 
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
-     m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
+     m_cache_framebuffer_tooltips[new_file_name]
+       = generate_deswizzle_combined_tool_tip(&new_table);
      cache_pupuids(new_file_name, filter());
 
      return it->second.as_table();
@@ -2728,10 +3214,13 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 
 void map_sprite::refresh_tooltip(const std::string &file_name)
 {
-     if (const auto *table = get_deswizzle_combined_toml_table(file_name); table)
+     if (const auto *table = get_deswizzle_combined_toml_table(file_name);
+         table)
      {
-          m_cache_framebuffer_tooltips[file_name] = generate_deswizzle_combined_tool_tip(table);
-          m_cache_framebuffer_pupuids[file_name]  = generate_deswizzle_combined_pupu_id(table);
+          m_cache_framebuffer_tooltips[file_name]
+            = generate_deswizzle_combined_tool_tip(table);
+          m_cache_framebuffer_pupuids[file_name]
+            = generate_deswizzle_combined_pupu_id(table);
      }
 }
 
@@ -2744,21 +3233,28 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
           if (new_filter.enabled())
           {
                // Update in-memory filter state from the table
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter
+                 = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
 
                copy_filter.combine(*table);
                copy_filter.update(*table);
           }
           else
           {
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = (ff_8::FilterSettings::Toggle_Enabled);
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter
+                 = (ff_8::FilterSettings::Toggle_Enabled);
                copy_filter.reload(*table);
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu>::value_type tempvec = {};
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu>::value_type tempvec
+                 = {};
 
                std::ranges::remove_copy_if(
                  copy_filter.value(),
                  std::back_inserter(tempvec),
-                 [&](const auto &value) { return std::ranges::find(new_filter.value(), value) != std::ranges::end(new_filter.value()); });
+                 [&](const auto &value)
+                 {
+                      return std::ranges::find(new_filter.value(), value)
+                             != std::ranges::end(new_filter.value());
+                 });
                copy_filter.update(std::move(tempvec));
                copy_filter.update(*table);
           }
@@ -2776,7 +3272,8 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
           spdlog::error("Failed to lock m_selections.");
           return nullptr;
      }
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return nullptr;
@@ -2784,7 +3281,8 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
      ff_8::filters tmp_filters = { false };
      for (const std::string &file_name_str : file_names)
      {
-          if (auto it_base = coo_table->find(file_name_str); it_base != coo_table->end() && it_base->second.is_table())
+          if (auto it_base = coo_table->find(file_name_str);
+              it_base != coo_table->end() && it_base->second.is_table())
           {
                tmp_filters.combine(*it_base->second.as_table());
           }
@@ -2792,14 +3290,16 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
 
      toml::table new_table{};
      tmp_filters.update(new_table);// This mutates new_table directly
-     auto [it, inserted] = coo_table->insert(new_file_name, std::move(new_table));
+     auto [it, inserted]
+       = coo_table->insert(new_file_name, std::move(new_table));
      if (!inserted)
      {
           spdlog::error("Failed to insert new entry '{}'.", new_file_name);
           return nullptr;
      }
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
-     m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
+     m_cache_framebuffer_tooltips[new_file_name]
+       = generate_deswizzle_combined_tool_tip(&new_table);
      cache_pupuids(new_file_name, tmp_filters);
      return it->second.as_table();
 }
@@ -2815,7 +3315,8 @@ void map_sprite::copy_deswizzle_combined_toml_table(
           spdlog::error("Failed to lock m_selections.");
           return;
      }
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table = get_deswizzle_combined_coo_table(
+       {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
           return;
 
@@ -2830,12 +3331,14 @@ void map_sprite::copy_deswizzle_combined_toml_table(
           std::string  new_file_name = generate_name();
           if (new_file_name.empty())
           {
-               spdlog::warn("Generated name is empty; skipping copy for '{}'.", name);
+               spdlog::warn(
+                 "Generated name is empty; skipping copy for '{}'.", name);
                continue;
           }
 
           toml::table new_table = *source_table;
-          auto [it, inserted]   = coo_table->insert(new_file_name, std::move(new_table));
+          auto [it, inserted]
+            = coo_table->insert(new_file_name, std::move(new_table));
           if (!inserted)
           {
                spdlog::error("Failed to insert new entry '{}'.", new_file_name);
@@ -2848,9 +3351,12 @@ void map_sprite::copy_deswizzle_combined_toml_table(
 
 uint32_t map_sprite::get_max_texture_height() const
 {
-     auto     transform_range = (*m_texture) | std::views::transform([](const glengine::Texture &texture) { return texture.height(); });
-     auto     max_height_it   = std::ranges::max_element(transform_range);
-     uint32_t tex_height      = {};
+     auto transform_range
+       = (*m_texture)
+         | std::views::transform([](const glengine::Texture &texture)
+                                 { return texture.height(); });
+     auto     max_height_it = std::ranges::max_element(transform_range);
+     uint32_t tex_height    = {};
      if (max_height_it != std::ranges::end(transform_range))
      {
           tex_height = static_cast<std::uint32_t>(*max_height_it);
@@ -2858,10 +3364,12 @@ uint32_t map_sprite::get_max_texture_height() const
      else
      {
           static constexpr std::uint16_t mim_texture_height = 256U;
-          tex_height                                        = mim_texture_height;
+          tex_height = mim_texture_height;
      }
-     if (const auto tex_height_scale = static_cast<std::uint16_t>(static_cast<std::uint16_t>(m_imported_tile_size >> 4U) << 8U);
-         m_using_imported_texture && std::cmp_greater(tex_height_scale, tex_height))
+     if (const auto tex_height_scale = static_cast<std::uint16_t>(
+           static_cast<std::uint16_t>(m_imported_tile_size >> 4U) << 8U);
+         m_using_imported_texture
+         && std::cmp_greater(tex_height_scale, tex_height))
      {
           tex_height = tex_height_scale;
      }
@@ -2880,7 +3388,11 @@ std::filesystem::path map_sprite::save_path_coo(
 {
      return path
             / fmt::vformat(
-              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page));
+              fmt::string_view(pattern),
+              fmt::make_format_args(
+                field_name,
+                open_viii::LangCommon::to_string(coo),
+                texture_page));
 }
 std::filesystem::path map_sprite::save_path_coo(
   fmt::format_string<
@@ -2896,7 +3408,12 @@ std::filesystem::path map_sprite::save_path_coo(
 {
      return path
             / fmt::vformat(
-              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page, palette));
+              fmt::string_view(pattern),
+              fmt::make_format_args(
+                field_name,
+                open_viii::LangCommon::to_string(coo),
+                texture_page,
+                palette));
 }
 std::filesystem::path map_sprite::save_path_coo(
   fmt::format_string<
@@ -2908,7 +3425,11 @@ std::filesystem::path map_sprite::save_path_coo(
   const ff_8::PupuID           pupu,
   const open_viii::LangT       coo)
 {
-     return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), pupu));
+     return path
+            / fmt::vformat(
+              fmt::string_view(pattern),
+              fmt::make_format_args(
+                field_name, open_viii::LangCommon::to_string(coo), pupu));
 }
 std::filesystem::path map_sprite::save_path(
   fmt::format_string<
@@ -2918,7 +3439,10 @@ std::filesystem::path map_sprite::save_path(
   const std::string_view      &field_name,
   const std::uint8_t           texture_page)
 {
-     return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, texture_page));
+     return path
+            / fmt::vformat(
+              fmt::string_view(pattern),
+              fmt::make_format_args(field_name, texture_page));
 }
 std::filesystem::path map_sprite::save_path(
   fmt::format_string<
@@ -2930,7 +3454,10 @@ std::filesystem::path map_sprite::save_path(
   std::uint8_t                 texture_page,
   std::uint8_t                 palette)
 {
-     return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, texture_page, palette));
+     return path
+            / fmt::vformat(
+              fmt::string_view(pattern),
+              fmt::make_format_args(field_name, texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path(
   fmt::format_string<
@@ -2940,7 +3467,10 @@ std::filesystem::path map_sprite::save_path(
   const std::string_view      &field_name,
   ff_8::PupuID                 pupu)
 {
-     return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
+     return path
+            / fmt::vformat(
+              fmt::string_view(pattern),
+              fmt::make_format_args(field_name, pupu));
 }
 
 
@@ -2970,39 +3500,45 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
      open_viii::tools::read_from_file(
        [&](std::istream &os)
        {
-            (void)m_map_group.maps.copy_working(fmt::format("{}: {}", gui_labels::load_map, src_path));
+            (void)m_map_group.maps.copy_working(
+              fmt::format("{}: {}", gui_labels::load_map, src_path));
             m_map_group.maps.original().visit_tiles(
               [this, &os](const auto &const_tiles)
               {
-                   using tile_t               = std::remove_cvref_t<decltype(const_tiles.front())>;
-                   m_map_group.maps.working() = open_viii::graphics::background::Map(
-                     [&os]() -> open_viii::graphics::background::Map::variant_tile
-                     {
-                          tile_t     tile{};
-                          const auto append = [&os](auto &t) -> bool
-                          {
-                               // load tile
-                               std::array<char, sizeof(t)> data = {};
-                               if (!os.read(data.data(), data.size()))
-                               {
-                                    return false;
-                               }
-                               t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
+                   using tile_t
+                     = std::remove_cvref_t<decltype(const_tiles.front())>;
+                   m_map_group.maps.working()
+                     = open_viii::graphics::background::Map(
+                       [&os]()
+                         -> open_viii::graphics::background::Map::variant_tile
+                       {
+                            tile_t     tile{};
+                            const auto append = [&os](auto &t) -> bool
+                            {
+                                 // load tile
+                                 std::array<char, sizeof(t)> data = {};
+                                 if (!os.read(data.data(), data.size()))
+                                 {
+                                      return false;
+                                 }
+                                 t = std::bit_cast<
+                                   std::remove_cvref_t<decltype(t)>>(data);
 
-                               return true;
-                          };
+                                 return true;
+                            };
 
-                          if (append(tile))
-                          {
-                               // write from tiles.
-                               return tile;
-                          }
-                          return std::monostate{};
-                     });
+                            if (append(tile))
+                            {
+                                 // write from tiles.
+                                 return tile;
+                            }
+                            return std::monostate{};
+                       });
               });
             //   shift to origin
             m_map_group.maps.working().shift_to_origin();
-            (void)m_map_group.maps.copy_working_to_original(fmt::format("{}: {}", gui_labels::load_map, src_path));
+            (void)m_map_group.maps.copy_working_to_original(
+              fmt::format("{}: {}", gui_labels::load_map, src_path));
        },
        path);
 
@@ -3016,17 +3552,24 @@ void map_sprite::test_map(const std::filesystem::path &saved_path) const
           return;
      }
      const MimType &type = m_map_group.mim->mim_type();
-     std::ignore         = ff_8::test_if_map_same(saved_path, m_map_group.field, type);
+     std::ignore = ff_8::test_if_map_same(saved_path, m_map_group.field, type);
 }
 void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
      if (m_using_imported_texture)
      {
-          ff_8::save_modified_map(dest_path, m_map_group.maps.original(), m_map_group.maps.const_working(), &m_imported_tile_map);
+          ff_8::save_modified_map(
+            dest_path,
+            m_map_group.maps.original(),
+            m_map_group.maps.const_working(),
+            &m_imported_tile_map);
      }
      else
      {
-          ff_8::save_modified_map(dest_path, m_map_group.maps.original(), m_map_group.maps.const_working());
+          ff_8::save_modified_map(
+            dest_path,
+            m_map_group.maps.original(),
+            m_map_group.maps.const_working());
      }
      test_map(dest_path);
 }
@@ -3065,18 +3608,23 @@ void map_sprite::compact_move_conflicts_only()
 {
      const auto &conflicts = m_map_group.maps.working_conflicts();
      ff_8::compact_move_conflicts_only(
-       m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::move_conflicts_only)), conflicts);
+       m_map_group.maps.copy_working(
+         fmt::format(
+           "{} {}", gui_labels::compact, gui_labels::move_conflicts_only)),
+       conflicts);
      update_render_texture();
 }
 void map_sprite::compact_map_order()
 {
-     ff_8::compact_map_order(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
+     ff_8::compact_map_order(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
      update_render_texture();
 }
 void map_sprite::compact_map_order_ffnx()
 {
-     ff_8::compact_map_order_ffnx(
-       m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
+     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(
+       fmt::format(
+         "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
      update_render_texture();
 }
 void map_sprite::first_to_working_and_original()
@@ -3091,7 +3639,10 @@ std::string map_sprite::str_to_lower(std::string input)
      std::string output{};
      output.reserve(std::size(input) + 1);
      std::ranges::transform(
-       input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
+       input,
+       std::back_inserter(output),
+       [](char character) -> char
+       { return static_cast<char>(::tolower(character)); });
      return output;
 }
 
@@ -3134,11 +3685,17 @@ bool fme::map_sprite::consume_one_future() const
 
 std::string map_sprite::current_undo_description() const
 {
-     return fmt::format("{}: {}", m_map_group.maps.current_undo_pushed(), m_map_group.maps.current_undo_description());
+     return fmt::format(
+       "{}: {}",
+       m_map_group.maps.current_undo_pushed(),
+       m_map_group.maps.current_undo_description());
 }
 std::string map_sprite::current_redo_description() const
 {
-     return fmt::format("{}: {}", m_map_group.maps.current_redo_pushed(), m_map_group.maps.current_redo_description());
+     return fmt::format(
+       "{}: {}",
+       m_map_group.maps.current_redo_pushed(),
+       m_map_group.maps.current_redo_description());
 }
 
 void map_sprite::begin_multi_frame_working(std::string description)
@@ -3188,9 +3745,11 @@ std::vector<std::size_t> map_sprite::find_intersecting(
 {
      if (m_draw_swizzle)
      {
-          return ff_8::find_intersecting_swizzle(map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+          return ff_8::find_intersecting_swizzle(
+            map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
      }
-     return ff_8::find_intersecting_deswizzle(map, m_filters, pixel_pos, skip_filters, find_all);
+     return ff_8::find_intersecting_deswizzle(
+       map, m_filters, pixel_pos, skip_filters, find_all);
 }
 bool map_sprite::using_coo() const
 {
@@ -3202,121 +3761,180 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
      const auto base_name = get_base_name();
      const auto prefix    = std::string_view{ base_name }.substr(0U, 2U);
      return fmt::format(
-       "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
+       "{} ({} {}{}{})",
+       title,
+       gui_labels::appends,
+       prefix,
+       char{ std::filesystem::path::preferred_separator },
+       base_name);
 }
 
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::uint8_t                      texture_page)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::uint8_t                      texture_page)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
-                                     .opt_coo                      = in_map_sprite.get_opt_coo(),
-                                     .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
-             texture_page]() -> std::vector<std::filesystem::path>
+     return
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_swizzle_value_string
+                                = in_map_sprite.filter()
+                                    .swizzle.value()
+                                    .string() },
+        texture_page]() -> std::vector<std::filesystem::path>
      {
-          spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
+          spdlog::debug(
+            "Generating swizzle paths for field: '{}', texture_page: {} ",
+            ps.field_name,
+            texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
      };
 }
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_as_one_image_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::optional<std::uint8_t>       palette)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_as_one_image_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::optional<std::uint8_t>       palette)
 {
-     assert(in_selections && "generate_swizzle_as_one_image_paths: in_selections is null");
+     assert(
+       in_selections
+       && "generate_swizzle_as_one_image_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections                          = std::move(in_selections),
-                                     .opt_coo                             = in_map_sprite.get_opt_coo(),
-                                     .field_name                          = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_as_one_image_string = in_map_sprite.filter().swizzle_as_one_image.value().string() },
-             palette]() -> std::vector<std::filesystem::path>
+     return
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_swizzle_as_one_image_string
+                                = in_map_sprite.filter()
+                                    .swizzle_as_one_image.value()
+                                    .string() },
+        palette]() -> std::vector<std::filesystem::path>
      {
           if (palette.has_value())
           {
-               spdlog::debug("Generating swizzle as one image paths for field: '{}', palette: {} ", ps.field_name, palette.value());
+               spdlog::debug(
+                 "Generating swizzle as one image paths for field: '{}', "
+                 "palette: {} ",
+                 ps.field_name,
+                 palette.value());
           }
           else
           {
-               spdlog::debug("Generating swizzle as one image paths for field: '{}'", ps.field_name);
+               spdlog::debug(
+                 "Generating swizzle as one image paths for field: '{}'",
+                 ps.field_name);
           }
           return ps.generate_swizzle_as_one_image_paths(palette, ".png");
      };
 }
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::uint8_t                      texture_page,
-  std::uint8_t                      palette)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::uint8_t                      texture_page,
+    std::uint8_t                      palette)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
-                                     .opt_coo                      = in_map_sprite.get_opt_coo(),
-                                     .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
-             texture_page,
-             palette]() -> std::vector<std::filesystem::path>
+     return
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_swizzle_value_string
+                                = in_map_sprite.filter()
+                                    .swizzle.value()
+                                    .string() },
+        texture_page,
+        palette]() -> std::vector<std::filesystem::path>
      {
-          spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {}, palette: {}", ps.field_name, texture_page, palette);
+          spdlog::debug(
+            "Generating swizzle paths for field: '{}', texture_page: {}, "
+            "palette: {}",
+            ps.field_name,
+            texture_page,
+            palette);
           return ps.generate_swizzle_paths(texture_page, palette, ".png");
      };
 }
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_deswizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  const ff_8::PupuID                pupu_id)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_deswizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    const ff_8::PupuID                pupu_id)
 {
      assert(in_selections && "generate_deswizzle_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_deswizzle_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections                     = std::move(in_selections),
-                                     .opt_coo                        = in_map_sprite.get_opt_coo(),
-                                     .field_name                     = in_map_sprite.get_base_name(),
-                                     .filters_deswizzle_value_string = in_map_sprite.filter().deswizzle.value().string() },
-             pupu_id]() -> std::vector<std::filesystem::path>
+     // assert(in_map_sprite && "generate_deswizzle_paths: in_map_sprite is
+     // null");
+     return
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_deswizzle_value_string
+                                = in_map_sprite.filter()
+                                    .deswizzle.value()
+                                    .string() },
+        pupu_id]() -> std::vector<std::filesystem::path>
      {
-          spdlog::debug("Generating deswizzle paths for field: '{}', pupu_id: {}", ps.field_name, pupu_id);
+          spdlog::debug(
+            "Generating deswizzle paths for field: '{}', pupu_id: {}",
+            ps.field_name,
+            pupu_id);
           return ps.generate_deswizzle_paths(pupu_id, ".png");
      };
 }
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_full_filename_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  const std::string                &filename)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_full_filename_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    const std::string                &filename)
 {
-     assert(in_selections && "generate_full_filename_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_full_filename_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections                         = std::move(in_selections),
-                                     .opt_coo                            = in_map_sprite.get_opt_coo(),
-                                     .field_name                         = in_map_sprite.get_base_name(),
-                                     .filters_full_filename_value_string = in_map_sprite.filter().full_filename.value().string() },
-             filename]() -> std::vector<std::filesystem::path>
+     assert(
+       in_selections && "generate_full_filename_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_full_filename_paths: in_map_sprite is
+     // null");
+     return
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_full_filename_value_string
+                                = in_map_sprite.filter()
+                                    .full_filename.value()
+                                    .string() },
+        filename]() -> std::vector<std::filesystem::path>
      {
-          spdlog::debug("Generating full filename paths for field: '{}', filename: {}", ps.field_name, filename);
+          spdlog::debug(
+            "Generating full filename paths for field: '{}', filename: {}",
+            ps.field_name,
+            filename);
           return ps.generate_full_filename_paths(filename);
      };
 }
 
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_map_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite)
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_map_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections = std::move(in_selections),
-                                     .opt_coo    = in_map_sprite.get_opt_coo(),
-                                     .field_name = in_map_sprite.get_base_name(),
-                                     .filters_map_value_string
-                                     = in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path>
+     return
+       [ps
+        = ff_8::path_search{ .selections = std::move(in_selections),
+                             .opt_coo    = in_map_sprite.get_opt_coo(),
+                             .field_name = in_map_sprite.get_base_name(),
+                             .filters_map_value_string
+                             = in_map_sprite.filter().map.value().string() }]()
+         -> std::vector<std::filesystem::path>
      {
           spdlog::debug("Generating map paths for field: '{}'", ps.field_name);
           return ps.generate_map_paths(".map");

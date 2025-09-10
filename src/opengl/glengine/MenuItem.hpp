@@ -83,7 +83,9 @@ class MenuItem
      MenuItem(
        std::in_place_type_t<T>,
        argsT &&...args) noexcept
-       : m_impl(std::make_unique<MenuItemModel<std::remove_cvref_t<T>>>(std::forward<argsT>(args)...))
+       : m_impl(
+           std::make_unique<MenuItemModel<std::remove_cvref_t<T>>>(
+             std::forward<argsT>(args)...))
      {
           static_assert(Renderable<T>);
      }

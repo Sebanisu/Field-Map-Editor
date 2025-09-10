@@ -18,12 +18,12 @@ class Mim
    public:
      Mim() = default;
      Mim(const Fields &fields);
-     void                               on_update(float) const;
-     void                               on_render() const;
-     void                               on_im_gui_update() const;
-     void                               on_event(const glengine::event::Item &) const;
-     std::size_t                        index() const;
-     const glengine::Texture           &current_texture() const;
+     void                     on_update(float) const;
+     void                     on_render() const;
+     void                     on_im_gui_update() const;
+     void                     on_event(const glengine::event::Item &) const;
+     std::size_t              index() const;
+     const glengine::Texture &current_texture() const;
 
      constexpr static const char *const label = "Mim";
 

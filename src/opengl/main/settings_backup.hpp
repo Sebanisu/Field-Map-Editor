@@ -52,7 +52,8 @@ struct setting_backup
           return *this;
      }
 
-     [[nodiscard]] auto operator<=>(const setting_backup<T> &other) const = default;
+     [[nodiscard]] auto operator<=>(const setting_backup<T> &other) const
+       = default;
 
      [[nodiscard]] auto operator<=>(const T &in_value) const
      {

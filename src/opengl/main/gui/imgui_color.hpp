@@ -16,7 +16,9 @@ inline static constexpr number_type bitwise_or(
   number_type first,
   rest_number_type... rest)
 {
-     return static_cast<number_type>(static_cast<std::uint32_t>(first) | (static_cast<std::uint32_t>(rest) | ...));
+     return static_cast<number_type>(
+       static_cast<std::uint32_t>(first)
+       | (static_cast<std::uint32_t>(rest) | ...));
 }
 template<
   is_enum_or_integral number_type,
@@ -25,7 +27,9 @@ inline static constexpr number_type bitwise_and(
   number_type start,
   rest_number_type... rest)
 {
-     return static_cast<number_type>(static_cast<std::uint32_t>(start) & (static_cast<std::uint32_t>(rest) & ...));
+     return static_cast<number_type>(
+       static_cast<std::uint32_t>(start)
+       & (static_cast<std::uint32_t>(rest) & ...));
 }
 template<is_enum_or_integral number_type>
 inline static constexpr number_type bitwise_not(number_type value)
@@ -42,9 +46,15 @@ inline static constexpr ImU32 imgui_color32(
      constexpr auto G_SHIFT = 8U;
      constexpr auto B_SHIFT = 16U;
      constexpr auto A_SHIFT = 24U;
-     return bitwise_or(ImU32{}, alpha << A_SHIFT, blue << B_SHIFT, green << G_SHIFT, red << R_SHIFT);
+     return bitwise_or(
+       ImU32{},
+       alpha << A_SHIFT,
+       blue << B_SHIFT,
+       green << G_SHIFT,
+       red << R_SHIFT);
 }
-inline static constexpr ImU32 imgui_color32(open_viii::struct_of_color32_byte auto color)
+inline static constexpr ImU32
+  imgui_color32(open_viii::struct_of_color32_byte auto color)
 {
      return imgui_color32(color.r, color.g, color.b, color.a);
 }

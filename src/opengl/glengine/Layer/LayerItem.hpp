@@ -78,7 +78,9 @@ namespace Layer
           Item(
             std::in_place_type_t<T>,
             argsT &&...args)
-            : m_impl(std::make_unique<ItemModel<std::remove_cvref_t<T>>>(std::forward<argsT>(args)...))
+            : m_impl(
+                std::make_unique<ItemModel<std::remove_cvref_t<T>>>(
+                  std::forward<argsT>(args)...))
           {
                static_assert(glengine::Renderable<T>);
           }

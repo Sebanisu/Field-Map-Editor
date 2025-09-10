@@ -35,69 +35,86 @@ struct [[nodiscard]] map_sprite// final
 //   , public sf::Transformable
 {
    public:
-     static constexpr std::uint8_t  TILE_SIZE                 = 16U;
-     static constexpr std::uint8_t  MAX_TEXTURE_PAGES         = 14U;
-     static constexpr std::uint8_t  MAX_PALETTES              = 16U;
-     static constexpr std::uint8_t  BPP_COMBOS                = 2U;
-     static constexpr std::uint16_t START_OF_NO_PALETTE_INDEX = MAX_PALETTES * MAX_TEXTURE_PAGES;
-     static constexpr std::uint16_t BPP16_INDEX               = MAX_PALETTES * BPP_COMBOS + 1;
-     static constexpr auto          MAX_TEXTURES = (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES),
-                                                     static_cast<std::uint16_t>(BPP16_INDEX + 1U));
+     static constexpr std::uint8_t  TILE_SIZE         = 16U;
+     static constexpr std::uint8_t  MAX_TEXTURE_PAGES = 14U;
+     static constexpr std::uint8_t  MAX_PALETTES      = 16U;
+     static constexpr std::uint8_t  BPP_COMBOS        = 2U;
+     static constexpr std::uint16_t START_OF_NO_PALETTE_INDEX
+       = MAX_PALETTES * MAX_TEXTURE_PAGES;
+     static constexpr std::uint16_t BPP16_INDEX = MAX_PALETTES * BPP_COMBOS + 1;
+     static constexpr auto          MAX_TEXTURES
+       = (std::max)(static_cast<std::uint16_t>(
+                      START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES),
+                    static_cast<std::uint16_t>(BPP16_INDEX + 1U));
 
-     using BPPT                                  = open_viii::graphics::BPPT;
-     using WeakField                             = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
-     using Map                                   = open_viii::graphics::background::Map;
-     using Mim                                   = open_viii::graphics::background::Mim;
-     using color_type                            = open_viii::graphics::Color32RGBA;
-     using colors_type                           = std::vector<color_type>;
-     using SharedTextures                        = std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>>;
-     using BlendModeT                            = open_viii::graphics::background::BlendModeT;
-     using Rectangle                             = open_viii::graphics::Rectangle<std::uint32_t>;
-     using iRectangle                            = open_viii::graphics::Rectangle<std::int32_t>;
+     using BPPT        = open_viii::graphics::BPPT;
+     using WeakField   = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
+     using Map         = open_viii::graphics::background::Map;
+     using Mim         = open_viii::graphics::background::Mim;
+     using color_type  = open_viii::graphics::Color32RGBA;
+     using colors_type = std::vector<color_type>;
+     using SharedTextures
+       = std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>>;
+     using BlendModeT = open_viii::graphics::background::BlendModeT;
+     using Rectangle  = open_viii::graphics::Rectangle<std::uint32_t>;
+     using iRectangle = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     mutable std::map<std::string, glengine::Texture>                            m_full_filename_textures     = {};
-     mutable std::map<std::string, std::string>                                  m_full_filename_to_mask_name = {};
-     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
-     mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
-     SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
-     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> m_cache_framebuffer          = {};
-     mutable std::map<std::string, std::string>                          m_cache_framebuffer_tooltips = {};
-     mutable std::map<std::string, std::vector<ff_8::PupuID>>            m_cache_framebuffer_pupuids  = {};
-     ff_8::map_group                                                     m_map_group                  = {};
+     mutable std::map<std::string, glengine::Texture> m_full_filename_textures
+       = {};
+     mutable std::map<std::string, std::string> m_full_filename_to_mask_name
+       = {};
+     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+       m_future_of_future_consumer = {};
+     mutable FutureConsumer<std::vector<std::future<void>>> m_future_consumer
+       = {};
+     SharedTextures m_texture
+       = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
+                                                m_cache_framebuffer = {};
+     mutable std::map<std::string, std::string> m_cache_framebuffer_tooltips
+       = {};
+     mutable std::map<std::string, std::vector<ff_8::PupuID>>
+                           m_cache_framebuffer_pupuids  = {};
+     ff_8::map_group       m_map_group                  = {};
      // TODO do I need square?
-     //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                                                m_draw_swizzle               = { false };
-     bool                                                                m_disable_texture_page_shift = { false };
-     bool                                                                m_disable_blends             = { false };
-     mutable ff_8::filters                          m_filters                = { false };// default false should be override by gui to true.
-     std::weak_ptr<Selections>                      m_selections             = {};
-     bool                                           m_using_imported_texture = {};
-     const glengine::Texture                       *m_imported_texture       = { nullptr };
-     std::uint16_t                                  m_imported_tile_size     = {};
-     Map                                            m_imported_tile_map      = {};
-     Map                                            m_imported_tile_map_front       = {};
-     ff_8::all_unique_values_and_strings            m_all_unique_values_and_strings = {};
-     open_viii::graphics::Rectangle<std::uint32_t>  m_canvas                        = {};
+     //  square                                        m_square    = {
+     //  glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
+     bool                  m_draw_swizzle               = { false };
+     bool                  m_disable_texture_page_shift = { false };
+     bool                  m_disable_blends             = { false };
+     mutable ff_8::filters m_filters
+       = { false };// default false should be override by gui to true.
+     std::weak_ptr<Selections>           m_selections             = {};
+     bool                                m_using_imported_texture = {};
+     const glengine::Texture            *m_imported_texture       = { nullptr };
+     std::uint16_t                       m_imported_tile_size     = {};
+     Map                                 m_imported_tile_map      = {};
+     Map                                 m_imported_tile_map_front       = {};
+     ff_8::all_unique_values_and_strings m_all_unique_values_and_strings = {};
+     open_viii::graphics::Rectangle<std::uint32_t>  m_canvas             = {};
 
-     glengine::BatchRenderer                        m_batch_renderer                = { 1000 };
-     // glengine::BatchRenderer                        m_batch_renderer_red_integer    = { 1,
+     glengine::BatchRenderer                        m_batch_renderer = { 1000 };
+     // glengine::BatchRenderer m_batch_renderer_red_integer    = { 1,
      //                                                                                    { std::filesystem::current_path() / "res" /
      //                                                                                    "shader"
      //                                                                                      / "red_integer.shader" } };
 
-     mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer            = {};
+     mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer = {};
 
-     std::vector<std::size_t>                       m_saved_imported_indices        = {};
-     mutable bool                                   once                            = { true };
-     mutable glengine::OrthographicCamera           m_fixed_render_camera           = {};
+     std::vector<std::size_t>             m_saved_imported_indices       = {};
+     mutable bool                         once                  = { true };
+     mutable glengine::OrthographicCamera m_fixed_render_camera = {};
 
-     static constexpr auto                          s_default_color                 = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
-     static constexpr auto                          s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };   // dimmed, fully opaque
-     static constexpr auto                          s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
+     static constexpr auto                s_default_color
+       = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
+     static constexpr auto s_half_color
+       = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
+     static constexpr auto s_quarter_color
+       = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
 
-     mutable glm::vec4                              m_uniform_color = s_default_color;
-     [[nodiscard]] settings_backup                  get_backup_settings(const bool);
+     mutable glm::vec4             m_uniform_color = s_default_color;
+     [[nodiscard]] settings_backup get_backup_settings(const bool);
 
    public:
      map_sprite() = default;
@@ -108,14 +125,16 @@ struct [[nodiscard]] map_sprite// final
        bool                                   force_disable_blends,
        bool                                   require_coo,
        std::weak_ptr<Selections>              selections,
-       std::shared_ptr<glengine::FrameBuffer> framebuffer = std::make_shared<glengine::FrameBuffer>());
-     explicit                                      operator ff_8::path_search() const;
+       std::shared_ptr<glengine::FrameBuffer> framebuffer
+       = std::make_shared<glengine::FrameBuffer>());
+     explicit operator ff_8::path_search() const;
 
      [[nodiscard]] std::optional<open_viii::LangT> get_opt_coo() const;
 
-     [[nodiscard]] std::string                     appends_prefix_base_name(std::string_view title) const;
+     [[nodiscard]] std::string
+       appends_prefix_base_name(std::string_view title) const;
 
-     [[nodiscard]] const glengine::FrameBuffer    &get_framebuffer() const
+     [[nodiscard]] const glengine::FrameBuffer &get_framebuffer() const
      {
           assert(m_render_framebuffer && "frame buffer is null ptr");
           return *m_render_framebuffer;
@@ -124,56 +143,66 @@ struct [[nodiscard]] map_sprite// final
        BPPT         bpp,
        std::uint8_t palette,
        std::uint8_t texture_page) const;
-     [[nodiscard]] glengine::Texture       *get_texture_mutable(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] const glengine::Texture *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] glm::uvec2               get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] bool                     generate_texture(const glengine::FrameBuffer &texture) const;
-     [[nodiscard]] std::uint32_t            get_max_texture_height() const;
-     [[nodiscard]] bool                     local_draw(
-                           const glengine::FrameBuffer   &target_framebuffer,
-                           const glengine::BatchRenderer &target_renderer) const;
-     [[nodiscard]] bool                                       draw_imported(const glengine::FrameBuffer &) const;
-     [[nodiscard]] std::string                                get_base_name() const;
+     [[nodiscard]] glengine::Texture *
+       get_texture_mutable(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] const glengine::Texture *
+       get_texture(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] glm::uvec2
+       get_tile_texture_size(const glengine::Texture *const texture) const;
+     [[nodiscard]] bool
+       generate_texture(const glengine::FrameBuffer &texture) const;
+     [[nodiscard]] std::uint32_t get_max_texture_height() const;
+     [[nodiscard]] bool          local_draw(
+                const glengine::FrameBuffer   &target_framebuffer,
+                const glengine::BatchRenderer &target_renderer) const;
+     [[nodiscard]] bool draw_imported(const glengine::FrameBuffer &) const;
+     [[nodiscard]] std::string get_base_name() const;
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>           &working_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID> &working_unique_pupu() const;
      [[nodiscard]] std::vector<std::tuple<
        glm::vec4,
        ff_8::PupuID>>
-                                                      working_unique_color_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>   &original_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>   &original_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>   &working_pupu() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts &original_conflicts() const;
+       working_unique_color_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID> &
+       original_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID> &original_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID> &working_pupu() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts &
+       original_conflicts() const;
      [[nodiscard]] const ff_8::source_tile_conflicts &working_conflicts() const;
-     [[nodiscard]] const ff_8::MapHistory::nst_map   &working_similar_counts() const;
-     [[nodiscard]] const ff_8::MapHistory::nsat_map  &working_animation_counts() const;
-     [[nodiscard]] std::string                        map_filename() const;
-     [[nodiscard]] bool                               fail() const;
-     [[nodiscard]] std::uint32_t                      width() const;
-     [[nodiscard]] std::uint32_t                      height() const;
-     [[nodiscard]] map_sprite                         with_coo(open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                         with_field(
-                               WeakField        field,
-                               open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite           with_filters(ff_8::filters filters) const;
-     [[nodiscard]] bool                 empty() const;
+     [[nodiscard]] const ff_8::MapHistory::nst_map &
+       working_similar_counts() const;
+     [[nodiscard]] const ff_8::MapHistory::nsat_map                           &
+       working_animation_counts() const;
+     [[nodiscard]] std::string   map_filename() const;
+     [[nodiscard]] bool          fail() const;
+     [[nodiscard]] std::uint32_t width() const;
+     [[nodiscard]] std::uint32_t height() const;
+     [[nodiscard]] map_sprite    with_coo(open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite    with_field(
+          WeakField        field,
+          open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite with_filters(ff_8::filters filters) const;
+     [[nodiscard]] bool       empty() const;
      [[nodiscard]] const ff_8::filters &filter() const;
      [[nodiscard]] map_sprite           update(
                  ff_8::map_group map_group,
                  bool            draw_swizzle) const;
-     [[nodiscard]] ff_8::all_unique_values_and_strings get_all_unique_values_and_strings() const;
-     [[nodiscard]] glm::uvec2                          get_tile_texture_size_for_import() const;
-     [[nodiscard]] Rectangle                           get_canvas() const;
-     [[nodiscard]] bool                                undo_enabled() const;
-     [[nodiscard]] bool                                redo_enabled() const;
-     [[nodiscard]] ff_8::filters                      &filter();
-     //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     [[nodiscard]] bool                                fallback_textures() const;
-     void                                              queue_texture_loading() const;
-     [[nodiscard]] static colors_type                  get_colors(
-                        const Mim &mim,
-                        BPPT       bpp,
-                        uint8_t    palette);
+     [[nodiscard]] ff_8::all_unique_values_and_strings
+                                      get_all_unique_values_and_strings() const;
+     [[nodiscard]] glm::uvec2         get_tile_texture_size_for_import() const;
+     [[nodiscard]] Rectangle          get_canvas() const;
+     [[nodiscard]] bool               undo_enabled() const;
+     [[nodiscard]] bool               redo_enabled() const;
+     [[nodiscard]] ff_8::filters     &filter();
+     //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const
+     //BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     [[nodiscard]] bool               fallback_textures() const;
+     void                             queue_texture_loading() const;
+     [[nodiscard]] static colors_type get_colors(
+       const Mim &mim,
+       BPPT       bpp,
+       uint8_t    palette);
      // [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>> async_save(
        const glengine::Texture     &out_texture,
@@ -189,7 +218,8 @@ struct [[nodiscard]] map_sprite// final
      {
           return str_to_lower(std::string{ input });
      }
-     //[[nodiscard]] sf::Sprite                     save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
+     //[[nodiscard]] sf::Sprite                     save_intersecting(const
+     //glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(
        BPPT         bpp,
        std::uint8_t palette,
@@ -197,9 +227,10 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>> save_swizzle_textures(
        const std::string           &keyed_string,
        const std::filesystem::path &selected_path);
-     [[nodiscard]] std::vector<std::future<void>> save_swizzle_as_one_image_textures(
-       const std::string           &keyed_string,
-       const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
+       save_swizzle_as_one_image_textures(
+         const std::string           &keyed_string,
+         const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>> save_csv(
        const std::string           &keyed_string,
        const std::filesystem::path &selected_path);
@@ -227,45 +258,55 @@ struct [[nodiscard]] map_sprite// final
        get_deswizzle_combined_textures_pupuids();
      [[nodiscard]] std::map<
        std::string,
-       std::optional<glengine::FrameBuffer>>                                       &
+       std::optional<glengine::FrameBuffer>> &
        get_deswizzle_combined_textures(const int scale = {});
-     [[nodiscard]] std::string               generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
-     [[nodiscard]] std::vector<ff_8::PupuID> generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
-     [[nodiscard]] open_viii::LangT          get_used_coo(const fme::FailOverLevels max_failover) const;
-     [[nodiscard]] toml::table              *get_deswizzle_combined_coo_table(
-                    open_viii::LangT   *out_used_coo = nullptr,
-                    fme::FailOverLevels failover     = fme::FailOverLevels::Loaded) const;
-     [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &) const;
+     [[nodiscard]] std::string generate_deswizzle_combined_tool_tip(
+       const toml::table *file_table) const;
+     [[nodiscard]] std::vector<ff_8::PupuID>
+       generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
+     [[nodiscard]] open_viii::LangT
+       get_used_coo(const fme::FailOverLevels max_failover) const;
+     [[nodiscard]] toml::table *get_deswizzle_combined_coo_table(
+       open_viii::LangT   *out_used_coo = nullptr,
+       fme::FailOverLevels failover     = fme::FailOverLevels::Loaded) const;
+     [[nodiscard]] toml::table *
+       get_deswizzle_combined_toml_table(const std::string &) const;
      [[nodiscard]] std::vector<std::string> toml_filenames() const;
      [[nodiscard]] std::string              get_recommended_prefix();
-     [[nodiscard]] toml::table             *rename_deswizzle_combined_toml_table(
-                   const std::string &,
-                   const std::string &);
-     [[nodiscard]] std::size_t  remove_deswizzle_combined_toml_table(const std::string &);
-     [[nodiscard]] toml::table *add_deswizzle_combined_toml_table(const std::string &);
-     void                       refresh_tooltip(const std::string &);
-     void                       apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                             const std::string                                  &file_name_key,
-                             const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
+     [[nodiscard]] toml::table *rename_deswizzle_combined_toml_table(
+       const std::string &,
+       const std::string &);
+     [[nodiscard]] std::size_t
+       remove_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] toml::table    *
+       add_deswizzle_combined_toml_table(const std::string &);
+     void refresh_tooltip(const std::string &);
+     void apply_multi_pupu_filter_deswizzle_combined_toml_table(
+       const std::string                                  &file_name_key,
+       const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(
        const std::vector<std::string> &,
        const std::string &);
      void copy_deswizzle_combined_toml_table(
        const std::vector<std::string> &,
        std::move_only_function<std::string(void)>);
-     [[nodiscard]] std::vector<std::future<void>> save_deswizzle_full_filename_textures(
-       const std::string           &keyed_string,
-       const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
+       save_deswizzle_full_filename_textures(
+         const std::string           &keyed_string,
+         const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(
        std::uint8_t texture_page,
        std::uint8_t palette) const;
-     [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>
-       load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;
+       load_swizzle_textures(std::uint8_t texture_page) const;
+     [[nodiscard]] std::future<std::future<void>>
+       load_swizzle_as_one_image_textures(
+         std::optional<std::uint8_t> palette = std::nullopt) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(
        const ff_8::PupuID pupu,
        const size_t       pos) const;
-     [[nodiscard]] std::future<std::future<void>> load_full_filename_textures(const std::string filename) const;
+     [[nodiscard]] std::future<std::future<void>>
+       load_full_filename_textures(const std::string filename) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(
        BPPT    bpp,
        uint8_t palette) const;
@@ -278,7 +319,8 @@ struct [[nodiscard]] map_sprite// final
        const glengine::FrameBuffer &fbo,
        const glengine::Shader      &shader) const;
      // void        disable_square() const;
-     //  void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+     //  void        draw(sf::RenderTarget &target, sf::RenderStates states)
+     //  const final;
      void enable_draw_swizzle();
      void disable_draw_swizzle();
      void enable_disable_blends();
@@ -307,11 +349,12 @@ struct [[nodiscard]] map_sprite// final
        Map                      map,
        const tile_sizes         tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
-     static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
-     void        update_position(
-              const glm::ivec2               &pixel_pos,
-              const glm::ivec2               &down_pixel_pos,
-              const std::vector<std::size_t> &saved_indices);
+     static void consume_futures(
+       std::vector<std::future<std::future<void>>> &future_of_futures);
+     void update_position(
+       const glm::ivec2               &pixel_pos,
+       const glm::ivec2               &down_pixel_pos,
+       const std::vector<std::size_t> &saved_indices);
      bool                         consume_one_future() const;
      void                         consume_now(const bool update = true) const;
 
@@ -384,35 +427,50 @@ struct [[nodiscard]] map_sprite// final
      {
           if (m_draw_swizzle)
           {
-               return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+               return ff_8::find_intersecting_swizzle(
+                 tiles,
+                 m_filters,
+                 pixel_pos,
+                 texture_page,
+                 skip_filters,
+                 find_all);
           }
-          return ff_8::find_intersecting_deswizzle(tiles, m_filters, pixel_pos, skip_filters, find_all);
+          return ff_8::find_intersecting_deswizzle(
+            tiles, m_filters, pixel_pos, skip_filters, find_all);
      }
      template<typename funcT>
      auto const_visit_working_tiles(funcT &&p_function) const
      {
-          return m_map_group.maps.const_working().visit_tiles(std::forward<decltype(p_function)>(p_function));
+          return m_map_group.maps.const_working().visit_tiles(
+            std::forward<decltype(p_function)>(p_function));
      }
      template<typename funcT>
      auto const_visit_original_tiles(funcT &&p_function) const
      {
-          return m_map_group.maps.original().visit_tiles(std::forward<decltype(p_function)>(p_function));
+          return m_map_group.maps.original().visit_tiles(
+            std::forward<decltype(p_function)>(p_function));
      }
      template<typename funcT>
      auto const_visit_tiles_both(funcT &&p_function) const
      {
           return m_map_group.maps.const_working().visit_tiles(
             [&](const auto &back)
-            { return m_map_group.maps.original().visit_tiles([&](const auto &front) { return p_function(back, front); }); });
+            {
+                 return m_map_group.maps.original().visit_tiles(
+                   [&](const auto &front) { return p_function(back, front); });
+            });
      }
 
      template<open_viii::graphics::background::is_tile tileT>
      [[nodiscard]] const glengine::Texture *get_texture(const tileT &tile) const
      {
 
-          if (!m_filters.deswizzle.enabled() && !m_filters.full_filename.enabled())
+          if (
+            !m_filters.deswizzle.enabled()
+            && !m_filters.full_filename.enabled())
           {
-               return get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+               return get_texture(
+                 tile.depth(), tile.palette_id(), tile.texture_id());
           }
           else
           {
@@ -428,20 +486,30 @@ struct [[nodiscard]] map_sprite// final
                       using TileT2 = std::remove_cvref<decltype(tile)>;
                       if constexpr (std::is_same_v<TileT1, TileT2>)
                       {
-                           const auto found_iterator = std::ranges::find_if(tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
-                           const auto distance       = std::ranges::distance(tiles.begin(), found_iterator);
+                           const auto found_iterator = std::ranges::find_if(
+                             tiles,
+                             [&tile](const auto &l_tile)
+                             { return l_tile == tile; });
+                           const auto distance = std::ranges::distance(
+                             tiles.begin(), found_iterator);
 
-                           if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.original_pupu()), distance))
+                           if (std::cmp_greater(
+                                 std::ranges::ssize(
+                                   m_map_group.maps.original_pupu()),
+                                 distance))
                            {
-                                auto pupu_it = m_map_group.maps.original_pupu().cbegin();
+                                auto pupu_it
+                                  = m_map_group.maps.original_pupu().cbegin();
                                 std::ranges::advance(pupu_it, distance);
                                 return get_texture(*pupu_it);
                            }
-                           return static_cast<const glengine::Texture *>(nullptr);
+                           return static_cast<const glengine::Texture *>(
+                             nullptr);
                       }
                       else
                       {
-                           return static_cast<const glengine::Texture *>(nullptr);
+                           return static_cast<const glengine::Texture *>(
+                             nullptr);
                       }
                  });
           }
@@ -453,8 +521,9 @@ struct [[nodiscard]] map_sprite// final
      // {
      //      using namespace open_viii::graphics::literals;
      //      auto       src_tpw = tile_type::texture_page_width(tile.depth());
-     //      const auto x       = [&tile, &src_tpw]() -> std::uint32_t { return tile.texture_id() * src_tpw; }();
-     //      const auto src_x   = [&tile, &x, this]() -> std::uint32_t {
+     //      const auto x       = [&tile, &src_tpw]() -> std::uint32_t { return
+     //      tile.texture_id() * src_tpw; }(); const auto src_x   = [&tile, &x,
+     //      this]() -> std::uint32_t {
      //           if (!m_filters.deswizzle.enabled())
      //           {
      //                return static_cast<std::uint32_t>(tile.x());
@@ -478,7 +547,12 @@ struct [[nodiscard]] map_sprite// final
             {
                  return m_map_group.maps.working().visit_tiles(
                    [&lambda, &tiles_const](const auto &tiles)
-                   { return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, tiles); });
+                   {
+                        return std::invoke(
+                          std::forward<decltype(lambda)>(lambda),
+                          tiles_const,
+                          tiles);
+                   });
             });
      }
      auto duel_visitor(auto &&lambda)
@@ -488,7 +562,12 @@ struct [[nodiscard]] map_sprite// final
             {
                  return m_map_group.maps.working().visit_tiles(
                    [&lambda, &tiles_const](auto &&tiles)
-                   { return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, std::forward<decltype(tiles)>(tiles)); });
+                   {
+                        return std::invoke(
+                          std::forward<decltype(lambda)>(lambda),
+                          tiles_const,
+                          std::forward<decltype(tiles)>(tiles));
+                   });
             });
      }
      void for_all_tiles(
@@ -502,30 +581,45 @@ struct [[nodiscard]] map_sprite// final
           m_map_group.maps.refresh_original_all();
           auto pupu_ids = m_map_group.maps.original_pupu();
           pupu_ids.push_back({});
-          namespace v          = std::ranges::views;
-          namespace r          = std::ranges;
-          const bool same_size = (tiles_const.size() == tiles.size() && tiles.size() == pupu_ids.size());
+          namespace v = std::ranges::views;
+          namespace r = std::ranges;
+          const bool same_size
+            = (tiles_const.size() == tiles.size() && tiles.size() == pupu_ids.size());
           if (!same_size)
           {
                spdlog::error(
-                 "tiles_const: {}, tiles: {}, pupu_ids: {}, same size: {}", tiles_const.size(), tiles.size(), pupu_ids.size(), same_size);
+                 "tiles_const: {}, tiles: {}, pupu_ids: {}, same size: {}",
+                 tiles_const.size(),
+                 tiles.size(),
+                 pupu_ids.size(),
+                 same_size);
           }
-          auto zipped_range = v::zip(tiles_const, tiles, pupu_ids)
-                              | v::filter([&](const auto &current) { return !skip_invalid || std::apply(Map::filter_invalid(), current); });
+          auto zipped_range
+            = v::zip(tiles_const, tiles, pupu_ids)
+              | v::filter(
+                [&](const auto &current)
+                {
+                     return !skip_invalid
+                            || std::apply(Map::filter_invalid(), current);
+                });
           if (!regular_order)
           {
                for (decltype(auto) current : zipped_range | v::reverse)
                {
-                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
-                    std::apply(lambda, std::forward<decltype(current)>(current));
+                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current),
+                    // std::get<1>(current), std::get<2>(current));
+                    std::apply(
+                      lambda, std::forward<decltype(current)>(current));
                }
           }
           else
           {
                for (decltype(auto) current : zipped_range)
                {
-                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
-                    std::apply(lambda, std::forward<decltype(current)>(current));
+                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current),
+                    // std::get<1>(current), std::get<2>(current));
+                    std::apply(
+                      lambda, std::forward<decltype(current)>(current));
                }
           }
      }
@@ -535,10 +629,15 @@ struct [[nodiscard]] map_sprite// final
        bool   regular_order = false) const
      {
           duel_visitor(
-            [&lambda, &skip_invalid, &regular_order, this](auto const &tiles_const, auto &&tiles)
+            [&lambda, &skip_invalid, &regular_order, this](
+              auto const &tiles_const, auto &&tiles)
             {
                  this->for_all_tiles(
-                   tiles_const, std::forward<decltype(tiles)>(tiles), std::forward<decltype(lambda)>(lambda), skip_invalid, regular_order);
+                   tiles_const,
+                   std::forward<decltype(tiles)>(tiles),
+                   std::forward<decltype(lambda)>(lambda),
+                   skip_invalid,
+                   regular_order);
             });
      }
 
@@ -546,26 +645,31 @@ struct [[nodiscard]] map_sprite// final
      template<typename TilesT>
      auto find_conflicting_tiles(const TilesT &tiles) const
      {
-          using TileT                                             = std::ranges::range_value_t<std::remove_cvref_t<TilesT>>;
-          using TextureIdT                                        = ff_8::tile_operations::TextureIdT<TileT>;
-          using PaletteIdT                                        = ff_8::tile_operations::PaletteIdT<TileT>;
-          static constexpr auto                         SourceX   = ff_8::tile_operations::SourceX{};
-          static constexpr auto                         SourceY   = ff_8::tile_operations::SourceY{};
-          static constexpr auto                         TextureId = ff_8::tile_operations::TextureId{};
-          static constexpr auto                         PaletteId = ff_8::tile_operations::PaletteId{};
+          using TileT = std::ranges::range_value_t<std::remove_cvref_t<TilesT>>;
+          using TextureIdT = ff_8::tile_operations::TextureIdT<TileT>;
+          using PaletteIdT = ff_8::tile_operations::PaletteIdT<TileT>;
+          static constexpr auto SourceX   = ff_8::tile_operations::SourceX{};
+          static constexpr auto SourceY   = ff_8::tile_operations::SourceY{};
+          static constexpr auto TextureId = ff_8::tile_operations::TextureId{};
+          static constexpr auto PaletteId = ff_8::tile_operations::PaletteId{};
           std::map<TextureIdT, std::vector<PaletteIdT>> conflicts;
 
-          // Process each pair of matching tiles and insert their palette IDs into the conflicts map
+          // Process each pair of matching tiles and insert their palette IDs
+          // into the conflicts map
           for (const auto &first : tiles)
           {
                for (const auto &second : tiles | std::views::drop(1))
                {
                     if (
-                      &first != &second && PaletteId(first) != PaletteId(second) && TextureId(first) == TextureId(second)
-                      && SourceX(first) == SourceX(second) && SourceY(first) == SourceY(second))
+                      &first != &second && PaletteId(first) != PaletteId(second)
+                      && TextureId(first) == TextureId(second)
+                      && SourceX(first) == SourceX(second)
+                      && SourceY(first) == SourceY(second))
                     {
-                         conflicts[TextureId(first)].push_back(PaletteId(first));
-                         conflicts[TextureId(second)].push_back(PaletteId(second));
+                         conflicts[TextureId(first)].push_back(
+                           PaletteId(first));
+                         conflicts[TextureId(second)].push_back(
+                           PaletteId(second));
                     }
                }
           }
@@ -599,7 +703,9 @@ struct [[nodiscard]] map_sprite// final
 
      [[nodiscard]] auto get_conflicting_palettes() const
      {
-          return m_map_group.maps.working().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
+          return m_map_group.maps.working().visit_tiles(
+            [this](const auto &tiles)
+            { return find_conflicting_tiles(tiles); });
      }
 
      static glm::vec2 to_vec2(const glm::ivec2 &v)
@@ -612,42 +718,53 @@ struct [[nodiscard]] map_sprite// final
      }
 
      [[nodiscard]] ff_8::QuadStrip get_triangle_strip_for_imported(
-       const glm::uvec2                                    &source_tile_size,
-       const glm::uvec2                                    &destination_tile_size,
-       const glm::uvec2                                    &source_texture_size,
+       const glm::uvec2 &source_tile_size,
+       const glm::uvec2 &destination_tile_size,
+       const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
        open_viii::graphics::background::is_tile auto      &&tile) const
      {
-          return get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile, true);
+          return get_triangle_strip(
+            source_tile_size,
+            destination_tile_size,
+            source_texture_size,
+            tile_const,
+            tile,
+            true);
      }
      [[nodiscard]] ff_8::QuadStrip get_triangle_strip(
-       const glm::uvec2                                    &source_tile_size,
-       const glm::uvec2                                    &destination_tile_size,
-       const glm::uvec2                                    &source_texture_size,
+       const glm::uvec2 &source_tile_size,
+       const glm::uvec2 &destination_tile_size,
+       const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
        open_viii::graphics::background::is_tile auto      &&tile,
-       bool                                                 imported = false) const
+       bool imported = false) const
      {
           const auto src = [this, &tile_const, &imported]()
           {
                if (imported)
                {
-                    return to_vec2(ff_8::source_coords_for_imported(tile_const));
+                    return to_vec2(
+                      ff_8::source_coords_for_imported(tile_const));
                }
                if (m_filters.swizzle_as_one_image.enabled())
                {
                     // Calculate UVs for single texture
                     // Source X adjusted by texture_page * texture_page_width
                     // Base this on dest_coords_for_swizzle
-                    return to_vec2(ff_8::source_coords_for_single_swizzle(tile_const));
+                    return to_vec2(
+                      ff_8::source_coords_for_single_swizzle(tile_const));
                }
                if (m_filters.swizzle.enabled())
                {
                     return to_vec2(ff_8::source_coords_for_swizzle(tile_const));
                }
-               if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
+               if (
+                 m_filters.deswizzle.enabled()
+                 || m_filters.full_filename.enabled())
                {
-                    return to_vec2(ff_8::source_coords_for_deswizzle(tile_const));
+                    return to_vec2(
+                      ff_8::source_coords_for_deswizzle(tile_const));
                }
                return to_vec2(ff_8::source_coords_for_default(tile_const));
           }();
@@ -657,47 +774,58 @@ struct [[nodiscard]] map_sprite// final
                {
                     if (m_disable_texture_page_shift)
                     {
-                         return to_vec2(ff_8::dest_coords_for_swizzle_disable_shift(tile));
+                         return to_vec2(
+                           ff_8::dest_coords_for_swizzle_disable_shift(tile));
                     }
                     return to_vec2(ff_8::dest_coords_for_swizzle(tile));
                }
                return to_vec2(ff_8::dest_coords_for_default(tile));
           }();
           return ff_8::get_triangle_strip(
-            to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
+            to_vec2(source_tile_size),
+            to_vec2(destination_tile_size),
+            to_vec2(source_texture_size),
+            src,
+            dest);
      }
 };
 
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::uint8_t                      texture_page);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::uint8_t                      texture_page);
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_as_one_image_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::optional<std::uint8_t>       palette = std::nullopt);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_as_one_image_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::optional<std::uint8_t>       palette = std::nullopt);
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  std::uint8_t                      texture_page,
-  std::uint8_t                      palette);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    std::uint8_t                      texture_page,
+    std::uint8_t                      palette);
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_deswizzle_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  const ff_8::PupuID                pupu_id);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_deswizzle_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    const ff_8::PupuID                pupu_id);
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_full_filename_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite,
-  const std::string                &filename);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_full_filename_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite,
+    const std::string                &filename);
 
-std::move_only_function<std::vector<std::filesystem::path>()> generate_map_paths(
-  std::shared_ptr<const Selections> in_selections,
-  const map_sprite                 &in_map_sprite);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_map_paths(
+    std::shared_ptr<const Selections> in_selections,
+    const map_sprite                 &in_map_sprite);
 
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

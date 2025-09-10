@@ -46,14 +46,16 @@ concept is_enum = std::is_enum_v<T>;
 template<typename T>
 concept is_enum_or_integral = is_enum<T> || std::integral<T>;
 template<typename T, typename U>
-concept decay_same_as = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+concept decay_same_as
+  = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 template<typename T>
 concept Void = std::is_void_v<T>;
 template<typename T>
-concept Bindable = std::default_initializable<T> && std::movable<T> && requires(const T t) {
-     { t.bind() } -> Void;
-     { T::unbind() } -> Void;
-};
+concept Bindable
+  = std::default_initializable<T> && std::movable<T> && requires(const T t) {
+         { t.bind() } -> Void;
+         { T::unbind() } -> Void;
+    };
 
 template<typename T>
 concept HasInstanceBackup = requires(T t) {
@@ -71,7 +73,11 @@ concept SizedBindable = Bindable<T> && requires(const T t) {
 };
 
 template<typename T, typename... Ts>
-     requires(std::same_as<std::ranges::range_value_t<T>, std::ranges::range_value_t<Ts>>, ...) || (sizeof...(Ts) == 0U)
+     requires(std::same_as<
+                std::ranges::range_value_t<T>,
+                std::ranges::range_value_t<Ts>>,
+              ...)
+             || (sizeof...(Ts) == 0U)
 struct all_range_value : std::true_type
 {
      using type = std::ranges::range_value_t<T>;

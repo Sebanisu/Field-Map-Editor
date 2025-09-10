@@ -23,7 +23,8 @@ inline namespace impl
                return strings;
           }
      };
-     using BlendModeEquations = BlendModeGenerics<BlendModeEquationsStrings, BlendModeEquation>;
+     using BlendModeEquations
+       = BlendModeGenerics<BlendModeEquationsStrings, BlendModeEquation>;
 }// namespace impl
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEEQUATIONS_HPP

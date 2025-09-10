@@ -24,7 +24,12 @@ class Ff8Menu
      void push_back(std::string name) const
      {
           m_menu.push_back(
-            std::move(name), [this]() -> glengine::MenuItem { return glengine::MenuItem(std::in_place_type_t<T>{}, GetFields()); });
+            std::move(name),
+            [this]() -> glengine::MenuItem
+            {
+                 return glengine::MenuItem(
+                   std::in_place_type_t<T>{}, GetFields());
+            });
      }
 
    private:

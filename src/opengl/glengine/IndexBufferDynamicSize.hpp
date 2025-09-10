@@ -32,6 +32,8 @@ class IndexBufferDynamicSize
 
      static constexpr void unbind() noexcept {}
 };
-static_assert(SizedBindable<IndexBufferDynamicSize> && std::copyable<IndexBufferDynamicSize>);
+static_assert(
+  SizedBindable<IndexBufferDynamicSize>
+  && std::copyable<IndexBufferDynamicSize>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP

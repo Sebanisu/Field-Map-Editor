@@ -26,14 +26,16 @@ struct [[nodiscard]] Shader
      Glid                                                       m_renderer_id{};
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
-     [[nodiscard]] static ShaderProgramSource                   parse_shader(const std::filesystem::path &path);
-     [[nodiscard]] static std::uint32_t                         compile_shader(
-                               const std::uint32_t    type,
-                               const std::string_view source);
+     [[nodiscard]] static ShaderProgramSource
+       parse_shader(const std::filesystem::path &path);
+     [[nodiscard]] static std::uint32_t compile_shader(
+       const std::uint32_t    type,
+       const std::string_view source);
      [[nodiscard]] static std::uint32_t create_shader(
        const std::string_view,
        const std::string_view);
-     [[nodiscard]] std::int32_t get_uniform_location(std::string_view name) const;
+     [[nodiscard]] std::int32_t
+       get_uniform_location(std::string_view name) const;
 
    public:
      Shader() = default;
@@ -54,8 +56,9 @@ struct [[nodiscard]] Shader
      {
           GLint program_binding{ 0 };// save original
           GlCall{}(glGetIntegerv, GL_CURRENT_PROGRAM, &program_binding);
-          return ScopeGuard{ [=]()
-                             { GlCall{}(glUseProgram, program_binding); } };// restore original shader. this might not be doing anything.
+          return ScopeGuard{
+               [=]() { GlCall{}(glUseProgram, program_binding); }
+          };// restore original shader. this might not be doing anything.
      }
 
      // Set Uniforms
@@ -84,8 +87,13 @@ struct [[nodiscard]] Shader
           const int32_t location = get_uniform_location(name);
           if (location == -1)
                return;
-          const auto perform
-            = [&]<typename NT>(auto &&fun) { GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...); };
+          const auto perform = [&]<typename NT>(auto &&fun)
+          {
+               GlCall{}(
+                 std::forward<decltype(fun)>(fun),
+                 location,
+                 static_cast<NT>(v)...);
+          };
           if constexpr ((std::floating_point<T> && ...))
           {
                if constexpr (sizeof...(T) == 1U)
@@ -164,18 +172,28 @@ struct [[nodiscard]] Shader
           if (location == -1)
                return;
           const auto perform = [&](auto &&fun)
-          { GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<GLsizei>(std::ranges::ssize(v)), std::ranges::data(v)); };
+          {
+               GlCall{}(
+                 std::forward<decltype(fun)>(fun),
+                 location,
+                 static_cast<GLsizei>(std::ranges::ssize(v)),
+                 std::ranges::data(v));
+          };
 
           assert(!std::ranges::empty(v));
           if constexpr (decay_same_as<std::ranges::range_value_t<T>, float>)
           {
                perform(glUniform1fv);
           }
-          else if constexpr (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
+          else if constexpr (decay_same_as<
+                               std::ranges::range_value_t<T>,
+                               std::uint32_t>)
           {
                perform(glUniform1uiv);
           }
-          else if constexpr (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>)
+          else if constexpr (decay_same_as<
+                               std::ranges::range_value_t<T>,
+                               std::int32_t>)
           {
                perform(glUniform1iv);
           }

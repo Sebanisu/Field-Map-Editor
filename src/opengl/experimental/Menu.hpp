@@ -10,10 +10,12 @@
 namespace glengine
 {
 template<typename T>
-concept is_MenuElementType = Renderable<typename std::remove_cvref_t<T>::ValueType> && requires(const T &t) {
-     typename std::remove_cvref_t<T>::ValueType;
-     { t.name } -> decay_same_as<std::string>;
-};
+concept is_MenuElementType
+  = Renderable<typename std::remove_cvref_t<T>::ValueType>
+    && requires(const T &t) {
+            typename std::remove_cvref_t<T>::ValueType;
+            { t.name } -> decay_same_as<std::string>;
+       };
 
 class Menu
 {
@@ -29,7 +31,9 @@ class Menu
        T &&...t)
        : Menu(title)
      {
-          ((void)push_back<typename std::remove_cvref_t<T>::ValueType>(std::move(t.name)), ...);
+          ((void)push_back<typename std::remove_cvref_t<T>::ValueType>(
+             std::move(t.name)),
+           ...);
      }
      template<Renderable T>
      struct MenuElementType
@@ -50,7 +54,9 @@ class Menu
      template<Renderable T>
      void push_back(std::string name) const
      {
-          push_back(std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
+          push_back(
+            std::move(name),
+            []() -> MenuItem { return std::in_place_type_t<T>{}; });
      }
      void push_back(
        std::string               name,
@@ -73,7 +79,10 @@ class Menu
           for (std::size_t i = {}; const auto &[name, function] : m_list)
           {
                auto b = std::ranges::cbegin(toggles);
-               std::ranges::advance(b, static_cast<std::ranges::range_difference_t<decltype(toggles)>>(i));
+               std::ranges::advance(
+                 b,
+                 static_cast<
+                   std::ranges::range_difference_t<decltype(toggles)>>(i));
                if (*b && !m_current[i])
                {
                     m_current[i] = function();
@@ -89,16 +98,20 @@ class Menu
      {
           std::vector<bool> ret{};
           ret.reserve(size());
-          std::ranges::transform(m_current, std::back_inserter(ret), [](auto &&val) -> bool { return val; });
+          std::ranges::transform(
+            m_current,
+            std::back_inserter(ret),
+            [](auto &&val) -> bool { return val; });
           return ret;
      };
 
    private:
-     const char                                                            *m_title   = {};
-     mutable std::vector<MenuItem>                                          m_current = {};
+     const char                   *m_title   = {};
+     mutable std::vector<MenuItem> m_current = {};
      //  mutable std::string_view m_current_string = {};
      //  mutable std::size_t      m_current_index  = {};
-     mutable std::vector<std::pair<std::string, std::function<MenuItem()>>> m_list    = {};
+     mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
+       m_list = {};
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_MENU_HPP

@@ -1,6 +1,7 @@
 #include "keyboard_shortcuts_window.hpp"
 #include <ScopeGuard.hpp>
-fme::keyboard_shortcuts_window::keyboard_shortcuts_window(std::weak_ptr<Selections> selections)
+fme::keyboard_shortcuts_window::keyboard_shortcuts_window(
+  std::weak_ptr<Selections> selections)
   : m_selections(selections)
 {
 }
@@ -12,14 +13,19 @@ void fme::keyboard_shortcuts_window::render() const
      {
           return;
      }
-     bool       show_keyboard_shortcuts = selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>();
-     const auto pop_enabled             = glengine::ScopeGuard(
+     bool show_keyboard_shortcuts
+       = selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>();
+     const auto pop_enabled = glengine::ScopeGuard(
        [&]()
        {
-            if (show_keyboard_shortcuts != selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>())
+            if (
+              show_keyboard_shortcuts
+              != selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>())
             {
-                 selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>() = show_keyboard_shortcuts;
-                 selections->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
+                 selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>()
+                   = show_keyboard_shortcuts;
+                 selections
+                   ->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
             }
        });
      if (!show_keyboard_shortcuts)
@@ -29,12 +35,15 @@ void fme::keyboard_shortcuts_window::render() const
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      ImGui::Begin("Keyboard Shortcuts", &show_keyboard_shortcuts);
 
-     ImGui::TextWrapped("A quick reference for keyboard shortcuts and mouse + modifier behaviors.");
+     ImGui::TextWrapped(
+       "A quick reference for keyboard shortcuts and mouse + modifier "
+       "behaviors.");
 
      if (ImGui::CollapsingHeader("Global Hotkeys"))
      {
           ImGui::Text("Navigation:");
-          ImGui::BulletText("Esc - Context sensitive: clear clicked tiles or file selection");
+          ImGui::BulletText(
+            "Esc - Context sensitive: clear clicked tiles or file selection");
           ImGui::BulletText("Page Up / Page Down - Switch field maps");
           ImGui::BulletText("Ctrl + Page Up/Down - Cycle COO (remaster only)");
 

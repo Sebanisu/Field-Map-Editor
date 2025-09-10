@@ -10,17 +10,23 @@ struct Changed
      void operator=(bool) const = delete;
      void set_if_true(
        bool                 in,
-       std::source_location source_location = std::source_location::current()) const
+       std::source_location source_location
+       = std::source_location::current()) const
      {
           if (in)
                operator()(source_location);
      }
-     void operator()(std::source_location source_location = std::source_location::current()) const
+     void operator()(
+       std::source_location source_location
+       = std::source_location::current()) const
      {
 
           if (!m_current)
           {
-               spdlog::debug("Changed\n\r{}:{}", source_location.file_name(), source_location.line());
+               spdlog::debug(
+                 "Changed\n\r{}:{}",
+                 source_location.file_name(),
+                 source_location.line());
                m_current = true;
           }
      }

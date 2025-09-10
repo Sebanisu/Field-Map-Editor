@@ -26,11 +26,15 @@ struct PupuID
        const open_viii::graphics::background::is_tile auto &tile,
        std::uint8_t                                         offset = 0U)
        : PupuID(
-           std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & 0x7FU) << layer_offset)
-                          | ((static_cast<std::uint32_t>(tile.blend_mode()) & 0x07U) << blend_offset)
-                          | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)
-                          | static_cast<std::uint32_t>(tile.animation_state() << animation_state_offset)
-                          | static_cast<std::uint32_t>(offset & 0xF) })
+           std::uint32_t{
+             ((static_cast<std::uint32_t>(tile.layer_id()) & 0x7FU)
+              << layer_offset)
+             | ((static_cast<std::uint32_t>(tile.blend_mode()) & 0x07U) << blend_offset)
+             | static_cast<std::uint32_t>(
+               tile.animation_id() << animation_offset)
+             | static_cast<std::uint32_t>(
+               tile.animation_state() << animation_state_offset)
+             | static_cast<std::uint32_t>(offset & 0xF) })
      {
           if (tile.x() % 16 != 0)
           {

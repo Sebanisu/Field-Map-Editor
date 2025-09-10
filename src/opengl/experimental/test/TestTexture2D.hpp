@@ -40,9 +40,12 @@ class TestTexture2D
      mutable glm::vec3      model_offset    = { -2.F, -2.F, 0.F };
      mutable glm::vec3      model_2_offset  = { 2.F, 2.F, 0.F };
      constexpr static auto  m_vertex_buffer_layout
-       = glengine::VertexBufferLayout(glengine::VertexBufferElementType<float>{ 2U }, glengine::VertexBufferElementType<float>{ 2U });
-     glengine::ImGuiViewPortWindow m_imgui_viewport_window = { "Test Texture2D" };
-     void                          render_frame_buffer() const;
+       = glengine::VertexBufferLayout(
+         glengine::VertexBufferElementType<float>{ 2U },
+         glengine::VertexBufferElementType<float>{ 2U });
+     glengine::ImGuiViewPortWindow m_imgui_viewport_window
+       = { "Test Texture2D" };
+     void render_frame_buffer() const;
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TESTTEXTURE2D_HPP

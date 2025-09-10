@@ -32,7 +32,8 @@ static inline constexpr bool operator==(
   draw_bitT lhs,
   draw_bitT rhs) noexcept
 {
-     return std::to_underlying(lhs) == std::to_underlying(draw_bitT::all) || std::to_underlying(rhs) == std::to_underlying(draw_bitT::all)
+     return std::to_underlying(lhs) == std::to_underlying(draw_bitT::all)
+            || std::to_underlying(rhs) == std::to_underlying(draw_bitT::all)
             || std::to_underlying(lhs) == std::to_underlying(rhs);
 }
 

@@ -29,7 +29,8 @@ template PupuID UniquifyPupu::operator()(const Tile3 &);
 //  operator UniqueValues<PupuID>() const
 //  {
 //    std::vector<PupuID> values{};
-//    std::ranges::transform(m_pupu_map, std::back_insert_iterator(values),[](auto && key_value)->PupuID{
+//    std::ranges::transform(m_pupu_map,
+//    std::back_insert_iterator(values),[](auto && key_value)->PupuID{
 //      const auto & [key,value] = key_value;
 //      return key.pupu_id;
 //    });

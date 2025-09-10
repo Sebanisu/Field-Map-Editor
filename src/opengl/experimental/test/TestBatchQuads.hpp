@@ -32,16 +32,18 @@ class TestBatchQuads
 
    private:
      void                                     draw() const;
-     glengine::VertexBufferDynamic            m_vertex_buffer         = { quad_count };
-     glengine::IndexBufferDynamic             m_index_buffer          = { quad_count };
-     mutable glengine::IndexBufferDynamicSize index_buffer_size       = {};
-     glengine::Shader                         m_shader                = {};
-     glengine::VertexArray                    m_vertex_array          = {};
-     mutable glm::vec3                        view_offset             = { 0.F, 0.F, 0.F };
-     mutable std::array<int, 2U>              m_count                 = { 100, 100 };
-     glengine::Texture                        m_blank                 = { (std::numeric_limits<std::uint32_t>::max)() };
-     glengine::ImGuiViewPortWindow            m_imgui_viewport_window = { "Test Batch Quads" };
-     void                                     set_uniforms() const;
+     glengine::VertexBufferDynamic            m_vertex_buffer = { quad_count };
+     glengine::IndexBufferDynamic             m_index_buffer  = { quad_count };
+     mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
+     glengine::Shader                         m_shader          = {};
+     glengine::VertexArray                    m_vertex_array    = {};
+     mutable glm::vec3                        view_offset = { 0.F, 0.F, 0.F };
+     mutable std::array<int, 2U>              m_count     = { 100, 100 };
+     glengine::Texture                        m_blank
+       = { (std::numeric_limits<std::uint32_t>::max)() };
+     glengine::ImGuiViewPortWindow m_imgui_viewport_window
+       = { "Test Batch Quads" };
+     void set_uniforms() const;
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP

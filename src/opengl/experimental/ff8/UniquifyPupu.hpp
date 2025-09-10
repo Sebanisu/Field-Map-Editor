@@ -19,13 +19,17 @@ class UniquifyPupu
      };
      std::map<PupuKey, std::uint8_t> m_pupu_map = {};
 
-     PupuID                          operator()(const open_viii::graphics::background::is_tile auto &tile_const)
+     PupuID                          operator()(
+       const open_viii::graphics::background::is_tile auto &tile_const)
      {
-          const auto tile_size   = 16;
-          const auto x_position  = static_cast<int16_t>(tile_const.x() / tile_size);
-          const auto y_position  = static_cast<int16_t>(tile_const.y() / tile_size);
-          auto       input_value = PupuKey{ PupuID(tile_const), x_position, y_position };
-          auto       insert_key  = [&](PupuKey key) -> PupuID
+          const auto tile_size = 16;
+          const auto x_position
+            = static_cast<int16_t>(tile_const.x() / tile_size);
+          const auto y_position
+            = static_cast<int16_t>(tile_const.y() / tile_size);
+          auto input_value
+            = PupuKey{ PupuID(tile_const), x_position, y_position };
+          auto insert_key = [&](PupuKey key) -> PupuID
           {
                if (m_pupu_map.contains(key))
                {

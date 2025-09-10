@@ -31,10 +31,10 @@ Quad CreateQuad(
                   .tiling_factor = tiling_factor,
                   .tile_id       = id,
                   .pupu_id       = pupu_id },// 1
-          Vertex{ .location      = { offset + glm::vec3{ size.x, size.y, 0.F } },
-                  .color         = { color },
-                  .uv            = uv[2],
-                  .texture_slot  = f_texture_id,
+          Vertex{ .location     = { offset + glm::vec3{ size.x, size.y, 0.F } },
+                  .color        = { color },
+                  .uv           = uv[2],
+                  .texture_slot = f_texture_id,
                   .tiling_factor = tiling_factor,
                   .tile_id       = id,
                   .pupu_id       = pupu_id },// 2
@@ -58,7 +58,8 @@ std::vector<std::uint32_t> QuadIndices(std::size_t count)
           std::ranges::transform(
             QuadIndicesInit,
             std::back_inserter(indices),
-            [&i](std::uint32_t index) { return static_cast<std::uint32_t>(index + i * quad_size); });
+            [&i](std::uint32_t index)
+            { return static_cast<std::uint32_t>(index + i * quad_size); });
      }
      return indices;
 }

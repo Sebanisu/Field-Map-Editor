@@ -11,7 +11,9 @@ template<typename SelectionsStringsLambdaT, typename SelectionsValuesLambdaT>
 class BlendModeGeneric
 {
    public:
-     static_assert(std::ranges::size(SelectionsStringsLambdaT()()) == std::ranges::size(SelectionsValuesLambdaT()()));
+     static_assert(
+       std::ranges::size(SelectionsStringsLambdaT()())
+       == std::ranges::size(SelectionsValuesLambdaT()()));
      static constexpr auto &selection_strings = SelectionsStringsLambdaT()();
      static constexpr auto &selection_values  = SelectionsValuesLambdaT()();
      constexpr BlendModeGeneric()             = default;
@@ -27,8 +29,10 @@ class BlendModeGeneric
           {
                return 0;
           }
-          return selection_values[static_cast<std::size_t>(
-            std::clamp(selection, int{}, static_cast<int>(std::ranges::ssize(selection_values) - 1)))];
+          return selection_values[static_cast<std::size_t>(std::clamp(
+            selection,
+            int{},
+            static_cast<int>(std::ranges::ssize(selection_values) - 1)))];
      }
 
      auto &operator=(int new_selection) noexcept
@@ -49,7 +53,8 @@ template<typename LabelsLambdaT, typename UsedSelectionsT>
 class BlendModeGenerics
 {
    private:
-     mutable std::array<UsedSelectionsT, std::ranges::size(LabelsLambdaT()())> m_selections{};
+     mutable std::array<UsedSelectionsT, std::ranges::size(LabelsLambdaT()())>
+       m_selections{};
 
    public:
      static constexpr auto &labels = LabelsLambdaT()();
@@ -73,7 +78,10 @@ class BlendModeGenerics
           bool changed = false;
           for (std::size_t i = 0U; i != std::ranges::size(labels); ++i)
           {
-               if (glengine::GenericCombo(labels[i].data(), m_selections[i], UsedSelectionsT::selection_strings))
+               if (glengine::GenericCombo(
+                     labels[i].data(),
+                     m_selections[i],
+                     UsedSelectionsT::selection_strings))
                {
                     changed = true;
                }
@@ -88,7 +96,9 @@ class BlendModeGenerics
           }
           else
           {
-               return m_selections.at(std::clamp(i, std::size_t{ 0 }, std::ranges::size(m_selections) - 1));
+               return m_selections.at(
+                 std::clamp(
+                   i, std::size_t{ 0 }, std::ranges::size(m_selections) - 1));
           }
      }
 };

@@ -41,27 +41,33 @@ namespace event
           {
                return std::visit(
                  glengine::MakeVisitor(
-                   [](const event::is auto &value) { return value.name(); }, [](std::monostate) { return std::string_view(""); }),
+                   [](const event::is auto &value) { return value.name(); },
+                   [](std::monostate) { return std::string_view(""); }),
                  m_impl);
           }
           event::Category category() const
           {
                return std::visit(
                  glengine::MakeVisitor(
-                   [](const event::is auto &value) { return value.category(); }, [](std::monostate) { return event::Category::None; }),
+                   [](const event::is auto &value) { return value.category(); },
+                   [](std::monostate) { return event::Category::None; }),
                  m_impl);
           }
           std::string_view category_name() const
           {
                return std::visit(
                  glengine::MakeVisitor(
-                   [](const event::is auto &value) { return value.category_name(); }, [](std::monostate) { return std::string_view(""); }),
+                   [](const event::is auto &value)
+                   { return value.category_name(); },
+                   [](std::monostate) { return std::string_view(""); }),
                  m_impl);
           }
           bool handled() const
           {
                return std::visit(
-                 glengine::MakeVisitor([](const event::is auto &value) { return value.handled(); }, [](std::monostate) { return false; }),
+                 glengine::MakeVisitor(
+                   [](const event::is auto &value) { return value.handled(); },
+                   [](std::monostate) { return false; }),
                  m_impl);
           }
 
@@ -69,7 +75,8 @@ namespace event
           {
                return std::visit(
                  glengine::MakeVisitor(
-                   [](const event::is auto &value) { return value.data(); }, [](std::monostate) { return std::string{}; }),
+                   [](const event::is auto &value) { return value.data(); },
+                   [](std::monostate) { return std::string{}; }),
                  m_impl);
           }
           template<event::is eventT>

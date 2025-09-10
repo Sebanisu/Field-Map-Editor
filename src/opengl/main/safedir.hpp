@@ -45,10 +45,16 @@ class safedir
      std::filesystem::path case_insensitive_exists() const
      {
           std::error_code ec{};
-          for (const auto &entry : std::filesystem::directory_iterator(m_path.parent_path(), ec))
+          for (const auto &entry :
+               std::filesystem::directory_iterator(m_path.parent_path(), ec))
           {
-               bool size_match = entry.path().filename().string().size() == m_path.filename().string().size();
-               if (size_match && open_viii::tools::i_equals(entry.path().filename().string(), m_path.filename().string()))
+               bool size_match = entry.path().filename().string().size()
+                                 == m_path.filename().string().size();
+               if (
+                 size_match
+                 && open_viii::tools::i_equals(
+                   entry.path().filename().string(),
+                   m_path.filename().string()))
                {
                     return entry.path();
                }
@@ -79,7 +85,13 @@ class safedir
                // Not found - common, safe to ignore
                return;
           }
-          spdlog::info("{}:{} - {}: {} path: \"{}\"", file, line, ec.value(), ec.message(), m_path.string());
+          spdlog::info(
+            "{}:{} - {}: {} path: \"{}\"",
+            file,
+            line,
+            ec.value(),
+            ec.message(),
+            m_path.string());
           ec.clear();
      }
      const std::filesystem::path &m_path     = {};

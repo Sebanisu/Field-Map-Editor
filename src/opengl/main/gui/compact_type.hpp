@@ -23,7 +23,8 @@ enum struct input_types
      swizzle,
      swizzle_as_one_image,
      // deswizzle_generate_toml,
-     deswizzle_full_filename,// only have one combined step for input that takes images and toml
+     deswizzle_full_filename,// only have one combined step for input that takes
+                             // images and toml
 };
 enum struct output_types
 {
@@ -34,7 +35,8 @@ enum struct output_types
      deswizzle_full_filename,
      csv,
 };
-[[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
+[[nodiscard]] constexpr static inline std::optional<output_types>
+  to_output_type(input_types input) noexcept
 {
      switch (input)
      {
@@ -53,7 +55,8 @@ enum struct output_types
      }
 }
 
-[[nodiscard]] constexpr static inline std::optional<input_types> to_input_type(output_types output) noexcept
+[[nodiscard]] constexpr static inline std::optional<input_types>
+  to_input_type(output_types output) noexcept
 {
      switch (output)
      {

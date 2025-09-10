@@ -20,17 +20,18 @@ namespace event
           return StaticName;                                             \
      }
 
-#define EVENT_CLASS_CATEGORY(in_category)                                       \
-   public:                                                                      \
-     constexpr static auto StaticCategory     = in_category;                    \
-     constexpr static auto StaticCategoryName = std::string_view(#in_category); \
-     constexpr auto        category() const                                     \
-     {                                                                          \
-          return StaticCategory;                                                \
-     }                                                                          \
-     constexpr auto category_name() const                                       \
-     {                                                                          \
-          return StaticCategoryName;                                            \
+#define EVENT_CLASS_CATEGORY(in_category)                \
+   public:                                               \
+     constexpr static auto StaticCategory = in_category; \
+     constexpr static auto StaticCategoryName            \
+       = std::string_view(#in_category);                 \
+     constexpr auto category() const                     \
+     {                                                   \
+          return StaticCategory;                         \
+     }                                                   \
+     constexpr auto category_name() const                \
+     {                                                   \
+          return StaticCategoryName;                     \
      }
      class Dispatcher;
 #define EVENT_HANDLED               \
@@ -198,7 +199,8 @@ namespace event
                {
                     return fmt::format("{:>3}, {}", +m_key, m_repeat);
                }
-               return fmt::format("{:>3} + {:>2},  {}", +m_key, +m_mods, m_repeat);
+               return fmt::format(
+                 "{:>3} + {:>2},  {}", +m_key, +m_mods, m_repeat);
           }
 
         private:
@@ -247,7 +249,8 @@ namespace event
      class MouseButtonPressed
      {
           EVENT_CLASS_TYPE(MouseButtonPressed)
-          EVENT_CLASS_CATEGORY(Category::Input | Category::Mouse | Category::MouseButton)
+          EVENT_CLASS_CATEGORY(
+            Category::Input | Category::Mouse | Category::MouseButton)
           EVENT_HANDLED
           constexpr MouseButtonPressed() = default;
           constexpr MouseButtonPressed(
@@ -283,7 +286,8 @@ namespace event
      class MouseButtonReleased
      {
           EVENT_CLASS_TYPE(MouseButtonReleased)
-          EVENT_CLASS_CATEGORY(Category::Input | Category::Mouse | Category::MouseButton)
+          EVENT_CLASS_CATEGORY(
+            Category::Input | Category::Mouse | Category::MouseButton)
           EVENT_HANDLED
           constexpr MouseButtonReleased() = default;
           constexpr MouseButtonReleased(
@@ -349,7 +353,8 @@ namespace event
 
           std::string data() const
           {
-               return fmt::format("{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
+               return fmt::format(
+                 "{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
           }
 
         private:
@@ -389,7 +394,8 @@ namespace event
           }
           std::string data() const
           {
-               return fmt::format("{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
+               return fmt::format(
+                 "{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
           }
 
         private:

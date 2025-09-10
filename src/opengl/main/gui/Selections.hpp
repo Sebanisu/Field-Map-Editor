@@ -107,7 +107,8 @@ enum class ConfigKey
      CacheFullFileNamePathsEnabled,
      CacheMapPathsEnabled,
 
-     // FFNX can load from FFNX config but we're doing read only these. Usually only if we're changing the FF8 directory
+     // FFNX can load from FFNX config but we're doing read only these. Usually
+     // only if we're changing the FF8 directory
      FFNXModPath,
      FFNXOverridePath,
      FFNXDirectPath,
@@ -129,9 +130,12 @@ consteval bool has_duplicate_keys()
 {
      std::array<ConfigKey, sizeof...(Keys)> arr = { Keys... };
 
-     if (std::ranges::any_of(arr, [](ConfigKey k) { return k == ConfigKey::All; }) && sizeof...(Keys) > 1U)
+     if (
+       std::ranges::any_of(arr, [](ConfigKey k) { return k == ConfigKey::All; })
+       && sizeof...(Keys) > 1U)
      {
-          // if we need to match keys above All we could adjust the function to allow that.
+          // if we need to match keys above All we could adjust the function to
+          // allow that.
           return true;// ConfigKey::All and something else present
      }
 
@@ -713,14 +717,16 @@ struct SelectionInfo<ConfigKey::BatchGenerateWhiteOnBlackMask>
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 {
-     static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
+     static constexpr std::string_view id
+       = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactType>
 {
-     using value_type                     = ff_8::filter_old<ff_8::FilterTag::Compact>;
-     static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
-     static inline value_type          default_value(const Configuration &config)
+     using value_type = ff_8::filter_old<ff_8::FilterTag::Compact>;
+     static constexpr std::string_view id
+       = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
+     static inline value_type default_value(const Configuration &config)
      {
           return { true, config };
      }
@@ -729,14 +735,16 @@ struct SelectionInfo<ConfigKey::BatchCompactType>
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenEnabled>
 {
-     static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
+     static constexpr std::string_view id
+       = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenType>
 {
-     using value_type                     = ff_8::filter_old<ff_8::FilterTag::Flatten>;
-     static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
-     static inline value_type          default_value(const Configuration &config)
+     using value_type = ff_8::filter_old<ff_8::FilterTag::Flatten>;
+     static constexpr std::string_view id
+       = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
+     static inline value_type default_value(const Configuration &config)
      {
           return { true, config };
      }
@@ -744,26 +752,29 @@ struct SelectionInfo<ConfigKey::BatchFlattenType>
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
 {
-     using value_type                     = std::vector<std::string>;
-     static constexpr std::string_view id = "PathPatternsWithPaletteAndTexturePage";
-     static value_type                 expensive_default_value()
+     using value_type = std::vector<std::string>;
+     static constexpr std::string_view id
+       = "PathPatternsWithPaletteAndTexturePage";
+     static value_type expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
+          return {
+               "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}_{texture_page}_{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"s };
+               "{selected_path}/{field_name}_{texture_page}_{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -778,21 +789,23 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPalette>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
+          return {
+               "{selected_path}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}_0{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_0{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}_0{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_0{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}"s,
 
-                   "{selected_path}/{field_name}_{palette}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_{palette}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{palette}{ext}"s };
+               "{selected_path}/{field_name}_{palette}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_{palette}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{palette}{ext}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -807,21 +820,23 @@ struct SelectionInfo<ConfigKey::PathPatternsWithTexturePage>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
+          return {
+               "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}"s,
 
-                   "{selected_path}/{field_name}_0{texture_page}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}"s,
+               "{selected_path}/{field_name}_0{texture_page}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}"s,
 
-                   "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"s,
 
-                   "{selected_path}/{field_name}_{texture_page}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}"s };
+               "{selected_path}/{field_name}_{texture_page}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -836,13 +851,15 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
+          return {
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
 
-                   "{selected_path}/{field_name}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}"s };
+               "{selected_path}/{field_name}_{pupu_id}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -858,8 +875,11 @@ struct SelectionInfo<ConfigKey::PathPatternsWithFullFileName>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{full_filename}"s, "{selected_path}/{field_name}/{full_filename}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{full_filename}"s };
+          return {
+               "{selected_path}/{full_filename}"s,
+               "{selected_path}/{field_name}/{full_filename}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{full_filename}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -874,19 +894,21 @@ struct SelectionInfo<ConfigKey::PatternsBase>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}{_{2_letter_lang}}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"s,
+          return {
+               "{selected_path}/{field_name}{_{2_letter_lang}}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"s,
 
-                   "{selected_path}/{field_name}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}"s,
+               "{selected_path}/{field_name}{ext}"s,
+               "{selected_path}/{field_name}/{field_name}{ext}"s,
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}"s,
 
-                   "{selected_path}/{demaster}"s,
+               "{selected_path}/{demaster}"s,
 
-                   "{selected_path}/{ffnx_multi_texture}"s,
-                   "{selected_path}/{ffnx_single_texture}"s,
-                   "{selected_path}/{ffnx_map}"s };
+               "{selected_path}/{ffnx_multi_texture}"s,
+               "{selected_path}/{ffnx_single_texture}"s,
+               "{selected_path}/{ffnx_map}"s
+          };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -983,7 +1005,8 @@ struct SelectionInfo<ConfigKey::TomlPaths>
      //      const auto &default_paths = open_viii::Paths::get();
      //      return { default_paths.begin(), default_paths.end() };
      // }
-     // static void post_load_operation([[maybe_unused]] const value_type &value)
+     // static void post_load_operation([[maybe_unused]] const value_type
+     // &value)
      // {
      //      assert(has_balanced_braces(value));
      // }
@@ -992,12 +1015,14 @@ struct SelectionInfo<ConfigKey::TomlPaths>
 template<>
 struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
 {
-     using value_type                     = std::vector<std::filesystem::path>;
-     static constexpr std::string_view id = "ExternalTexturesAndMapsDirectoryPaths";
-     static value_type                 expensive_default_value()
+     using value_type = std::vector<std::filesystem::path>;
+     static constexpr std::string_view id
+       = "ExternalTexturesAndMapsDirectoryPaths";
+     static value_type expensive_default_value()
      {
           using namespace std::string_literals;
-          return { R"(D:\Angelwing-Ultima_Remastered_v1-0-a)"s, R"(D:\dev\Field-Map-Editor\bin\RelWithDebInfo\deswizzle)"s };
+          return { R"(D:\Angelwing-Ultima_Remastered_v1-0-a)"s,
+                   R"(D:\dev\Field-Map-Editor\bin\RelWithDebInfo\deswizzle)"s };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -1007,50 +1032,50 @@ struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
 template<>
 struct SelectionInfo<ConfigKey::SwizzlePath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "SwizzlePath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "SwizzlePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::SwizzleAsOneImagePath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "SwizzleAsOneImagePath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "SwizzleAsOneImagePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::DeswizzlePath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "DeswizzlePath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "DeswizzlePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::FullFileNamePath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "FullFileNamePath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "FullFileNamePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputImagePath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "OutputImagePath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "OutputImagePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputMimPath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "OutputMimPath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "OutputMimPath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputMapPath>
 {
-     using value_type                                     = std::filesystem::path;
-     static constexpr std::string_view id                 = "OutputMapPath";
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "OutputMapPath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
@@ -1068,8 +1093,9 @@ struct SelectionInfo<ConfigKey::CacheSwizzlePathsEnabled>
 template<>
 struct SelectionInfo<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>
 {
-     using value_type                     = std::vector<bool>;
-     static constexpr std::string_view id = "CacheSwizzleAsOneImagePathsEnabled";
+     using value_type = std::vector<bool>;
+     static constexpr std::string_view id
+       = "CacheSwizzleAsOneImagePathsEnabled";
 };
 template<>
 struct SelectionInfo<ConfigKey::CacheDeswizzlePathsEnabled>
@@ -1158,7 +1184,8 @@ struct SelectionLoadStrategy
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
-               value = std::bit_cast<fme::color>(config[id].value_or(std::bit_cast<std::uint32_t>(value)));
+               value = std::bit_cast<fme::color>(
+                 config[id].value_or(std::bit_cast<std::uint32_t>(value)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
@@ -1166,23 +1193,32 @@ struct SelectionLoadStrategy
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
-               value = static_cast<ValueT>(config[id].value_or(std::to_underlying(value)));
+               value = static_cast<ValueT>(
+                 config[id].value_or(std::to_underlying(value)));
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (std::is_enum_v<
+                               glengine::vector_elem_type_t<ValueT>>)
                {
-                    return fme::Configuration::
-                      load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
-                        config, id, value);
+                    return fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::underlying_type_t<
+                        glengine::vector_elem_type_t<ValueT>>>(
+                      config, id, value);
                }
-               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, ff_8::PupuID>)
+               else if constexpr (std::same_as<
+                                    glengine::vector_elem_type_t<ValueT>,
+                                    ff_8::PupuID>)
                {
-                    return fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
+                    return fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::uint32_t>(config, id, value);
                }
                else
                {
-                    return fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
+                    return fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
           else
@@ -1200,14 +1236,16 @@ struct SelectionLoadStrategy
      }
 };
 
-// For filters that are constructed with full context and do not support default init
+// For filters that are constructed with full context and do not support default
+// init
 template<ff_8::FilterTag Tag>
 struct SelectionLoadStrategy<ff_8::filter_old<Tag>>
 {
      // No loading: object is fully initialized elsewhere
      static bool load(auto &&...) noexcept
      {
-          return true;// We're returning true to prevent fall back logic from triggering.
+          return true;// We're returning true to prevent fall back logic from
+                      // triggering.
      }
 };
 
@@ -1222,14 +1260,19 @@ struct SelectionUpdateStrategy
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
                std::u8string str_val = value.u8string();
-               std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
-               spdlog::info("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
+               std::ranges::replace(
+                 str_val, u8'\\', u8'/');// normalize to forward slashes
+               spdlog::info(
+                 "selection<{}>: \"{}\"",
+                 id,
+                 std::filesystem::path(str_val).string());
                config->insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
+               config->insert_or_assign(
+                 id, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
@@ -1249,7 +1292,9 @@ struct SelectionUpdateStrategy
           {
                Configuration::update_array(config, id, value);
           }
-          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
+          else if constexpr (std::same_as<
+                               ValueT,
+                               std::vector<std::filesystem::path>>)
           {
                Configuration::update_array(config, id, value);
           }
@@ -1316,9 +1361,12 @@ struct Selection : SelectionBase
      }
 
    private:
-     static constexpr value_type get_default_value([[maybe_unused]] const Configuration *config)
+     static constexpr value_type
+       get_default_value([[maybe_unused]] const Configuration *config)
      {
-          if constexpr (requires(const Configuration &c) { SelectionInfo<Key>::default_value(c); })
+          if constexpr (requires(const Configuration &c) {
+                             SelectionInfo<Key>::default_value(c);
+                        })
           {
                if (config != nullptr)
                {
@@ -1332,7 +1380,9 @@ struct Selection : SelectionBase
                     }
                     else
                     {
-                         throw std::runtime_error("Selection not initialized and not default-initializable");
+                         throw std::runtime_error(
+                           "Selection not initialized and not "
+                           "default-initializable");
                     }
                }
           }
@@ -1346,20 +1396,27 @@ struct Selection : SelectionBase
           }
           else
           {
-               throw std::runtime_error("Selection not initialized and not default-initializable");
+               throw std::runtime_error(
+                 "Selection not initialized and not default-initializable");
           }
      }
 
      void fail_to_load([[maybe_unused]] const Configuration &config)
      {
-          if constexpr (requires { SelectionInfo<Key>::expensive_default_value(); })
+          if constexpr (requires {
+                             SelectionInfo<Key>::expensive_default_value();
+                        })
           {
                value = SelectionInfo<Key>::expensive_default_value();
           }
-          else if constexpr (requires { SelectionInfo<Key>::default_value_copy; })
+          else if constexpr (requires {
+                                  SelectionInfo<Key>::default_value_copy;
+                             })
           {
-               std::ignore
-                 = SelectionLoadStrategy<value_type>::load(config, SelectionInfo<SelectionInfo<Key>::default_value_copy>::id, value);
+               std::ignore = SelectionLoadStrategy<value_type>::load(
+                 config,
+                 SelectionInfo<SelectionInfo<Key>::default_value_copy>::id,
+                 value);
           }
           else
           {
@@ -1369,20 +1426,25 @@ struct Selection : SelectionBase
 
      void load(const Configuration &config)
      {
-          if (!SelectionLoadStrategy<value_type>::load(config, SelectionInfo<Key>::id, value))
+          if (!SelectionLoadStrategy<value_type>::load(
+                config, SelectionInfo<Key>::id, value))
           {
                fail_to_load(config);
           }
-          if constexpr (requires(value_type &v) { SelectionInfo<Key>::post_load_operation(v); })
+          if constexpr (requires(value_type &v) {
+                             SelectionInfo<Key>::post_load_operation(v);
+                        })
           {
                SelectionInfo<Key>::post_load_operation(value);
           }
      }
 
    public:
-     // when we change directories we need to check for the ffnx config and refresh the values from that config.
-     // go back to default value if ffnx_config not there.
-     void refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config)
+     // when we change directories we need to check for the ffnx config and
+     // refresh the values from that config. go back to default value if
+     // ffnx_config not there.
+     void
+       refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config)
      {
           if constexpr (SelectionUseFFNXConfig<Key>::value)
           {
@@ -1397,18 +1459,22 @@ struct Selection : SelectionBase
           }
      }
 
-     // update skips over ffnx values as we're currently not writing to the ffnx config file.
+     // update skips over ffnx values as we're currently not writing to the ffnx
+     // config file.
      void update([[maybe_unused]] Configuration &config) const
      {
           if constexpr (!SelectionUseFFNXConfig<Key>::value)
           {
-               SelectionUpdateStrategy<value_type>::update(config, SelectionInfo<Key>::id, value);
+               SelectionUpdateStrategy<value_type>::update(
+                 config, SelectionInfo<Key>::id, value);
           }
      }
 
      bool reset_to_demaster()
      {
-          if constexpr (requires { SelectionInfo<Key>::default_value_demaster(); })
+          if constexpr (requires {
+                             SelectionInfo<Key>::default_value_demaster();
+                        })
           {
                value = SelectionInfo<Key>::default_value_demaster();
                return true;
@@ -1437,50 +1503,60 @@ consteval inline auto load_selections_id_array()
 {
      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
      {
-          return std::array<std::string_view, static_cast<std::size_t>(fme::ConfigKey::All)>{
+          return std::array<
+            std::string_view,
+            static_cast<std::size_t>(fme::ConfigKey::All)>{
                SelectionInfo<static_cast<ConfigKey>(Is)>::id...
           };
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::ConfigKey::All)>{});
 }
 
 /**
  * @brief Manages various settings and selections for the application.
  *
- * This struct contains configuration options and runtime selections, such as window dimensions,
- * drawing modes, selected tiles, and rendering options.
+ * This struct contains configuration options and runtime selections, such as
+ * window dimensions, drawing modes, selected tiles, and rendering options.
  */
 struct Selections
 {
    private:
-     static constexpr std::size_t SelectionsSizeT = static_cast<std::size_t>(fme::ConfigKey::All);
-     using SelectionsArrayT                       = std::array<std::unique_ptr<SelectionBase>, SelectionsSizeT>;
-     SelectionsArrayT                                                      m_selections_array;
+     static constexpr std::size_t SelectionsSizeT
+       = static_cast<std::size_t>(fme::ConfigKey::All);
+     using SelectionsArrayT
+       = std::array<std::unique_ptr<SelectionBase>, SelectionsSizeT>;
+     SelectionsArrayT m_selections_array;
 
-     static inline constexpr std::array<std::string_view, SelectionsSizeT> s_selections_id_array = load_selections_id_array();
+     static inline constexpr std::array<std::string_view, SelectionsSizeT>
+                      s_selections_id_array = load_selections_id_array();
 
-     SelectionsArrayT                                                      load_selections_array(const Configuration &config)
+     SelectionsArrayT load_selections_array(const Configuration &config)
      {
           // cache these values for use later on.
           std::optional<Configuration>         ffnx_config{};
           std::optional<std::filesystem::path> ff8_path{};
-          return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> SelectionsArrayT
+          return [&]<std::size_t... Is>(
+                   std::index_sequence<Is...>) -> SelectionsArrayT
           {
                SelectionsArrayT result{};
 
-               ((result[Is] = [&]<ConfigKey Key>() -> std::unique_ptr<Selection<Key>>
-                                                      {
-                                                           if constexpr (ConfigKey::FF8Path == Key)
-                                                           {
-                                                                auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
-                                                                ff8_path    = tmp->value;
-                                                                ffnx_config = get_ffnx_config(tmp->value);
-                                                                return std::move(tmp);
-                                                           }
-                                                           else
-                                                           {
-                                                                return std::make_unique<Selection<Key>>(config, ffnx_config);
-                                                           }
-                                                      }.template operator()<static_cast<ConfigKey>(Is)>()),
+               ((result[Is] = [&]<ConfigKey Key>()
+                   -> std::unique_ptr<Selection<Key>>
+                      {
+                           if constexpr (ConfigKey::FF8Path == Key)
+                           {
+                                auto tmp = std::make_unique<Selection<Key>>(
+                                  config, ffnx_config);
+                                ff8_path    = tmp->value;
+                                ffnx_config = get_ffnx_config(tmp->value);
+                                return std::move(tmp);
+                           }
+                           else
+                           {
+                                return std::make_unique<Selection<Key>>(
+                                  config, ffnx_config);
+                           }
+                      }.template operator()<static_cast<ConfigKey>(Is)>()),
                 ...);
                return result;
           }(std::make_index_sequence<SelectionsSizeT>{});
@@ -1489,12 +1565,16 @@ struct Selections
      ///**
      // * @brief Refreshes FFNx-related paths based on the current FF8 path.
      // *
-     // * This function must be rerun if the FF8 path changes, as the presence and location
-     // * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
+     // * This function must be rerun if the FF8 path changes, as the presence
+     // and location
+     // * of FFNx components are path-dependent. It reads configuration from
+     // "FFNx.toml".
      // */
-     // void                         refresh_ffnx_paths(const std::filesystem::path &ff8_path);
+     // void                         refresh_ffnx_paths(const
+     // std::filesystem::path &ff8_path);
      std::optional<Configuration> get_ffnx_config() const;
-     std::optional<Configuration> get_ffnx_config(const std::filesystem::path &ff8_path) const;
+     std::optional<Configuration>
+       get_ffnx_config(const std::filesystem::path &ff8_path) const;
 
    public:
      /**
@@ -1507,20 +1587,25 @@ struct Selections
      auto &get()
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Key);
-          using ValueT                       = typename SelectionInfo<Key>::value_type;
+          using ValueT = typename SelectionInfo<Key>::value_type;
 
           if (!m_selections_array[index])
           {
                if constexpr (std::default_initializable<ValueT>)
                {
-                    throw std::runtime_error("Mutable access to default-initialized value is not supported");
+                    throw std::runtime_error(
+                      "Mutable access to default-initialized value is not "
+                      "supported");
                }
                else
                {
-                    throw std::runtime_error("Selection not initialized and not default-initializable");
+                    throw std::runtime_error(
+                      "Selection not initialized and not "
+                      "default-initializable");
                }
           }
-          Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+          Selection<Key> *selection
+            = static_cast<Selection<Key> *>(m_selections_array[index].get());
           return selection->value;
      }
 
@@ -1529,7 +1614,7 @@ struct Selections
      const auto &get() const
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Key);
-          using ValueT                       = typename SelectionInfo<Key>::value_type;
+          using ValueT = typename SelectionInfo<Key>::value_type;
 
           if (!m_selections_array[index])
           {
@@ -1540,17 +1625,21 @@ struct Selections
                }
                else
                {
-                    throw std::runtime_error("Selection not initialized and not default-initializable");
+                    throw std::runtime_error(
+                      "Selection not initialized and not "
+                      "default-initializable");
                }
           }
-          const Selection<Key> *selection = static_cast<const Selection<Key> *>(m_selections_array[index].get());
+          const Selection<Key> *selection = static_cast<const Selection<Key> *>(
+            m_selections_array[index].get());
           return selection->value;
      }
 
      const auto get_id(ConfigKey key)
      {
           assert(
-            static_cast<std::size_t>(key) < std::ranges::size(s_selections_id_array)
+            static_cast<std::size_t>(key)
+              < std::ranges::size(s_selections_id_array)
             && "Key out of range, must be less than ConfigKey::All");
           return s_selections_id_array[static_cast<std::size_t>(key)];
      }
@@ -1559,23 +1648,32 @@ struct Selections
           requires(!has_duplicate_keys<Keys...>() && has_valid_keys<Keys...>())
      void refresh()
      {
-          if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
+          if constexpr (
+            sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
           {
                [&]<std::size_t... Is>(std::index_sequence<Is...>)
-               { refresh<(static_cast<ConfigKey>(Is))...>(); }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+               {
+                    refresh<(static_cast<ConfigKey>(Is))...>();
+               }(std::make_index_sequence<static_cast<std::size_t>(
+                   fme::ConfigKey::All)>{});
           }
           else
           {
-               const std::optional<Configuration> ffnx_config = get_ffnx_config();
+               const std::optional<Configuration> ffnx_config
+                 = get_ffnx_config();
                (
                  [&]<ConfigKey Key>
                  {
-                      static constexpr std::size_t index = static_cast<std::size_t>(Key);
-                      if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
+                      static constexpr std::size_t index
+                        = static_cast<std::size_t>(Key);
+                      if (
+                        index >= std::ranges::size(m_selections_array)
+                        || !m_selections_array[index])
                       {
                            return;
                       }
-                      Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+                      Selection<Key> *selection = static_cast<Selection<Key> *>(
+                        m_selections_array[index].get());
                       selection->refresh(ffnx_config);
                  }.template operator()<Keys>(),
                  ...);
@@ -1587,10 +1685,14 @@ struct Selections
           requires(!has_duplicate_keys<Keys...>() && has_valid_keys<Keys...>())
      void update()
      {
-          if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
+          if constexpr (
+            sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
           {
                [&]<std::size_t... Is>(std::index_sequence<Is...>)
-               { update<(static_cast<ConfigKey>(Is))...>(); }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+               {
+                    update<(static_cast<ConfigKey>(Is))...>();
+               }(std::make_index_sequence<static_cast<std::size_t>(
+                   fme::ConfigKey::All)>{});
           }
           else
           {
@@ -1598,12 +1700,16 @@ struct Selections
                (
                  [&]<ConfigKey Key>
                  {
-                      static constexpr std::size_t index = static_cast<std::size_t>(Key);
-                      if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
+                      static constexpr std::size_t index
+                        = static_cast<std::size_t>(Key);
+                      if (
+                        index >= std::ranges::size(m_selections_array)
+                        || !m_selections_array[index])
                       {
                            return;
                       }
-                      Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+                      Selection<Key> *selection = static_cast<Selection<Key> *>(
+                        m_selections_array[index].get());
                       selection->update(config);
                  }.template operator()<Keys>(),
                  ...);
@@ -1621,7 +1727,8 @@ struct Selections
                  {
                       if (m_selections_array[Is])
                       {
-                           auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());
+                           auto *selection = static_cast<Selection<Key> *>(
+                             m_selections_array[Is].get());
                            if (selection->reset_to_demaster())
                            {
                                 selection->update(config);
@@ -1643,7 +1750,8 @@ struct Selections
                  {
                       if (m_selections_array[Is])
                       {
-                           auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());
+                           auto *selection = static_cast<Selection<Key> *>(
+                             m_selections_array[Is].get());
                            if (selection->reset_to_ffnx())
                            {
                                 selection->update(config);

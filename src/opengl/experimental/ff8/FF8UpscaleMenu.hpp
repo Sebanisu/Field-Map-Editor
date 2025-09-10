@@ -28,7 +28,11 @@ class Ff8UpscaleMenu
      {
           m_menu.push_back(
             std::move(name),
-            [this]() -> glengine::MenuItem { return glengine::MenuItem(std::in_place_type_t<T>{}, GetFields(), m_swizzles); });
+            [this]() -> glengine::MenuItem
+            {
+                 return glengine::MenuItem(
+                   std::in_place_type_t<T>{}, GetFields(), m_swizzles);
+            });
      }
 
    private:

@@ -27,14 +27,17 @@ struct Vec4Less
      }
 };
 /**
- * @brief Asynchronously saves an OpenGL texture to an sf::Image using a Pixel Buffer Object (PBO).
+ * @brief Asynchronously saves an OpenGL texture to an sf::Image using a Pixel
+ * Buffer Object (PBO).
  *
- * This function uses a PBO to asynchronously retrieve texture pixel data from GPU memory,
- * allowing the CPU to continue processing without blocking while the GPU completes the readback.
- * The returned future will produce an sf::Image once the pixel data is ready.
+ * This function uses a PBO to asynchronously retrieve texture pixel data from
+ * GPU memory, allowing the CPU to continue processing without blocking while
+ * the GPU completes the readback. The returned future will produce an sf::Image
+ * once the pixel data is ready.
  *
  * @param texture The glengine::Texture to be saved into an sf::Image.
- * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
+ * @return A deferred std::future that will contain the sf::Image once pixel
+ * data is read back.
  */
 std::future<void> save_image_pbo(
   std::filesystem::path in_path,
@@ -56,30 +59,35 @@ std::future<void> save_image_pbo(
      glengine::GlCall{}(glGetIntegerv, GL_PACK_ALIGNMENT, &prev_pack_alignment);
 
      GLint prev_pack_row_length = 0;
-     glengine::GlCall{}(glGetIntegerv, GL_PACK_ROW_LENGTH, &prev_pack_row_length);
+     glengine::GlCall{}(
+       glGetIntegerv, GL_PACK_ROW_LENGTH, &prev_pack_row_length);
 
      // Set correct read target for RGBA8 normalized data
      glengine::GlCall{}(glReadBuffer, attachment);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, 1);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, 0);
 
-     const GLsizei    w           = in_fbo.width();
-     const GLsizei    h           = in_fbo.height();
-     const GLint      channels    = 4;
-     const GLsizeiptr buffer_size = GLsizeiptr{ w } * GLsizeiptr{ h } * GLsizeiptr{ channels };
+     const GLsizei    w        = in_fbo.width();
+     const GLsizei    h        = in_fbo.height();
+     const GLint      channels = 4;
+     const GLsizeiptr buffer_size
+       = GLsizeiptr{ w } * GLsizeiptr{ h } * GLsizeiptr{ channels };
 
      // Create and bind PBO
-     GLuint           pbo_id      = 0;
+     GLuint pbo_id = 0;
      glGenBuffers(1, &pbo_id);
      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
      glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, nullptr, GL_STREAM_READ);
 
      // Issue the readback (normalized RGBA8)
-     glengine::GlCall{}(glReadPixels, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+     glengine::GlCall{}(
+       glReadPixels, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
      if (GLenum err = glGetError(); err != GL_NO_ERROR)
      {
-          spdlog::error("save_image_pbo: glReadPixels error: 0x{:X}", static_cast<unsigned>(err));
+          spdlog::error(
+            "save_image_pbo: glReadPixels error: 0x{:X}",
+            static_cast<unsigned>(err));
      }
 
      // Unbind PBO
@@ -88,12 +96,20 @@ std::future<void> save_image_pbo(
      // Restore GL state
      glengine::GlCall{}(glReadBuffer, prev_read_buffer);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, prev_pack_alignment);
-     glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, prev_pack_row_length);
+     glengine::GlCall{}(
+       glPixelStorei, GL_PACK_ROW_LENGTH, prev_pack_row_length);
 
      // Return deferred CPU-side save
      return std::async(
        std::launch::deferred,
-       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path), fbo = std::move(in_fbo), color_ids = std::move(in_color_ids)]()
+       [pbo_id,
+        buffer_size,
+        w,
+        h,
+        channels,
+        path      = std::move(in_path),
+        fbo       = std::move(in_fbo),
+        color_ids = std::move(in_color_ids)]()
        {
             // Ensure directory exists
             if (!path.parent_path().empty())
@@ -102,22 +118,34 @@ std::future<void> save_image_pbo(
                  std::filesystem::create_directories(path.parent_path(), ec);
                  if (ec)
                  {
-                      spdlog::error("Failed to create directories for '{}': {}", path.string(), ec.message());
+                      spdlog::error(
+                        "Failed to create directories for '{}': {}",
+                        path.string(),
+                        ec.message());
                  }
             }
 
 #ifdef __cpp_lib_smart_ptr_for_overwrite
-            auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+            auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(
+              static_cast<std::size_t>(buffer_size));
 #else
-            auto pixels = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+            auto pixels = std::make_unique<std::uint8_t[]>(
+              static_cast<std::size_t>(buffer_size));
 #endif
 
             // Retrieve from PBO
             glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
-            glengine::GlCall{}(glGetBufferSubData, GL_PIXEL_PACK_BUFFER, 0, buffer_size, pixels.get());
+            glengine::GlCall{}(
+              glGetBufferSubData,
+              GL_PIXEL_PACK_BUFFER,
+              0,
+              buffer_size,
+              pixels.get());
             if (GLenum err = glGetError(); err != GL_NO_ERROR)
             {
-                 spdlog::error("save_image_pbo: glGetBufferSubData error: 0x{:X}", static_cast<unsigned>(err));
+                 spdlog::error(
+                   "save_image_pbo: glGetBufferSubData error: 0x{:X}",
+                   static_cast<unsigned>(err));
             }
             glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
 
@@ -125,25 +153,37 @@ std::future<void> save_image_pbo(
             glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
 
             // // Flip vertically
-            // std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
-            const std::size_t row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
+            // std::unique_ptr<std::uint8_t[]> flipped   =
+            // std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+            const std::size_t row_bytes = static_cast<std::size_t>(w)
+                                          * static_cast<std::size_t>(channels);
             // for (GLint y = 0; y < h; ++y)
             // {
-            //      const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
-            //      const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
-            //      std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
+            //      const std::size_t src = static_cast<std::size_t>(h - 1 - y)
+            //      * row_bytes; const std::size_t dst =
+            //      static_cast<std::size_t>(y) * row_bytes;
+            //      std::memcpy(flipped.get() + dst, pixels.get() + src,
+            //      row_bytes);
             // }
 
             // Save PNG
             {
-                 int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
+                 int ok = stbi_write_png(
+                   path.string().c_str(),
+                   w,
+                   h,
+                   channels,
+                   pixels.get(),
+                   static_cast<int>(row_bytes));
                  if (!ok)
                  {
-                      spdlog::error("stbi_write_png failed for '{}'", path.string());
+                      spdlog::error(
+                        "stbi_write_png failed for '{}'", path.string());
                  }
                  else
                  {
-                      spdlog::debug("Wrote RGBA8 attachment to '{}'", path.string());
+                      spdlog::debug(
+                        "Wrote RGBA8 attachment to '{}'", path.string());
                  }
             }
             if (std::ranges::empty(color_ids))
@@ -151,12 +191,15 @@ std::future<void> save_image_pbo(
                  return;
             }
 
-            const auto span = std::span(reinterpret_cast<const fme::color *>(pixels.get()), static_cast<std::size_t>(w * h));
+            const auto span = std::span(
+              reinterpret_cast<const fme::color *>(pixels.get()),
+              static_cast<std::size_t>(w * h));
             // For each unique PupuID, create a vector of masks
             std::map<ff_8::PupuID, std::vector<fme::color>>  masks;
             std::set<std::pair<fme::color, fme::color>>      logged_colors;
             static std::map<glm::vec4, fme::color, Vec4Less> conv_cache;
-            std::map<fme::color, ff_8::PupuID>               best_id_cache;// memoizes best id for each pixel color
+            std::map<fme::color, ff_8::PupuID>
+              best_id_cache;// memoizes best id for each pixel color
 
             for (const auto &[i, color_in] : span | std::views::enumerate)
             {
@@ -181,7 +224,8 @@ std::future<void> save_image_pbo(
                                        auto nested_it = conv_cache.find(c);
                                        if (nested_it != conv_cache.end())
                                             return nested_it->second;
-                                       fme::color conv = static_cast<fme::color>(c);
+                                       fme::color conv
+                                         = static_cast<fme::color>(c);
                                        conv_cache.emplace(c, conv);
                                        return conv;
                                   };
@@ -189,7 +233,8 @@ std::future<void> save_image_pbo(
                                   const auto conv_a = get_conv(std::get<0>(a));
                                   const auto conv_b = get_conv(std::get<0>(b));
 
-                                  return color_in.difference(conv_a) < color_in.difference(conv_b);
+                                  return color_in.difference(conv_a)
+                                         < color_in.difference(conv_b);
                              });
 
                            if (it == color_ids.end())
@@ -197,7 +242,8 @@ std::future<void> save_image_pbo(
                                 return {};
                            }
 
-                           best_id_cache[color_in] = std::get<1>(*it);// store result for next time
+                           best_id_cache[color_in]
+                             = std::get<1>(*it);// store result for next time
                            return std::get<1>(*it);
                       }
                  }();
@@ -211,13 +257,19 @@ std::future<void> save_image_pbo(
 
                  mask[static_cast<std::size_t>(i)] = fme::colors::White;
 
-                 auto       it = std::ranges::find_if(color_ids, [&](const auto &tup) { return std::get<1>(tup) == best_id; });
+                 auto it                           = std::ranges::find_if(
+                   color_ids,
+                   [&](const auto &tup)
+                   { return std::get<1>(tup) == best_id; });
 
                  fme::color conv_color_best;
                  if (it != color_ids.end())
                  {
                       conv_color_best = conv_cache[std::get<0>(*it)];
-                      if (color_in != conv_color_best && logged_colors.insert({ color_in, conv_color_best }).second)
+                      if (
+                        color_in != conv_color_best
+                        && logged_colors.insert({ color_in, conv_color_best })
+                             .second)
                       {
                            spdlog::debug("{} != {}", color_in, conv_color_best);
                       }
@@ -226,15 +278,28 @@ std::future<void> save_image_pbo(
 
             for (auto &&[id, mask] : masks)
             {
-                 const auto current_path = path.parent_path() / fmt::format("{}_{}{}", path.stem().string(), id, path.extension().string());
-                 int        ok = stbi_write_png(current_path.string().c_str(), w, h, channels, &mask.front(), static_cast<int>(row_bytes));
+                 const auto current_path = path.parent_path()
+                                           / fmt::format(
+                                             "{}_{}{}",
+                                             path.stem().string(),
+                                             id,
+                                             path.extension().string());
+                 int ok = stbi_write_png(
+                   current_path.string().c_str(),
+                   w,
+                   h,
+                   channels,
+                   &mask.front(),
+                   static_cast<int>(row_bytes));
                  if (!ok)
                  {
-                      spdlog::error("stbi_write_png failed for '{}'", path.string());
+                      spdlog::error(
+                        "stbi_write_png failed for '{}'", path.string());
                  }
                  else
                  {
-                      spdlog::debug("Wrote RGBA attachment to '{}'", path.string());
+                      spdlog::debug(
+                        "Wrote RGBA attachment to '{}'", path.string());
                  }
             }
        });

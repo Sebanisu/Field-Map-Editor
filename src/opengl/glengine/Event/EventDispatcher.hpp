@@ -34,7 +34,11 @@ namespace event
             std::invocable auto &&callable)
           {
                if (
-                 check<event::MouseButtonPressed, event::MouseButtonReleased, event::MouseMoved, event::MouseScroll>(e, hovered)
+                 check<
+                   event::MouseButtonPressed,
+                   event::MouseButtonReleased,
+                   event::MouseMoved,
+                   event::MouseScroll>(e, hovered)
                  || check<event::KeyPressed, event::KeyReleased>(e, focused))
                {
                     callable();

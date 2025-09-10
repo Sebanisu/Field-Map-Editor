@@ -25,7 +25,8 @@ struct unique_values_and_strings
 {
    private:
      static constexpr auto default_filter_lambda = [](auto &&) { return true; };
-     static constexpr auto kite                  = [](auto &&, auto &&ret) { return std::forward<decltype(ret)>(ret); };
+     static constexpr auto kite
+       = [](auto &&, auto &&ret) { return std::forward<decltype(ret)>(ret); };
 
    public:
      using value_type            = T;
@@ -76,14 +77,18 @@ struct unique_values_and_strings
      }
 
    private:
-     std::vector<value_type>                m_values{};
-     std::vector<std::string>               m_strings{};
+     std::vector<value_type>  m_values{};
+     std::vector<std::string> m_strings{};
 
-     [[nodiscard]] std::vector<std::string> get_strings(const std::vector<T> &data) const
+     [[nodiscard]] std::vector<std::string>
+       get_strings(const std::vector<T> &data) const
      {
           std::vector<std::string> vector;
           vector.reserve(std::size(data));
-          std::ranges::transform(data, std::back_inserter(vector), [](const T &t_value) { return fmt::format("{}", t_value); });
+          std::ranges::transform(
+            data,
+            std::back_inserter(vector),
+            [](const T &t_value) { return fmt::format("{}", t_value); });
           return vector;
      }
      template<
@@ -104,7 +109,10 @@ struct unique_values_and_strings
           }
           using namespace open_viii::graphics::background;
           auto filtered = tiles | Map::filter_view_invalid();
-          std::ranges::transform(filtered | std::views::filter(filter), std::back_inserter(ret), lambda);
+          std::ranges::transform(
+            filtered | std::views::filter(filter),
+            std::back_inserter(ret),
+            lambda);
           std::ranges::sort(ret, sort);
           auto last = std::ranges::unique(ret.begin(), ret.end());
           ret.erase(last.begin(), last.end());
@@ -115,8 +123,14 @@ struct unique_values_and_strings
 // Concept to check for values(), strings(), and zip()
 template<typename T>
 concept HasValuesAndStringsAndZip = requires(T obj) {
-     { obj.values() } -> std::ranges::range; // std::convertible_to<const std::vector<typename std::remove_cvref_t<T>::value_type> &>;
-     { obj.strings() } -> std::ranges::range;// std::convertible_to<const std::vector<std::string> &>;
+     {
+          obj.values()
+     } -> std::ranges::range;// std::convertible_to<const std::vector<typename
+                             // std::remove_cvref_t<T>::value_type> &>;
+     {
+          obj.strings()
+     } -> std::ranges::range;// std::convertible_to<const
+                             // std::vector<std::string> &>;
      { obj.zip() } -> std::ranges::range;
 };
 
@@ -159,7 +173,10 @@ struct all_unique_values_and_strings
              {},
              [](
                const auto  key,
-               const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
+               const auto &tile) -> bool
+             {
+                  return ff_8::tile_operations::AnimationIdMatch{ key } == tile;
+             }))
        , m_palette(
            get_map<
              std::uint8_t,
@@ -170,7 +187,8 @@ struct all_unique_values_and_strings
              {},
              [](
                const auto  key,
-               const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
+               const auto &tile) -> bool
+             { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
      {
      }
      [[nodiscard]] const auto &z() const
@@ -211,17 +229,21 @@ struct all_unique_values_and_strings
      }
 
    private:
-     unique_values_and_strings<std::uint16_t>                                     m_z                   = {};
-     unique_values_and_strings<std::uint8_t>                                      m_layer_id            = {};
-     unique_values_and_strings<std::uint8_t>                                      m_texture_page_id     = {};
-     unique_values_and_strings<std::uint8_t>                                      m_animation_id        = {};
-     unique_values_and_strings<std::uint8_t>                                      m_blend_other         = {};
-     unique_values_and_strings<open_viii::graphics::background::BlendModeT>       m_blend_mode          = {};
-     unique_values_and_strings<open_viii::graphics::BPPT>                         m_bpp                 = {};
-     std::map<std::uint8_t, unique_values_and_strings<std::uint8_t>>              m_animation_frame     = {};
-     std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> m_palette             = {};
+     unique_values_and_strings<std::uint16_t> m_z               = {};
+     unique_values_and_strings<std::uint8_t>  m_layer_id        = {};
+     unique_values_and_strings<std::uint8_t>  m_texture_page_id = {};
+     unique_values_and_strings<std::uint8_t>  m_animation_id    = {};
+     unique_values_and_strings<std::uint8_t>  m_blend_other     = {};
+     unique_values_and_strings<open_viii::graphics::background::BlendModeT>
+                                                          m_blend_mode = {};
+     unique_values_and_strings<open_viii::graphics::BPPT> m_bpp        = {};
+     std::map<std::uint8_t, unique_values_and_strings<std::uint8_t>>
+       m_animation_frame = {};
+     std::
+       map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>>
+                           m_palette             = {};
 
-     static constexpr auto                                                        default_filter_lambda = [](auto &&) { return true; };
+     static constexpr auto default_filter_lambda = [](auto &&) { return true; };
      template<
        typename valT,
        typename keyT,
@@ -244,7 +266,12 @@ struct all_unique_values_and_strings
           {
                ret.emplace(
                  key,
-                 unique_values_and_strings<valT>(tiles, lambda, sort, [&key, &filter](const auto &tile) { return filter(key, tile); }));
+                 unique_values_and_strings<valT>(
+                   tiles,
+                   lambda,
+                   sort,
+                   [&key, &filter](const auto &tile)
+                   { return filter(key, tile); }));
           }
           return ret;
      }

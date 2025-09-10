@@ -48,7 +48,8 @@ namespace ff_8
  * Should only be called by undo() pops front
  * @return returns new front
  */
-[[nodiscard]] const MapHistory::map_t &MapHistory::undo_original(bool skip_redo) const
+[[nodiscard]] const MapHistory::map_t &
+  MapHistory::undo_original(bool skip_redo) const
 {
      if (!skip_redo)
      {
@@ -68,7 +69,8 @@ std::vector<PupuID> MapHistory::calculate_pupu(const map_t &map)
             std::vector<PupuID> pupu_ids = {};
             UniquifyPupu        pupu_map = {};
             pupu_ids.reserve(std::ranges::size(tiles));
-            std::ranges::transform(tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+            std::ranges::transform(
+              tiles, std::back_insert_iterator(pupu_ids), pupu_map);
             return pupu_ids;
        });
 }
@@ -104,14 +106,18 @@ MapHistory::MapHistory(map_t map)
  * For when a change could happen. we make a copy ahead of time.
  * @return back map
  */
-[[nodiscard]] MapHistory::map_t &MapHistory::copy_back_preemptive(std::source_location source_location) const
+[[nodiscard]] MapHistory::map_t &
+  MapHistory::copy_back_preemptive(std::source_location source_location) const
 {
      if (!preemptive_copy_mode)
      {
           auto &temp           = safe_copy_working();
           preemptive_copy_mode = true;
           spdlog::debug(
-            "Map History preemptive_copy_mode: {}\n\t{}:{}", preemptive_copy_mode, source_location.file_name(), source_location.line());
+            "Map History preemptive_copy_mode: {}\n\t{}:{}",
+            preemptive_copy_mode,
+            source_location.file_name(),
+            source_location.line());
           return temp;
      }
      return back();
@@ -120,13 +126,17 @@ MapHistory::MapHistory(map_t map)
  * After copy_mode is returned to normal copy_back_preemptive will resume
  * making copies.
  */
-void MapHistory::end_preemptive_copy_mode(std::source_location source_location) const
+void MapHistory::end_preemptive_copy_mode(
+  std::source_location source_location) const
 {
      if (preemptive_copy_mode)
      {
           preemptive_copy_mode = false;
           spdlog::debug(
-            "Map History preemptive_copy_mode: {}\n\t{}:{}", preemptive_copy_mode, source_location.file_name(), source_location.line());
+            "Map History preemptive_copy_mode: {}\n\t{}:{}",
+            preemptive_copy_mode,
+            source_location.file_name(),
+            source_location.line());
      }
 }
 [[nodiscard]] MapHistory::map_t &MapHistory::copy_working() const

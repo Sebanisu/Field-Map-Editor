@@ -13,10 +13,10 @@ class Archive
 {
    public:
      Archive();
-     void                                                  on_update(float) const {}
-     void                                                  on_render() const {}
-     [[nodiscard]] bool                                    on_im_gui_update() const;
-     void                                                  on_event(const glengine::event::Item &) const {}
+     void               on_update(float) const {}
+     void               on_render() const {}
+     [[nodiscard]] bool on_im_gui_update() const;
+     void               on_event(const glengine::event::Item &) const {}
 
      [[nodiscard]] const open_viii::archive::Archives     *operator->() const;
      [[nodiscard]] const open_viii::archive::FIFLFS<true> &fields() const;

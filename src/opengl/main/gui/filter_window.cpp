@@ -25,7 +25,8 @@ void fme::filter_window::collapsing_header_filters() const
           auto lock_map_sprite = m_map_sprite.lock();
           if (!lock_map_sprite)
           {
-               spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock map_sprite: shared_ptr is expired.");
                return;
           }
           combo_filtered_pupu(lock_map_sprite);
@@ -48,7 +49,9 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
           return false;
      }
      // Clear selection with Escape
-     if (key_chord == ImGuiKey_Escape || key_chord == (ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A))
+     if (
+       key_chord == ImGuiKey_Escape
+       || key_chord == (ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A))
      {
           m_last_selected      = {};
           m_selected_file_name = {};
@@ -56,7 +59,9 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
           return true;
      }
      // Select All with Ctrl+A (only if no active edit)
-     else if (m_selected_file_name.empty() && key_chord == (ImGuiMod_Ctrl | ImGuiKey_A))
+     else if (
+       m_selected_file_name.empty()
+       && key_chord == (ImGuiMod_Ctrl | ImGuiKey_A))
      {
           m_multi_select.clear();
           m_multi_select.reserve(m_textures_map->size());
@@ -74,7 +79,9 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
           return true;
      }
      // Inverse selection with Ctrl+I (only if no active edit)
-     else if (m_selected_file_name.empty() && key_chord == (ImGuiMod_Ctrl | ImGuiKey_I))
+     else if (
+       m_selected_file_name.empty()
+       && key_chord == (ImGuiMod_Ctrl | ImGuiKey_I))
      {
           std::vector<std::string> new_selection;
           new_selection.reserve(m_textures_map->size());
@@ -82,7 +89,9 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
           for (const auto &[current_file_name, _] : *m_textures_map)
           {
                // Add file_name if it is NOT currently selected
-               if (std::ranges::find(m_multi_select, current_file_name) == m_multi_select.end())
+               if (
+                 std::ranges::find(m_multi_select, current_file_name)
+                 == m_multi_select.end())
                {
                     new_selection.push_back(current_file_name);
                }
@@ -120,23 +129,29 @@ void fme::filter_window::render() const
      const auto pop_end = glengine::ScopeGuard(
        [&]()
        {
-            m_was_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+            m_was_focused
+              = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
             ImGui::End();
        });
      if (lock_map_sprite->fail())
      {
-          format_imgui_text("The `.map` is in an invalid state.\nSo no filters are avalible.");
+          format_imgui_text(
+            "The `.map` is in an invalid state.\nSo no filters are avalible.");
           return;
      }
      if (lock_selections->get<ConfigKey::DrawMode>() != draw_mode::draw_map)
      {
-          format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
+          format_imgui_text(
+            "The draw mode is not set to `.map`.\nFilter changes won't show on "
+            "draw window.");
      }
 
      handle_remove_queue(lock_selections, lock_map_sprite);
      handle_rename_queue(lock_selections, lock_map_sprite);
      handle_regenerate(lock_selections, lock_map_sprite);
-     if (!m_selected_file_name.empty() && !m_textures_map->contains(m_selected_file_name))
+     if (
+       !m_selected_file_name.empty()
+       && !m_textures_map->contains(m_selected_file_name))
      {
           m_selected_file_name = {};
      }
@@ -146,7 +161,10 @@ void fme::filter_window::render() const
      }
      if (!m_multi_select.empty())
      {
-          std::erase_if(m_multi_select, [&](const std::string &filename) { return !m_textures_map->contains(filename); });
+          std::erase_if(
+            m_multi_select,
+            [&](const std::string &filename)
+            { return !m_textures_map->contains(filename); });
      }
 
 
@@ -158,9 +176,12 @@ void fme::filter_window::render() const
      {
           static const constexpr auto speed = 20.f;
           if (wheel > 0.0f)
-               m_thumb_size_width = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
+               m_thumb_size_width
+                 = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
           else if (wheel < 0.0f)
-               m_thumb_size_width = std::max(m_thumb_size_width + (wheel * speed), 96.f);// add because wheel is negative
+               m_thumb_size_width = std::max(
+                 m_thumb_size_width + (wheel * speed),
+                 96.f);// add because wheel is negative
      }
 
      m_textures_map = &lock_map_sprite->get_deswizzle_combined_textures();
@@ -195,7 +216,9 @@ void fme::filter_window::render() const
           }
      }
 
-     if (m_selected_file_name.empty() || !m_textures_map->contains(m_selected_file_name))
+     if (
+       m_selected_file_name.empty()
+       || !m_textures_map->contains(m_selected_file_name))
      {
           render_list_view(lock_selections, lock_map_sprite);
      }
@@ -236,16 +259,19 @@ void fme::filter_window::update(std::weak_ptr<map_sprite> in_map_sprite)
      m_map_sprite = std::move(in_map_sprite);
 }
 
-bool fme::filter_window::begin_window(const std::shared_ptr<Selections> &lock_selections) const
+bool fme::filter_window::begin_window(
+  const std::shared_ptr<Selections> &lock_selections) const
 {
-     bool      &visible     = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&lock_selections, &visible, was_visable = visible]
-                                                    {
-                                                         if (was_visable != visible)
-                                                         {
-                                                              lock_selections->update<ConfigKey::DisplayFiltersWindow>();
-                                                         }
-                                                    } };
+     bool &visible = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
+     const auto pop_visible = glengine::ScopeGuard{
+          [&lock_selections, &visible, was_visable = visible]
+          {
+               if (was_visable != visible)
+               {
+                    lock_selections->update<ConfigKey::DisplayFiltersWindow>();
+               }
+          }
+     };
      if (!visible)
      {
           return false;
@@ -268,7 +294,8 @@ void fme::filter_window::handle_remove_queue(
 
      for (const auto &file_name : m_remove_queue)
      {
-          (void)lock_map_sprite->remove_deswizzle_combined_toml_table(file_name);
+          (void)lock_map_sprite->remove_deswizzle_combined_toml_table(
+            file_name);
      }
      save_config(lock_selections);
      m_remove_queue.clear();
@@ -283,7 +310,8 @@ void fme::filter_window::handle_rename_queue(
 
      for (const auto &[old_name, new_name] : m_rename_queue)
      {
-          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(old_name, new_name);
+          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(
+            old_name, new_name);
      }
      save_config(lock_selections);
      m_rename_queue.clear();
@@ -298,9 +326,9 @@ void fme::filter_window::handle_regenerate(
           return;
      }
      spdlog::debug("{}:{} Regenerate Started", __FILE__, __LINE__);
-     m_regenerate_items = false;
-     toml::table *coo_table
-       = lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     m_regenerate_items     = false;
+     toml::table *coo_table = lock_map_sprite->get_deswizzle_combined_coo_table(
+       {}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return;
@@ -311,18 +339,23 @@ void fme::filter_window::handle_regenerate(
      }
      coo_table->clear();// wipe old contents
      lock_map_sprite->save_deswizzle_generate_toml(
-       lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {}, *coo_table, lock_selections);
+       lock_selections->get<ConfigKey::OutputDeswizzlePattern>(),
+       {},
+       *coo_table,
+       lock_selections);
      save_config(lock_selections);
      spdlog::debug("{}:{} Regenerate Ended", __FILE__, __LINE__);
 }
 
-void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const
+void fme::filter_window::save_config(
+  const std::shared_ptr<Selections> &lock_selections) const
 {
 
-     // TODO fill in common values here or else users can't use them. Like Field names and coo
+     // TODO fill in common values here or else users can't use them. Like Field
+     // names and coo
      const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path
-       = config_path_values.replace_tags(lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
+     const std::filesystem::path config_path = config_path_values.replace_tags(
+       lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
      auto config = Configuration(config_path);
      config.save();
 }
@@ -332,11 +365,16 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
 
-     const float  button_height = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
-     const ImVec2 button_size   = { m_tool_button_size_width, button_height };
-     const auto   unused_ids    = get_unused_ids();
-     const auto   used_coo      = lock_map_sprite->get_used_coo(lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
-     format_imgui_text("Unused Pupu IDs: {}\t Used Language Code: {}", unused_ids.size(), used_coo);
+     const float button_height
+       = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
+     const ImVec2 button_size = { m_tool_button_size_width, button_height };
+     const auto   unused_ids  = get_unused_ids();
+     const auto   used_coo    = lock_map_sprite->get_used_coo(
+       lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     format_imgui_text(
+       "Unused Pupu IDs: {}\t Used Language Code: {}",
+       unused_ids.size(),
+       used_coo);
      if (!unused_ids.empty() && ImGui::IsItemHovered())
      {
           ImGui::BeginTooltip();
@@ -350,12 +388,14 @@ void fme::filter_window::render_list_view(
 
      static const constexpr auto FailOverLevelsArray = []()
      {
-          constexpr auto                               first = std::to_underlying(FailOverLevels::Begin);
-          constexpr auto                               last  = std::to_underlying(FailOverLevels::End);
+          constexpr auto first = std::to_underlying(FailOverLevels::Begin);
+          constexpr auto last  = std::to_underlying(FailOverLevels::End);
 
-          std::array<FailOverLevels, last - first + 1> arr   = {};
+          std::array<FailOverLevels, last - first + 1> arr = {};
 
-          auto range = std::views::iota(first, last + 1) | std::views::transform([](auto v) { return static_cast<FailOverLevels>(v); });
+          auto range = std::views::iota(first, last + 1)
+                       | std::views::transform(
+                         [](auto v) { return static_cast<FailOverLevels>(v); });
 
           std::ranges::copy(range, arr.begin());
           return arr;
@@ -363,7 +403,8 @@ void fme::filter_window::render_list_view(
      const auto gcc = GenericCombo(
        "Fail Over",
        [&]() { return FailOverLevelsArray; },
-       [&]() { return FailOverLevelsArray | std::views::transform(AsString{}); },
+       [&]()
+       { return FailOverLevelsArray | std::views::transform(AsString{}); },
        lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (gcc.render())
      {
@@ -373,37 +414,50 @@ void fme::filter_window::render_list_view(
                m_textures_map->clear();
           }
      }
-     ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_tool_buttons", false);
+     ImGui::Columns(
+       calc_column_count(m_tool_button_size_width),
+       "##get_deswizzle_combined_tool_buttons",
+       false);
      ImGui::BeginDisabled(std::ranges::empty(m_multi_select));
-     format_imgui_wrapped_text("Selected {} Items(s): ", std::ranges::size(m_multi_select));
+     format_imgui_wrapped_text(
+       "Selected {} Items(s): ", std::ranges::size(m_multi_select));
      ImGui::NextColumn();
      // Combine into a new entry (keep originals)
      if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)", button_size))
      {
-          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
+            m_multi_select, generate_file_name(lock_map_sprite));
           save_config(lock_selections);
      }
-     tool_tip("Combine selected entries into a new entry without removing the originals.");
+     tool_tip(
+       "Combine selected entries into a new entry without removing the "
+       "originals.");
      ImGui::NextColumn();
      // Combine and replace originals
      if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)", button_size))
      {
           std::string temp_name = generate_file_name(lock_map_sprite);
-          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
+            m_multi_select, temp_name);
           std::ranges::sort(m_multi_select);
-          m_rename_queue.emplace_back(std::move(temp_name), m_multi_select.front());
+          m_rename_queue.emplace_back(
+            std::move(temp_name), m_multi_select.front());
           std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
           m_multi_select.clear();
      }
-     tool_tip("Combine selected entries into one entry and remove the originals.");
+     tool_tip(
+       "Combine selected entries into one entry and remove the originals.");
      ImGui::NextColumn();
      // Copy
      if (ImGui::Button(ICON_FA_COPY " Copy", button_size))
      {
           lock_map_sprite->copy_deswizzle_combined_toml_table(
-            m_multi_select, [&, index = int{}]() mutable { return generate_file_name(lock_map_sprite, index++); });
+            m_multi_select,
+            [&, index = int{}]() mutable
+            { return generate_file_name(lock_map_sprite, index++); });
           save_config(lock_selections);
-          // todo: copy create new entries with generated name (prefix_timestamp_index.png).
+          // todo: copy create new entries with generated name
+          // (prefix_timestamp_index.png).
      }
      tool_tip("Copy selected entries into new entries with generated names.");
      ImGui::NextColumn();
@@ -432,7 +486,9 @@ void fme::filter_window::render_list_view(
      {
           add_new_entry(lock_selections, lock_map_sprite);
      }
-     tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
+     tool_tip(
+       "Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, "
+       "the mode will switch to editing the new entry.");
      ImGui::Columns(1);
      if (ImGui::Button(ICON_FA_REPEAT " Regenerate", button_size))
      {
@@ -441,7 +497,10 @@ void fme::filter_window::render_list_view(
      tool_tip("Clear and regenerate the TOML entries from PupuIDs.");
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
-     ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
+     ImGui::Columns(
+       calc_column_count(m_tool_button_size_width),
+       "##get_deswizzle_combined_based_on_attributes",
+       false);
      ImGui::BeginDisabled(m_checkanimation);
      if (m_checkanimation)
      {
@@ -463,14 +522,17 @@ void fme::filter_window::render_list_view(
           }
      }
      tool_tip(
-       "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one of the PupuIDs is has Animation ID 0xFF and Animation State "
+       "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one "
+       "of the PupuIDs is has Animation ID 0xFF and Animation State "
        "0x00");
      ImGui::NextColumn();
      if (ImGui::Checkbox("ID", &m_checkanimation_id))
      {
      }
 
-     tool_tip("mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join animations ids of not the same state.");
+     tool_tip(
+       "mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join "
+       "animations ids of not the same state.");
 
      ImGui::NextColumn();
      if (ImGui::Checkbox("State", &m_checkanimation_state))
@@ -479,7 +541,8 @@ void fme::filter_window::render_list_view(
 
 
      tool_tip(
-       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join animations of the same state because they usually don't "
+       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join "
+       "animations of the same state because they usually don't "
        "overlap.");
 
      ImGui::NextColumn();
@@ -503,15 +566,19 @@ void fme::filter_window::render_list_view(
      combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::Columns(1);
      ImGui::BeginDisabled(
-       !m_checkoffset && !m_checkanimation && !m_checkanimation_id && !m_checkanimation_state && !m_checklayer_id
+       !m_checkoffset && !m_checkanimation && !m_checkanimation_id
+       && !m_checkanimation_state && !m_checklayer_id
        && !m_checkanimation_fill_in);
      if (ImGui::Button("Combine (w/attribute)"))
      {
           [&]()
           {
-               const auto  &unique_pupu_ids = lock_map_sprite->working_unique_pupu();
+               const auto &unique_pupu_ids
+                 = lock_map_sprite->working_unique_pupu();
                toml::table *coo_table
-                 = lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+                 = lock_map_sprite->get_deswizzle_combined_coo_table(
+                   {},
+                   lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
                if (m_checkoffset)
                     process_combine(coo_table, unique_pupu_ids)
 
@@ -521,9 +588,12 @@ void fme::filter_window::render_list_view(
                          {
                               if (value.is_table())
                               {
-                                   ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                                   toml::table                                 &file_table  = *value.as_table();
-                                   temp_filter.reload(file_table);// loads from table;
+                                   ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                     temp_filter
+                                     = { ff_8::FilterSettings::All_Disabled };
+                                   toml::table &file_table = *value.as_table();
+                                   temp_filter.reload(
+                                     file_table);// loads from table;
                                    if (!temp_filter.enabled())
                                    {
                                         continue;
@@ -533,7 +603,12 @@ void fme::filter_window::render_list_view(
                                      && std::ranges::any_of(
                                        temp_filter.value(),
                                        [](const ff_8::PupuID &pupu_id)
-                                       { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                       {
+                                            return pupu_id.blend_mode()
+                                                   != open_viii::graphics::
+                                                     background::BlendModeT::
+                                                       none;
+                                       }))
                                    {
                                         continue;
                                    }
@@ -553,26 +628,35 @@ void fme::filter_window::render_list_view(
                                         continue;
                                    }
                                    // if (std::ranges::all_of(
-                                   //       temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
+                                   //       temp_filter.value(), [](const
+                                   //       ff_8::PupuID &pupu_id) { return
+                                   //       pupu_id.offset() == 0; }))
                                    {
                                         // append offsets > 0 to these.
                                         auto copy_values = temp_filter.value();
                                         bool reload      = false;
-                                        for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                        for (const ff_8::PupuID &u_pupu_id :
+                                             unique_pupu_ids)
                                         {
                                              if (is_excluded(u_pupu_id))
                                              {
                                                   continue;
                                              }
-                                             for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                             for (const ff_8::PupuID
+                                                    &i_pupu_id :
+                                                  temp_filter.value())
                                              {
                                                   if (is_excluded(i_pupu_id))
                                                   {
                                                        continue;
                                                   }
-                                                  if (u_pupu_id != i_pupu_id && u_pupu_id.same_base(i_pupu_id))
+                                                  if (
+                                                    u_pupu_id != i_pupu_id
+                                                    && u_pupu_id.same_base(
+                                                      i_pupu_id))
                                                   {
-                                                       copy_values.push_back(u_pupu_id);
+                                                       copy_values.push_back(
+                                                         u_pupu_id);
                                                        reload = true;
                                                   }
                                              }
@@ -583,9 +667,13 @@ void fme::filter_window::render_list_view(
                                              m_reload_thumbnail = true;
                                         }
                                         std::ranges::sort(copy_values);
-                                        const auto remove_range = std::ranges::unique(copy_values);
-                                        copy_values.erase(remove_range.begin(), remove_range.end());
-                                        temp_filter.update(std::move(copy_values));
+                                        const auto remove_range
+                                          = std::ranges::unique(copy_values);
+                                        copy_values.erase(
+                                          remove_range.begin(),
+                                          remove_range.end());
+                                        temp_filter.update(
+                                          std::move(copy_values));
                                         temp_filter.update(file_table);
                                    }
                               }
@@ -598,9 +686,12 @@ void fme::filter_window::render_list_view(
                     {
                          if (value.is_table())
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                temp_filter
+                                = { ff_8::FilterSettings::All_Disabled };
+                              toml::table &file_table = *value.as_table();
+                              temp_filter.reload(
+                                file_table);// loads from table;
                               if (!temp_filter.enabled())
                               {
                                    continue;
@@ -610,7 +701,11 @@ void fme::filter_window::render_list_view(
                                 && std::ranges::any_of(
                                   temp_filter.value(),
                                   [](const ff_8::PupuID &pupu_id)
-                                  { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                  {
+                                       return pupu_id.blend_mode()
+                                              != open_viii::graphics::
+                                                background::BlendModeT::none;
+                                  }))
                               {
                                    continue;
                               }
@@ -633,14 +728,16 @@ void fme::filter_window::render_list_view(
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
                                    bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   for (const ff_8::PupuID &u_pupu_id :
+                                        unique_pupu_ids)
                                    {
 
                                         if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        for (const ff_8::PupuID &i_pupu_id :
+                                             temp_filter.value())
                                         {
                                              if (is_excluded(i_pupu_id))
                                              {
@@ -650,7 +747,8 @@ void fme::filter_window::render_list_view(
                                                u_pupu_id != i_pupu_id
                                                && (u_pupu_id.same_base(i_pupu_id) || (u_pupu_id.same_animation_id_base(i_pupu_id))))
                                              {
-                                                  copy_values.push_back(u_pupu_id);
+                                                  copy_values.push_back(
+                                                    u_pupu_id);
                                                   reload = true;
                                              }
                                         }
@@ -661,8 +759,10 @@ void fme::filter_window::render_list_view(
                                         m_reload_thumbnail = true;
                                    }
                                    std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   const auto remove_range
+                                     = std::ranges::unique(copy_values);
+                                   copy_values.erase(
+                                     remove_range.begin(), remove_range.end());
                                    temp_filter.update(std::move(copy_values));
                                    temp_filter.update(file_table);
                               }
@@ -676,9 +776,12 @@ void fme::filter_window::render_list_view(
                     {
                          if (value.is_table())
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                temp_filter
+                                = { ff_8::FilterSettings::All_Disabled };
+                              toml::table &file_table = *value.as_table();
+                              temp_filter.reload(
+                                file_table);// loads from table;
                               if (!temp_filter.enabled())
                               {
                                    continue;
@@ -688,7 +791,11 @@ void fme::filter_window::render_list_view(
                                 && std::ranges::any_of(
                                   temp_filter.value(),
                                   [](const ff_8::PupuID &pupu_id)
-                                  { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                  {
+                                       return pupu_id.blend_mode()
+                                              != open_viii::graphics::
+                                                background::BlendModeT::none;
+                                  }))
                               {
                                    continue;
                               }
@@ -711,14 +818,16 @@ void fme::filter_window::render_list_view(
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
                                    bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   for (const ff_8::PupuID &u_pupu_id :
+                                        unique_pupu_ids)
                                    {
 
                                         if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        for (const ff_8::PupuID &i_pupu_id :
+                                             temp_filter.value())
                                         {
                                              if (is_excluded(i_pupu_id))
                                              {
@@ -736,7 +845,8 @@ void fme::filter_window::render_list_view(
                                                   )
                                              )
                                              {
-                                                  copy_values.push_back(u_pupu_id);
+                                                  copy_values.push_back(
+                                                    u_pupu_id);
                                                   reload = true;
                                              }
                                         }
@@ -747,8 +857,10 @@ void fme::filter_window::render_list_view(
                                         m_reload_thumbnail = true;
                                    }
                                    std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   const auto remove_range
+                                     = std::ranges::unique(copy_values);
+                                   copy_values.erase(
+                                     remove_range.begin(), remove_range.end());
                                    temp_filter.update(std::move(copy_values));
                                    temp_filter.update(file_table);
                               }
@@ -762,9 +874,12 @@ void fme::filter_window::render_list_view(
                     {
                          if (value.is_table())
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                temp_filter
+                                = { ff_8::FilterSettings::All_Disabled };
+                              toml::table &file_table = *value.as_table();
+                              temp_filter.reload(
+                                file_table);// loads from table;
                               if (!temp_filter.enabled())
                               {
                                    continue;
@@ -774,7 +889,11 @@ void fme::filter_window::render_list_view(
                                 && std::ranges::any_of(
                                   temp_filter.value(),
                                   [](const ff_8::PupuID &pupu_id)
-                                  { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                  {
+                                       return pupu_id.blend_mode()
+                                              != open_viii::graphics::
+                                                background::BlendModeT::none;
+                                  }))
                               {
                                    continue;
                               }
@@ -797,7 +916,8 @@ void fme::filter_window::render_list_view(
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
                                    bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   for (const ff_8::PupuID &u_pupu_id :
+                                        unique_pupu_ids)
                                    {
                                         if (
                                           u_pupu_id.animation_state() != 0u
@@ -814,7 +934,8 @@ void fme::filter_window::render_list_view(
                                              continue;
                                         }
 
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        for (const ff_8::PupuID &i_pupu_id :
+                                             temp_filter.value())
                                         {
                                              if (is_excluded(i_pupu_id))
                                              {
@@ -830,8 +951,10 @@ void fme::filter_window::render_list_view(
                                         m_reload_thumbnail = true;
                                    }
                                    std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   const auto remove_range
+                                     = std::ranges::unique(copy_values);
+                                   copy_values.erase(
+                                     remove_range.begin(), remove_range.end());
                                    temp_filter.update(std::move(copy_values));
                                    temp_filter.update(file_table);
                               }
@@ -845,9 +968,12 @@ void fme::filter_window::render_list_view(
                     {
                          if (value.is_table())
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                temp_filter
+                                = { ff_8::FilterSettings::All_Disabled };
+                              toml::table &file_table = *value.as_table();
+                              temp_filter.reload(
+                                file_table);// loads from table;
                               if (!temp_filter.enabled())
                               {
                                    continue;
@@ -857,7 +983,11 @@ void fme::filter_window::render_list_view(
                                 && std::ranges::any_of(
                                   temp_filter.value(),
                                   [](const ff_8::PupuID &pupu_id)
-                                  { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                  {
+                                       return pupu_id.blend_mode()
+                                              != open_viii::graphics::
+                                                background::BlendModeT::none;
+                                  }))
                               {
                                    continue;
                               }
@@ -880,14 +1010,16 @@ void fme::filter_window::render_list_view(
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
                                    bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   for (const ff_8::PupuID &u_pupu_id :
+                                        unique_pupu_ids)
                                    {
 
                                         if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        for (const ff_8::PupuID &i_pupu_id :
+                                             temp_filter.value())
                                         {
                                              if (is_excluded(i_pupu_id))
                                              {
@@ -897,7 +1029,8 @@ void fme::filter_window::render_list_view(
                                                u_pupu_id != i_pupu_id
                                                && (u_pupu_id.same_base(i_pupu_id) || (u_pupu_id.same_layer_base(i_pupu_id))))
                                              {
-                                                  copy_values.push_back(u_pupu_id);
+                                                  copy_values.push_back(
+                                                    u_pupu_id);
                                                   reload = true;
                                              }
                                         }
@@ -908,8 +1041,10 @@ void fme::filter_window::render_list_view(
                                         m_reload_thumbnail = true;
                                    }
                                    std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   const auto remove_range
+                                     = std::ranges::unique(copy_values);
+                                   copy_values.erase(
+                                     remove_range.begin(), remove_range.end());
                                    temp_filter.update(std::move(copy_values));
                                    temp_filter.update(file_table);
                               }
@@ -917,11 +1052,14 @@ void fme::filter_window::render_list_view(
                     }
                }
 
-               auto cmp = [](std::vector<ff_8::PupuID> const &a, std::vector<ff_8::PupuID> const &b)
+               auto cmp = [](
+                            std::vector<ff_8::PupuID> const &a,
+                            std::vector<ff_8::PupuID> const &b)
                {
                     if (a.size() != b.size())
-                         return a.size() < b.size();                  // size first
-                    return std::ranges::lexicographical_compare(a, b);// then lexicographically
+                         return a.size() < b.size();// size first
+                    return std::ranges::lexicographical_compare(
+                      a, b);// then lexicographically
                };
                // Assuming value() is hashable/comparable
                std::set<std::vector<ff_8::PupuID>, decltype(cmp)> seen(cmp);
@@ -931,14 +1069,16 @@ void fme::filter_window::render_list_view(
                {
                     if (value.is_table())
                     {
-                         ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                         toml::table                                 &file_table  = *value.as_table();
+                         ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                           temp_filter = { ff_8::FilterSettings::All_Disabled };
+                         toml::table &file_table = *value.as_table();
                          temp_filter.reload(file_table);
 
                          if (!seen.insert(temp_filter.value()).second)
                          {
                               // Duplicate → queue for removal
-                              m_remove_queue.push_back(std::string{ key.str() });
+                              m_remove_queue.push_back(
+                                std::string{ key.str() });
                          }
                     }
                }
@@ -950,9 +1090,12 @@ void fme::filter_window::render_list_view(
                     {
                          if (value.is_table())
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                                temp_filter
+                                = { ff_8::FilterSettings::All_Disabled };
+                              toml::table &file_table = *value.as_table();
+                              temp_filter.reload(
+                                file_table);// loads from table;
                               if (!temp_filter.enabled())
                               {
                                    continue;
@@ -962,7 +1105,11 @@ void fme::filter_window::render_list_view(
                                 && std::ranges::any_of(
                                   temp_filter.value(),
                                   [](const ff_8::PupuID &pupu_id)
-                                  { return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none; }))
+                                  {
+                                       return pupu_id.blend_mode()
+                                              != open_viii::graphics::
+                                                background::BlendModeT::none;
+                                  }))
                               {
                                    continue;
                               }
@@ -985,13 +1132,15 @@ void fme::filter_window::render_list_view(
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
                                    bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   for (const ff_8::PupuID &u_pupu_id :
+                                        unique_pupu_ids)
                                    {
                                         if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        for (const ff_8::PupuID &i_pupu_id :
+                                             temp_filter.value())
                                         {
                                              if (is_excluded(i_pupu_id))
                                              {
@@ -1010,7 +1159,8 @@ void fme::filter_window::render_list_view(
                                                   )
                                              )
                                              {
-                                                  copy_values.push_back(u_pupu_id);
+                                                  copy_values.push_back(
+                                                    u_pupu_id);
                                                   reload = true;
                                              }
                                         }
@@ -1021,8 +1171,10 @@ void fme::filter_window::render_list_view(
                                         m_reload_thumbnail = true;
                                    }
                                    std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   const auto remove_range
+                                     = std::ranges::unique(copy_values);
+                                   copy_values.erase(
+                                     remove_range.begin(), remove_range.end());
                                    temp_filter.update(std::move(copy_values));
                                    temp_filter.update(file_table);
                               }
@@ -1033,14 +1185,23 @@ void fme::filter_window::render_list_view(
           }();
      }
      ImGui::EndDisabled();
-     tool_tip("Automaticly combine with attributes selected. Replacing entries.");
+     tool_tip(
+       "Automaticly combine with attributes selected. Replacing entries.");
      ImGui::Columns(1);
      ImGui::BeginChild("##Scrolling");
-     ImGui::Columns(calc_column_count(m_thumb_size_width), "##get_deswizzle_combined_textures", false);
+     ImGui::Columns(
+       calc_column_count(m_thumb_size_width),
+       "##get_deswizzle_combined_textures",
+       false);
 
      for (const auto &[file_name, framebuffer] : *m_textures_map)
      {
-          draw_thumbnail(lock_selections, lock_map_sprite, file_name, framebuffer, [&]() { select_file(file_name, lock_map_sprite); });
+          draw_thumbnail(
+            lock_selections,
+            lock_map_sprite,
+            file_name,
+            framebuffer,
+            [&]() { select_file(file_name, lock_map_sprite); });
           draw_thumbnail_label(file_name);
           ImGui::NextColumn();
      }
@@ -1054,8 +1215,9 @@ void fme::filter_window::render_list_view(
 int fme::filter_window::calc_column_count(float width) const
 {
      const ImVec2 region_size = ImGui::GetContentRegionAvail();
-     const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
-     const int    count       = static_cast<int>(region_size.x / (width + padding));
+     const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f
+                           + ImGui::GetStyle().ItemSpacing.x;
+     const int count = static_cast<int>(region_size.x / (width + padding));
      return count > 0 ? count : 1;
 }
 
@@ -1064,7 +1226,9 @@ void fme::filter_window::select_file(
   const std::string                 &file_name,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
+     if (auto *ptr
+         = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+         ptr)
      {
           if (ImGui::GetIO().KeyCtrl)
           {
@@ -1081,7 +1245,8 @@ void fme::filter_window::select_file(
                }
                return;
           }
-          else if (ImGui::GetIO().KeyShift && std::ranges::empty(m_last_selected))
+          else if (
+            ImGui::GetIO().KeyShift && std::ranges::empty(m_last_selected))
           {
                // No anchor set yet — just select this one and set anchor
                m_multi_select.clear();
@@ -1094,7 +1259,9 @@ void fme::filter_window::select_file(
                m_last_selected = file_name;
                return;
           }
-          else if ((ImGui::GetIO().KeyShift || ImGui::GetIO().KeyAlt) && !std::ranges::empty(m_last_selected))
+          else if (
+            (ImGui::GetIO().KeyShift || ImGui::GetIO().KeyAlt)
+            && !std::ranges::empty(m_last_selected))
           {
                auto last_it            = m_textures_map->find(m_last_selected);
                auto it                 = m_textures_map->find(file_name);
@@ -1104,20 +1271,25 @@ void fme::filter_window::select_file(
                     // Figure out order
                     auto begin_it = last_it;
                     auto end_it   = it;
-                    // Walk forward until we either find end_it or hit the real end
-                    for (auto tmp = last_it; tmp != m_textures_map->end(); ++tmp)
+                    // Walk forward until we either find end_it or hit the real
+                    // end
+                    for (auto tmp = last_it; tmp != m_textures_map->end();
+                         ++tmp)
                     {
                          if (tmp == it)
                          {
                               // last_it comes before it
-                              return std::ranges::subrange(begin_it, std::ranges::next(end_it));
+                              return std::ranges::subrange(
+                                begin_it, std::ranges::next(end_it));
                          }
                     }
 
-                    // If we didn’t find it going forward, then last_it must come after it
+                    // If we didn’t find it going forward, then last_it must
+                    // come after it
                     begin_it = it;
                     end_it   = last_it;
-                    return std::ranges::subrange(begin_it, std::ranges::next(end_it));
+                    return std::ranges::subrange(
+                      begin_it, std::ranges::next(end_it));
                };
 
                const auto add = [this](auto &&range)
@@ -1135,7 +1307,8 @@ void fme::filter_window::select_file(
                {
                     for (const auto &[current_file_name, _] : range)
                     {
-                         auto found = std::ranges::find(m_multi_select, current_file_name);
+                         auto found = std::ranges::find(
+                           m_multi_select, current_file_name);
                          if (found != m_multi_select.end())
                          {
                               m_multi_select.erase(found);
@@ -1154,9 +1327,12 @@ void fme::filter_window::select_file(
           }
           m_multi_select.clear();
           m_selected_file_name = file_name;
-          const auto count     = (std::min)(s_max_chars, m_selected_file_name.size());
+          const auto count
+            = (std::min)(s_max_chars, m_selected_file_name.size());
           std::ranges::copy_n(
-            m_selected_file_name.begin(), static_cast<std::ranges::range_difference_t<std::string>>(count), m_file_name_buffer.begin());
+            m_selected_file_name.begin(),
+            static_cast<std::ranges::range_difference_t<std::string>>(count),
+            m_file_name_buffer.begin());
           m_file_name_buffer[count] = '\0';
           m_selected_toml_table     = ptr;
           lock_map_sprite->filter().reload(*ptr);
@@ -1207,21 +1383,26 @@ std::optional<std::string> fme::filter_window::next_key() const
      return it->first;
 }
 
-void fme::filter_window::draw_thumbnail_label(const std::string &file_name) const
+void fme::filter_window::draw_thumbnail_label(
+  const std::string &file_name) const
 {
      // Label under image (optional)
-     const float  button_width    = ImGui::GetFrameHeight();
-     const ImVec2 button_size     = { button_width, button_width };
-     const float  text_area_width = m_thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
+     const float  button_width = ImGui::GetFrameHeight();
+     const ImVec2 button_size  = { button_width, button_width };
+     const float  text_area_width
+       = m_thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
      // Remember the top-left of where we want to start
-     const ImVec2 text_start_pos  = ImGui::GetCursorScreenPos();
+     const ImVec2 text_start_pos = ImGui::GetCursorScreenPos();
 
      ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + text_area_width);
      ImGui::Text("%s", file_name.c_str());
      ImGui::PopTextWrapPos();
      const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
-     // Position the button at top-right of this block (same Y as the start of the text)
-     ImGui::SetCursorScreenPos(ImVec2(text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x, text_start_pos.y));
+     // Position the button at top-right of this block (same Y as the start of
+     // the text)
+     ImGui::SetCursorScreenPos(ImVec2(
+       text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
+       text_start_pos.y));
      const auto pop_id = PushPopID();
      if (ImGui::Button(ICON_FA_TRASH, button_size))
      {
@@ -1231,7 +1412,8 @@ void fme::filter_window::draw_thumbnail_label(const std::string &file_name) cons
      {
           tool_tip("Remove");
      }
-     ImGui::SetCursorScreenPos(ImVec2(backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
+     ImGui::SetCursorScreenPos(ImVec2(
+       backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
 }
 
 
@@ -1241,19 +1423,26 @@ void fme::filter_window::draw_add_new_button(
 {
 
 
-     ImTextureID tex_id = m_hovered_file_name == "##add"
-                            ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(1))
-                            : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
+     ImTextureID tex_id
+       = m_hovered_file_name == "##add"
+           ? glengine::ConvertGliDtoImTextureId<ImTextureID>(
+               lock_map_sprite->get_framebuffer().color_attachment_id(1))
+           : glengine::ConvertGliDtoImTextureId<ImTextureID>(
+               lock_map_sprite->get_framebuffer().color_attachment_id());
      m_aspect_ratio
-       = static_cast<float>(lock_map_sprite->get_framebuffer().height()) / static_cast<float>(lock_map_sprite->get_framebuffer().width());
-     const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+       = static_cast<float>(lock_map_sprite->get_framebuffer().height())
+         / static_cast<float>(lock_map_sprite->get_framebuffer().width());
+     const ImVec2 thumb_size
+       = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
      if (ImGui::ImageButton("add new item", tex_id, thumb_size))
      {
           add_new_entry(lock_selections, lock_map_sprite);
      }
      else
      {
-          tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
+          tool_tip(
+            "Add a new entry.\nHold Ctrl to add multiple entries.\nWithout "
+            "Ctrl, the mode will switch to editing the new entry.");
      }
 
      if (ImGui::IsItemHovered())
@@ -1277,16 +1466,20 @@ void fme::filter_window::add_new_entry(
      if (!ImGui::GetIO().KeyCtrl)
      {
           m_multi_select.clear();
-          m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+          m_selected_toml_table
+            = lock_map_sprite->add_deswizzle_combined_toml_table(
+              m_selected_file_name);
 
           std::ranges::copy_n(
             m_selected_file_name.begin(),
-            static_cast<std::ranges::range_difference_t<std::string>>((std::min)(s_max_chars, m_selected_file_name.size())),
+            static_cast<std::ranges::range_difference_t<std::string>>(
+              (std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
      {
-          (void)lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+          (void)lock_map_sprite->add_deswizzle_combined_toml_table(
+            m_selected_file_name);
           m_selected_file_name.clear();
      }
 
@@ -1300,13 +1493,23 @@ std::string fme::filter_window::generate_file_name(
 {
      auto now = std::chrono::system_clock::now();
      auto sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
-     auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+     auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                 now.time_since_epoch())
+               % 1000;
      if (index.has_value())
      {
           return fmt::format(
-            "{}_{:%Y%m%d_%H%M%S}_{:03d}_{}.png", lock_map_sprite->get_recommended_prefix(), sec, ms.count(), index.value());
+            "{}_{:%Y%m%d_%H%M%S}_{:03d}_{}.png",
+            lock_map_sprite->get_recommended_prefix(),
+            sec,
+            ms.count(),
+            index.value());
      }
-     return fmt::format("{}_{:%Y%m%d_%H%M%S}_{:03d}.png", lock_map_sprite->get_recommended_prefix(), sec, ms.count());
+     return fmt::format(
+       "{}_{:%Y%m%d_%H%M%S}_{:03d}.png",
+       lock_map_sprite->get_recommended_prefix(),
+       sec,
+       ms.count());
 }
 
 void fme::filter_window::render_detail_view(
@@ -1314,7 +1517,12 @@ void fme::filter_window::render_detail_view(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &framebuffer = m_textures_map->at(m_selected_file_name);
-     draw_thumbnail(lock_selections, lock_map_sprite, m_selected_file_name, framebuffer, [&]() { unselect_file(); });
+     draw_thumbnail(
+       lock_selections,
+       lock_map_sprite,
+       m_selected_file_name,
+       framebuffer,
+       [&]() { unselect_file(); });
      draw_filename_controls(lock_selections, lock_map_sprite);
      ImGui::Separator();
      draw_filter_controls(lock_map_sprite);
@@ -1331,19 +1539,25 @@ void fme::filter_window::draw_filename_controls(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     if (ImGui::InputText("##Empty", m_file_name_buffer.data(), m_file_name_buffer.size() - 1U))
+     if (ImGui::InputText(
+           "##Empty",
+           m_file_name_buffer.data(),
+           m_file_name_buffer.size() - 1U))
      {
      }
 
-     constexpr static auto pattern  = CTRE_REGEX_INPUT_TYPE{ R".((?i)^[a-z0-9_\-\.]+\.png$)." };
-     bool                  valid_fn = ctre::match<pattern>(
+     constexpr static auto pattern
+       = CTRE_REGEX_INPUT_TYPE{ R".((?i)^[a-z0-9_\-\.]+\.png$)." };
+     bool valid_fn = ctre::match<pattern>(
        m_file_name_buffer.data(),
        m_file_name_buffer.data()
          + static_cast<std::ranges::range_difference_t<std::array<char, 1>>>(
            strnlen(m_file_name_buffer.data(), m_file_name_buffer.size())));
      if (!valid_fn)
      {
-          ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid filename (must be alphanumeric with .png extension)");
+          ImGui::TextColored(
+            ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+            "Invalid filename (must be alphanumeric with .png extension)");
      }
      const std::string prefix = lock_map_sprite->get_recommended_prefix();
      if (ImGui::Button("Copy Prefix"))
@@ -1357,12 +1571,16 @@ void fme::filter_window::draw_filename_controls(
      ImGui::SameLine();
      ImGui::BeginDisabled(
        std::ranges::equal(
-         m_selected_file_name, std::string_view(m_file_name_buffer.data(), strnlen(m_file_name_buffer.data(), m_file_name_buffer.size()))));
+         m_selected_file_name,
+         std::string_view(
+           m_file_name_buffer.data(),
+           strnlen(m_file_name_buffer.data(), m_file_name_buffer.size()))));
      ImGui::BeginDisabled(!valid_fn);
      if (ImGui::Button("Rename"))
      {
           auto new_file_name = std::string(m_file_name_buffer.data());
-          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(m_selected_file_name, new_file_name);
+          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(
+            m_selected_file_name, new_file_name);
           m_selected_file_name = std::move(new_file_name);
           save_config(lock_selections);
      }
@@ -1373,7 +1591,8 @@ void fme::filter_window::draw_filename_controls(
           m_file_name_buffer = {};
           std::ranges::copy_n(
             m_selected_file_name.begin(),
-            static_cast<std::ranges::range_difference_t<std::string>>((std::min)(s_max_chars, m_selected_file_name.size())),
+            static_cast<std::ranges::range_difference_t<std::string>>(
+              (std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
@@ -1383,11 +1602,13 @@ void fme::filter_window::draw_filename_controls(
      ImGui::EndDisabled();
      ImGui::SameLine();
      {
-          const auto pop_id        = PushPopID();
-          const bool has_prev      = m_previous_file_name.has_value();
-          const auto disabled      = ImGuiDisabled(!has_prev);
+          const auto pop_id   = PushPopID();
+          const bool has_prev = m_previous_file_name.has_value();
+          const auto disabled = ImGuiDisabled(!has_prev);
 
-          const bool activate_prev = ImGui::ArrowButton("##l", ImGuiDir_Left) || (has_prev && ImGui::IsKeyPressed(ImGuiKey_LeftArrow));
+          const bool activate_prev
+            = ImGui::ArrowButton("##l", ImGuiDir_Left)
+              || (has_prev && ImGui::IsKeyPressed(ImGuiKey_LeftArrow));
           if (activate_prev)
           {
                select_file(m_previous_file_name.value(), lock_map_sprite);
@@ -1399,11 +1620,13 @@ void fme::filter_window::draw_filename_controls(
      }
      ImGui::SameLine();
      {
-          const auto pop_id        = PushPopID();
-          const bool has_next      = m_next_file_name.has_value();
-          const auto disabled      = ImGuiDisabled(!has_next);
+          const auto pop_id   = PushPopID();
+          const bool has_next = m_next_file_name.has_value();
+          const auto disabled = ImGuiDisabled(!has_next);
 
-          const bool activate_next = ImGui::ArrowButton("##l", ImGuiDir_Right) || (has_next && ImGui::IsKeyPressed(ImGuiKey_RightArrow));
+          const bool activate_next
+            = ImGui::ArrowButton("##l", ImGuiDir_Right)
+              || (has_next && ImGui::IsKeyPressed(ImGuiKey_RightArrow));
           if (activate_next)
           {
                select_file(m_next_file_name.value(), lock_map_sprite);
@@ -1440,13 +1663,15 @@ void fme::filter_window::unselect_file() const
      m_file_name_buffer   = {};
 }
 
-void fme::filter_window::draw_filter_controls(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::draw_filter_controls(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
 
      combo_filtered_pupu(lock_map_sprite);
      ImGui::Separator();
      format_imgui_wrapped_text(
-       "You may use these other filters in the export or testing process but we only can import via Pupu IDs. This may change in the "
+       "You may use these other filters in the export or testing process but "
+       "we only can import via Pupu IDs. This may change in the "
        "future once we figure out how.");
      ImGui::Separator();
      combo_filtered_bpps(lock_map_sprite);
@@ -1474,7 +1699,8 @@ std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
      // collect used IDs from textures_map
      for (const auto &[current_file_name, _] : *m_textures_map)
      {
-          const auto &pupu_map = lock_map_sprite->get_deswizzle_combined_textures_pupuids();
+          const auto &pupu_map
+            = lock_map_sprite->get_deswizzle_combined_textures_pupuids();
 
           if (auto it = pupu_map.find(current_file_name); it != pupu_map.end())
           {
@@ -1502,29 +1728,41 @@ void fme::filter_window::popup_combo_filtered_pupu(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     if (ImGui::BeginPopupModal("Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+     if (ImGui::BeginPopupModal(
+           "Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
      {
           const auto gcc = GenericComboWithMultiFilter(
             gui_labels::pupu_id,
             [&]() { return lock_map_sprite->working_unique_pupu(); },
-            [&]() { return lock_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
             [&]()
             {
                  return lock_map_sprite->working_unique_pupu()
-                        | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+                        | std::views::transform(AsString{});
+            },
+            [&]()
+            {
+                 return lock_map_sprite->working_unique_pupu()
+                        | std::views::transform(
+                          [](const ff_8::PupuID &pupu_id) -> decltype(auto)
+                          { return pupu_id.create_summary(); });
             },
             [&]() -> auto & { return m_multi_select_filter; },
             generic_combo_settings{ .num_columns = 2 });
           (void)gcc.render();
           format_imgui_wrapped_text(
             "{}",
-            m_multi_select_filter.enabled() ? "IDs will be " ICON_FA_LAYER_GROUP " added to the selected entries."
-                                            : "IDs will be " ICON_FA_TRASH " removed from the selected entries.");
+            m_multi_select_filter.enabled()
+              ? "IDs will be " ICON_FA_LAYER_GROUP
+                " added to the selected entries."
+              : "IDs will be " ICON_FA_TRASH
+                " removed from the selected entries.");
           if (ImGui::Button(ICON_FA_CHECK " Apply"))
           {
                for (const std::string &file_name : m_multi_select)
                {
-                    lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(file_name, m_multi_select_filter);
+                    lock_map_sprite
+                      ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                        file_name, m_multi_select_filter);
                }
                m_reload_thumbnail = true;
                ImGui::CloseCurrentPopup();
@@ -1540,16 +1778,23 @@ void fme::filter_window::popup_combo_filtered_pupu(
      }
 }
 
-void fme::filter_window::combo_filtered_pupu(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_pupu(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
        [&]() { return lock_map_sprite->working_unique_pupu(); },
-       [&]() { return lock_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
        [&]()
        {
             return lock_map_sprite->working_unique_pupu()
-                   | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+                   | std::views::transform(AsString{});
+       },
+       [&]()
+       {
+            return lock_map_sprite->working_unique_pupu()
+                   | std::views::transform(
+                     [](const ff_8::PupuID &pupu_id) -> decltype(auto)
+                     { return pupu_id.create_summary(); });
        },
        [&]() -> auto & { return lock_map_sprite->filter().multi_pupu; },
        generic_combo_settings{ .num_columns = 3 });
@@ -1562,7 +1807,8 @@ void fme::filter_window::combo_filtered_pupu(const std::shared_ptr<map_sprite> &
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_bpps(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_bpps(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().bpp();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1579,14 +1825,17 @@ void fme::filter_window::combo_filtered_bpps(const std::shared_ptr<map_sprite> &
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_palettes(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().palette();
      const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
      const auto  join_vector = [](auto &&pairs)
      {
-          auto transform_pairs = pairs | std::views::transform([](const auto &pair) { return pair.zip(); });
-          auto join_pairs      = std::ranges::join_view(transform_pairs);
+          auto transform_pairs = pairs
+                                 | std::views::transform(
+                                   [](const auto &pair) { return pair.zip(); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -1598,9 +1847,15 @@ void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprit
           }
           else
           {
-               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_filter
+                 = keys
+                   | std::views::filter([&](const auto &key)
+                                        { return map.contains(key); });
                auto keys_transform
-                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+                 = keys_filter
+                   | std::views::transform([&](const auto &key)
+                                           { return map.at(key); })
+                   | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
@@ -1608,20 +1863,30 @@ void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprit
 
 
      // Deduplicate based on value
-     std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
+     std::ranges::sort(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
+     const auto unique_range = std::ranges::unique(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      // Extract values and strings into separate views
-     auto       values  = value_string_pairs | std::views::transform([](const auto &pair) { return std::get<0>(pair); });
-     auto       strings = value_string_pairs | std::views::transform([](const auto &pair) { return std::get<1>(pair); });
+     auto values = value_string_pairs
+                   | std::views::transform([](const auto &pair)
+                                           { return std::get<0>(pair); });
+     auto strings = value_string_pairs
+                    | std::views::transform([](const auto &pair)
+                                            { return std::get<1>(pair); });
 
-     const auto gcc     = fme::GenericComboWithMultiFilter(
+     const auto gcc = fme::GenericComboWithMultiFilter(
        gui_labels::palette,
        [&values]() { return values; },
        [&strings]() { return strings; },
        [&strings]() { return strings; },
-       [&]() -> auto     &{ return lock_map_sprite->filter().multi_palette; });
+       [&]() -> auto & { return lock_map_sprite->filter().multi_palette; });
 
      if (!gcc.render())
      {
@@ -1633,7 +1898,8 @@ void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprit
 }
 
 
-void fme::filter_window::combo_filtered_blend_modes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_blend_modes(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().blend_mode();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1650,7 +1916,8 @@ void fme::filter_window::combo_filtered_blend_modes(const std::shared_ptr<map_sp
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_blend_other(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_blend_other(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().blend_other();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1667,7 +1934,8 @@ void fme::filter_window::combo_filtered_blend_other(const std::shared_ptr<map_sp
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_layers(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_layers(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().layer_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1684,7 +1952,8 @@ void fme::filter_window::combo_filtered_layers(const std::shared_ptr<map_sprite>
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_texture_pages(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().texture_page_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1692,7 +1961,8 @@ void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_texture_page_id; });
+       [&]() -> auto   &
+     { return lock_map_sprite->filter().multi_texture_page_id; });
      if (!gcc.render())
      {
           return;
@@ -1702,11 +1972,13 @@ void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_
 }
 
 
-void fme::filter_window::combo_exclude_animation_id_from_state(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_exclude_animation_id_from_state(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().animation_id();
-     // ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U || std::ranges::size(pair.strings()) <= 1U);
-     // const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
+     // ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U ||
+     // std::ranges::size(pair.strings()) <= 1U); const auto pop_disabled =
+     // glengine::ScopeGuard(&ImGui::EndDisabled);
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        "Exclude",
        [&pair]() { return pair.values(); },
@@ -1721,7 +1993,8 @@ void fme::filter_window::combo_exclude_animation_id_from_state(const std::shared
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_animation_ids(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().animation_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1730,7 +2003,8 @@ void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
        //       filter<FilterTag::MultiAnimationId> multi_animation_id;
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_animation_id; });
+       [&]() -> auto   &
+     { return lock_map_sprite->filter().multi_animation_id; });
      if (!gcc.render())
      {
           return;
@@ -1739,45 +2013,67 @@ void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_animation_states(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_animation_states(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map         = lock_map_sprite->uniques().animation_state();
-     const auto &keys        = lock_map_sprite->filter().multi_animation_id.value();
+     const auto &map  = lock_map_sprite->uniques().animation_state();
+     const auto &keys = lock_map_sprite->filter().multi_animation_id.value();
      const auto  join_vector = [](auto &&pairs)
      {
-          auto transform_pairs = pairs | std::views::transform([](const auto &pair) { return pair.zip(); });
-          auto join_pairs      = std::ranges::join_view(transform_pairs);
+          auto transform_pairs = pairs
+                                 | std::views::transform(
+                                   [](const auto &pair) { return pair.zip(); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
      auto value_string_pairs = [&]()
      {
-          if (keys.empty() || !lock_map_sprite->filter().multi_animation_id.enabled())
+          if (
+            keys.empty()
+            || !lock_map_sprite->filter().multi_animation_id.enabled())
           {
                return join_vector(map | std::views::values);
           }
           else
           {
-               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_filter
+                 = keys
+                   | std::views::filter([&](const auto &key)
+                                        { return map.contains(key); });
                auto keys_transform
-                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+                 = keys_filter
+                   | std::views::transform([&](const auto &key)
+                                           { return map.at(key); })
+                   | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
      }();
 
-     std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
+     std::ranges::sort(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
+     const auto unique_range = std::ranges::unique(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     auto       values  = value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<0>(pair); });
-     auto       strings = value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<1>(pair); });
-     const auto gcc     = fme::GenericComboWithMultiFilter(
+     auto values = value_string_pairs
+                   | std::views::transform([&](const auto &pair)
+                                           { return std::get<0>(pair); });
+     auto strings = value_string_pairs
+                    | std::views::transform([&](const auto &pair)
+                                            { return std::get<1>(pair); });
+     const auto gcc = fme::GenericComboWithMultiFilter(
        gui_labels::animation_state,
        [&values]() { return values; },
        [&strings]() { return strings; },
        [&strings]() { return strings; },
-       [&]() -> auto     &{ return lock_map_sprite->filter().multi_animation_state; });
+       [&]() -> auto &
+       { return lock_map_sprite->filter().multi_animation_state; });
      if (!gcc.render())
      {
           return;
@@ -1786,7 +2082,8 @@ void fme::filter_window::combo_filtered_animation_states(const std::shared_ptr<m
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_z(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_z(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().z();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -1803,20 +2100,24 @@ void fme::filter_window::combo_filtered_z(const std::shared_ptr<map_sprite> &loc
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_draw_bit(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_draw_bit(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      using namespace std::string_view_literals;
-     static constexpr auto values = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-     const auto            gcc    = fme::GenericComboWithFilter(
+     static constexpr auto values
+       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
+                     ff_8::draw_bitT::disabled };
+     const auto gcc = fme::GenericComboWithFilter(
        gui_labels::draw_bit,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []()
        {
-            return std::array{ gui_labels::draw_bit_all_tooltip, gui_labels::draw_bit_enabled_tooltip,
+            return std::array{ gui_labels::draw_bit_all_tooltip,
+                               gui_labels::draw_bit_enabled_tooltip,
                                gui_labels::draw_bit_disabled_tooltip };
        },
-       [&]() -> auto               &{ return lock_map_sprite->filter().draw_bit; });
+       [&]() -> auto & { return lock_map_sprite->filter().draw_bit; });
      if (!gcc.render())
           return;
      lock_map_sprite->update_render_texture();
@@ -1832,12 +2133,15 @@ struct map_pupu_id
      }
      auto strings() const
      {
-          return m_map_sprite->working_unique_pupu() | std::views::transform(fme::AsString{});
+          return m_map_sprite->working_unique_pupu()
+                 | std::views::transform(fme::AsString{});
      }
      auto tooltips() const
      {
           return m_map_sprite->working_unique_pupu()
-                 | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+                 | std::views::transform(
+                   [](const ff_8::PupuID &pupu_id) -> decltype(auto)
+                   { return pupu_id.create_summary(); });
      }
      auto zip() const
      {
@@ -1845,7 +2149,8 @@ struct map_pupu_id
      }
 };
 
-void fme::filter_window::menu_filtered_pupu(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_pupu(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::pupu_id,
@@ -1858,7 +2163,8 @@ void fme::filter_window::menu_filtered_pupu(const std::shared_ptr<map_sprite> &l
        })();
 }
 
-void fme::filter_window::menu_filtered_bpps(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_bpps(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::bpp,
@@ -1871,15 +2177,18 @@ void fme::filter_window::menu_filtered_bpps(const std::shared_ptr<map_sprite> &l
        })();
 }
 
-void fme::filter_window::menu_filtered_palettes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_palettes(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().palette();
      const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
 
      const auto  join_vector = [](auto &&pairs)
      {
-          auto transform_pairs = pairs | std::views::transform([](const auto &pair) { return pair.zip(); });
-          auto join_pairs      = std::ranges::join_view(transform_pairs);
+          auto transform_pairs = pairs
+                                 | std::views::transform(
+                                   [](const auto &pair) { return pair.zip(); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -1891,21 +2200,39 @@ void fme::filter_window::menu_filtered_palettes(const std::shared_ptr<map_sprite
           }
           else
           {
-               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_filter
+                 = keys
+                   | std::views::filter([&](const auto &key)
+                                        { return map.contains(key); });
                auto keys_transform
-                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+                 = keys_filter
+                   | std::views::transform([&](const auto &key)
+                                           { return map.at(key); })
+                   | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
      }();
 
-     std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
+     std::ranges::sort(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
+     const auto unique_range = std::ranges::unique(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      const auto unique_palettes = ff_8::unique_values_and_strings<std::uint8_t>(
-       value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<0>(pair); }) | std::ranges::to<std::vector>(),
-       value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<1>(pair); }) | std::ranges::to<std::vector>());
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<0>(pair); })
+         | std::ranges::to<std::vector>(),
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<1>(pair); })
+         | std::ranges::to<std::vector>());
 
      GenericMenuWithMultiFilter(
        gui_labels::palette,
@@ -1918,7 +2245,8 @@ void fme::filter_window::menu_filtered_palettes(const std::shared_ptr<map_sprite
        })();
 }
 
-void fme::filter_window::menu_filtered_blend_modes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_blend_modes(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::blend_mode,
@@ -1931,7 +2259,8 @@ void fme::filter_window::menu_filtered_blend_modes(const std::shared_ptr<map_spr
        })();
 }
 
-void fme::filter_window::menu_filtered_blend_other(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_blend_other(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::blend_other,
@@ -1944,7 +2273,8 @@ void fme::filter_window::menu_filtered_blend_other(const std::shared_ptr<map_spr
        })();
 }
 
-void fme::filter_window::menu_filtered_layers(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_layers(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::layer_id,
@@ -1957,7 +2287,8 @@ void fme::filter_window::menu_filtered_layers(const std::shared_ptr<map_sprite> 
        })();
 }
 
-void fme::filter_window::menu_filtered_texture_pages(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_texture_pages(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::texture_page,
@@ -1970,7 +2301,8 @@ void fme::filter_window::menu_filtered_texture_pages(const std::shared_ptr<map_s
        })();
 }
 
-void fme::filter_window::menu_filtered_animation_ids(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_animation_ids(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::animation_id,
@@ -1983,41 +2315,65 @@ void fme::filter_window::menu_filtered_animation_ids(const std::shared_ptr<map_s
        })();
 }
 
-void fme::filter_window::menu_filtered_animation_states(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_animation_states(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map         = lock_map_sprite->uniques().animation_state();
-     const auto &keys        = lock_map_sprite->filter().multi_animation_id.value();
+     const auto &map  = lock_map_sprite->uniques().animation_state();
+     const auto &keys = lock_map_sprite->filter().multi_animation_id.value();
 
      const auto  join_vector = [](auto &&pairs)
      {
-          auto transform_pairs = pairs | std::views::transform([](const auto &pair) { return pair.zip(); });
-          auto join_pairs      = std::ranges::join_view(transform_pairs);
+          auto transform_pairs = pairs
+                                 | std::views::transform(
+                                   [](const auto &pair) { return pair.zip(); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
      auto value_string_pairs = [&]()
      {
-          if (keys.empty() || !lock_map_sprite->filter().multi_animation_id.enabled())
+          if (
+            keys.empty()
+            || !lock_map_sprite->filter().multi_animation_id.enabled())
           {
                return join_vector(map | std::views::values);
           }
           else
           {
-               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_filter
+                 = keys
+                   | std::views::filter([&](const auto &key)
+                                        { return map.contains(key); });
                auto keys_transform
-                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+                 = keys_filter
+                   | std::views::transform([&](const auto &key)
+                                           { return map.at(key); })
+                   | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
      }();
 
-     std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
+     std::ranges::sort(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
+     const auto unique_range = std::ranges::unique(
+       value_string_pairs,
+       {},
+       [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto unique_animation_state = ff_8::unique_values_and_strings<std::uint8_t>(
-       value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<0>(pair); }) | std::ranges::to<std::vector>(),
-       value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<1>(pair); }) | std::ranges::to<std::vector>());
+     const auto unique_animation_state
+       = ff_8::unique_values_and_strings<std::uint8_t>(
+         value_string_pairs
+           | std::views::transform([&](const auto &pair)
+                                   { return std::get<0>(pair); })
+           | std::ranges::to<std::vector>(),
+         value_string_pairs
+           | std::views::transform([&](const auto &pair)
+                                   { return std::get<1>(pair); })
+           | std::ranges::to<std::vector>());
 
      GenericMenuWithMultiFilter(
        gui_labels::animation_state,
@@ -2030,7 +2386,8 @@ void fme::filter_window::menu_filtered_animation_states(const std::shared_ptr<ma
        })();
 }
 
-void fme::filter_window::menu_filtered_z(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_z(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::z,
@@ -2046,9 +2403,13 @@ void fme::filter_window::menu_filtered_z(const std::shared_ptr<map_sprite> &lock
 struct map_draw_bit
 {
    private:
-     static constexpr auto m_values   = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-     static constexpr auto m_tooltips = std::array{ fme::gui_labels::draw_bit_all_tooltip, fme::gui_labels::draw_bit_enabled_tooltip,
-                                                    fme::gui_labels::draw_bit_disabled_tooltip };
+     static constexpr auto m_values
+       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
+                     ff_8::draw_bitT::disabled };
+     static constexpr auto m_tooltips
+       = std::array{ fme::gui_labels::draw_bit_all_tooltip,
+                     fme::gui_labels::draw_bit_enabled_tooltip,
+                     fme::gui_labels::draw_bit_disabled_tooltip };
 
    public:
      auto values() const
@@ -2069,7 +2430,8 @@ struct map_draw_bit
      }
 };
 
-void fme::filter_window::menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_draw_bit(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithFilter(
        gui_labels::draw_bit,
@@ -2092,35 +2454,46 @@ void fme::filter_window::draw_thumbnail(
      const std::string &tooltip_str = [&]() -> const std::string &
      {
           static const std::string empty_msg = "No filters are enabled...";
-          if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+          if (lock_map_sprite->get_deswizzle_combined_textures_tooltips()
+                .contains(file_name))
           {
-               const std::string &tmp = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name);
+               const std::string &tmp
+                 = lock_map_sprite->get_deswizzle_combined_textures_tooltips()
+                     .at(file_name);
                return tmp.empty() ? empty_msg : tmp;
           }
           return empty_msg;
      }();
      if (framebuffer.has_value())
      {
-          ImTextureID tex_id           = (m_hovered_file_name == file_name)
-                                           ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(1))
-                                           : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
-          m_aspect_ratio               = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
-          const ImVec2 thumb_size      = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+          ImTextureID tex_id
+            = (m_hovered_file_name == file_name)
+                ? glengine::ConvertGliDtoImTextureId<ImTextureID>(
+                    framebuffer.value().color_attachment_id(1))
+                : glengine::ConvertGliDtoImTextureId<ImTextureID>(
+                    framebuffer.value().color_attachment_id());
+          m_aspect_ratio = static_cast<float>(framebuffer.value().height())
+                           / static_cast<float>(framebuffer.value().width());
+          const ImVec2 thumb_size
+            = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
 
-          const auto   it              = std::ranges::find(m_multi_select, file_name);
-          bool         selected        = it != std::ranges::end(m_multi_select);
-          const auto   pop_style_color = glengine::ScopeGuard{ [selected]()
-                                                             {
-                                                                  if (selected)
-                                                                  {
-                                                                       ImGui::PopStyleColor(3);
-                                                                  }
-                                                             } };
+          const auto it       = std::ranges::find(m_multi_select, file_name);
+          bool       selected = it != std::ranges::end(m_multi_select);
+          const auto pop_style_color
+            = glengine::ScopeGuard{ [selected]()
+                                    {
+                                         if (selected)
+                                         {
+                                              ImGui::PopStyleColor(3);
+                                         }
+                                    } };
           if (selected)
           {
                ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
-               ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
-               ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+               ImGui::PushStyleColor(
+                 ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+               ImGui::PushStyleColor(
+                 ImGuiCol_ButtonActive, colors::ButtonGreenActive);
           }
 
           if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
@@ -2132,36 +2505,57 @@ void fme::filter_window::draw_thumbnail(
                tool_tip(tooltip_str);
           }
           const auto pop_id = PushPopID();
-          if (ImGui::BeginPopupContextItem("FilterOptions"))// right-click menu for this button
+          if (ImGui::BeginPopupContextItem(
+                "FilterOptions"))// right-click menu for this button
           {
-               if (ImGui::MenuItem(ICON_FA_SQUARE_PLUS " Add to selected", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_SQUARE_PLUS " Add to selected",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                    const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+                      = { ff_8::FilterSettings::All_Disabled };
+                    const toml::table *const file_table
+                      = lock_map_sprite->get_deswizzle_combined_toml_table(
+                        file_name);
                     if (file_table)
                     {
                          temp_filter.reload(*file_table);
                          temp_filter.enable();
-                         for (const std::string &update_file_name : m_multi_select)
+                         for (const std::string &update_file_name :
+                              m_multi_select)
                          {
-                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(update_file_name, temp_filter);
+                              lock_map_sprite
+                                ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                                  update_file_name, temp_filter);
                          }
                          m_reload_thumbnail = true;
                          save_config(lock_selections);
                     }
                }
                tool_tip("Add hovered values to selected items.");
-               if (ImGui::MenuItem(ICON_FA_SQUARE_MINUS " Remove from selected", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_SQUARE_MINUS " Remove from selected",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                    const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+                      = { ff_8::FilterSettings::All_Disabled };
+                    const toml::table *const file_table
+                      = lock_map_sprite->get_deswizzle_combined_toml_table(
+                        file_name);
                     if (file_table)
                     {
                          temp_filter.reload(*file_table);
                          temp_filter.disable();
-                         for (const std::string &update_file_name : m_multi_select)
+                         for (const std::string &update_file_name :
+                              m_multi_select)
                          {
-                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(update_file_name, temp_filter);
+                              lock_map_sprite
+                                ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                                  update_file_name, temp_filter);
                          }
                          m_reload_thumbnail = true;
                          save_config(lock_selections);
@@ -2169,47 +2563,87 @@ void fme::filter_window::draw_thumbnail(
                }
                tool_tip("Remove hovered values to selected items.");
                ImGui::Separator();
-               if (ImGui::MenuItem(ICON_FA_LAYER_GROUP " Combine (New)", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_LAYER_GROUP " Combine (New)",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
-                    (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+                    (void)lock_map_sprite
+                      ->add_combine_deswizzle_combined_toml_table(
+                        m_multi_select, generate_file_name(lock_map_sprite));
                     save_config(lock_selections);
                }
 
-               tool_tip("Combine selected entries into a new entry without removing the originals.");
-               if (ImGui::MenuItem(ICON_FA_OBJECT_GROUP " Combine (Replace)", nullptr, nullptr, !m_multi_select.empty()))
+               tool_tip(
+                 "Combine selected entries into a new entry without removing "
+                 "the originals.");
+               if (ImGui::MenuItem(
+                     ICON_FA_OBJECT_GROUP " Combine (Replace)",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
                     std::string temp_name = generate_file_name(lock_map_sprite);
-                    (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
+                    (void)lock_map_sprite
+                      ->add_combine_deswizzle_combined_toml_table(
+                        m_multi_select, temp_name);
                     std::ranges::sort(m_multi_select);
-                    m_rename_queue.emplace_back(std::move(temp_name), m_multi_select.front());
-                    std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+                    m_rename_queue.emplace_back(
+                      std::move(temp_name), m_multi_select.front());
+                    std::ranges::move(
+                      m_multi_select, std::back_inserter(m_remove_queue));
                     m_multi_select.clear();
                }
-               tool_tip("Combine selected entries into one entry and remove the originals.");
+               tool_tip(
+                 "Combine selected entries into one entry and remove the "
+                 "originals.");
                ImGui::Separator();
 
-               if (ImGui::MenuItem(ICON_FA_COPY " Copy", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_COPY " Copy",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
                     lock_map_sprite->copy_deswizzle_combined_toml_table(
-                      m_multi_select, [&, index = int{}]() mutable { return generate_file_name(lock_map_sprite, index++); });
+                      m_multi_select,
+                      [&, index = int{}]() mutable
+                      { return generate_file_name(lock_map_sprite, index++); });
                     save_config(lock_selections);
-                    // todo: copy create new entries with generated name (prefix_timestamp_index.png).
+                    // todo: copy create new entries with generated name
+                    // (prefix_timestamp_index.png).
                }
-               tool_tip("Copy selected entries into new entries with generated names.");
-               if (ImGui::MenuItem(ICON_FA_TRASH " Remove", nullptr, nullptr, !m_multi_select.empty()))
+               tool_tip(
+                 "Copy selected entries into new entries with generated "
+                 "names.");
+               if (ImGui::MenuItem(
+                     ICON_FA_TRASH " Remove",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
-                    std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+                    std::ranges::move(
+                      m_multi_select, std::back_inserter(m_remove_queue));
                     m_multi_select.clear();
                }
                tool_tip("Remove selected entries.");
 
-               if (ImGui::MenuItem(ICON_FA_FILTER " Pupu Filter", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_FILTER " Pupu Filter",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
                     ImGui::OpenPopup("Pupu Filter Popup");
                }
                tool_tip("Bulk enable or disable pupu.");
                ImGui::Separator();
-               if (ImGui::MenuItem(ICON_FA_BROOM " Clear Selection", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(
+                     ICON_FA_BROOM " Clear Selection",
+                     nullptr,
+                     nullptr,
+                     !m_multi_select.empty()))
                {
                     m_multi_select.clear();
                }
@@ -2227,9 +2661,11 @@ void fme::filter_window::draw_thumbnail(
      }
      else
      {
-          const auto pop_id            = PushPopID();
-          ImVec2     padded_thumb_size = { m_thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
-                                           m_thumb_size_width * m_aspect_ratio + ImGui::GetStyle().FramePadding.y * 2.0f };
+          const auto pop_id = PushPopID();
+          ImVec2     padded_thumb_size
+            = { m_thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
+                m_thumb_size_width * m_aspect_ratio
+                  + ImGui::GetStyle().FramePadding.y * 2.0f };
           if (ImGui::Button("##Empty", padded_thumb_size))
           {
                on_click();
@@ -2245,7 +2681,8 @@ bool fme::filter_window::is_excluded(const ff_8::PupuID &pupu_id) const
 {
      return m_excluded_animation_id_from_state.enabled()
             && std::ranges::any_of(
-              m_excluded_animation_id_from_state.value(), [&](const auto &id) { return pupu_id.animation_id() == id; });
+              m_excluded_animation_id_from_state.value(),
+              [&](const auto &id) { return pupu_id.animation_id() == id; });
 }
 
 void fme::filter_window::process_combine(
@@ -2262,8 +2699,10 @@ void fme::filter_window::process_combine(
           if (!value.is_table())
                continue;
 
-          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter{ ff_8::FilterSettings::All_Disabled };
-          toml::table                                 &file_table = *value.as_table();
+          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter{
+               ff_8::FilterSettings::All_Disabled
+          };
+          toml::table &file_table = *value.as_table();
           temp_filter.reload(file_table);
 
           if (!temp_filter.enabled())
@@ -2278,15 +2717,19 @@ void fme::filter_window::process_combine(
           for (const auto &u : unique_pupu_ids)
           {
                if (
-                 (!m_checkallow_same_blend && pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none) || (is_excluded(u))
-                 || (!outer_filter(u, temp_filter.value())))
+                 (!m_checkallow_same_blend
+                  && pupu_id.blend_mode()
+                       != open_viii::graphics::background::BlendModeT::none)
+                 || (is_excluded(u)) || (!outer_filter(u, temp_filter.value())))
                {
                     continue;
                }
 
                for (const auto &i : temp_filter.value())
                {
-                    if (is_excluded(i) || u == i || u.blend_mode() != i.blend_mode() || !match_pred(u, i))
+                    if (
+                      is_excluded(i) || u == i
+                      || u.blend_mode() != i.blend_mode() || !match_pred(u, i))
                     {
                          continue;
                     }

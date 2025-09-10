@@ -28,7 +28,8 @@ void ff_8::Mim::on_update(float ts) const
 {
      (void)GetMim().on_update();
      const auto &local_texture = current_texture();
-     m_imgui_viewport_window.set_image_bounds(glm::vec2{ local_texture.width(), local_texture.height() });
+     m_imgui_viewport_window.set_image_bounds(
+       glm::vec2{ local_texture.width(), local_texture.height() });
      m_imgui_viewport_window.on_update(ts);
      m_imgui_viewport_window.fit(FitWidth, FitHeight);
      m_batch_renderer.on_update(ts);
@@ -36,7 +37,8 @@ void ff_8::Mim::on_update(float ts) const
 
 void ff_8::Mim::on_render() const
 {
-     const auto null_texture = glengine::ScopeGuard([]() { Texture = nullptr; });
+     const auto null_texture
+       = glengine::ScopeGuard([]() { Texture = nullptr; });
      if (Texture == nullptr)
           Texture = &current_texture();
 
@@ -50,13 +52,15 @@ void ff_8::Mim::on_render() const
      set_uniforms();
      if (!Saving)
      {
-          m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
+          m_imgui_viewport_window.on_render([this]()
+                                            { render_frame_buffer(); });
           GetViewPortPreview().on_render(
             m_imgui_viewport_window,
             [this]()
             {
-                 Preview                = true;
-                 const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+                 Preview = true;
+                 const auto pop_preview
+                   = glengine::ScopeGuard([]() { Preview = false; });
                  set_uniforms();
                  render_frame_buffer();
             });
@@ -65,14 +69,16 @@ void ff_8::Mim::on_render() const
      {
           render_frame_buffer();
      }
-     ff_8::ImGuiTileDisplayWindow::take_control(m_imgui_viewport_window.has_hover(), m_id);
+     ff_8::ImGuiTileDisplayWindow::take_control(
+       m_imgui_viewport_window.has_hover(), m_id);
 }
 void ff_8::Mim::on_im_gui_update() const
 {
      const auto  pop_id        = glengine::ImGuiPushId();
      const auto &local_texture = current_texture();
      {
-          const auto disable = glengine::ImGuiDisabled(local_texture.height() == 0 || local_texture.width() == 0);
+          const auto disable = glengine::ImGuiDisabled(
+            local_texture.height() == 0 || local_texture.width() == 0);
 
 
           ImGui::Checkbox("draw Palette", &DrawPalette);
@@ -95,13 +101,24 @@ void ff_8::Mim::on_im_gui_update() const
      ImGui::Separator();
 
 
-     ImGui::Text("%s", fmt::format("Texture Width: {:>5}, Height: {:>5}\n", local_texture.width(), local_texture.height()).c_str());
+     ImGui::Text(
+       "%s",
+       fmt::format(
+         "Texture Width: {:>5}, Height: {:>5}\n",
+         local_texture.width(),
+         local_texture.height())
+         .c_str());
      ImGui::Separator();
      m_imgui_viewport_window.on_im_gui_update();
      ImGui::Separator();
      m_batch_renderer.on_im_gui_update();
      ff_8::ImGuiTileDisplayWindow::on_render_forward(
-       m_id, [this]() { ImGui::Text("%s", fmt::format("Mim {}", static_cast<uint32_t>(m_id)).c_str()); });
+       m_id,
+       [this]()
+       {
+            ImGui::Text(
+              "%s", fmt::format("Mim {}", static_cast<uint32_t>(m_id)).c_str());
+       });
 }
 
 ff_8::Mim::Mim(const ff_8::Fields &)
@@ -138,16 +155,21 @@ void ff_8::Mim::set_uniforms() const
      if (Saving)
      {
           m_batch_renderer.shader().set_uniform(
-            "u_MVP", glengine::OrthographicCamera{ { Texture->width(), Texture->height() } }.view_projection_matrix());
+            "u_MVP",
+            glengine::OrthographicCamera{
+              { Texture->width(), Texture->height() } }
+              .view_projection_matrix());
      }
      else if (Preview)
      {
 
-          m_batch_renderer.shader().set_uniform("u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
+          m_batch_renderer.shader().set_uniform(
+            "u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
      }
      else
      {
-          m_batch_renderer.shader().set_uniform("u_MVP", m_imgui_viewport_window.view_projection_matrix());
+          m_batch_renderer.shader().set_uniform(
+            "u_MVP", m_imgui_viewport_window.view_projection_matrix());
      }
      if (!DrawGrid || Saving)
      {
@@ -175,7 +197,8 @@ void ff_8::Mim::save() const
 {
      Saving                                 = true;
      const glengine::Texture &local_texture = current_texture();
-     glengine::FrameBuffer    fb({ .width = local_texture.width(), .height = local_texture.height() });
+     glengine::FrameBuffer    fb(
+       { .width = local_texture.width(), .height = local_texture.height() });
      {
           const auto fbb = glengine::FrameBufferBackup{};
           fb.bind();
@@ -185,10 +208,15 @@ void ff_8::Mim::save() const
           on_render();
      }
      auto fs_path = std::filesystem::path(GetMim().path);
-     auto string  = fmt::format("{}_mim_{}_{}.png", fs_path.stem().string(), Bpp.string(), Palette.string());
+     auto string  = fmt::format(
+       "{}_mim_{}_{}.png",
+       fs_path.stem().string(),
+       Bpp.string(),
+       Palette.string());
      if (Bpp->bpp16() || Bpp->bpp24())
      {
-          string = fmt::format("{}_mim_{}.png", fs_path.stem().string(), Bpp.string());
+          string = fmt::format(
+            "{}_mim_{}.png", fs_path.stem().string(), Bpp.string());
      }
      if (DrawPalette)
      {
@@ -203,9 +231,12 @@ void ff_8::Mim::save() const
 void ff_8::Mim::save_all() const
 {
      Saving = true;
-     for (int index = 0; index < static_cast<int>(GetMim().delayed_textures.textures->size()); ++index)
+     for (int index = 0;
+          index < static_cast<int>(GetMim().delayed_textures.textures->size());
+          ++index)
      {
-          Texture           = &GetMim().delayed_textures.textures->at(static_cast<std::size_t>(index));
+          Texture = &GetMim().delayed_textures.textures->at(
+            static_cast<std::size_t>(index));
           int local_bpp     = index / 16;
           int local_palette = index % 16;
           if (local_bpp == 2)
@@ -237,20 +268,27 @@ void ff_8::Mim::save_all() const
           {
                continue;
           }
-          glengine::FrameBuffer fb({ .width = Texture->width(), .height = Texture->height() });
+          glengine::FrameBuffer fb(
+            { .width = Texture->width(), .height = Texture->height() });
           {
                const auto fbb = glengine::FrameBufferBackup{};
                fb.bind();
                glengine::Renderer::Clear();
                // fb.clear_non_standard_color_attachments();
-               glengine::GlCall{}(glViewport, 0, 0, Texture->width(), Texture->height());
+               glengine::GlCall{}(
+                 glViewport, 0, 0, Texture->width(), Texture->height());
                on_render();
           }
           glengine::PixelBuffer pixel_buffer{ fb.specification() };
           auto                  fs_path = std::filesystem::path(GetMim().path);
-          auto                  string  = fmt::format("{}_mim_{}_{}.png", fs_path.stem().string(), local_bpp, local_palette);
+          auto                  string  = fmt::format(
+            "{}_mim_{}_{}.png",
+            fs_path.stem().string(),
+            local_bpp,
+            local_palette);
           if (local_bpp == 16 || local_bpp == 24)
-               string = fmt::format("{}_mim_{}.png", fs_path.stem().string(), local_bpp);
+               string = fmt::format(
+                 "{}_mim_{}.png", fs_path.stem().string(), local_bpp);
           else if (local_bpp == -1)
                string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
           pixel_buffer(fb, fs_path.parent_path() / string);
@@ -265,7 +303,8 @@ void ff_8::Mim::render_frame_buffer() const
      m_batch_renderer.clear();
      m_batch_renderer.draw_quad(
        *Texture,
-       glm::vec3{ -static_cast<float>(Texture->width()) / 2.F, -static_cast<float>(Texture->height()) / 2.F, 0.F },
+       glm::vec3{ -static_cast<float>(Texture->width()) / 2.F,
+                  -static_cast<float>(Texture->height()) / 2.F, 0.F },
        glm::vec2{ Texture->width(), Texture->height() });
      m_batch_renderer.draw();
      m_batch_renderer.on_render();

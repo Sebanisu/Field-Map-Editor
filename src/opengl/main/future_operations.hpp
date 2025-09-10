@@ -53,13 +53,15 @@ namespace future_operations
 
      class GetImageFromFromFirstValidPathCreateFuture
      {
-          glengine::Texture *const                                              m_texture;
-          mutable std::move_only_function<std::vector<std::filesystem::path>()> m_paths_get;
+          glengine::Texture *const m_texture;
+          mutable std::move_only_function<std::vector<std::filesystem::path>()>
+            m_paths_get;
 
         public:
           GetImageFromFromFirstValidPathCreateFuture(
-            glengine::Texture *const                                        in_texture,
-            std::move_only_function<std::vector<std::filesystem::path>()> &&in_paths_get);
+            glengine::Texture *const in_texture,
+            std::move_only_function<std::vector<std::filesystem::path>()>
+              &&in_paths_get);
           std::future<void> operator()() const;
      };
 }// namespace future_operations

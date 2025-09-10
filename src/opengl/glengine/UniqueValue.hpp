@@ -231,7 +231,9 @@ UniqueValue(
   T t,
   F f) -> UniqueValue<T>;
 template<typename T, typename U, std::size_t Usz>
-concept array_type_and_size_are_same = decay_same_as<std::ranges::range_value_t<T>, U> && std::ranges::size(T{}) == Usz;
+concept array_type_and_size_are_same
+  = decay_same_as<std::ranges::range_value_t<T>, U>
+    && std::ranges::size(T{}) == Usz;
 template<typename T>
 class WeakValue
 {

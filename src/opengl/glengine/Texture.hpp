@@ -87,7 +87,8 @@ class Texture
        : m_width{ in_width }
        , m_height{ in_height }
      {
-          if constexpr (!std::is_const_v<std::remove_reference_t<std::ranges::range_reference_t<R>>>)
+          if constexpr (!std::is_const_v<std::remove_reference_t<
+                          std::ranges::range_reference_t<R>>>)
           {
                if (in_flip)
                {
@@ -99,7 +100,9 @@ class Texture
           {
                if (in_flip)
                {
-                    std::vector<std::remove_cvref_t<std::ranges::range_value_t<R>>> copy{ std::ranges::begin(r), std::ranges::end(r) };
+                    std::vector<
+                      std::remove_cvref_t<std::ranges::range_value_t<R>>>
+                      copy{ std::ranges::begin(r), std::ranges::end(r) };
                     flip(copy, in_width);
                     init_texture(std::ranges::data(copy));
                }
@@ -115,19 +118,37 @@ class Texture
           {
                return;
           }
-          m_renderer_id = Glid{ []() -> std::uint32_t
-                                {
-                                     std::uint32_t tmp;
-                                     GlCall{}(glGenTextures, 1, &tmp);
-                                     GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-                                     return tmp;
-                                }(),
-                                destroy };
-          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          GlCall{}(glTexImage2D, GL_TEXTURE_2D, 0, s_sized_interal_format, width(), height(), 0, s_base_interal_format, s_type, color);
+          m_renderer_id
+            = Glid{ []() -> std::uint32_t
+                    {
+                         std::uint32_t tmp;
+                         GlCall{}(glGenTextures, 1, &tmp);
+                         GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+                         return tmp;
+                    }(),
+                    destroy };
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          GlCall{}(
+            glTexParameteri,
+            GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          GlCall{}(
+            glTexImage2D,
+            GL_TEXTURE_2D,
+            0,
+            s_sized_interal_format,
+            width(),
+            height(),
+            0,
+            s_base_interal_format,
+            s_type,
+            color);
           // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
           GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
@@ -159,7 +180,11 @@ class Texture
        int                   height)
      {
           spdlog::debug(
-            "{}\t{} bytes\twidth {}\theight {}", std::filesystem::absolute(path).string().c_str(), std::ranges::size(data), width, height);
+            "{}\t{} bytes\twidth {}\theight {}",
+            std::filesystem::absolute(path).string().c_str(),
+            std::ranges::size(data),
+            width,
+            height);
           Texture::flip(data, width * 4);
           if (path.has_parent_path())
           {
@@ -167,11 +192,18 @@ class Texture
                std::filesystem::create_directories(path.parent_path(), ec);
                if (ec)
                {
-                    spdlog::error("{}:{} - {}: {} - path: {}", __FILE__, __LINE__, ec.value(), ec.message(), path.string().c_str());
+                    spdlog::error(
+                      "{}:{} - {}: {} - path: {}",
+                      __FILE__,
+                      __LINE__,
+                      ec.value(),
+                      ec.message(),
+                      path.string().c_str());
                     ec.clear();
                }
           }
-          stbi_write_png(path.string().c_str(), width, height, 4, data.data(), width * 4);
+          stbi_write_png(
+            path.string().c_str(), width, height, 4, data.data(), width * 4);
      }
 
      template<std::ranges::contiguous_range R>
@@ -189,11 +221,14 @@ class Texture
                // throw or use another function that's more flexible.
                return flip_slow(range, stride);
           }
-          static constexpr auto sizeof_value    = sizeof(std::ranges::range_value_t<R>);
-          const auto            stride_in_bytes = static_cast<std::size_t>(stride) * sizeof_value;
-          auto                  buffer          = std::make_unique<char[]>(stride_in_bytes);
-          const auto            swap_memory
-            = [tmp = buffer.get(), stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right)
+          static constexpr auto sizeof_value
+            = sizeof(std::ranges::range_value_t<R>);
+          const auto stride_in_bytes
+            = static_cast<std::size_t>(stride) * sizeof_value;
+          auto       buffer      = std::make_unique<char[]>(stride_in_bytes);
+          const auto swap_memory = [tmp = buffer.get(), stride_in_bytes](
+                                     std::ranges::range_reference_t<R> &left,
+                                     std::ranges::range_reference_t<R> &right)
           {
                std::memcpy(tmp, &left, stride_in_bytes);
                std::memcpy(&left, &right, stride_in_bytes);
@@ -245,10 +280,12 @@ class Texture
 };
 #undef FME_NOT_CONSTEVAL
 template<typename T = std::uint64_t>
-constexpr inline T
-  ConvertGliDtoImTextureId(GlidCopy r_id)// this is for imgui but imgui isn't part of the glengine so i made this a template
+constexpr inline T ConvertGliDtoImTextureId(
+  GlidCopy r_id)// this is for imgui but imgui isn't part of the glengine so i
+                // made this a template
 {
-     // ImTextureID used to be a void pointer or something now it's a 64 bit unsigned int.
+     // ImTextureID used to be a void pointer or something now it's a 64 bit
+     // unsigned int.
      return static_cast<T>(std::uint32_t(r_id));
 }
 static_assert(Bindable<Texture>);

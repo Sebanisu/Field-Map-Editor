@@ -42,7 +42,9 @@ inline namespace impl
 
      class BlendModeEquationValues
      {
-          constexpr static auto values = std::array{ GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX };
+          constexpr static auto values
+            = std::array{ GL_FUNC_ADD, GL_FUNC_SUBTRACT,
+                          GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX };
 
         public:
           constexpr const auto &operator()() const noexcept
@@ -50,7 +52,8 @@ inline namespace impl
                return values;
           }
      };
-     using BlendModeEquation = BlendModeGeneric<BlendModeEquationStrings, BlendModeEquationValues>;
+     using BlendModeEquation
+       = BlendModeGeneric<BlendModeEquationStrings, BlendModeEquationValues>;
 }// namespace impl
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEEQUATION_HPP

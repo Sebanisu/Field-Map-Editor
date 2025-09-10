@@ -38,7 +38,10 @@ static inline void MenuLoadToggles(
           toml::array *array = (config->get(string)->as_array());
           array->resize(menu.size(), false);
           config.save();
-          menu.toggle_items((*array) | std::ranges::views::transform([](toml::node &val) { return val.value_or(false); }));
+          menu.toggle_items(
+            (*array)
+            | std::ranges::views::transform([](toml::node &val)
+                                            { return val.value_or(false); }));
      }
      //  else
      //  {

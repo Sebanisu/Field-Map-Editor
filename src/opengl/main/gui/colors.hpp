@@ -23,27 +23,29 @@ namespace fme
  */
 struct [[nodiscard]] color
 {
-     std::uint8_t r                          = {};                                            //!< Red component (0-255)
-     std::uint8_t g                          = {};                                            //!< Green component (0-255)
-     std::uint8_t b                          = {};                                            //!< Blue component (0-255)
-     std::uint8_t a                          = { (std::numeric_limits<std::uint8_t>::max)() };//!< Alpha (opacity) component (0-255)
+     std::uint8_t r = {};//!< Red component (0-255)
+     std::uint8_t g = {};//!< Green component (0-255)
+     std::uint8_t b = {};//!< Blue component (0-255)
+     std::uint8_t a = {
+          (std::numeric_limits<std::uint8_t>::max)()
+     };//!< Alpha (opacity) component (0-255)
 
      /**
       * @brief Default constructor.
       *
       * Initializes the color to fully opaque black.
       */
-     constexpr color() noexcept              = default;
+     constexpr color() noexcept                         = default;
 
      /**
       * @brief Copy constructor.
       */
-     constexpr color(const color &) noexcept = default;
+     constexpr color(const color &) noexcept            = default;
 
      /**
       * @brief Move constructor.
       */
-     constexpr color(color &&) noexcept      = default;
+     constexpr color(color &&) noexcept                 = default;
 
      /**
       * @brief Copy assignment operator.
@@ -61,7 +63,8 @@ struct [[nodiscard]] color
       * @tparam float_t A floating-point type.
       */
      template<std::floating_point float_t>
-     static constexpr auto max_f = static_cast<float_t>((std::numeric_limits<std::uint8_t>::max)());
+     static constexpr auto max_f
+       = static_cast<float_t>((std::numeric_limits<std::uint8_t>::max)());
 
 
      /**
@@ -70,7 +73,8 @@ struct [[nodiscard]] color
       * @tparam float_t A floating-point type.
       */
      template<std::floating_point float_t>
-     static constexpr auto min_f = static_cast<float_t>((std::numeric_limits<std::uint8_t>::min)());
+     static constexpr auto min_f
+       = static_cast<float_t>((std::numeric_limits<std::uint8_t>::min)());
 
      /**
       * @brief Maximum value for integral conversions.
@@ -78,7 +82,8 @@ struct [[nodiscard]] color
       * @tparam int_t An integral type.
       */
      template<std::integral int_t>
-     static constexpr auto max_i = static_cast<int_t>((std::numeric_limits<std::uint8_t>::max)());
+     static constexpr auto max_i
+       = static_cast<int_t>((std::numeric_limits<std::uint8_t>::max)());
 
      /**
       * @brief Constructs a color from an ImVec4 instance.
@@ -184,7 +189,8 @@ struct [[nodiscard]] color
        int_t in_b,
        int_t in_a) noexcept
      {
-#if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202311L
+#if defined(__cpp_lib_saturation_arithmetic) \
+  && __cpp_lib_saturation_arithmetic >= 202311L
           r = std::saturate_cast<std::uint8_t>(in_r);
           g = std::saturate_cast<std::uint8_t>(in_g);
           b = std::saturate_cast<std::uint8_t>(in_b);
@@ -198,7 +204,8 @@ struct [[nodiscard]] color
      }
 
      /**
-      * @brief Constructs a color from integral RGB components with default alpha.
+      * @brief Constructs a color from integral RGB components with default
+      * alpha.
       *
       * @tparam int_t An integral type.
       * @param in_r Red component.
@@ -234,7 +241,8 @@ struct [[nodiscard]] color
        float_t in_b,
        float_t in_a) noexcept
      {
-#if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202311L
+#if defined(__cpp_lib_saturation_arithmetic) \
+  && __cpp_lib_saturation_arithmetic >= 202311L
           r = std::saturate_cast<std::uint8_t>(in_r * max_f<float_t>);
           g = std::saturate_cast<std::uint8_t>(in_g * max_f<float_t>);
           b = std::saturate_cast<std::uint8_t>(in_b * max_f<float_t>);
@@ -248,7 +256,8 @@ struct [[nodiscard]] color
      }
 
      /**
-      * @brief Constructs a color from floating-point RGB components with default alpha.
+      * @brief Constructs a color from floating-point RGB components with
+      * default alpha.
       *
       * @tparam float_t A floating-point type.
       * @param in_r Red component (0.0-1.0).
@@ -285,7 +294,11 @@ struct [[nodiscard]] color
       */
      [[nodiscard]] constexpr operator ImColor() const noexcept
      {
-          return ImColor(static_cast<int>(r), static_cast<int>(g), static_cast<int>(b), static_cast<int>(a));
+          return ImColor(
+            static_cast<int>(r),
+            static_cast<int>(g),
+            static_cast<int>(b),
+            static_cast<int>(a));
      }
 
      /**
@@ -295,7 +308,9 @@ struct [[nodiscard]] color
       */
      [[nodiscard]] constexpr operator ImVec4() const noexcept
      {
-          return { static_cast<float>(r) / max_f<float>, static_cast<float>(g) / max_f<float>, static_cast<float>(b) / max_f<float>,
+          return { static_cast<float>(r) / max_f<float>,
+                   static_cast<float>(g) / max_f<float>,
+                   static_cast<float>(b) / max_f<float>,
                    static_cast<float>(a) / max_f<float> };
      }
 
@@ -307,7 +322,9 @@ struct [[nodiscard]] color
       */
      [[nodiscard]] constexpr operator glm::vec4() const noexcept
      {
-          return { static_cast<float>(r) / max_f<float>, static_cast<float>(g) / max_f<float>, static_cast<float>(b) / max_f<float>,
+          return { static_cast<float>(r) / max_f<float>,
+                   static_cast<float>(g) / max_f<float>,
+                   static_cast<float>(b) / max_f<float>,
                    static_cast<float>(a) / max_f<float> };
      }
 
@@ -333,31 +350,43 @@ struct [[nodiscard]] color
      /**
       * @brief Fades the color's RGB by a given value.
       *
-      * If the value is positive, the color will become brighter. If negative, the color will become darker.
+      * If the value is positive, the color will become brighter. If negative,
+      * the color will become darker.
       *
-      * @param fadeValue A float that determines the amount of fade. Positive values brighten the color, negative values darken it.
+      * @param fadeValue A float that determines the amount of fade. Positive
+      * values brighten the color, negative values darken it.
       */
      [[nodiscard]] constexpr color fade(float fadeValue) const noexcept
      {
           // Clamp the fadeValue to avoid overflowing the color channels
-          const float factor = 1.0f + fadeValue;// The factor by which the color channels will be adjusted
-          return { static_cast<std::uint8_t>(std::clamp(r * factor, min_f<float>, max_f<float>)),
-                   static_cast<std::uint8_t>(std::clamp(g * factor, min_f<float>, max_f<float>)),
-                   static_cast<std::uint8_t>(std::clamp(b * factor, min_f<float>, max_f<float>)), a };
+          const float factor = 1.0f + fadeValue;// The factor by which the color
+                                                // channels will be adjusted
+          return { static_cast<std::uint8_t>(
+                     std::clamp(r * factor, min_f<float>, max_f<float>)),
+                   static_cast<std::uint8_t>(
+                     std::clamp(g * factor, min_f<float>, max_f<float>)),
+                   static_cast<std::uint8_t>(
+                     std::clamp(b * factor, min_f<float>, max_f<float>)),
+                   a };
      }
 
      /**
       * @brief Fades the color's alpha by a given value.
       *
-      * If the value is positive, the color will become less transparent. If negative, the color will become more transparent.
+      * If the value is positive, the color will become less transparent. If
+      * negative, the color will become more transparent.
       *
-      * @param fadeValue A float that determines the amount of fade. Positive values brighten the color, negative values darken it.
+      * @param fadeValue A float that determines the amount of fade. Positive
+      * values brighten the color, negative values darken it.
       */
      [[nodiscard]] constexpr color fade_alpha(float fadeValue) const noexcept
      {
           // Clamp the fadeValue to avoid overflowing the color channels
-          const float factor = 1.0f + fadeValue;// The factor by which the color channels will be adjusted
-          return { r, g, b, static_cast<std::uint8_t>(std::clamp(a * factor, min_f<float>, max_f<float>)) };
+          const float factor = 1.0f + fadeValue;// The factor by which the color
+                                                // channels will be adjusted
+          return { r, g, b,
+                   static_cast<std::uint8_t>(
+                     std::clamp(a * factor, min_f<float>, max_f<float>)) };
      }
 
      [[nodiscard]] constexpr color opaque() const noexcept
@@ -540,7 +569,7 @@ struct colors
      static constexpr color Blue        = { 0, 0, 255 };    //!< Fully blue.
      static constexpr color White       = { 255, 255, 255 };//!< Fully white.
      static constexpr color Black       = { 0, 0, 0 };      //!< Fully black.
-     static constexpr color Transparent = { 0, 0, 0, 0 };   //!< Fully transparent.
+     static constexpr color Transparent = { 0, 0, 0, 0 };//!< Fully transparent.
      static constexpr color Yellow      = { 255, 255, 0 };  //!< Fully yellow.
      static constexpr color Cyan        = { 0, 255, 255 };  //!< Fully cyan.
      static constexpr color Magenta     = { 255, 0, 255 };  //!< Fully magenta.
@@ -548,114 +577,164 @@ struct colors
      static constexpr color LightGray   = { 192, 192, 192 };//!< Light gray.
      static constexpr color DarkGray    = { 64, 64, 64 };   //!< Dark gray.
      static constexpr color Orange      = { 255, 165, 0 };  //!< Orange color.
-     static constexpr color Peach       = { 255, 153, 102 };//!< Gentle, warm orange variant
-     static constexpr color Purple      = { 128, 0, 128 };  //!< Purple color.
-     static constexpr color Pink        = { 255, 192, 203 };//!< Pink color.
-     static constexpr color Brown       = { 78, 39, 5 };    //!< Brown color.
+     static constexpr color Peach
+       = { 255, 153, 102 };//!< Gentle, warm orange variant
+     static constexpr color Purple = { 128, 0, 128 };  //!< Purple color.
+     static constexpr color Pink   = { 255, 192, 203 };//!< Pink color.
+     static constexpr color Brown  = { 78, 39, 5 };    //!< Brown color.
 
-     static constexpr auto  ColorValues = std::array{ Red,  Green,     Blue,     White,  Black, Transparent, Yellow, Cyan, Magenta,
-                                                     Gray, LightGray, DarkGray, Orange, Peach, Purple,      Pink,   Brown };
+     static constexpr auto  ColorValues
+       = std::array{ Red,    Green, Blue,    White, Black,     Transparent,
+                     Yellow, Cyan,  Magenta, Gray,  LightGray, DarkGray,
+                     Orange, Peach, Purple,  Pink,  Brown };
 
-     static constexpr auto  ColorNames
-       = std::array<std::string_view, std::ranges::size(ColorValues)>{ "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
-                                                                       "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
-                                                                       "Orange", "Peach", "Purple",  "Pink",  "Brown" };
+     static constexpr auto ColorNames
+       = std::array<std::string_view, std::ranges::size(ColorValues)>{
+              "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
+              "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
+              "Orange", "Peach", "Purple",  "Pink",  "Brown"
+         };
 
      // darkstyle imgui color blue tint
-     static inline const color             Button                 = color{ DarkStyle.Colors[ImGuiCol_Button] };
-     static inline const color             ButtonHovered          = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
-     static inline const color             ButtonActive           = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
+     static inline const color Button
+       = color{ DarkStyle.Colors[ImGuiCol_Button] };
+     static inline const color ButtonHovered
+       = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
+     static inline const color ButtonActive
+       = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
 
      // Green tint
-     static constexpr color                ButtonGreen            = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color                ButtonGreenHovered     = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color                ButtonGreenActive      = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color ButtonGreen
+       = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color ButtonGreenHovered
+       = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color ButtonGreenActive
+       = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
 
      // Red tint
-     static constexpr color                ButtonRed              = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
-     static constexpr color                ButtonRedHovered       = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
-     static constexpr color                ButtonRedActive        = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
+     static constexpr color ButtonRed
+       = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
+     static constexpr color ButtonRedHovered
+       = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
+     static constexpr color ButtonRedActive
+       = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
 
      // Dark Blue tint
-     static constexpr color                ButtonDarkBlue         = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color                ButtonDarkBlueHovered  = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color                ButtonDarkBlueActive   = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
+     static constexpr color ButtonDarkBlue
+       = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color ButtonDarkBlueHovered
+       = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color ButtonDarkBlueActive
+       = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
 
      // Yellow tint
-     static constexpr color                ButtonYellow           = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color                ButtonYellowHovered    = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color                ButtonYellowActive     = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color ButtonYellow
+       = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color ButtonYellowHovered
+       = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color ButtonYellowActive
+       = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
 
      // Orange tint
-     static constexpr color                ButtonOrange           = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
-     static constexpr color                ButtonOrangeHovered    = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
-     static constexpr color                ButtonOrangeActive     = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
+     static constexpr color ButtonOrange
+       = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
+     static constexpr color ButtonOrangeHovered
+       = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
+     static constexpr color ButtonOrangeActive
+       = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
 
      // Pink tint
-     static constexpr color                ButtonPink             = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color                ButtonPinkHovered      = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color                ButtonPinkActive       = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
+     static constexpr color ButtonPink
+       = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color ButtonPinkHovered
+       = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color ButtonPinkActive
+       = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
 
      // Tan tint
-     static constexpr color                ButtonTan              = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
-     static constexpr color                ButtonTanHovered       = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
-     static constexpr color                ButtonTanActive        = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
+     static constexpr color ButtonTan
+       = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
+     static constexpr color ButtonTanHovered
+       = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
+     static constexpr color ButtonTanActive
+       = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
 
      // tableColors
-     static constexpr color                TableDarkRed           = color{ 120, 40, 40 };
-     static constexpr color                TableLightDarkRed      = color{ 160, 60, 60 };
-     static constexpr color                TableDarkRedHovered    = TableLightDarkRed.fade(0.4F);
-     static constexpr color                TableDarkRedActive     = color{ 100, 20, 20 };
+     static constexpr color TableDarkRed        = color{ 120, 40, 40 };
+     static constexpr color TableLightDarkRed   = color{ 160, 60, 60 };
+     static constexpr color TableDarkRedHovered = TableLightDarkRed.fade(0.4F);
+     static constexpr color TableDarkRedActive  = color{ 100, 20, 20 };
 
-     static constexpr color                TableDarkGray          = color{ 80, 80, 80 };
-     static constexpr color                TableLightDarkGray     = color{ 100, 100, 100 };
-     static constexpr color                TableDarkGrayHovered   = TableLightDarkGray.fade(0.4F);
-     static constexpr color                TableDarkGrayActive    = color{ 50, 50, 50 };
+     static constexpr color TableDarkGray       = color{ 80, 80, 80 };
+     static constexpr color TableLightDarkGray  = color{ 100, 100, 100 };
+     static constexpr color TableDarkGrayHovered
+       = TableLightDarkGray.fade(0.4F);
+     static constexpr color TableDarkGrayActive = color{ 50, 50, 50 };
 
-     static constexpr color                TableDarkBlue          = color{ 40, 60, 120 };
-     static constexpr color                TableLightDarkBlue     = color{ 60, 90, 160 };
-     static constexpr color                TableDarkBlueHovered   = TableLightDarkBlue.fade(0.4F);
-     static constexpr color                TableDarkBlueActive    = color{ 20, 40, 100 };
+     static constexpr color TableDarkBlue       = color{ 40, 60, 120 };
+     static constexpr color TableLightDarkBlue  = color{ 60, 90, 160 };
+     static constexpr color TableDarkBlueHovered
+       = TableLightDarkBlue.fade(0.4F);
+     static constexpr color TableDarkBlueActive = color{ 20, 40, 100 };
 
-     static constexpr color                TableDarkGreen         = color{ 40, 120, 60 };
-     static constexpr color                TableLightDarkGreen    = color{ 60, 160, 90 };
-     static constexpr color                TableDarkGreenHovered  = TableLightDarkGreen.fade(0.4F);
-     static constexpr color                TableDarkGreenActive   = color{ 20, 100, 40 };
+     static constexpr color TableDarkGreen      = color{ 40, 120, 60 };
+     static constexpr color TableLightDarkGreen = color{ 60, 160, 90 };
+     static constexpr color TableDarkGreenHovered
+       = TableLightDarkGreen.fade(0.4F);
+     static constexpr color TableDarkGreenActive = color{ 20, 100, 40 };
 
-     static constexpr color                TableDarkPurple        = color{ 80, 40, 120 };
-     static constexpr color                TableLightDarkPurple   = color{ 110, 60, 160 };
-     static constexpr color                TableDarkPurpleHovered = TableLightDarkPurple.fade(0.4F);
-     static constexpr color                TableDarkPurpleActive  = color{ 50, 20, 100 };
+     static constexpr color TableDarkPurple      = color{ 80, 40, 120 };
+     static constexpr color TableLightDarkPurple = color{ 110, 60, 160 };
+     static constexpr color TableDarkPurpleHovered
+       = TableLightDarkPurple.fade(0.4F);
+     static constexpr color TableDarkPurpleActive = color{ 50, 20, 100 };
 
-     static constexpr color                TableDarkTeal          = color{ 40, 100, 100 };
-     static constexpr color                TableLightDarkTeal     = color{ 60, 140, 140 };
-     static constexpr color                TableDarkTealHovered   = TableLightDarkTeal.fade(0.4F);
-     static constexpr color                TableDarkTealActive    = color{ 20, 80, 80 };
+     static constexpr color TableDarkTeal         = color{ 40, 100, 100 };
+     static constexpr color TableLightDarkTeal    = color{ 60, 140, 140 };
+     static constexpr color TableDarkTealHovered
+       = TableLightDarkTeal.fade(0.4F);
+     static constexpr color TableDarkTealActive  = color{ 20, 80, 80 };
 
-     static constexpr color                TableDarkOrange        = color{ 120, 80, 40 };
-     static constexpr color                TableLightDarkOrange   = color{ 160, 110, 60 };
-     static constexpr color                TableDarkOrangeHovered = TableLightDarkOrange.fade(0.4F);
-     static constexpr color                TableDarkOrangeActive  = color{ 100, 50, 20 };
+     static constexpr color TableDarkOrange      = color{ 120, 80, 40 };
+     static constexpr color TableLightDarkOrange = color{ 160, 110, 60 };
+     static constexpr color TableDarkOrangeHovered
+       = TableLightDarkOrange.fade(0.4F);
+     static constexpr color TableDarkOrangeActive = color{ 100, 50, 20 };
 
 
      [[nodiscard]] static inline glm::vec3 hsv2rgb(const glm::vec3 &c)
      {
-          static const glm::vec4 K = glm::vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
+          static const glm::vec4 K
+            = glm::vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
           // Replace GLSL c.xxx + K.xyz with explicit vector construction
-          const glm::vec3        p = glm::abs(glm::fract(glm::vec3(c.x) + glm::vec3(K.x, K.y, K.z)) * 6.0f - glm::vec3(K.w));
-          // Replace GLSL mix and clamp with GLM equivalents, ensuring correct argument types
-          return c.z * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.0f, 1.0f), c.y);
+          const glm::vec3 p = glm::abs(
+            glm::fract(glm::vec3(c.x) + glm::vec3(K.x, K.y, K.z)) * 6.0f
+            - glm::vec3(K.w));
+          // Replace GLSL mix and clamp with GLM equivalents, ensuring correct
+          // argument types
+          return c.z
+                 * glm::mix(
+                   glm::vec3(K.x),
+                   glm::clamp(p - glm::vec3(K.x), 0.0f, 1.0f),
+                   c.y);
      }
 
-     [[nodiscard]] static inline glm::vec4 encode_uint_to_rgba(const unsigned int id)
+     [[nodiscard]] static inline glm::vec4
+       encode_uint_to_rgba(const unsigned int id)
      {
           static constexpr float GOLDEN_RATIO = 0.61803398875f;
           static constexpr float SATURATION   = 0.8f;
           static constexpr float VALUE        = 0.9f;
-          const float            hue          = glm::fract(static_cast<float>(id) * GOLDEN_RATIO);
-          const glm::vec3        temp_color   = hsv2rgb(glm::vec3(hue, SATURATION, VALUE));// Explicitly round to integers for comparison
-          // glm::vec3              rounded_color = glm::floor(temp_color * 255.0f + 0.5f);
-          /// return glm::vec4(rounded_color / 255.0f, 1.0f);// Keep in [0,1] for rendering
+          const float hue = glm::fract(static_cast<float>(id) * GOLDEN_RATIO);
+          const glm::vec3 temp_color = hsv2rgb(
+            glm::vec3(
+              hue,
+              SATURATION,
+              VALUE));// Explicitly round to integers for comparison
+          // glm::vec3              rounded_color = glm::floor(temp_color *
+          // 255.0f + 0.5f);
+          /// return glm::vec4(rounded_color / 255.0f, 1.0f);// Keep in [0,1]
+          /// for rendering
           return glm::vec4(temp_color, 1.f);
      }
 };
@@ -683,14 +762,16 @@ inline constexpr BackgroundSettings operator|(
   BackgroundSettings lhs,
   BackgroundSettings rhs)
 {
-     return static_cast<BackgroundSettings>(std::to_underlying(lhs) | std::to_underlying(rhs));
+     return static_cast<BackgroundSettings>(
+       std::to_underlying(lhs) | std::to_underlying(rhs));
 }
 
 inline constexpr BackgroundSettings operator&(
   BackgroundSettings lhs,
   BackgroundSettings rhs)
 {
-     return static_cast<BackgroundSettings>(std::to_underlying(lhs) & std::to_underlying(rhs));
+     return static_cast<BackgroundSettings>(
+       std::to_underlying(lhs) & std::to_underlying(rhs));
 }
 
 inline constexpr BackgroundSettings &operator|=(
@@ -704,11 +785,16 @@ inline constexpr BackgroundSettings &operator|=(
 inline constexpr bool ValidateBackgroundSettings(BackgroundSettings setting)
 {
      // Must only contain valid bits
-     if (std::to_underlying(setting) & ~std::to_underlying(BackgroundSettings::Solid | BackgroundSettings::TwoColors))
+     if (
+       std::to_underlying(setting)
+       & ~std::to_underlying(
+         BackgroundSettings::Solid | BackgroundSettings::TwoColors))
      {
           if (!std::is_constant_evaluated())
           {
-               spdlog::debug("Invalid BackgroundSettings: contains unknown bits ({:#X})", std::to_underlying(setting));
+               spdlog::debug(
+                 "Invalid BackgroundSettings: contains unknown bits ({:#X})",
+                 std::to_underlying(setting));
           }
           return false;
      }
@@ -720,7 +806,10 @@ inline constexpr bool ValidateBackgroundSettings(BackgroundSettings setting)
      {
           if (!std::is_constant_evaluated())
           {
-               spdlog::debug("Invalid BackgroundSettings: Solid and TwoColors cannot be combined ({:#X})", std::to_underlying(setting));
+               spdlog::debug(
+                 "Invalid BackgroundSettings: Solid and TwoColors cannot be "
+                 "combined ({:#X})",
+                 std::to_underlying(setting));
           }
           return false;
      }
@@ -740,7 +829,8 @@ inline constexpr bool HasFlag(
 
 
 static_assert(ValidateBackgroundSettings(BackgroundSettings::Default));
-static_assert(!ValidateBackgroundSettings(BackgroundSettings::TwoColors | BackgroundSettings::Solid));
+static_assert(!ValidateBackgroundSettings(
+  BackgroundSettings::TwoColors | BackgroundSettings::Solid));
 
 // Static asserts to validate HasFlag logic
 

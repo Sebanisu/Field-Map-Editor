@@ -12,7 +12,8 @@ using map_t = Map;
  * @brief Namespace for Final Fantasy VIII-related functionality.
  *
  * The `ff_8` namespace contains utilities, classes, and functions related to
- * handling tile data, conflicts, and other game-specific operations for Final Fantasy VIII.
+ * handling tile data, conflicts, and other game-specific operations for Final
+ * Fantasy VIII.
  */
 namespace ff_8
 {
@@ -26,16 +27,20 @@ namespace ff_8
  * allowing modders to modify and re-import tiles without conflicts.
  *
  * The `UniquifyPupu` logic performs the following:
- * - Initially, a `PupuID` is generated for each tile, which includes 4 offset bits.
- * - After the initial generation, a second pass is made where overlapping tiles are detected.
- * - For overlapping tiles, the `PupuID` is incremented to resolve the conflict, ensuring each tile
- *   has a unique ID even when they occupy the same location.
+ * - Initially, a `PupuID` is generated for each tile, which includes 4 offset
+ * bits.
+ * - After the initial generation, a second pass is made where overlapping tiles
+ * are detected.
+ * - For overlapping tiles, the `PupuID` is incremented to resolve the conflict,
+ * ensuring each tile has a unique ID even when they occupy the same location.
  *
- * The `PupuID` is designed to wrap around the unsigned 64-bit integer, allowing you to reverse
- * the ID back to the original values, much like `source_tile_conflicts` handles the swizzle or input locations.
+ * The `PupuID` is designed to wrap around the unsigned 64-bit integer, allowing
+ * you to reverse the ID back to the original values, much like
+ * `source_tile_conflicts` handles the swizzle or input locations.
  *
  * The generated `PupuID`s can be used to:
- * - Dump unswizzled images with unique filenames containing the raw hex value of each `PupuID`.
+ * - Dump unswizzled images with unique filenames containing the raw hex value
+ * of each `PupuID`.
  * - Allow modders to upscale or modify the images.
  * - Re-import the modified images back into the system without conflicts.
  *
@@ -51,7 +56,10 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
             UniquifyPupu const  pupu_map = {};
             pupu_ids.reserve(std::ranges::size(tiles));
 
-            std::ranges::transform(tiles | Map::filter_view_invalid(), std::back_insert_iterator(pupu_ids), pupu_map);
+            std::ranges::transform(
+              tiles | Map::filter_view_invalid(),
+              std::back_insert_iterator(pupu_ids),
+              pupu_map);
             return pupu_ids;
        });
 }
@@ -59,17 +67,21 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
 /**
  * @brief Generates a vector of unique PupuIDs from the input vector.
  *
- * This function processes a vector of `PupuID` values, removing any duplicate entries
- * while preserving the order of unique elements (after sorting). The steps include:
+ * This function processes a vector of `PupuID` values, removing any duplicate
+ * entries while preserving the order of unique elements (after sorting). The
+ * steps include:
  * - Sorting the input vector to group duplicates together.
  * - Removing consecutive duplicates using `std::ranges::unique`.
- * - Erasing the duplicates from the resulting vector to ensure all elements are unique.
+ * - Erasing the duplicates from the resulting vector to ensure all elements are
+ * unique.
  *
  * @param input A vector of `PupuID` values that may contain duplicates.
- * @return A new vector containing only the unique `PupuID` values from the input.
+ * @return A new vector containing only the unique `PupuID` values from the
+ * input.
  *
- * @note The function operates on a copy of the input, leaving the original vector unmodified.
- *       The output is sorted due to the use of `std::ranges::sort` prior to deduplication.
+ * @note The function operates on a copy of the input, leaving the original
+ * vector unmodified. The output is sorted due to the use of `std::ranges::sort`
+ * prior to deduplication.
  */
 static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 {
@@ -91,13 +103,14 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 /**
  * @brief Calculates source tile location conflicts for a given map.
  *
- * This function identifies and tracks conflicts between tiles in the provided map.
- * A conflict is defined as multiple tiles occupying the same grid location. The result
- * is a `source_tile_conflicts` object, which stores information about conflicting tiles
- * and their locations.
+ * This function identifies and tracks conflicts between tiles in the provided
+ * map. A conflict is defined as multiple tiles occupying the same grid
+ * location. The result is a `source_tile_conflicts` object, which stores
+ * information about conflicting tiles and their locations.
  *
  * @param map The map containing the tiles to process.
- * @return A `source_tile_conflicts` object representing the tile conflicts in the map.
+ * @return A `source_tile_conflicts` object representing the tile conflicts in
+ * the map.
  */
 [[nodiscard]] static source_tile_conflicts calculate_conflicts(const map_t &map)
 {
@@ -107,32 +120,42 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
             source_tile_conflicts stc{};
             std::ranges::for_each(
               tiles | Map::filter_view_invalid(),
-              [&](const auto &tile) { stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile)); });
+              [&](const auto &tile)
+              {
+                   stc(tile).push_back(
+                     std::ranges::distance(&tiles.front(), &tile));
+              });
             return stc;
        });
 }
 
 
 /**
- * @brief Populates a map with the count of similar tiles within a given range of tile indices.
+ * @brief Populates a map with the count of similar tiles within a given range
+ * of tile indices.
  *
- * This function traverses a range of tile indices within the map and counts the frequency of normalized tiles.
- * The function returns a map where each key is a normalized tile, and the corresponding value is the count of
- * its occurrences within the specified range of tile indices.
+ * This function traverses a range of tile indices within the map and counts the
+ * frequency of normalized tiles. The function returns a map where each key is a
+ * normalized tile, and the corresponding value is the count of its occurrences
+ * within the specified range of tile indices.
  *
- * The count of tiles is incremented for each occurrence of a normalized tile in the provided range.
- * This is useful for identifying tiles that appear multiple times in the range, potentially for highlighting
- * or providing additional feedback to the user.
+ * The count of tiles is incremented for each occurrence of a normalized tile in
+ * the provided range. This is useful for identifying tiles that appear multiple
+ * times in the range, potentially for highlighting or providing additional
+ * feedback to the user.
  *
  * @param map The map object that contains the tiles to be processed.
- * @param range_of_tile_indices A range of indices specifying the tiles to be counted. The range can be any
- *        iterable sequence of indices that corresponds to the tiles within the map.
+ * @param range_of_tile_indices A range of indices specifying the tiles to be
+ * counted. The range can be any iterable sequence of indices that corresponds
+ * to the tiles within the map.
  *
- * @return A map of `normalized_source_tile` to `std::uint8_t` where the key is the normalized tile and the
- *         value is the count of its occurrences within the specified range of tile indices.
+ * @return A map of `normalized_source_tile` to `std::uint8_t` where the key is
+ * the normalized tile and the value is the count of its occurrences within the
+ * specified range of tile indices.
  *
- * @note This function relies on `std::ranges::advance` to retrieve the tile at each index, ensuring that the
- *       correct tile is processed for each index in the given range.
+ * @note This function relies on `std::ranges::advance` to retrieve the tile at
+ * each index, ensuring that the correct tile is processed for each index in the
+ * given range.
  */
 [[nodiscard]] static std::map<
   normalized_source_tile,
@@ -145,17 +168,21 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
      return map.visit_tiles(
        [&](const auto &tiles)
        {
-            std::map<normalized_source_tile, std::uint8_t> ret     = {};
-            const auto                                     to_tile = [&](const auto index)
+            std::map<normalized_source_tile, std::uint8_t> ret = {};
+            const auto to_tile = [&](const auto index)
             {
-                 assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                 assert(
+                   std::cmp_less(index, std::ranges::size(tiles))
+                   && "index out of range!");
                  auto begin = std::ranges::cbegin(tiles);
                  std::ranges::advance(begin, index);
                  return *begin;
             };
-            auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+            auto transform_view
+              = range_of_tile_indices | std::ranges::views::transform(to_tile);
             for (const auto tile : transform_view)
-            {// Increment the count for the current tile (default initializes to 0 if not found)
+            {// Increment the count for the current tile (default initializes to
+             // 0 if not found)
                  ++ret[tile];
             }
             return ret;
@@ -163,24 +190,30 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 }
 
 /**
- * @brief Populates a map with the count of animated tiles within a given range of tile indices.
+ * @brief Populates a map with the count of animated tiles within a given range
+ * of tile indices.
  *
- * This function processes a range of tile indices within the map and counts the frequency of normalized
- * animated tiles. The result is a map where each key is a `normalized_source_animated_tile`, and the corresponding
- * value represents the count of its occurrences in the specified range.
+ * This function processes a range of tile indices within the map and counts the
+ * frequency of normalized animated tiles. The result is a map where each key is
+ * a `normalized_source_animated_tile`, and the corresponding value represents
+ * the count of its occurrences in the specified range.
  *
- * This function is useful for identifying frequently used animated tiles within the range, which may
- * help with optimization, debugging, or providing visual feedback to users.
+ * This function is useful for identifying frequently used animated tiles within
+ * the range, which may help with optimization, debugging, or providing visual
+ * feedback to users.
  *
  * @param map The map object containing tiles to process.
- * @param range_of_tile_indices A range of indices specifying the animated tiles to be counted. The range can be
- *        any iterable sequence of indices corresponding to tiles in the map.
+ * @param range_of_tile_indices A range of indices specifying the animated tiles
+ * to be counted. The range can be any iterable sequence of indices
+ * corresponding to tiles in the map.
  *
- * @return A map of `normalized_source_animated_tile` to `std::uint8_t` where the key is the normalized animated tile
- *         and the value is the count of its occurrences within the specified range of tile indices.
+ * @return A map of `normalized_source_animated_tile` to `std::uint8_t` where
+ * the key is the normalized animated tile and the value is the count of its
+ * occurrences within the specified range of tile indices.
  *
- * @note This function ensures that tile indices are within bounds using an `assert` statement.
- *       It leverages `std::ranges` to transform the range of indices into tiles and count their occurrences.
+ * @note This function ensures that tile indices are within bounds using an
+ * `assert` statement. It leverages `std::ranges` to transform the range of
+ * indices into tiles and count their occurrences.
  */
 [[nodiscard]] static std::map<
   normalized_source_animated_tile,
@@ -193,17 +226,21 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
      return map.visit_tiles(
        [&](const auto &tiles)
        {
-            std::map<normalized_source_animated_tile, std::uint8_t> ret     = {};
-            const auto                                              to_tile = [&](const auto index)
+            std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
+            const auto to_tile = [&](const auto index)
             {
-                 assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                 assert(
+                   std::cmp_less(index, std::ranges::size(tiles))
+                   && "index out of range!");
                  auto begin = std::ranges::cbegin(tiles);
                  std::ranges::advance(begin, index);
                  return *begin;
             };
-            auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+            auto transform_view
+              = range_of_tile_indices | std::ranges::views::transform(to_tile);
             for (const auto &tile : transform_view)
-            {// Increment the count for the current tile (default initializes to 0 if not found)
+            {// Increment the count for the current tile (default initializes to
+             // 0 if not found)
                  ++ret[tile];
             }
             return ret;
@@ -211,17 +248,22 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 }
 
 // /**
-//  * @brief Generates a map of normalized source animated tiles to their counts based on similar tiles.
+//  * @brief Generates a map of normalized source animated tiles to their counts
+//  based on similar tiles.
 //  *
-//  * This function processes a subset of tiles (`similar_tiles`) and creates a new map where
-//  * each normalized source animated tile is associated with its total count. It aggregates counts
+//  * This function processes a subset of tiles (`similar_tiles`) and creates a
+//  new map where
+//  * each normalized source animated tile is associated with its total count.
+//  It aggregates counts
 //  * from the given similar tiles map.
 //  *
-//  * @param similar_tiles A map containing normalized source tiles and their counts.
+//  * @param similar_tiles A map containing normalized source tiles and their
+//  counts.
 //  * @return A map of normalized source animated tiles to their total counts.
 //  */
 // [[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
-//   populate_animation_tile_count(const ff_8::MapHistory::nst_map &similar_tiles)
+//   populate_animation_tile_count(const ff_8::MapHistory::nst_map
+//   &similar_tiles)
 // {
 //      std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
 //      for (const auto &[tile, count] : similar_tiles)
@@ -234,33 +276,44 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 /**
  * @brief Disambiguates conflicts between similar and animation tile counts.
  *
- * This function ensures that tiles are either marked as similar or animation tiles,
- * but not both. It resolves conflicts by prioritizing one category over the other:
- * - If a tile's "similar" count is greater than 1, its animation count is set to 0, as similar tiles are considered more specific.
+ * This function ensures that tiles are either marked as similar or animation
+ * tiles, but not both. It resolves conflicts by prioritizing one category over
+ * the other:
+ * - If a tile's "similar" count is greater than 1, its animation count is set
+ * to 0, as similar tiles are considered more specific.
  * - Otherwise, the "similar" count is set to 0, prioritizing animation tiles.
  *
- * The function assumes that the number of elements in `working_similar_counts` is greater than or equal
- * to the number of elements in `working_animation_counts`. It uses the key from `working_similar_counts` to access
- * and modify corresponding values in `working_animation_counts`.
+ * The function assumes that the number of elements in `working_similar_counts`
+ * is greater than or equal to the number of elements in
+ * `working_animation_counts`. It uses the key from `working_similar_counts` to
+ * access and modify corresponding values in `working_animation_counts`.
  *
- * @param working_similar_counts A reference to a map of normalized source tiles and their similar counts.
- *                               This map must have a superset of the keys in `working_animation_counts`.
- * @param working_animation_counts A reference to a map of normalized source animated tiles and their counts.
- *                                 Keys in this map may be a subset of those in `working_similar_counts`.
+ * @param working_similar_counts A reference to a map of normalized source tiles
+ * and their similar counts. This map must have a superset of the keys in
+ * `working_animation_counts`.
+ * @param working_animation_counts A reference to a map of normalized source
+ * animated tiles and their counts. Keys in this map may be a subset of those in
+ * `working_similar_counts`.
  *
- * @note This function uses an `assert` to ensure that the size of `working_similar_counts` is greater than or
- *       equal to the size of `working_animation_counts`.
+ * @note This function uses an `assert` to ensure that the size of
+ * `working_similar_counts` is greater than or equal to the size of
+ * `working_animation_counts`.
  */
 static void disambiguate_normalized_tiles(
   ff_8::MapHistory::nst_map  &working_similar_counts,
   ff_8::MapHistory::nsat_map &working_animation_counts)
 {
-     assert(std::cmp_greater_equal(std::ranges::size(working_similar_counts), std::ranges::size(working_animation_counts)));
+     assert(
+       std::cmp_greater_equal(
+         std::ranges::size(working_similar_counts),
+         std::ranges::size(working_animation_counts)));
      std::ranges::for_each(
        working_similar_counts,
        [&](auto &similar)
        {
-            if (std::cmp_equal(similar.first.m_animation_id, (std::numeric_limits<std::uint8_t>::max)()))
+            if (std::cmp_equal(
+                  similar.first.m_animation_id,
+                  (std::numeric_limits<std::uint8_t>::max)()))
             {
                  if (similar.second > 1)
                  {
@@ -282,7 +335,12 @@ static void disambiguate_normalized_tiles(
 static std::vector<glm::vec4> create_colors_from_indexes(std::size_t count)
 {
      return std::views::iota(0u, static_cast<std::uint32_t>(count))
-            | std::views::transform([&](const auto index) { return fme::colors::encode_uint_to_rgba(static_cast<std::uint32_t>(index)); })
+            | std::views::transform(
+              [&](const auto index)
+              {
+                   return fme::colors::encode_uint_to_rgba(
+                     static_cast<std::uint32_t>(index));
+              })
             | std::ranges::to<std::vector>();
 }
 
@@ -296,7 +354,8 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working_pupu(m_original_pupu)
   , m_original_unique_pupu(make_unique_pupu(m_original_pupu))
   , m_working_unique_pupu(m_original_unique_pupu)
-  , m_original_unique_pupu_color(create_colors_from_indexes(std::ranges::size(m_original_unique_pupu)))
+  , m_original_unique_pupu_color(
+      create_colors_from_indexes(std::ranges::size(m_original_unique_pupu)))
   , m_working_unique_pupu_color(m_original_unique_pupu_color)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
@@ -307,7 +366,8 @@ ff_8::MapHistory::MapHistory(map_t map)
       m_working,
       m_working_conflicts.range_of_conflicts_flattened()))
 {
-     disambiguate_normalized_tiles(m_working_similar_counts, m_working_animation_counts);
+     disambiguate_normalized_tiles(
+       m_working_similar_counts, m_working_animation_counts);
 }
 
 void ff_8::MapHistory::refresh_original_all(bool force) const
@@ -336,9 +396,12 @@ void ff_8::MapHistory::refresh_original_pupu() const
 {
      m_original_pupu        = calculate_pupu(m_original);
      m_original_unique_pupu = make_unique_pupu(m_original_pupu);
-     if (std::ranges::size(m_original_unique_pupu) != std::ranges::size(m_original_unique_pupu_color))
+     if (
+       std::ranges::size(m_original_unique_pupu)
+       != std::ranges::size(m_original_unique_pupu_color))
      {
-          m_original_unique_pupu_color = create_colors_from_indexes(std::ranges::size(m_original_unique_pupu));
+          m_original_unique_pupu_color = create_colors_from_indexes(
+            std::ranges::size(m_original_unique_pupu));
      }
 }
 
@@ -346,9 +409,12 @@ void ff_8::MapHistory::refresh_working_pupu() const
 {
      m_working_pupu        = calculate_pupu(m_working);
      m_working_unique_pupu = make_unique_pupu(m_working_pupu);
-     if (std::ranges::size(m_original_unique_pupu) != std::ranges::size(m_working_unique_pupu_color))
+     if (
+       std::ranges::size(m_original_unique_pupu)
+       != std::ranges::size(m_working_unique_pupu_color))
      {
-          m_working_unique_pupu_color = create_colors_from_indexes(std::ranges::size(m_working_unique_pupu));
+          m_working_unique_pupu_color = create_colors_from_indexes(
+            std::ranges::size(m_working_unique_pupu));
      }
 }
 
@@ -359,13 +425,17 @@ void ff_8::MapHistory::refresh_original_conflicts() const
 
 void ff_8::MapHistory::refresh_working_conflicts() const
 {
-     m_working_conflicts        = calculate_conflicts(m_working);
-     m_working_similar_counts   = populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
-     m_working_animation_counts = populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
-     disambiguate_normalized_tiles(m_working_similar_counts, m_working_animation_counts);
+     m_working_conflicts      = calculate_conflicts(m_working);
+     m_working_similar_counts = populate_similar_tile_count(
+       m_working, m_working_conflicts.range_of_conflicts_flattened());
+     m_working_animation_counts = populate_animation_tile_count(
+       m_working, m_working_conflicts.range_of_conflicts_flattened());
+     disambiguate_normalized_tiles(
+       m_working_similar_counts, m_working_animation_counts);
 }
 
-const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept
+const std::vector<ff_8::PupuID> &
+  ff_8::MapHistory::original_pupu() const noexcept
 {
      return m_original_pupu;
 }
@@ -375,44 +445,52 @@ const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
      return m_working_pupu;
 }
 
-const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_unique_pupu() const noexcept
+const std::vector<ff_8::PupuID> &
+  ff_8::MapHistory::original_unique_pupu() const noexcept
 {
      return m_original_unique_pupu;
 }
 
-const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_unique_pupu() const noexcept
+const std::vector<ff_8::PupuID> &
+  ff_8::MapHistory::working_unique_pupu() const noexcept
 {
      return m_working_unique_pupu;
 }
 
 
-const std::vector<glm::vec4> &ff_8::MapHistory::original_unique_pupu_color() const noexcept
+const std::vector<glm::vec4> &
+  ff_8::MapHistory::original_unique_pupu_color() const noexcept
 {
      return m_original_unique_pupu_color;
 }
 
-const std::vector<glm::vec4> &ff_8::MapHistory::working_unique_pupu_color() const noexcept
+const std::vector<glm::vec4> &
+  ff_8::MapHistory::working_unique_pupu_color() const noexcept
 {
      return m_working_unique_pupu_color;
 }
 
 
-const ff_8::source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept
+const ff_8::source_tile_conflicts &
+  ff_8::MapHistory::original_conflicts() const noexcept
 {
      return m_original_conflicts;
 }
 
-const ff_8::source_tile_conflicts &ff_8::MapHistory::working_conflicts() const noexcept
+const ff_8::source_tile_conflicts &
+  ff_8::MapHistory::working_conflicts() const noexcept
 {
      return m_working_conflicts;
 }
 
-const ff_8::MapHistory::nst_map &ff_8::MapHistory::working_similar_counts() const noexcept
+const ff_8::MapHistory::nst_map &
+  ff_8::MapHistory::working_similar_counts() const noexcept
 {
      return m_working_similar_counts;
 }
 
-const ff_8::MapHistory::nsat_map &ff_8::MapHistory::working_animation_counts() const noexcept
+const ff_8::MapHistory::nsat_map &
+  ff_8::MapHistory::working_animation_counts() const noexcept
 {
      return m_working_animation_counts;
 }
@@ -461,7 +539,9 @@ map_t &ff_8::MapHistory::begin_multi_frame_working(std::string description)
 {
      if (!m_in_multi_frame_operation)
      {
-          const auto pop_set = glengine::ScopeGuard{ [this] { m_in_multi_frame_operation = true; } };
+          const auto pop_set
+            = glengine::ScopeGuard{ [this]
+                                    { m_in_multi_frame_operation = true; } };
           return copy_working(std::move(description));
      }
      return working();
@@ -548,7 +628,8 @@ bool ff_8::MapHistory::redo()
      m_undo_original_or_working.push_back(last);
      m_redo_original_or_working.pop_back();
 
-     (void)m_undo_change_descriptions.emplace_back(std::move(m_redo_change_descriptions.back()));
+     (void)m_undo_change_descriptions.emplace_back(
+       std::move(m_redo_change_descriptions.back()));
      m_redo_change_descriptions.pop_back();
      if (last == pushed::working)
      {
@@ -576,7 +657,8 @@ bool ff_8::MapHistory::undo(bool skip_redo)
      if (!skip_redo)
      {
           m_redo_original_or_working.push_back(last);
-          (void)m_redo_change_descriptions.emplace_back(std::move(m_undo_change_descriptions.back()));
+          (void)m_redo_change_descriptions.emplace_back(
+            std::move(m_undo_change_descriptions.back()));
      }
      m_undo_original_or_working.pop_back();
      m_undo_change_descriptions.pop_back();
@@ -614,12 +696,14 @@ void ff_8::MapHistory::redo_all()
 }
 bool ff_8::MapHistory::redo_enabled() const
 {
-     return !std::ranges::empty(m_redo_history) && !std::ranges::empty(m_redo_original_or_working);
+     return !std::ranges::empty(m_redo_history)
+            && !std::ranges::empty(m_redo_original_or_working);
 }
 
 bool ff_8::MapHistory::undo_enabled() const
 {
-     return !std::ranges::empty(m_undo_history) && !std::ranges::empty(m_undo_original_or_working);
+     return !std::ranges::empty(m_undo_history)
+            && !std::ranges::empty(m_undo_original_or_working);
 }
 
 const map_t &ff_8::MapHistory::const_working() const
@@ -628,25 +712,35 @@ const map_t &ff_8::MapHistory::const_working() const
 }
 
 template<is_tile TileT>
-[[nodiscard]] ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
+[[nodiscard]] ff_8::PupuID
+  ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
 {
-     return m_original_pupu[static_cast<std::size_t>(get_offset_from_working(tile))];
+     return m_original_pupu[static_cast<std::size_t>(
+       get_offset_from_working(tile))];
 }
 
 // Explicit instantiation for Tiles
-template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
-template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
-template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
+template ff_8::PupuID
+  ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
+template ff_8::PupuID
+  ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
+template ff_8::PupuID
+  ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
 
 template<open_viii::graphics::background::is_tile TileT>
-std::vector<TileT>::difference_type ff_8::MapHistory::get_offset_from_working(const TileT &tile) const
+std::vector<TileT>::difference_type
+  ff_8::MapHistory::get_offset_from_working(const TileT &tile) const
 {
      return working().visit_tiles(
        [&](const auto &tiles) -> std::vector<TileT>::difference_type
        {
-            if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+            if constexpr (std::is_same_v<
+                            std::ranges::range_value_t<
+                              std::remove_cvref_t<decltype(tiles)>>,
+                            TileT>)
             {
-                 return static_cast<std::vector<TileT>::difference_type>(std::ranges::distance(&tiles.front(), &tile));
+                 return static_cast<std::vector<TileT>::difference_type>(
+                   std::ranges::distance(&tiles.front(), &tile));
             }
             else
             {
@@ -655,12 +749,15 @@ std::vector<TileT>::difference_type ff_8::MapHistory::get_offset_from_working(co
        });
 }
 
-template std::vector<Tile1>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile1 &) const;
-template std::vector<Tile2>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile2 &) const;
-template std::vector<Tile3>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile3 &) const;
+template std::vector<Tile1>::difference_type
+  ff_8::MapHistory::get_offset_from_working(const Tile1 &) const;
+template std::vector<Tile2>::difference_type
+  ff_8::MapHistory::get_offset_from_working(const Tile2 &) const;
+template std::vector<Tile3>::difference_type
+                 ff_8::MapHistory::get_offset_from_working(const Tile3 &) const;
 
 
-std::string_view                             ff_8::MapHistory::current_undo_description() const
+std::string_view ff_8::MapHistory::current_undo_description() const
 {
      if (std::ranges::empty(m_undo_change_descriptions))
      {
@@ -678,7 +775,8 @@ std::string_view ff_8::MapHistory::current_redo_description() const
      return m_redo_change_descriptions.back();
 }
 
-[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::current_undo_pushed() const
+[[nodiscard]] ff_8::MapHistory::pushed
+  ff_8::MapHistory::current_undo_pushed() const
 {
      if (std::ranges::empty(m_undo_original_or_working))
      {
@@ -687,7 +785,8 @@ std::string_view ff_8::MapHistory::current_redo_description() const
      return m_undo_original_or_working.back();
 }
 
-[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::current_redo_pushed() const
+[[nodiscard]] ff_8::MapHistory::pushed
+  ff_8::MapHistory::current_redo_pushed() const
 {
      if (std::ranges::empty(m_redo_original_or_working))
      {

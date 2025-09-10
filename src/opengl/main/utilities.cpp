@@ -24,7 +24,10 @@ bool          has_balanced_braces([[maybe_unused]] const std::string_view s)
                --balance;
                if (balance < 0)
                {
-                    spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
+                    spdlog::error(
+                      "Unmatched closing brace in input: \"{}\" (note: literal "
+                      "braces shown as {{ and }})",
+                      s);
                     return false;
                }
           }
@@ -32,7 +35,11 @@ bool          has_balanced_braces([[maybe_unused]] const std::string_view s)
 
      if (balance != 0)
      {
-          spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
+          spdlog::error(
+            "Mismatched brace count in input: \"{}\" ({} unmatched opening "
+            "brace{{}})",
+            s,
+            balance);
           return false;
      }
 
@@ -54,7 +61,8 @@ bool has_balanced_braces([[maybe_unused]] const std::u8string_view s)
                if (balance < 0)
                {
                     spdlog::error(
-                      "Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})",
+                      "Unmatched closing brace in input: \"{}\" (note: literal "
+                      "braces shown as {{ and }})",
                       reinterpret_cast<const char *>(s.data()));
                     return false;
                }
@@ -64,7 +72,10 @@ bool has_balanced_braces([[maybe_unused]] const std::u8string_view s)
      if (balance != 0)
      {
           spdlog::error(
-            "Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", reinterpret_cast<const char *>(s.data()), balance);
+            "Mismatched brace count in input: \"{}\" ({} unmatched opening "
+            "brace{{}})",
+            reinterpret_cast<const char *>(s.data()),
+            balance);
           return false;
      }
 

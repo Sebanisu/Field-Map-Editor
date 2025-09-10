@@ -26,15 +26,20 @@ namespace ff_8
 template<open_viii::graphics::background::is_tile tileT>
 static constexpr auto to_hex(const tileT &tile)
 {
-     constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char
+     constexpr auto to_hex_operation
+       = [](const std::uint8_t input_byte, const auto operation) -> char
      {
           constexpr std::uint8_t number_of_values_in_nibble = 16U;
           constexpr char         threshold_of_A_to_F        = 10;
-          char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
-          return static_cast<char>((
-            half_transformed_char < threshold_of_A_to_F ? half_transformed_char + '0' : half_transformed_char - threshold_of_A_to_F + 'A'));
+          char const             half_transformed_char      = static_cast<char>(
+            operation(input_byte, number_of_values_in_nibble));
+          return static_cast<char>(
+            (half_transformed_char < threshold_of_A_to_F
+               ? half_transformed_char + '0'
+               : half_transformed_char - threshold_of_A_to_F + 'A'));
      };
-     const auto                               raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
+     const auto raw_bytes
+       = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
      std::array<char, sizeof(tileT) * 2U + 1> raw_hex{};
      raw_hex.back() = '\0';
      auto rhi       = raw_hex.begin();
@@ -52,7 +57,8 @@ static constexpr auto to_hex(const tileT &tile)
 template<>
 struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
 {
-     // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
+     // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size,
+     // tile_sizes::x_8_size, tile_sizes::x_16_size
      //  parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(
@@ -113,7 +119,8 @@ struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
 };
 
 template<>
-struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::formatter<std::string_view>
+struct fmt::formatter<open_viii::graphics::background::BlendModeT>
+  : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
@@ -294,7 +301,8 @@ struct fmt::formatter<fme::BackgroundSettings>
 
           if (bs == Default)
           {
-               return fmt::format_to(ctx.out(), "Default (OneColor | Checkerboard)");
+               return fmt::format_to(
+                 ctx.out(), "Default (OneColor | Checkerboard)");
           }
 
           bool       first      = true;
@@ -322,7 +330,8 @@ struct fmt::formatter<fme::BackgroundSettings>
 };
 
 template<open_viii::Number numT>
-struct fmt::formatter<open_viii::graphics::Rectangle<numT>> : fmt::formatter<open_viii::graphics::Point<numT>>
+struct fmt::formatter<open_viii::graphics::Rectangle<numT>>
+  : fmt::formatter<open_viii::graphics::Point<numT>>
 {
      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
      template<typename FormatContext>
@@ -330,10 +339,14 @@ struct fmt::formatter<open_viii::graphics::Rectangle<numT>> : fmt::formatter<ope
        open_viii::graphics::Rectangle<numT> rectangle,
        FormatContext                       &ctx) const
      {
-          fmt::formatter<open_viii::graphics::Point<numT>>::format(open_viii::graphics::Point<numT>{ rectangle.x(), rectangle.y() }, ctx);
+          fmt::formatter<open_viii::graphics::Point<numT>>::format(
+            open_viii::graphics::Point<numT>{ rectangle.x(), rectangle.y() },
+            ctx);
           fmt::format_to(ctx.out(), "{}", ' ');
           return fmt::formatter<open_viii::graphics::Point<numT>>::format(
-            open_viii::graphics::Point<numT>{ rectangle.width(), rectangle.height() }, ctx);
+            open_viii::graphics::Point<numT>{ rectangle.width(),
+                                              rectangle.height() },
+            ctx);
      }
 };
 
@@ -422,7 +435,8 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
 };
 
 template<>
-struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> : fmt::formatter<std::string>
+struct fmt::formatter<open_viii::graphics::background::normalized_source_tile>
+  : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string>.
      template<typename FormatContext>
@@ -472,7 +486,9 @@ struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> :
 };
 
 template<typename range_t>
-concept tile_range = std::ranges::range<range_t> && open_viii::graphics::background::is_tile<std::ranges::range_value_t<range_t>>;
+concept tile_range = std::ranges::range<range_t>
+                     && open_viii::graphics::background::is_tile<
+                       std::ranges::range_value_t<range_t>>;
 
 template<tile_range TileRange>
 struct fmt::is_range<TileRange, char> : std::false_type
@@ -500,7 +516,8 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 template<>
 struct fmt::formatter<fme::color>
 {
-     // Parses format specs; in this case, we don't support any custom formatting
+     // Parses format specs; in this case, we don't support any custom
+     // formatting
      constexpr auto parse(format_parse_context &ctx)
      {
           return ctx.begin();// no custom formatting, so just return the end
@@ -512,7 +529,8 @@ struct fmt::formatter<fme::color>
        const fme::color &c,
        FormatContext    &ctx) const
      {
-          return fmt::format_to(ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
+          return fmt::format_to(
+            ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
      }
 };
 

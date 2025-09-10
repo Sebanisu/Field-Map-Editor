@@ -13,11 +13,14 @@ namespace glengine
 {
 void                  BeginErrorCallBack();
 [[maybe_unused]] void EndErrorCallback();
-void                  GlClearError(const std::source_location location = std::source_location::current());
+void                  GlClearError(
+                   const std::source_location location = std::source_location::current());
 
-bool                  GlCheckError(const std::source_location location = std::source_location::current());
+bool GlCheckError(
+  const std::source_location location = std::source_location::current());
 
-void                  GlGetError(const std::source_location location = std::source_location::current());
+void GlGetError(
+  const std::source_location location = std::source_location::current());
 
 struct GlCall
 {
@@ -36,17 +39,20 @@ struct GlCall
        FuncT &&func,
        ArgsT &&...args) &&
      {
-          using ReturnValueT = std::remove_cvref_t<std::invoke_result_t<FuncT, ArgsT...>>;
+          using ReturnValueT
+            = std::remove_cvref_t<std::invoke_result_t<FuncT, ArgsT...>>;
           GlClearError(m_source_location);
           if constexpr (!glengine::Void<ReturnValueT>)
           {
-               ReturnValueT return_value = std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+               ReturnValueT return_value = std::invoke(
+                 std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
                GlGetError(m_source_location);
                return return_value;
           }
           else
           {
-               std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+               std::invoke(
+                 std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
                GlGetError(m_source_location);
           }
      }

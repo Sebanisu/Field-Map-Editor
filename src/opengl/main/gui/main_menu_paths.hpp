@@ -19,9 +19,9 @@ struct main_menu_paths_settings
 {
      std::reference_wrapper<std::vector<std::filesystem::path>> user_paths;
      std::reference_wrapper<std::vector<std::filesystem::path>> generated_paths;
-     std::reference_wrapper<std::vector<bool>>                  generated_paths_enabled;
-     std::string_view                                           main_label;
-     std::string_view                                           browse_tooltip;
+     std::reference_wrapper<std::vector<bool>> generated_paths_enabled;
+     std::string_view                          main_label;
+     std::string_view                          browse_tooltip;
 };
 template<typename main_filter_t, typename... other_filter_t>
 struct main_menu_paths
@@ -56,7 +56,8 @@ struct main_menu_paths
           const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           [&]()
           {
-               if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
+               if (!ImGui::MenuItem(
+                     gui_labels::browse.data(), nullptr, false, true))
                {
                     tool_tip(m_settings.browse_tooltip);
                     return;
@@ -67,7 +68,8 @@ struct main_menu_paths
                 gui_labels::explore.data(),
                 nullptr,
                 nullptr,
-                !std::ranges::empty(m_main_filter.get().value()) && m_main_filter.get().enabled()))
+                !std::ranges::empty(m_main_filter.get().value())
+                  && m_main_filter.get().enabled()))
           {
                open_directory(m_main_filter.get().value());
           }
@@ -77,12 +79,14 @@ struct main_menu_paths
                tool_tip(m_main_filter.get().value().string());
           }
 
-          const auto     transformed_paths = m_settings.user_paths.get() | std::ranges::views::enumerate;
+          const auto transformed_paths
+            = m_settings.user_paths.get() | std::ranges::views::enumerate;
 
-          std::ptrdiff_t delete_me         = -1;
-          static float   elapsed_time      = 0.0f;// Track elapsed time
+          std::ptrdiff_t delete_me    = -1;
+          static float   elapsed_time = 0.0f;// Track elapsed time
 
-          elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
+          elapsed_time
+            += ImGui::GetIO().DeltaTime;// Increment with frame delta time
           static constexpr size_t max_display_chars = 50;
           static constexpr float  chars_per_second  = 8.0f;
           [&]()
@@ -94,8 +98,11 @@ struct main_menu_paths
                ImGui::Separator();
                if (ImGui::BeginTable("##path_table", 2))
                {
-                    const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
-                    auto zip_path = std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get());
+                    const auto end_table
+                      = glengine::ScopeGuard(&ImGui::EndTable);
+                    auto zip_path = std::ranges::views::zip(
+                      m_settings.generated_paths.get(),
+                      m_settings.generated_paths_enabled.get());
                     for (const auto &[index, path] : transformed_paths)
                     {
                          auto it = std::ranges::find_if(
@@ -118,18 +125,29 @@ struct main_menu_paths
                          // {
                          //      continue;
                          // }
-                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
+                         bool is_checked = path == m_main_filter.get().value()
+                                           && m_main_filter.get().enabled();
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
                          {
                               ImGui::BeginDisabled(!enabled);
-                              const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
-                              if (ImGui::MenuItem(path.string().data(), nullptr, &is_checked, true))
+                              const auto pop_disabled
+                                = glengine::ScopeGuard{ &ImGui::EndDisabled };
+                              if (ImGui::MenuItem(
+                                    path.string().data(),
+                                    nullptr,
+                                    &is_checked,
+                                    true))
                               {
                                    if (m_main_filter.get().value() != path)
                                    {
-                                        std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
-                                        m_main_filter.get().update(path).enable();
+                                        std::apply(
+                                          [](auto &...other_filter)
+                                          { (other_filter.disable(), ...); },
+                                          m_other_filter);
+                                        m_main_filter.get()
+                                          .update(path)
+                                          .enable();
                                    }
                                    else
                                    {
@@ -139,7 +157,13 @@ struct main_menu_paths
                                         }
                                         else
                                         {
-                                             std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
+                                             std::apply(
+                                               [](auto &...other_filter)
+                                               {
+                                                    (other_filter.disable(),
+                                                     ...);
+                                               },
+                                               m_other_filter);
                                              m_main_filter.get().enable();
                                         }
                                    }
@@ -157,7 +181,8 @@ struct main_menu_paths
           {
                if (
                  std::ranges::empty(m_settings.generated_paths.get())
-                 || std::ranges::none_of(m_settings.generated_paths_enabled.get(), std::identity{}))
+                 || std::ranges::none_of(
+                   m_settings.generated_paths_enabled.get(), std::identity{}))
                {
                     return;
                }
@@ -166,37 +191,53 @@ struct main_menu_paths
 
                if (ImGui::BeginTable("##path_table", 2))
                {
-                    const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
-                    for (const auto &[path, enabled] :
-                         std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get()))
+                    const auto end_table
+                      = glengine::ScopeGuard(&ImGui::EndTable);
+                    for (const auto &[path, enabled] : std::ranges::views::zip(
+                           m_settings.generated_paths.get(),
+                           m_settings.generated_paths_enabled.get()))
                     {
                          if (!enabled)
                          {
                               continue;
                          }
-                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
+                         bool is_checked = path == m_main_filter.get().value()
+                                           && m_main_filter.get().enabled();
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
                          {
                               ImGui::BeginDisabled(!enabled);
-                              const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
-                              const auto path_padded  = path.string() + "  -  ";
-                              size_t offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
-                              std::string display_text = path_padded.substr(offset, max_display_chars);
-                              if (display_text.size() < max_display_chars && offset > 0)
+                              const auto pop_disabled
+                                = glengine::ScopeGuard{ &ImGui::EndDisabled };
+                              const auto path_padded = path.string() + "  -  ";
+                              size_t     offset
+                                = static_cast<size_t>(
+                                    elapsed_time * chars_per_second)
+                                  % (path_padded.size());// Sliding offset
+                              std::string display_text
+                                = path_padded.substr(offset, max_display_chars);
+                              if (
+                                display_text.size() < max_display_chars
+                                && offset > 0)
                               {
-                                   // Wrap-around to show the start of the string
-                                   display_text += path_padded.substr(0, max_display_chars - display_text.size());
+                                   // Wrap-around to show the start of the
+                                   // string
+                                   display_text += path_padded.substr(
+                                     0,
+                                     max_display_chars - display_text.size());
                               }
                               const auto pop_id_menu_item = PushPopID();
-                              ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
-                              bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                              ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
+                              bool   selected   = ImGui::MenuItem(
+                                "##menu_item", nullptr, &is_checked);
                               if (!selected)
                               {
                                    tool_tip(path);
                               }
                               ImGui::SetCursorScreenPos(cursor_pos);
-                              ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
+                              ImGui::TextUnformatted(
+                                display_text.c_str());// Draw the scrolling text
+                                                      // separately
                               ImGui::SameLine();
                               float sz = ImGui::GetTextLineHeight();
                               ImGui::Dummy(ImVec2(sz, sz));
@@ -204,8 +245,13 @@ struct main_menu_paths
                               {
                                    if (m_main_filter.get().value() != path)
                                    {
-                                        std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
-                                        m_main_filter.get().update(path).enable();
+                                        std::apply(
+                                          [](auto &...other_filter)
+                                          { (other_filter.disable(), ...); },
+                                          m_other_filter);
+                                        m_main_filter.get()
+                                          .update(path)
+                                          .enable();
                                    }
                                    else
                                    {
@@ -215,7 +261,13 @@ struct main_menu_paths
                                         }
                                         else
                                         {
-                                             std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
+                                             std::apply(
+                                               [](auto &...other_filter)
+                                               {
+                                                    (other_filter.disable(),
+                                                     ...);
+                                               },
+                                               m_other_filter);
                                              m_main_filter.get().enable();
                                         }
                                    }
@@ -225,22 +277,26 @@ struct main_menu_paths
                          }
                          ImGui::TableNextColumn();
                          add_explore_button(path);
-                         delete_me = add_delete_button(path, m_settings.user_paths.get(), delete_me);
+                         delete_me = add_delete_button(
+                           path, m_settings.user_paths.get(), delete_me);
                     }
                }
                if (std::cmp_greater_equal(delete_me, 0))
                {
                     spdlog::info("delete {}", delete_me);
                }
-               if (const auto found = handle_path_deletion(m_settings.user_paths, delete_me); found.has_value())
+               if (const auto found
+                   = handle_path_deletion(m_settings.user_paths, delete_me);
+                   found.has_value())
                {
                     std::invoke(generate);
                     // generate_deswizzle_map_paths();
                     // handle update config
                     if (found.value() == m_main_filter.get().value())
                     {
-                         m_main_filter.get().update(
-                           find_replacement_path_value(m_settings.generated_paths, m_settings.generated_paths_enabled));
+                         m_main_filter.get().update(find_replacement_path_value(
+                           m_settings.generated_paths,
+                           m_settings.generated_paths_enabled));
                          if (std::ranges::empty(m_main_filter.get().value()))
                          {
                               m_main_filter.get().disable();
@@ -264,7 +320,8 @@ struct main_menu_paths
           std::ranges::advance(it, offset);
           if (it != std::ranges::end(ff8_directory_paths))
           {
-               auto return_value = std::optional<std::filesystem::path>(std::move(*it));
+               auto return_value
+                 = std::optional<std::filesystem::path>(std::move(*it));
                ff8_directory_paths.erase(it);
                return return_value;
           }
@@ -285,7 +342,8 @@ struct main_menu_paths
           }
 
           auto zip_paths = std::ranges::views::zip(paths, paths_enabled);
-          auto it        = std::ranges::find_if(zip_paths, [](const auto &pair) { return std::get<1>(pair); });
+          auto it        = std::ranges::find_if(
+            zip_paths, [](const auto &pair) { return std::get<1>(pair); });
           if (it != std::ranges::end(zip_paths))
           {
                return std::get<0>(*it);
@@ -319,14 +377,17 @@ struct main_menu_paths
      {
           auto       transformed_paths = paths | std::ranges::views::enumerate;
           const auto it                = std::ranges::find_if(
-            transformed_paths, [&path](const auto &pair) { return path.string().starts_with(std::get<1>(pair).string()); });
+            transformed_paths,
+            [&path](const auto &pair)
+            { return path.string().starts_with(std::get<1>(pair).string()); });
           if (it != std::ranges::end(transformed_paths))
 
           {
                const auto  pop_id      = PushPopID();
                const float button_size = ImGui::GetFrameHeight();
                ImGui::SameLine();
-               if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
+               if (ImGui::Button(
+                     ICON_FA_TRASH, ImVec2{ button_size, button_size }))
                {
                     const auto &index = std::get<0>(*it);
 
@@ -344,7 +405,8 @@ struct main_menu_paths
      {
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();
-          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          if (ImGui::Button(
+                ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
                open_directory(path);
           }

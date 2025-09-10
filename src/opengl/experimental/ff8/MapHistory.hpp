@@ -18,9 +18,9 @@ class [[nodiscard]] MapHistory
           Front,
           Back
      };
-     using map_t                                      = open_viii::graphics::background::Map;
-     mutable map_t               m_front              = {};
-     mutable map_t               m_back               = {};
+     using map_t                         = open_viii::graphics::background::Map;
+     mutable map_t               m_front = {};
+     mutable map_t               m_back  = {};
      mutable std::vector<PupuID> m_front_pupu         = {};
      mutable std::vector<map_t>  m_front_history      = {};
      mutable std::vector<map_t>  m_back_history       = {};
@@ -54,7 +54,9 @@ class [[nodiscard]] MapHistory
       */
      [[nodiscard]] const map_t  &undo_original(bool skip_redo = false) const;
 
-     auto                        debug_count_print(std::source_location source_location = std::source_location::current()) const
+     auto                        debug_count_print(
+                              std::source_location source_location
+                              = std::source_location::current()) const
      {
           return glengine::ScopeGuard(
             [=, this]()
@@ -78,13 +80,24 @@ class [[nodiscard]] MapHistory
           return front().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 if constexpr (std::is_same_v<
+                                 std::ranges::range_value_t<
+                                   std::remove_cvref_t<decltype(tiles)>>,
+                                 TileT>)
                  {
                       auto front_tile = tiles.cbegin();
 
-                      if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
+                      if (
+                        pos < 0
+                        || std::cmp_greater_equal(
+                          pos, std::ranges::size(tiles)))
                       {
-                           spdlog::error("{}:{} pos in front to be 0 < {} < {} ", __FILE__, __LINE__, pos, std::ranges::size(tiles));
+                           spdlog::error(
+                             "{}:{} pos in front to be 0 < {} < {} ",
+                             __FILE__,
+                             __LINE__,
+                             pos,
+                             std::ranges::size(tiles));
                            throw std::exception();
                       }
                       std::ranges::advance(front_tile, pos);
@@ -93,10 +106,13 @@ class [[nodiscard]] MapHistory
                  else
                  {
                       if constexpr (!requires(TileT tile_t) {
-                                         { lambda(tile_t) } -> std::same_as<void>;
+                                         {
+                                              lambda(tile_t)
+                                         } -> std::same_as<void>;
                                     })
                       {
-                           return typename std::remove_cvref_t<std::invoke_result_t<decltype(lambda), TileT>>{};
+                           return typename std::remove_cvref_t<
+                             std::invoke_result_t<decltype(lambda), TileT>>{};
                       }
                  }
             });
@@ -113,7 +129,10 @@ class [[nodiscard]] MapHistory
           return back().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 if constexpr (std::is_same_v<
+                                 std::ranges::range_value_t<
+                                   std::remove_cvref_t<decltype(tiles)>>,
+                                 TileT>)
                  {
                       auto tile = tiles.begin();
                       std::ranges::advance(tile, pos);
@@ -122,7 +141,9 @@ class [[nodiscard]] MapHistory
                  else
                  {
                       if constexpr (!requires(TileT tile_t) {
-                                         { lambda(tile_t) } -> std::same_as<void>;
+                                         {
+                                              lambda(tile_t)
+                                         } -> std::same_as<void>;
                                     })
                       {
                            TileT v{};
@@ -143,7 +164,8 @@ class [[nodiscard]] MapHistory
      template<typename TileT>
      [[nodiscard]] PupuID get_pupu_from_working(const TileT &tile) const
      {
-          return m_front_pupu[static_cast<std::size_t>(get_offset_from_working(tile))];
+          return m_front_pupu[static_cast<std::size_t>(
+            get_offset_from_working(tile))];
      }
 
      [[nodiscard]] const std::vector<PupuID> &pupu() const noexcept;
@@ -154,13 +176,17 @@ class [[nodiscard]] MapHistory
           return back().visit_tiles(
             [&](const auto &tiles)
             {
-                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 if constexpr (std::is_same_v<
+                                 std::ranges::range_value_t<
+                                   std::remove_cvref_t<decltype(tiles)>>,
+                                 TileT>)
                  {
                       return std::ranges::distance(&tiles.front(), &tile);
                  }
                  else
                  {
-                      return std::ranges::range_difference_t<std::remove_cvref_t<decltype(tiles)>>{};
+                      return std::ranges::range_difference_t<
+                        std::remove_cvref_t<decltype(tiles)>>{};
                  }
             });
      }
@@ -179,7 +205,8 @@ class [[nodiscard]] MapHistory
      {
           const auto pos = get_offset_from_working(tile);
           (void)copy_working();
-          return working_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
+          return working_get_tile_at_offset<TileT>(
+            pos, std::forward<LambdaT>(lambda));
      }
 
      template<
@@ -212,7 +239,10 @@ class [[nodiscard]] MapHistory
           back().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 if constexpr (std::is_same_v<
+                                 std::ranges::range_value_t<
+                                   std::remove_cvref_t<decltype(tiles)>>,
+                                 TileT>)
                  {
                       auto filtered_tiles = tiles | std::views::filter(filter);
                       for (auto &tile : filtered_tiles)
@@ -233,11 +263,13 @@ class [[nodiscard]] MapHistory
      {
           if (similar)
           {
-               copy_working_perform_operation<TileT>(similar(tile), std::forward<LambdaT>(lambda));
+               copy_working_perform_operation<TileT>(
+                 similar(tile), std::forward<LambdaT>(lambda));
           }
           else
           {
-               copy_working_and_get_new_tile<TileT>(tile, std::forward<LambdaT>(lambda));
+               copy_working_and_get_new_tile<TileT>(
+                 tile, std::forward<LambdaT>(lambda));
           }
      }
 
@@ -248,20 +280,25 @@ class [[nodiscard]] MapHistory
        const TileT &tile,
        LambdaT    &&lambda) const
      {
-          return original_get_tile_at_offset<TileT>(get_offset_from_working(tile), std::forward<LambdaT>(lambda));
+          return original_get_tile_at_offset<TileT>(
+            get_offset_from_working(tile), std::forward<LambdaT>(lambda));
      }
 
      /**
       * For when a change could happen. we make a copy ahead of time.
       * @return back map
       */
-     [[nodiscard]] map_t &copy_back_preemptive(std::source_location source_location = std::source_location::current()) const;
+     [[nodiscard]] map_t &copy_back_preemptive(
+       std::source_location source_location
+       = std::source_location::current()) const;
 
      /**
       * After copy_mode is returned to normal copy_back_preemptive will resume
       * making copies.
       */
-     void                 end_preemptive_copy_mode(std::source_location source_location = std::source_location::current()) const;
+     void end_preemptive_copy_mode(
+       std::source_location source_location
+       = std::source_location::current()) const;
 
      [[nodiscard]] map_t &copy_working() const;
 
@@ -275,18 +312,25 @@ class [[nodiscard]] MapHistory
       * Deletes the most recent back or front
       * @return
       */
-     [[nodiscard]] bool   redo(std::source_location source_location = std::source_location::current()) const;
+     [[nodiscard]] bool   redo(
+         std::source_location source_location
+         = std::source_location::current()) const;
 
      /**
       * Deletes the most recent back or front
       * @return
       */
-     [[nodiscard]] bool   undo(
-         bool                 skip_redo       = false,
-         std::source_location source_location = std::source_location::current()) const;
+     [[nodiscard]] bool undo(
+       bool                 skip_redo = false,
+       std::source_location source_location
+       = std::source_location::current()) const;
 
-     void               undo_all(std::source_location source_location = std::source_location::current()) const;
-     void               redo_all(std::source_location source_location = std::source_location::current()) const;
+     void undo_all(
+       std::source_location source_location
+       = std::source_location::current()) const;
+     void redo_all(
+       std::source_location source_location
+       = std::source_location::current()) const;
      [[nodiscard]] bool redo_enabled() const;
      [[nodiscard]] bool undo_enabled() const;
 };

@@ -13,16 +13,18 @@ struct PupuID
 {
 
      // 1 bit for x not aligned
-     static constexpr std::uint32_t x_not_aligned_offset   = 31U;
-     static constexpr std::uint32_t x_not_aligned_mask     = 0x1U;
-     static constexpr std::uint32_t x_not_aligned_to_grid  = x_not_aligned_mask << x_not_aligned_offset;
+     static constexpr std::uint32_t x_not_aligned_offset = 31U;
+     static constexpr std::uint32_t x_not_aligned_mask   = 0x1U;
+     static constexpr std::uint32_t x_not_aligned_to_grid
+       = x_not_aligned_mask << x_not_aligned_offset;
      // layer is 7 bits
-     static constexpr std::uint32_t layer_offset           = 24U;
-     static constexpr std::uint32_t layer_mask             = 0x7FU;
+     static constexpr std::uint32_t layer_offset         = 24U;
+     static constexpr std::uint32_t layer_mask           = 0x7FU;
      // 1 bit for y not aligned
-     static constexpr std::uint32_t y_not_aligned_offset   = 23U;
-     static constexpr std::uint32_t y_not_aligned_mask     = 0x1U;
-     static constexpr std::uint32_t y_not_aligned_to_grid  = y_not_aligned_mask << y_not_aligned_offset;
+     static constexpr std::uint32_t y_not_aligned_offset = 23U;
+     static constexpr std::uint32_t y_not_aligned_mask   = 0x1U;
+     static constexpr std::uint32_t y_not_aligned_to_grid
+       = y_not_aligned_mask << y_not_aligned_offset;
      // blend is only 0,1,2,3,4. So 3 bits
      static constexpr std::uint32_t blend_offset           = 20U;
      static constexpr std::uint32_t blend_mask             = 0x07U;
@@ -42,7 +44,8 @@ struct PupuID
      static_assert(y_not_aligned_to_grid == 0x0080'0000U);
      static_assert((blend_mask << blend_offset) == 0x0070'0000U);
      static_assert((animation_mask << animation_offset) == 0x000F'F000U);
-     static_assert((animation_state_mask << animation_state_offset) == 0x0000'0FF0);
+     static_assert(
+       (animation_state_mask << animation_state_offset) == 0x0000'0FF0);
 
 
      constexpr PupuID() noexcept = default;
@@ -52,12 +55,17 @@ struct PupuID
      }
      constexpr explicit PupuID(
        const open_viii::graphics::background::is_tile auto &tile,
-       std::uint8_t                                         offset = 0U) noexcept
+       std::uint8_t offset = 0U) noexcept
        : PupuID(
-           std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask) << layer_offset)
-                          | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
-                          | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)
-                          | static_cast<std::uint32_t>(tile.animation_state() << animation_state_offset) | (offset & offset_mask) })
+           std::uint32_t{
+             ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask)
+              << layer_offset)
+             | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
+             | static_cast<std::uint32_t>(
+               tile.animation_id() << animation_offset)
+             | static_cast<std::uint32_t>(
+               tile.animation_state() << animation_state_offset)
+             | (offset & offset_mask) })
      {
           if (tile.x() % tile_grid_size != 0)
           {
@@ -74,19 +82,26 @@ struct PupuID
      }
      [[nodiscard]] constexpr std::uint8_t layer_id() const noexcept
      {
-          return static_cast<std::uint8_t>((m_raw >> layer_offset) & layer_mask);
+          return static_cast<std::uint8_t>(
+            (m_raw >> layer_offset) & layer_mask);
      }
-     [[nodiscard]] constexpr open_viii::graphics::background::BlendModeT blend_mode() const noexcept
+     [[nodiscard]] constexpr open_viii::graphics::background::BlendModeT
+       blend_mode() const noexcept
      {
-          return static_cast<open_viii::graphics::background::BlendModeT>((m_raw >> blend_offset) & blend_mask);
+          return static_cast<open_viii::graphics::background::BlendModeT>(
+            (m_raw >> blend_offset) & blend_mask);
      }
      [[nodiscard]] constexpr std::uint8_t animation_id() const noexcept
      {
-          return static_cast<std::uint8_t>((m_raw >> animation_offset) & std::numeric_limits<std::uint8_t>::max());
+          return static_cast<std::uint8_t>(
+            (m_raw >> animation_offset)
+            & std::numeric_limits<std::uint8_t>::max());
      }
      [[nodiscard]] constexpr std::uint8_t animation_state() const noexcept
      {
-          return static_cast<std::uint8_t>((m_raw >> animation_state_offset) & std::numeric_limits<std::uint8_t>::max());
+          return static_cast<std::uint8_t>(
+            (m_raw >> animation_state_offset)
+            & std::numeric_limits<std::uint8_t>::max());
      }
      [[nodiscard]] constexpr std::uint8_t offset() const noexcept
      {
@@ -105,7 +120,8 @@ struct PupuID
           m_raw += right;
           return *this;
      }
-     [[nodiscard]] constexpr PupuID operator+(std::uint32_t right) const noexcept
+     [[nodiscard]] constexpr PupuID
+       operator+(std::uint32_t right) const noexcept
      {
           auto cpy = *this;
           return cpy += right;
@@ -115,7 +131,8 @@ struct PupuID
           m_raw |= right;
           return *this;
      }
-     [[nodiscard]] constexpr PupuID operator|(std::uint32_t right) const noexcept
+     [[nodiscard]] constexpr PupuID
+       operator|(std::uint32_t right) const noexcept
      {
           auto cpy = *this;
           return cpy |= right;
@@ -147,35 +164,45 @@ struct PupuID
 
      [[nodiscard]] bool constexpr same_layer_base(PupuID right) const noexcept
      {
-          constexpr std::uint32_t mask = ~((layer_mask << layer_offset) | offset_mask);
+          constexpr std::uint32_t mask
+            = ~((layer_mask << layer_offset) | offset_mask);
           static_assert(mask == 0x80FFFFF0u, "same_layer_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
 
-     [[nodiscard]] bool constexpr same_animation_base(PupuID right) const noexcept
+     [[nodiscard]] bool constexpr same_animation_base(
+       PupuID right) const noexcept
+     {
+          constexpr std::uint32_t mask = ~(
+            (animation_mask << animation_offset)
+            | (animation_state_mask << animation_state_offset) | offset_mask);
+          static_assert(
+            mask == 0xFFF00000u, "same_animation_base mask mismatch");
+          return (m_raw & mask) == (right.raw() & mask);
+     }
+
+
+     [[nodiscard]] bool constexpr same_animation_id_base(
+       PupuID right) const noexcept
      {
           constexpr std::uint32_t mask
-            = ~((animation_mask << animation_offset) | (animation_state_mask << animation_state_offset) | offset_mask);
-          static_assert(mask == 0xFFF00000u, "same_animation_base mask mismatch");
+            = ~((animation_state_mask << animation_state_offset) | offset_mask);
+          static_assert(
+            mask == 0xFFFFF000u, "same_animation_id_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
 
-
-     [[nodiscard]] bool constexpr same_animation_id_base(PupuID right) const noexcept
+     [[nodiscard]] bool constexpr same_animation_state_base(
+       PupuID right) const noexcept
      {
-          constexpr std::uint32_t mask = ~((animation_state_mask << animation_state_offset) | offset_mask);
-          static_assert(mask == 0xFFFFF000u, "same_animation_id_base mask mismatch");
+          constexpr std::uint32_t mask
+            = ~((animation_mask << animation_offset) | offset_mask);
+          static_assert(
+            mask == 0xFFF00FF0u, "same_animation_state_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
 
-     [[nodiscard]] bool constexpr same_animation_state_base(PupuID right) const noexcept
-     {
-          constexpr std::uint32_t mask = ~((animation_mask << animation_offset) | offset_mask);
-          static_assert(mask == 0xFFF00FF0u, "same_animation_state_base mask mismatch");
-          return (m_raw & mask) == (right.raw() & mask);
-     }
-
-     constexpr auto            operator<=>(const PupuID &) const noexcept = default;
+     constexpr auto operator<=>(const PupuID &) const noexcept = default;
      [[nodiscard]] std::string create_summary() const;
 
    private:

@@ -23,15 +23,16 @@ class BatchRenderer
      BatchRenderer();
      BatchRenderer(
        std::size_t quad_count,
-       Shader      shader = { std::filesystem::current_path() / "res" / "shader" / "basic3.shader" });
+       Shader      shader = { std::filesystem::current_path() / "res" / "shader"
+                              / "basic3.shader" });
 
-     void                                       on_update(float) const;
-     void                                       on_render() const;
-     void                                       on_im_gui_update() const;
-     void                                       on_event(const event::Item &e) const;
+     void                      on_update(float) const;
+     void                      on_render() const;
+     void                      on_im_gui_update() const;
+     void                      on_event(const event::Item &e) const;
 
-     [[nodiscard]] std::size_t                  quad_count() const noexcept;
-     [[nodiscard]] std::size_t                  vert_count() const noexcept;
+     [[nodiscard]] std::size_t quad_count() const noexcept;
+     [[nodiscard]] std::size_t vert_count() const noexcept;
      [[nodiscard]] [[maybe_unused]] std::size_t index_count() const noexcept;
      [[nodiscard]] static std::uint32_t         max_texture_image_units();
      void                                       clear() const;
@@ -76,7 +77,12 @@ class BatchRenderer
 
           GLint active_texture;
           GlCall{}(glGetIntegerv, GL_ACTIVE_TEXTURE, &active_texture);
-          return ScopeGuard{ [=, shader_pop = Shader::backup()] { GlCall{}(glActiveTexture, static_cast<GLenum>(active_texture)); } };
+          return ScopeGuard{ [=, shader_pop = Shader::backup()]
+                             {
+                                  GlCall{}(
+                                    glActiveTexture,
+                                    static_cast<GLenum>(active_texture));
+                             } };
      }
 
    private:
@@ -98,7 +104,7 @@ class BatchRenderer
      VertexArray                        m_vertex_array          = {};
      mutable std::vector<std::uint32_t> m_texture_slots         = {};
      mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
-     Texture                            m_blank                 = { (std::numeric_limits<std::uint32_t>::max)() };
+     Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
 static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);

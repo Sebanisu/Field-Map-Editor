@@ -53,9 +53,10 @@ void layer::Tests::on_im_gui_update() const
 //       {
 //         return;
 //       }
-//       static const ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
-//       ImGuiID dockSpace = ImGui::GetID("MainWindowDockspace");
-//       ImGui::DockSpace(dockSpace, ImVec2(0.0f, 0.0f), dockspaceFlags);
+//       static const ImGuiDockNodeFlags dockspaceFlags =
+//       ImGuiDockNodeFlags_None; ImGuiID dockSpace =
+//       ImGui::GetID("MainWindowDockspace"); ImGui::DockSpace(dockSpace,
+//       ImVec2(0.0f, 0.0f), dockspaceFlags);
 //     }
 //   }
 // }
@@ -66,7 +67,10 @@ void layer::Tests::fps() const
      {
           ImGui::Text(
             "%s",
-            fmt::format("Application average {:.3f} ms/frame ({:.3f} FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate)
+            fmt::format(
+              "Application average {:.3f} ms/frame ({:.3f} FPS)",
+              1000.0f / ImGui::GetIO().Framerate,
+              ImGui::GetIO().Framerate)
               .c_str());
      }
 }
@@ -74,22 +78,27 @@ void layer::Tests::main_menu() const
 {
      if (ImGui::BeginMainMenuBar())
      {
-          const auto end_menubar = glengine::ScopeGuard{ []() { ImGui::EndMainMenuBar(); } };
+          const auto end_menubar
+            = glengine::ScopeGuard{ []() { ImGui::EndMainMenuBar(); } };
           if (ImGui::BeginMenu("Edit"))
           {
-               auto const menu_end = glengine::ScopeGuard{ []() { ImGui::EndMenu(); } };
-               if (ImGui::MenuItem("Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
+               auto const menu_end
+                 = glengine::ScopeGuard{ []() { ImGui::EndMenu(); } };
+               if (ImGui::MenuItem(
+                     "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
                {
                     (void)GetMapHistory()->undo();
                     GetWindow().trigger_refresh_image();
                }
-               if (ImGui::MenuItem("Redo", "CTRL+Y", false, GetMapHistory()->redo_enabled()))
+               if (ImGui::MenuItem(
+                     "Redo", "CTRL+Y", false, GetMapHistory()->redo_enabled()))
                {
                     (void)GetMapHistory()->redo();
                     GetWindow().trigger_refresh_image();
                }
                if (ImGui::MenuItem(
-                     fmt::format("Undo All ({})", GetMapHistory()->count()).c_str(),
+                     fmt::format("Undo All ({})", GetMapHistory()->count())
+                       .c_str(),
                      "SHIFT+CTRL+Z",
                      false,
                      GetMapHistory()->undo_enabled()))
@@ -98,7 +107,8 @@ void layer::Tests::main_menu() const
                     GetWindow().trigger_refresh_image();
                }
                if (ImGui::MenuItem(
-                     fmt::format("Redo All ({})", GetMapHistory()->redo_count()).c_str(),
+                     fmt::format("Redo All ({})", GetMapHistory()->redo_count())
+                       .c_str(),
                      "SHIFT+CTRL+Y",
                      false,
                      GetMapHistory()->redo_enabled()))
@@ -119,7 +129,9 @@ void layer::Tests::on_event(const glengine::event::Item &e) const
      dispatcher.Dispatch<glengine::event::KeyPressed>(
        [](glengine::event::KeyPressed key_pressed) -> bool
        {
-            if ((key_pressed.key() == glengine::Key::Z) && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
+            if (
+              (key_pressed.key() == glengine::Key::Z)
+              && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
             {
                  if ((+key_pressed.mods() & +glengine::Mods::Shift) != 0)
                  {
@@ -132,7 +144,9 @@ void layer::Tests::on_event(const glengine::event::Item &e) const
                       GetWindow().trigger_refresh_image();
                  }
             }
-            if ((key_pressed.key() == glengine::Key::Y) && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
+            if (
+              (key_pressed.key() == glengine::Key::Y)
+              && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
             {
                  if ((+key_pressed.mods() & +glengine::Mods::Shift) != 0)
                  {

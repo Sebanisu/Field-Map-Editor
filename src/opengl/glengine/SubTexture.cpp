@@ -12,13 +12,28 @@ void glengine::SubTexture::bind(std::int32_t slot) const
 
 void glengine::SubTexture::bind_read_only(int slot) const
 {
-     GlCall{}(glBindImageTexture, slot, m_render_id, 0, static_cast<GLboolean>(GL_FALSE), 0, GL_READ_ONLY, Texture::s_sized_interal_format);
+     GlCall{}(
+       glBindImageTexture,
+       slot,
+       m_render_id,
+       0,
+       static_cast<GLboolean>(GL_FALSE),
+       0,
+       GL_READ_ONLY,
+       Texture::s_sized_interal_format);
      // bind(slot);
 }
 void glengine::SubTexture::bind_write_only(int slot) const
 {
      GlCall{}(
-       glBindImageTexture, slot, m_render_id, 0, static_cast<GLboolean>(GL_FALSE), 0, GL_WRITE_ONLY, Texture::s_sized_interal_format);
+       glBindImageTexture,
+       slot,
+       m_render_id,
+       0,
+       static_cast<GLboolean>(GL_FALSE),
+       0,
+       GL_WRITE_ONLY,
+       Texture::s_sized_interal_format);
 }
 
 
@@ -34,10 +49,14 @@ glengine::SubTexture glengine::SubTexture::create_from_coords(
   float            scale)
 {
      return { texture,
-              { (coords.x * cell_size.x * scale) / static_cast<float>(texture.width()),
-                (coords.y * cell_size.y * scale) / static_cast<float>(texture.height()) },
-              { ((coords.x + sprite_size.x) * cell_size.x * scale) / static_cast<float>(texture.width()),
-                ((coords.y + sprite_size.y) * cell_size.y * scale) / static_cast<float>(texture.height()) } };
+              { (coords.x * cell_size.x * scale)
+                  / static_cast<float>(texture.width()),
+                (coords.y * cell_size.y * scale)
+                  / static_cast<float>(texture.height()) },
+              { ((coords.x + sprite_size.x) * cell_size.x * scale)
+                  / static_cast<float>(texture.width()),
+                ((coords.y + sprite_size.y) * cell_size.y * scale)
+                  / static_cast<float>(texture.height()) } };
 }
 glengine::SubTexture::SubTexture(
   const Texture   &texture,
@@ -68,8 +87,18 @@ glengine::SubTexture::SubTexture(GlidCopy id)
   : m_render_id(std::move(id))
 {
      bind();
-     GlCall{}(glGetTexLevelParameteriv, GL_TEXTURE_2D, Miplevel, GL_TEXTURE_WIDTH, &m_width);
-     GlCall{}(glGetTexLevelParameteriv, GL_TEXTURE_2D, Miplevel, GL_TEXTURE_HEIGHT, &m_height);
+     GlCall{}(
+       glGetTexLevelParameteriv,
+       GL_TEXTURE_2D,
+       Miplevel,
+       GL_TEXTURE_WIDTH,
+       &m_width);
+     GlCall{}(
+       glGetTexLevelParameteriv,
+       GL_TEXTURE_2D,
+       Miplevel,
+       GL_TEXTURE_HEIGHT,
+       &m_height);
 }
 
 
@@ -80,7 +109,8 @@ int glengine::SubTexture::width() const noexcept
           return m_width;
      }
      auto [min_uv, max_uv] = minmax_uv();
-     return static_cast<int>(std::round((max_uv.x - min_uv.x) * static_cast<float>(m_width)));
+     return static_cast<int>(
+       std::round((max_uv.x - min_uv.x) * static_cast<float>(m_width)));
 }
 
 int glengine::SubTexture::height() const noexcept
@@ -90,7 +120,8 @@ int glengine::SubTexture::height() const noexcept
           return m_height;
      }
      auto [min_uv, max_uv] = minmax_uv();
-     return static_cast<int>(std::round((max_uv.y - min_uv.y) * static_cast<float>(m_height)));
+     return static_cast<int>(
+       std::round((max_uv.y - min_uv.y) * static_cast<float>(m_height)));
 }
 
 glm::ivec2 glengine::SubTexture::get_size() const noexcept

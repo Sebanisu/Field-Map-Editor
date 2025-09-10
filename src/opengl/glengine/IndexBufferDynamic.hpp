@@ -21,8 +21,12 @@ class IndexBufferDynamic
      [[nodiscard]] static auto backup()
      {
           GLint ibo_binding{ 0 };// save original
-          GlCall{}(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_binding);
-          return ScopeGuard{ [=]() { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); } };
+          GlCall{}(
+            glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_binding);
+          return ScopeGuard{
+               [=]()
+               { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); }
+          };
      }
      IndexBufferDynamic() = default;
      IndexBufferDynamic(std::size_t count)
@@ -41,11 +45,18 @@ class IndexBufferDynamic
                 const auto           pop_backup = backup();
                 std::uint32_t        tmp{};
                 const std::ptrdiff_t size_in_bytes
-                  = static_cast<std::ptrdiff_t>(std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<R>));
+                  = static_cast<std::ptrdiff_t>(
+                    std::ranges::size(buffer)
+                    * sizeof(std::ranges::range_value_t<R>));
                 const void *data = std::ranges::data(buffer);
                 GlCall{}(glGenBuffers, 1, &tmp);
                 GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, tmp);
-                GlCall{}(glBufferData, GL_ELEMENT_ARRAY_BUFFER, size_in_bytes, data, GL_STATIC_DRAW);
+                GlCall{}(
+                  glBufferData,
+                  GL_ELEMENT_ARRAY_BUFFER,
+                  size_in_bytes,
+                  data,
+                  GL_STATIC_DRAW);
                 return tmp;
            }(),
            [](const std::uint32_t id)
@@ -61,6 +72,7 @@ class IndexBufferDynamic
      static void unbind();
      IndexType   type() const;
 };
-static_assert(Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
+static_assert(
+  Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_INDEXBUFFERDYNAMIC_HPP

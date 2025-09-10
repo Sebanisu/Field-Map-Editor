@@ -23,7 +23,7 @@ struct PatternInfo<PatternSelector::OutputSwizzlePattern>
 template<>
 struct PatternInfo<PatternSelector::OutputSwizzleAsOneImagePattern>
 {
-     static constexpr ConfigKey      key  = ConfigKey::OutputSwizzleAsOneImagePattern;
+     static constexpr ConfigKey key = ConfigKey::OutputSwizzleAsOneImagePattern;
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
@@ -37,7 +37,7 @@ struct PatternInfo<PatternSelector::OutputDeswizzlePattern>
 template<>
 struct PatternInfo<PatternSelector::OutputFullFileNamePattern>
 {
-     static constexpr ConfigKey      key  = ConfigKey::OutputFullFileNamePattern;
+     static constexpr ConfigKey      key = ConfigKey::OutputFullFileNamePattern;
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
@@ -51,21 +51,22 @@ struct PatternInfo<PatternSelector::OutputTomlPattern>
 template<>
 struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
 {
-     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForSwizzle;
+     static constexpr ConfigKey key = ConfigKey::OutputMapPatternForSwizzle;
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
 template<>
 struct PatternInfo<PatternSelector::OutputMapPatternForDeswizzle>
 {
-     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForDeswizzle;
+     static constexpr ConfigKey key = ConfigKey::OutputMapPatternForDeswizzle;
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
 template<>
 struct PatternInfo<PatternSelector::OutputMapPatternForFullFileName>
 {
-     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForFullFileName;
+     static constexpr ConfigKey key
+       = ConfigKey::OutputMapPatternForFullFileName;
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
@@ -80,7 +81,7 @@ struct PatternInfo<PatternSelector::PatternsCommonPrefixes>
 template<>
 struct PatternInfo<PatternSelector::PatternsCommonPrefixesForMaps>
 {
-     static constexpr ConfigKey      key  = ConfigKey::PatternsCommonPrefixesForMaps;
+     static constexpr ConfigKey key = ConfigKey::PatternsCommonPrefixesForMaps;
      static constexpr VectorOrString type = VectorOrString::vector;
 };
 
@@ -94,7 +95,8 @@ struct PatternInfo<PatternSelector::PatternsBase>
 template<>
 struct PatternInfo<PatternSelector::PathPatternsWithPaletteAndTexturePage>
 {
-     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithPaletteAndTexturePage;
+     static constexpr ConfigKey key
+       = ConfigKey::PathPatternsWithPaletteAndTexturePage;
      static constexpr VectorOrString type = VectorOrString::vector;
 };
 
@@ -108,7 +110,7 @@ struct PatternInfo<PatternSelector::PathPatternsWithPalette>
 template<>
 struct PatternInfo<PatternSelector::PathPatternsWithTexturePage>
 {
-     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithTexturePage;
+     static constexpr ConfigKey key = ConfigKey::PathPatternsWithTexturePage;
      static constexpr VectorOrString type = VectorOrString::vector;
 };
 
@@ -122,7 +124,7 @@ struct PatternInfo<PatternSelector::PathPatternsWithPupuID>
 template<>
 struct PatternInfo<PatternSelector::PathPatternsWithFullFileName>
 {
-     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithFullFileName;
+     static constexpr ConfigKey key = ConfigKey::PathPatternsWithFullFileName;
      static constexpr VectorOrString type = VectorOrString::vector;
 };
 }// namespace fme
@@ -142,12 +144,17 @@ static const auto trim = [](const std::string &str) -> std::string
 {
      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
      {
-          return std::array<fme::PatternSelector, sizeof...(Is)>{ static_cast<fme::PatternSelector>(Is)... };
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+          return std::array<fme::PatternSelector, sizeof...(Is)>{
+               static_cast<fme::PatternSelector>(Is)...
+          };
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::PatternSelector::End)>{});
 }
 
 static const auto m_tests = std::to_array<fme::key_value_data>(
-  { { .field_name = "ecmall1", .ext = ".ca", .full_filename = "ecmall1.ca" },// Basic field_name + ext match
+  { { .field_name    = "ecmall1",
+      .ext           = ".ca",
+      .full_filename = "ecmall1.ca" },// Basic field_name + ext match
     { .field_name    = "ecmall1",
       .ext           = ".jsm",
       .full_filename = "ecmall1_en.jsm",
@@ -172,20 +179,28 @@ static const auto m_tests = std::to_array<fme::key_value_data>(
       .ext           = ".inf",
       .full_filename = "ecmall1_it.inf",
       .language_code = open_viii::LangT::it,
-      .pupu_id       = 456789U },                                                                        // Italian match
-    { .field_name = "ecmall1", .ext = ".sfx", .full_filename = "ecmall1.sfx", .pupu_id = 678901U },// No language, unique ext
+      .pupu_id       = 456789U },// Italian match
+    { .field_name    = "ecmall1",
+      .ext           = ".sfx",
+      .full_filename = "ecmall1.sfx",
+      .pupu_id       = 678901U },// No language, unique ext
     { .field_name    = "ecmall1",
       .ext           = ".tdw",
       .full_filename = "ecmall1_es.tdw",
       .language_code = open_viii::LangT::es,
-      .pupu_id       = 321098U },                                                    // Spanish case
-    { .field_name = "cwwood2", .ext = ".one", .full_filename = "cwwood2.one" },// `chara.one` match
+      .pupu_id       = 321098U },// Spanish case
+    { .field_name    = "cwwood2",
+      .ext           = ".one",
+      .full_filename = "cwwood2.one" },// `chara.one` match
     { .field_name    = "cwwood2",
       .ext           = ".one",
       .full_filename = "cwwood2_jp.one",
       .language_code = open_viii::LangT::jp,
-      .pupu_id       = 765432U },                                                                          // `chara_{2_letter_lang}.one` match
-    { .field_name = "cdfield1", .ext = ".pmd", .full_filename = "cdfield1.pmd", .pupu_id = 210987U },// Another general field match
+      .pupu_id       = 765432U },// `chara_{2_letter_lang}.one` match
+    { .field_name    = "cdfield1",
+      .ext           = ".pmd",
+      .full_filename = "cdfield1.pmd",
+      .pupu_id       = 210987U },// Another general field match
     { .field_name    = "cdfield2",
       .ext           = ".pvp",
       .full_filename = "cdfield2_palette2.pvp",
@@ -208,7 +223,9 @@ static const auto m_tests = std::to_array<fme::key_value_data>(
       .palette       = std::uint8_t{ 4 },
       .texture_page  = std::uint8_t{ 3 },
       .pupu_id       = 123456U },// Full case
-    { .field_name = "deswizzle", .ext = ".toml", .full_filename = "deswizzle.toml" },
+    { .field_name    = "deswizzle",
+      .ext           = ".toml",
+      .full_filename = "deswizzle.toml" },
     {
       .field_name    = "bgeat1a",
       .ext           = ".test",
@@ -237,7 +254,8 @@ fme::VectorOrString fme::custom_paths_window::vector_or_string() const
           const auto selections = m_selections.lock();
           if (!selections)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock m_selections: shared_ptr is expired.");
                return fme::VectorOrString::unknown;
           }
           fme::VectorOrString result = fme::VectorOrString::unknown;
@@ -256,12 +274,15 @@ fme::VectorOrString fme::custom_paths_window::vector_or_string() const
           {
                spdlog::critical(
                  "Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 std::to_underlying(
+                   selections->get<ConfigKey::CurrentPattern>()),
                  selections->get<ConfigKey::CurrentPattern>());
-               throw std::runtime_error("Unhandled PatternSelector value in vector_or_string()");
+               throw std::runtime_error(
+                 "Unhandled PatternSelector value in vector_or_string()");
           }
           return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::PatternSelector::End)>{});
 }
 
 std::string *fme::custom_paths_window::get_current_string_value_mutable() const
@@ -271,24 +292,36 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
           const auto selections = m_selections.lock();
           if (!selections)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock m_selections: shared_ptr is expired.");
                return nullptr;
           }
           std::string *result = nullptr;
           ((
              [&]()
              {
-                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  if (
+                    selections->get<ConfigKey::CurrentPattern>()
+                    == static_cast<fme::PatternSelector>(Is))
                   {
-                       if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::string)
+                       if constexpr (
+                         fme::PatternInfo<static_cast<fme::PatternSelector>(
+                           Is)>::type
+                         == VectorOrString::string)
                        {
-                            result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                            result = &selections->get<fme::PatternInfo<
+                              static_cast<fme::PatternSelector>(Is)>::key>();
                        }
-                       else if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                       else if constexpr (
+                         fme::PatternInfo<static_cast<fme::PatternSelector>(
+                           Is)>::type
+                         == VectorOrString::vector)
                        {
                             result = get_current_string_value_from_index(
-                              selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>(),
-                              selections->get<ConfigKey::CurrentPatternIndex>());
+                              selections->get<fme::PatternInfo<
+                                static_cast<fme::PatternSelector>(Is)>::key>(),
+                              selections
+                                ->get<ConfigKey::CurrentPatternIndex>());
                        }
                   }
              }()),
@@ -296,33 +329,45 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
           if (!result)
           {
                spdlog::debug(
-                 "Pattern Vector is empty, or Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 "Pattern Vector is empty, or Unhandled PatternSelector value: "
+                 "{}:{}",
+                 std::to_underlying(
+                   selections->get<ConfigKey::CurrentPattern>()),
                  selections->get<ConfigKey::CurrentPattern>());
           }
           return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::PatternSelector::End)>{});
 }
 
-std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mutable() const
+std::vector<std::string> *
+  fme::custom_paths_window::get_current_string_vector_mutable() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::vector<std::string> *
+     return [&]<std::size_t... Is>(
+              std::index_sequence<Is...>) -> std::vector<std::string> *
      {
           const auto selections = m_selections.lock();
           if (!selections)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock m_selections: shared_ptr is expired.");
                return nullptr;
           }
           std::vector<std::string> *result = nullptr;
           ((
              [&]()
              {
-                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  if (
+                    selections->get<ConfigKey::CurrentPattern>()
+                    == static_cast<fme::PatternSelector>(Is))
                   {
-                       if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                       if constexpr (
+                         fme::PatternInfo<static_cast<fme::PatternSelector>(
+                           Is)>::type
+                         == VectorOrString::vector)
                        {
-                            result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                            result = &selections->get<fme::PatternInfo<
+                              static_cast<fme::PatternSelector>(Is)>::key>();
                        }
                   }
              }()),
@@ -330,15 +375,19 @@ std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mu
           if (!result)
           {
                spdlog::debug(
-                 "VectorOrString type is not vector, or Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 "VectorOrString type is not vector, or Unhandled "
+                 "PatternSelector value: {}:{}",
+                 std::to_underlying(
+                   selections->get<ConfigKey::CurrentPattern>()),
                  selections->get<ConfigKey::CurrentPattern>());
           }
           return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::PatternSelector::End)>{});
 }
 
-const std::vector<std::string> *fme::custom_paths_window::get_current_string_vector() const
+const std::vector<std::string> *
+  fme::custom_paths_window::get_current_string_vector() const
 {
      return get_current_string_vector_mutable();
 }
@@ -353,7 +402,8 @@ std::string *fme::custom_paths_window::get_current_string_value_from_index(
      }
 
      // clamp index into [0, size-1]
-     auto clamped = std::clamp(index, -1, static_cast<int>(std::ranges::ssize(strings)) - 1);
+     auto clamped = std::clamp(
+       index, -1, static_cast<int>(std::ranges::ssize(strings)) - 1);
      if (clamped == -1)
      {
           return nullptr;
@@ -395,9 +445,11 @@ void fme::custom_paths_window::populate_test_output() const
      m_output_tests.clear();
      for (const auto &test_data : m_tests)
      {
-          const auto   m_input_pattern_string_view = std::string_view(m_input_pattern_string.data());
-          std::string &output_test                 = m_output_tests.emplace_back(m_input_pattern_string_view);
-          output_test                              = test_data.replace_tags(output_test, selections);
+          const auto m_input_pattern_string_view
+            = std::string_view(m_input_pattern_string.data());
+          std::string &output_test
+            = m_output_tests.emplace_back(m_input_pattern_string_view);
+          output_test = test_data.replace_tags(output_test, selections);
      }
 }
 
@@ -410,7 +462,8 @@ bool fme::custom_paths_window::combo_selected_pattern() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return false;
      }
-     if (!ImGui::BeginTable("##test input", 2, ImGuiTableFlags_SizingStretchProp))
+     if (!ImGui::BeginTable(
+           "##test input", 2, ImGuiTableFlags_SizingStretchProp))
      {
           return false;
      }
@@ -424,8 +477,11 @@ bool fme::custom_paths_window::combo_selected_pattern() const
      static const auto  values = load_pattern_selector_array();
 
 
-     const GenericCombo gcc    = { ""sv, []() { return values; }, []() { return values | std::views::transform(AsString{}); },
-                                selections->get<ConfigKey::CurrentPattern>(), generic_combo_settings{ .num_columns = 1 } };
+     const GenericCombo gcc
+       = { ""sv, []() { return values; },
+           []() { return values | std::views::transform(AsString{}); },
+           selections->get<ConfigKey::CurrentPattern>(),
+           generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {
           selections->get<ConfigKey::CurrentPatternIndex>() = -1;
@@ -444,7 +500,8 @@ void fme::custom_paths_window::save_pattern() const
           const auto selections = m_selections.lock();
           if (!selections)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               spdlog::error(
+                 "Failed to lock m_selections: shared_ptr is expired.");
                return;
           }
 
@@ -467,17 +524,21 @@ void fme::custom_paths_window::save_pattern() const
           {
                spdlog::critical(
                  "Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 std::to_underlying(
+                   selections->get<ConfigKey::CurrentPattern>()),
                  selections->get<ConfigKey::CurrentPattern>());
-               throw std::runtime_error("Unhandled PatternSelector value in save_pattern()");
+               throw std::runtime_error(
+                 "Unhandled PatternSelector value in save_pattern()");
           }
-     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+     }(std::make_index_sequence<static_cast<std::size_t>(
+         fme::PatternSelector::End)>{});
 }
 
 bool fme::custom_paths_window::textbox_pattern() const
 {
 
-     if (!ImGui::BeginTable("##test input", 2, ImGuiTableFlags_SizingStretchProp))
+     if (!ImGui::BeginTable(
+           "##test input", 2, ImGuiTableFlags_SizingStretchProp))
      {
           return false;
      }
@@ -486,7 +547,10 @@ bool fme::custom_paths_window::textbox_pattern() const
      format_imgui_text("{}", "Pattern: ");
      ImGui::TableNextColumn();
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
-     if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
+     if (ImGui::InputText(
+           "##test input",
+           m_input_pattern_string.data(),
+           m_input_pattern_string.size()))
      {
           save_pattern();
           return true;
@@ -495,7 +559,8 @@ bool fme::custom_paths_window::textbox_pattern() const
      {
           if (ImGui::Selectable("Copy Pattern"))
           {
-               const auto test_str = trim(std::string{ m_input_pattern_string.data() });
+               const auto test_str
+                 = trim(std::string{ m_input_pattern_string.data() });
                ImGui::SetClipboardText(test_str.data());
           }
           if (ImGui::Button("Close"))
@@ -520,15 +585,23 @@ bool fme::custom_paths_window::vector_pattern() const
      }
      format_imgui_text("{}", "Pattern: ");
      constexpr static int cols = 2;
-     if (!ImGui::BeginTable("##vector of patterns table", cols, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV))
+     if (!ImGui::BeginTable(
+           "##vector of patterns table",
+           cols,
+           ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV))
      {
           return false;
      }
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
 
      // Setup columns
-     ImGui::TableSetupColumn("Pattern", ImGuiTableColumnFlags_WidthStretch);      // First column stretches to content
-     ImGui::TableSetupColumn("Actions", ImGuiTableColumnFlags_WidthFixed, 120.0f);// Second column fixed width for buttons
+     ImGui::TableSetupColumn(
+       "Pattern",
+       ImGuiTableColumnFlags_WidthStretch);// First column stretches to content
+     ImGui::TableSetupColumn(
+       "Actions",
+       ImGuiTableColumnFlags_WidthFixed,
+       120.0f);// Second column fixed width for buttons
      // ImGui::TableHeadersRow();
 
      bool                          r_val     = false;
@@ -540,22 +613,33 @@ bool fme::custom_paths_window::vector_pattern() const
           ImGui::TableNextRow();
           if (bg_color)
           {
-               ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+               ImGui::TableSetBgColor(
+                 ImGuiTableBgTarget_RowBg0,
+                 ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
           }
           else
           {
                ImGui::TableSetBgColor(
-                 ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkTeal.fade(-0.4F) });// Slightly lighter dark red
+                 ImGuiTableBgTarget_RowBg0,
+                 ImU32{ colors::TableLightDarkTeal.fade(
+                   -0.4F) });// Slightly lighter dark red
           }
           bg_color = !bg_color;
           ImGui::TableNextColumn();
           {
                const float availableWidth = ImGui::GetContentRegionAvail().x;
-               ImGui::PushItemWidth(availableWidth);// Set textbox width to fill cell
-               const auto pop_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
-               if (selections->get<ConfigKey::CurrentPatternIndex>() == static_cast<int>(index))
+               ImGui::PushItemWidth(
+                 availableWidth);// Set textbox width to fill cell
+               const auto pop_width
+                 = glengine::ScopeGuard(&ImGui::PopItemWidth);
+               if (
+                 selections->get<ConfigKey::CurrentPatternIndex>()
+                 == static_cast<int>(index))
                {
-                    if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
+                    if (ImGui::InputText(
+                          "##test input",
+                          m_input_pattern_string.data(),
+                          m_input_pattern_string.size()))
                     {
                          save_pattern();
                          r_val = true;
@@ -565,7 +649,8 @@ bool fme::custom_paths_window::vector_pattern() const
                {
                     if (ImGui::Selectable(str.c_str()))
                     {
-                         selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(index);
+                         selections->get<ConfigKey::CurrentPatternIndex>()
+                           = static_cast<int>(index);
                          selections->update<ConfigKey::CurrentPatternIndex>();
                          populate_input_pattern();
                          r_val = true;
@@ -578,7 +663,8 @@ bool fme::custom_paths_window::vector_pattern() const
           }
           ImGui::TableNextColumn();
           // Delete button
-          if (ImGui::Button(fmt::format("{}##delete_{}", ICON_FA_TRASH, index).c_str()))
+          if (ImGui::Button(
+                fmt::format("{}##delete_{}", ICON_FA_TRASH, index).c_str()))
           {
                delete_me = index;
           }
@@ -587,13 +673,17 @@ bool fme::custom_paths_window::vector_pattern() const
                tool_tip("Delete");
           }
           ImGui::SameLine();// Keep buttons on the same line
-          if (selections->get<ConfigKey::CurrentPatternIndex>() != static_cast<int>(index))
+          if (
+            selections->get<ConfigKey::CurrentPatternIndex>()
+            != static_cast<int>(index))
           {
                const auto pop_id = PushPopID();
                // Edit button
-               if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
+               if (ImGui::Button(
+                     fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
                {
-                    selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(index);
+                    selections->get<ConfigKey::CurrentPatternIndex>()
+                      = static_cast<int>(index);
                     selections->update<ConfigKey::CurrentPatternIndex>();
                     populate_input_pattern();
                     r_val = true;
@@ -605,7 +695,9 @@ bool fme::custom_paths_window::vector_pattern() const
           }
           else
           {
-               if (ImGui::Button(fmt::format("{}##cancel_{}", ICON_FA_XMARK, index).c_str()))
+               if (ImGui::Button(
+                     fmt::format("{}##cancel_{}", ICON_FA_XMARK, index)
+                       .c_str()))
                {
                     selections->get<ConfigKey::CurrentPatternIndex>() = -1;
                     selections->update<ConfigKey::CurrentPatternIndex>();
@@ -620,15 +712,19 @@ bool fme::custom_paths_window::vector_pattern() const
           ImGui::SameLine();// Keep buttons on the same line
 
           // Copy button
-          if (ImGui::Button(fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
+          if (ImGui::Button(
+                fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
           {
-               if (selections->get<ConfigKey::CurrentPatternIndex>() != static_cast<int>(index))
+               if (
+                 selections->get<ConfigKey::CurrentPatternIndex>()
+                 != static_cast<int>(index))
                {
                     ImGui::SetClipboardText(str.c_str());
                }
                else
                {
-                    const auto test_str = trim(std::string{ m_input_pattern_string.data() });
+                    const auto test_str
+                      = trim(std::string{ m_input_pattern_string.data() });
                     ImGui::SetClipboardText(test_str.data());
                }
           }
@@ -640,20 +736,27 @@ bool fme::custom_paths_window::vector_pattern() const
      ImGui::TableNextRow();
      if (bg_color)
      {
-          ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+          ImGui::TableSetBgColor(
+            ImGuiTableBgTarget_RowBg0,
+            ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
      }
      else
      {
-          ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkTeal.fade(-0.4F) });// Slightly lighter dark red
+          ImGui::TableSetBgColor(
+            ImGuiTableBgTarget_RowBg0,
+            ImU32{ colors::TableLightDarkTeal.fade(
+              -0.4F) });// Slightly lighter dark red
      }
      ImGui::TableNextColumn();
      const char *add        = "Add New Pattern";
      const auto  add_action = [&]()
      {
-          if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
+          if (auto *const mut_vptr = get_current_string_vector_mutable();
+              mut_vptr)
           {
                mut_vptr->emplace_back();
-               selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
+               selections->get<ConfigKey::CurrentPatternIndex>()
+                 = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
                selections->update<ConfigKey::CurrentPatternIndex>();
                populate_input_pattern();
                save_pattern();
@@ -676,15 +779,20 @@ bool fme::custom_paths_window::vector_pattern() const
 
      if (delete_me.has_value())
      {
-          if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
+          if (auto *const mut_vptr = get_current_string_vector_mutable();
+              mut_vptr)
           {
-               if (selections->get<ConfigKey::CurrentPatternIndex>() == static_cast<int>(delete_me.value()))
+               if (
+                 selections->get<ConfigKey::CurrentPatternIndex>()
+                 == static_cast<int>(delete_me.value()))
                {
                     selections->get<ConfigKey::CurrentPatternIndex>() = -1;
                     selections->update<ConfigKey::CurrentPatternIndex>();
                     std::ranges::fill(m_input_pattern_string, '\0');
                }
-               else if (selections->get<ConfigKey::CurrentPatternIndex>() > static_cast<int>(delete_me.value()))
+               else if (
+                 selections->get<ConfigKey::CurrentPatternIndex>()
+                 > static_cast<int>(delete_me.value()))
                {
                     selections->get<ConfigKey::CurrentPatternIndex>()--;
                     selections->update<ConfigKey::CurrentPatternIndex>();
@@ -701,7 +809,8 @@ bool fme::custom_paths_window::vector_pattern() const
 
 bool fme::custom_paths_window::button_add_seperator() const
 {
-     static constexpr char seperator = std::filesystem::path::preferred_separator;
+     static constexpr char seperator
+       = std::filesystem::path::preferred_separator;
      if (ImGui::Button("Add Separator"))
      {
           size_t current_length = std::strlen(m_input_pattern_string.data());
@@ -740,7 +849,8 @@ bool fme::custom_paths_window::button_remove_last_key() const
 
           // Ensure they are a valid pair at the end
           if (
-            last_open != std::string_view::npos && last_close != std::string_view::npos && last_open < last_close
+            last_open != std::string_view::npos
+            && last_close != std::string_view::npos && last_open < last_close
             && last_close == path_view.size() - 1)
           {
                // Remove the last {key_value}
@@ -765,24 +875,32 @@ bool fme::custom_paths_window::child_keys() const
      format_imgui_wrapped_text(
        "{}",
        "Click a {key} to add it to the pattern text box.\n"
-       "You can use extra braces like {{key}} to create prefixes or suffixes, e.g., {prefix{key}suffix}.\n"
+       "You can use extra braces like {{key}} to create prefixes or suffixes, "
+       "e.g., {prefix{key}suffix}.\n"
        "These will only appear if the {key} has a value.\n\n"
        "Right-click a {key} to access a context menu for copying key values.");
      {
           const auto pop_child = glengine::ScopeGuard{ &ImGui::EndChild };
-          if (!ImGui::BeginChild("##scrollingKeys", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
+          if (!ImGui::BeginChild(
+                "##scrollingKeys",
+                m_scrolling_child_size,
+                ImGuiChildFlags_Borders,
+                ImGuiWindowFlags_HorizontalScrollbar))
           {
                return false;
           }
           static constexpr int cols = 3;
-          if (!ImGui::BeginTable("##scrollingKeys", cols, ImGuiTableFlags_BordersInnerV))
+          if (!ImGui::BeginTable(
+                "##scrollingKeys", cols, ImGuiTableFlags_BordersInnerV))
           {
                return false;
           }
           const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
           bool       bg_color  = true;
-          for (const auto &[index, pair] :
-               std::ranges::views::enumerate(std::ranges::views::zip(key_value_data::keys::all_keys, key_value_data::keys::all_tooltips)))
+          for (const auto &[index, pair] : std::ranges::views::enumerate(
+                 std::ranges::views::zip(
+                   key_value_data::keys::all_keys,
+                   key_value_data::keys::all_tooltips)))
           {
                const auto &[key, tooltip] = pair;
 
@@ -791,12 +909,17 @@ bool fme::custom_paths_window::child_keys() const
                     ImGui::TableNextRow();
                     if (bg_color)
                     {
-                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkRed.fade(-0.4F) });// Dark red
+                         ImGui::TableSetBgColor(
+                           ImGuiTableBgTarget_RowBg0,
+                           ImU32{
+                             colors::TableDarkRed.fade(-0.4F) });// Dark red
                     }
                     else
                     {
                          ImGui::TableSetBgColor(
-                           ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkRed.fade(-0.4F) });// Slightly lighter dark red
+                           ImGuiTableBgTarget_RowBg0,
+                           ImU32{ colors::TableLightDarkRed.fade(
+                             -0.4F) });// Slightly lighter dark red
                     }
                     bg_color = !bg_color;
                }
@@ -806,23 +929,33 @@ bool fme::custom_paths_window::child_keys() const
                if (ImGui::Selectable(key_brackets.data()))
                {
                     // Ensure null-termination and safe appending
-                    static constexpr size_t max_size       = s_input_string_size_value - 1;// Leave space for null terminator
-                    size_t                  current_length = std::strlen(m_input_pattern_string.data());
-                    size_t                  append_length  = key_brackets.size();
+                    static constexpr size_t max_size
+                      = s_input_string_size_value
+                        - 1;// Leave space for null terminator
+                    size_t current_length
+                      = std::strlen(m_input_pattern_string.data());
+                    size_t append_length = key_brackets.size();
 
                     if (current_length + append_length < max_size)
                     {
-                         std::strncat(m_input_pattern_string.data(), key_brackets.data(), append_length);
+                         std::strncat(
+                           m_input_pattern_string.data(),
+                           key_brackets.data(),
+                           append_length);
                     }
                     else
                     {
-                         std::strncat(m_input_pattern_string.data(), key_brackets.data(), max_size - current_length);
+                         std::strncat(
+                           m_input_pattern_string.data(),
+                           key_brackets.data(),
+                           max_size - current_length);
                     }
 
                     save_pattern();
                     override_changed = true;
                }
-               if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+               if (ImGui::BeginPopupContextItem())// <-- use last item id as
+                                                  // popup id
                {
                     if (ImGui::Selectable("Copy Key"))
                     {
@@ -831,14 +964,19 @@ bool fme::custom_paths_window::child_keys() const
                     if (ImGui::Selectable("Copy All Keys"))
                     {
                          using namespace std::string_view_literals;
-                         auto combined_keys = fmt::format("{{{}}}", fmt::join(key_value_data::keys::all_keys, "}\n{"sv));
+                         auto combined_keys = fmt::format(
+                           "{{{}}}",
+                           fmt::join(key_value_data::keys::all_keys, "}\n{"sv));
                          ImGui::SetClipboardText(combined_keys.data());
                     }
                     if (ImGui::Button("Close"))
                          ImGui::CloseCurrentPopup();
                     ImGui::EndPopup();
                }
-               const auto current_tooltip = fmt::format("{}\nClick to add {}\nRight-click to open popup", tooltip, key_brackets);
+               const auto current_tooltip = fmt::format(
+                 "{}\nClick to add {}\nRight-click to open popup",
+                 tooltip,
+                 key_brackets);
                ImGui::SetItemTooltip("%s", current_tooltip.data());
           }
      }
@@ -847,7 +985,10 @@ bool fme::custom_paths_window::child_keys() const
           ImGui::SameLine();
           return {};
      };
-     if (std::ranges::any_of(std::array{ button_remove_last_key(), same_line(), button_add_seperator() }, std::identity{}))
+     if (std::ranges::any_of(
+           std::array{ button_remove_last_key(), same_line(),
+                       button_add_seperator() },
+           std::identity{}))
      {
           override_changed = true;
      }
@@ -857,7 +998,8 @@ bool fme::custom_paths_window::child_keys() const
 bool fme::custom_paths_window::child_test_output() const
 {
      bool override_changed = false;
-     if (!ImGui::CollapsingHeader("Test Output", ImGuiTreeNodeFlags_DefaultOpen))
+     if (!ImGui::CollapsingHeader(
+           "Test Output", ImGuiTreeNodeFlags_DefaultOpen))
      {
           return false;
      }
@@ -867,35 +1009,46 @@ bool fme::custom_paths_window::child_test_output() const
 
      format_imgui_wrapped_text(
        "{}",
-       "This second section displays what the pattern will look like with various test inputs.\n"
+       "This second section displays what the pattern will look like with "
+       "various test inputs.\n"
        "{ff8_path}/Textures could output something like c:\\ff8\\Textures.\n"
        "Right-click a key to access a context menu for copying test output.");
 
      const auto pop_child = glengine::ScopeGuard{ &ImGui::EndChild };
-     if (!ImGui::BeginChild("##scrollingTest", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
+     if (!ImGui::BeginChild(
+           "##scrollingTest",
+           m_scrolling_child_size,
+           ImGuiChildFlags_Borders,
+           ImGuiWindowFlags_HorizontalScrollbar))
      {
           return false;
      }
      static constexpr int cols = 2;
-     if (!ImGui::BeginTable("##scrollingTest", cols, ImGuiTableFlags_BordersInnerV))
+     if (!ImGui::BeginTable(
+           "##scrollingTest", cols, ImGuiTableFlags_BordersInnerV))
      {
           return false;
      }
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      bool       bg_color  = true;
-     for (const auto &[index, test_str] : m_output_tests | std::ranges::views::enumerate)
+     for (const auto &[index, test_str] :
+          m_output_tests | std::ranges::views::enumerate)
      {
           if (index % cols == 0)
           {
                ImGui::TableNextRow();
                if (bg_color)
                {
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkGreen.fade(-0.4F) });// Dark red
+                    ImGui::TableSetBgColor(
+                      ImGuiTableBgTarget_RowBg0,
+                      ImU32{ colors::TableDarkGreen.fade(-0.4F) });// Dark red
                }
                else
                {
                     ImGui::TableSetBgColor(
-                      ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkGreen.fade(-0.4F) });// Slightly lighter dark red
+                      ImGuiTableBgTarget_RowBg0,
+                      ImU32{ colors::TableLightDarkGreen.fade(
+                        -0.4F) });// Slightly lighter dark red
                }
                bg_color = !bg_color;
           }
@@ -911,7 +1064,9 @@ bool fme::custom_paths_window::child_test_output() const
                if (ImGui::Selectable("Copy All Test Output"))
                {
                     using namespace std::string_literals;
-                    auto combined_paths = m_output_tests | std::ranges::views::join_with("\n"s) | std::ranges::to<std::string>();
+                    auto combined_paths = m_output_tests
+                                          | std::ranges::views::join_with("\n"s)
+                                          | std::ranges::to<std::string>();
                     ImGui::SetClipboardText(combined_paths.data());
                }
                if (ImGui::Button("Close"))
@@ -920,7 +1075,8 @@ bool fme::custom_paths_window::child_test_output() const
           }
           else
           {
-               const auto tool_tip_string = fmt::format("{}\n\nRight-click to open popup.", test_str.data());
+               const auto tool_tip_string = fmt::format(
+                 "{}\n\nRight-click to open popup.", test_str.data());
                ImGui::SetItemTooltip("%s", tool_tip_string.data());
           }
      }
@@ -928,7 +1084,8 @@ bool fme::custom_paths_window::child_test_output() const
 }
 
 
-fme::custom_paths_window::custom_paths_window(std::weak_ptr<Selections> input_selections)
+fme::custom_paths_window::custom_paths_window(
+  std::weak_ptr<Selections> input_selections)
   : m_selections{ input_selections }
   , m_output_tests{ m_tests.size() }
 {
@@ -936,7 +1093,8 @@ fme::custom_paths_window::custom_paths_window(std::weak_ptr<Selections> input_se
      populate_test_output();
 }
 
-fme::custom_paths_window &fme::custom_paths_window::refresh(std::weak_ptr<Selections> input_selections)
+fme::custom_paths_window &
+  fme::custom_paths_window::refresh(std::weak_ptr<Selections> input_selections)
 {
      m_selections = input_selections;
      populate_input_pattern();
@@ -953,7 +1111,8 @@ fme::custom_paths_window &fme::custom_paths_window::refresh()
 
 void fme::custom_paths_window::render() const
 {
-     m_scrolling_child_size = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
+     m_scrolling_child_size
+       = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
      using namespace std::string_view_literals;
      bool override_changed = { false };
      auto selections       = m_selections.lock();
@@ -961,20 +1120,23 @@ void fme::custom_paths_window::render() const
      {
           return;
      }
-     bool      &visible     = selections->get<ConfigKey::DisplayCustomPathsWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
-                                                    {
-                                                         if (was_visable != visible)
-                                                         {
-                                                              selections->update<ConfigKey::DisplayCustomPathsWindow>();
-                                                         }
-                                                    } };
+     bool &visible = selections->get<ConfigKey::DisplayCustomPathsWindow>();
+     const auto pop_visible = glengine::ScopeGuard{
+          [&selections, &visible, was_visable = visible]
+          {
+               if (was_visable != visible)
+               {
+                    selections->update<ConfigKey::DisplayCustomPathsWindow>();
+               }
+          }
+     };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::custom_paths_window.data(), &visible))
      {
           return;
      }
-     const auto pop_changed = glengine::ScopeGuard([this, &override_changed]() { m_changed = override_changed; });
+     const auto pop_changed = glengine::ScopeGuard(
+       [this, &override_changed]() { m_changed = override_changed; });
      ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
      ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
@@ -995,8 +1157,10 @@ void fme::custom_paths_window::render() const
      else
      {
           tool_tip(
-            "Resets all applicable patterns to their default FFNX values. Patterns without an FFNX reset function are unaffected. This "
-            "will overwrite any customizations already made. You can further customize individual patterns below after using this for "
+            "Resets all applicable patterns to their default FFNX values. "
+            "Patterns without an FFNX reset function are unaffected. This "
+            "will overwrite any customizations already made. You can further "
+            "customize individual patterns below after using this for "
             "convenience.");
      }
      ImGui::SameLine();
@@ -1009,8 +1173,10 @@ void fme::custom_paths_window::render() const
      else
      {
           tool_tip(
-            "Resets all applicable patterns to their default Demaster values. Patterns without a Demaster reset function are unaffected. "
-            "This will overwrite any customizations already made. You can further customize individual patterns below after using this for "
+            "Resets all applicable patterns to their default Demaster values. "
+            "Patterns without a Demaster reset function are unaffected. "
+            "This will overwrite any customizations already made. You can "
+            "further customize individual patterns below after using this for "
             "convenience.");
      }
      ImGui::Separator();
@@ -1018,7 +1184,9 @@ void fme::custom_paths_window::render() const
      {
           case VectorOrString::string:
           {
-               if (std::ranges::any_of(std::array{ combo_selected_pattern(), textbox_pattern() }, std::identity{}))
+               if (std::ranges::any_of(
+                     std::array{ combo_selected_pattern(), textbox_pattern() },
+                     std::identity{}))
                {
                     override_changed = true;
                }
@@ -1026,7 +1194,9 @@ void fme::custom_paths_window::render() const
           }
           case VectorOrString::vector:
           {
-               if (std::ranges::any_of(std::array{ combo_selected_pattern(), vector_pattern() }, std::identity{}))
+               if (std::ranges::any_of(
+                     std::array{ combo_selected_pattern(), vector_pattern() },
+                     std::identity{}))
                {
                     override_changed = true;
                }

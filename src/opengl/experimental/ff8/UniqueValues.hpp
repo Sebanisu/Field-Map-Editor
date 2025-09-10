@@ -7,11 +7,14 @@
 template<typename T>
 class UniqueValues
 {
-     static constexpr auto default_transform_function = [](const auto &value) -> std::string { return fmt::format("{}", value); };
+     static constexpr auto default_transform_function
+       = [](const auto &value) -> std::string
+     { return fmt::format("{}", value); };
 
    public:
      UniqueValues() = default;
-     template<typename transform_to_stringT = decltype(default_transform_function)>
+     template<
+       typename transform_to_stringT = decltype(default_transform_function)>
      UniqueValues(
        std::vector<T>         values,
        transform_to_stringT &&transform_to_string = {})
@@ -19,10 +22,19 @@ class UniqueValues
        , m_strings(
            [&]()
            {
-                auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
-                return std::vector<std::string>{ transform.begin(), transform.end() };
+                auto transform
+                  = m_values
+                    | std::views::transform(
+                      std::forward<transform_to_stringT>(transform_to_string));
+                return std::vector<std::string>{ transform.begin(),
+                                                 transform.end() };
            }())
-       , m_enable([&]() { return std::vector<std::uint8_t>(std::ranges::size(m_values), std::uint8_t{ true }); }())
+       , m_enable(
+           [&]()
+           {
+                return std::vector<std::uint8_t>(
+                  std::ranges::size(m_values), std::uint8_t{ true });
+           }())
      {
           //    for (const auto &string : m_strings)
           //    {
@@ -75,11 +87,15 @@ class UniqueValues
       */
      void update(const UniqueValues<T> &old)
      {
-          for (const auto i : std::views::iota(size_t{}, std::ranges::size(m_values)))
+          for (const auto i :
+               std::views::iota(size_t{}, std::ranges::size(m_values)))
           {
-               if (const auto location = std::ranges::find(old.values(), m_values[i]); location != old.values().end())
+               if (const auto location
+                   = std::ranges::find(old.values(), m_values[i]);
+                   location != old.values().end())
                {
-                    m_enable[i] = old.enable()[static_cast<size_t>(std::distance(old.values().begin(), location))];
+                    m_enable[i] = old.enable()[static_cast<size_t>(
+                      std::distance(old.values().begin(), location))];
                }
           }
      }
@@ -90,11 +106,13 @@ class UniqueValues
      mutable std::vector<std::uint8_t> m_enable  = {};
 };
 template<std::ranges::range rangeT>
-UniqueValues(rangeT &&a) -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
+UniqueValues(rangeT &&a)
+  -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
 template<
   std::ranges::range rangeT,
   typename funcT>
 UniqueValues(
   rangeT &&a,
-  funcT &&) -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
+  funcT &&)
+  -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
 #endif// FIELD_MAP_EDITOR_UNIQUEVALUES_HPP

@@ -36,14 +36,16 @@ enum class FilterSettings : std::uint8_t
   FilterSettings lhs,
   FilterSettings rhs)
 {
-     return static_cast<FilterSettings>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
+     return static_cast<FilterSettings>(
+       static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
 }
 
 [[nodiscard]] inline FilterSettings operator&(
   FilterSettings lhs,
   FilterSettings rhs)
 {
-     return static_cast<FilterSettings>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
+     return static_cast<FilterSettings>(
+       static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
 }
 
 inline FilterSettings &operator|=(
@@ -144,41 +146,46 @@ struct ConfigKeys<FilterTag::Pupu>
 template<>
 struct ConfigKeys<FilterTag::MultiPupu>
 {
-     using value_type                                   = std::vector<PupuID>;
-     static constexpr std::string_view key_name         = "filter_multi_pupu";
-     static constexpr std::string_view enabled_key_name = "filter_multi_pupu_enabled";
+     using value_type                           = std::vector<PupuID>;
+     static constexpr std::string_view key_name = "filter_multi_pupu";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_pupu_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Swizzle>
 {
-     using value_type                                   = std::filesystem::path;
-     static constexpr std::string_view key_name         = "filter_swizzle";
-     static constexpr std::string_view enabled_key_name = "filter_swizzle_enabled";
+     using value_type                           = std::filesystem::path;
+     static constexpr std::string_view key_name = "filter_swizzle";
+     static constexpr std::string_view enabled_key_name
+       = "filter_swizzle_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Deswizzle>
 {
-     using value_type                                   = std::filesystem::path;
-     static constexpr std::string_view key_name         = "filter_deswizzle";
-     static constexpr std::string_view enabled_key_name = "filter_deswizzle_enabled";
+     using value_type                           = std::filesystem::path;
+     static constexpr std::string_view key_name = "filter_deswizzle";
+     static constexpr std::string_view enabled_key_name
+       = "filter_deswizzle_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 {
-     using value_type                                   = std::filesystem::path;
-     static constexpr std::string_view key_name         = "filter_swizzle_as_one_image";
-     static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_enabled";
+     using value_type                           = std::filesystem::path;
+     static constexpr std::string_view key_name = "filter_swizzle_as_one_image";
+     static constexpr std::string_view enabled_key_name
+       = "filter_swizzle_as_one_image_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::FullFileName>
 {
-     using value_type                                   = std::filesystem::path;
-     static constexpr std::string_view key_name         = "filter_full_filename";
-     static constexpr std::string_view enabled_key_name = "filter_full_filename_enabled";
+     using value_type                           = std::filesystem::path;
+     static constexpr std::string_view key_name = "filter_full_filename";
+     static constexpr std::string_view enabled_key_name
+       = "filter_full_filename_enabled";
 };
 
 
@@ -206,9 +213,9 @@ struct ConfigKeys<FilterTag::DrawBit>
 template<>
 struct ConfigKeys<FilterTag::Z>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::ZT<TileT>;
-     using operation_type                               = ff_8::tile_operations::Z;
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::ZT<TileT>;
+     using operation_type = ff_8::tile_operations::Z;
      static constexpr std::string_view key_name         = "filter_z";
      static constexpr std::string_view enabled_key_name = "filter_z_enabled";
 };
@@ -217,162 +224,180 @@ struct ConfigKeys<FilterTag::Z>
 template<>
 struct ConfigKeys<FilterTag::MultiZ>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::ZT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::Z;
-     static constexpr std::string_view key_name         = "filter_multi_z";
-     static constexpr std::string_view enabled_key_name = "filter_multi_z_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = std::vector<ff_8::tile_operations::ZT<TileT>>;
+     using operation_type = ff_8::tile_operations::Z;
+     static constexpr std::string_view key_name = "filter_multi_z";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_z_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Palette>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::PaletteIdT<TileT>;
-     using operation_type                               = ff_8::tile_operations::PaletteId;
-     static constexpr std::string_view key_name         = "filter_palette";
-     static constexpr std::string_view enabled_key_name = "filter_palette_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::PaletteIdT<TileT>;
+     using operation_type = ff_8::tile_operations::PaletteId;
+     static constexpr std::string_view key_name = "filter_palette";
+     static constexpr std::string_view enabled_key_name
+       = "filter_palette_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::MultiPalette>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::PaletteIdT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::PaletteId;
-     static constexpr std::string_view key_name         = "filter_multi_palette";
-     static constexpr std::string_view enabled_key_name = "filter_multi_palette_enabled";
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = std::vector<ff_8::tile_operations::PaletteIdT<TileT>>;
+     using operation_type = ff_8::tile_operations::PaletteId;
+     static constexpr std::string_view key_name = "filter_multi_palette";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_palette_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::AnimationId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::AnimationIdT<TileT>;
-     using operation_type                               = ff_8::tile_operations::AnimationId;
-     static constexpr std::string_view key_name         = "filter_animation_id";
-     static constexpr std::string_view enabled_key_name = "filter_animation_id_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::AnimationIdT<TileT>;
+     using operation_type = ff_8::tile_operations::AnimationId;
+     static constexpr std::string_view key_name = "filter_animation_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_animation_id_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::MultiAnimationId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::AnimationIdT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::AnimationId;
-     static constexpr std::string_view key_name         = "filter_multi_animation_id";
-     static constexpr std::string_view enabled_key_name = "filter_multi_animation_id_enabled";
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = std::vector<ff_8::tile_operations::AnimationIdT<TileT>>;
+     using operation_type = ff_8::tile_operations::AnimationId;
+     static constexpr std::string_view key_name = "filter_multi_animation_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_animation_id_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::AnimationFrame>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::AnimationStateT<TileT>;
-     using operation_type                               = ff_8::tile_operations::AnimationState;
-     static constexpr std::string_view key_name         = "filter_animation_frame";
-     static constexpr std::string_view enabled_key_name = "filter_animation_frame_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::AnimationStateT<TileT>;
+     using operation_type = ff_8::tile_operations::AnimationState;
+     static constexpr std::string_view key_name = "filter_animation_frame";
+     static constexpr std::string_view enabled_key_name
+       = "filter_animation_frame_enabled";
 };
 
 
 template<>
 struct ConfigKeys<FilterTag::MultiAnimationFrame>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::AnimationStateT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::AnimationState;
-     static constexpr std::string_view key_name         = "filter_multi_animation_frame";
-     static constexpr std::string_view enabled_key_name = "filter_multi_animation_frame_enabled";
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::tile_operations::AnimationStateT<TileT>>;
+     using operation_type = ff_8::tile_operations::AnimationState;
+     static constexpr std::string_view key_name
+       = "filter_multi_animation_frame";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_animation_frame_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::LayerId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::LayerIdT<TileT>;
-     using operation_type                               = ff_8::tile_operations::LayerId;
-     static constexpr std::string_view key_name         = "filter_layer_id";
-     static constexpr std::string_view enabled_key_name = "filter_layer_id_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::LayerIdT<TileT>;
+     using operation_type = ff_8::tile_operations::LayerId;
+     static constexpr std::string_view key_name = "filter_layer_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_layer_id_enabled";
 };
 
 
 template<>
 struct ConfigKeys<FilterTag::MultiLayerId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::LayerIdT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::LayerId;
-     static constexpr std::string_view key_name         = "filter_multi_layer_id";
-     static constexpr std::string_view enabled_key_name = "filter_multi_layer_id_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = std::vector<ff_8::tile_operations::LayerIdT<TileT>>;
+     using operation_type = ff_8::tile_operations::LayerId;
+     static constexpr std::string_view key_name = "filter_multi_layer_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_layer_id_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::TexturePageId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::TextureIdT<TileT>;
-     using operation_type                               = ff_8::tile_operations::TextureId;
-     static constexpr std::string_view key_name         = "filter_texture_page_id";
-     static constexpr std::string_view enabled_key_name = "filter_texture_page_id_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::TextureIdT<TileT>;
+     using operation_type = ff_8::tile_operations::TextureId;
+     static constexpr std::string_view key_name = "filter_texture_page_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_texture_page_id_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::MultiTexturePageId>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::TextureIdT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::TextureId;
-     static constexpr std::string_view key_name         = "filter_multi_texture_page_id";
-     static constexpr std::string_view enabled_key_name = "filter_multi_texture_page_id_enabled";
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = std::vector<ff_8::tile_operations::TextureIdT<TileT>>;
+     using operation_type = ff_8::tile_operations::TextureId;
+     static constexpr std::string_view key_name
+       = "filter_multi_texture_page_id";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_texture_page_id_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::BlendMode>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::BlendModeT<TileT>;
-     using operation_type                               = ff_8::tile_operations::BlendMode;
-     static constexpr std::string_view key_name         = "filter_blend_mode";
-     static constexpr std::string_view enabled_key_name = "filter_blend_mode_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::BlendModeT<TileT>;
+     using operation_type = ff_8::tile_operations::BlendMode;
+     static constexpr std::string_view key_name = "filter_blend_mode";
+     static constexpr std::string_view enabled_key_name
+       = "filter_blend_mode_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::MultiBlendMode>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::BlendModeT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::BlendMode;
-     static constexpr std::string_view enabled_key_name = "filter_multi_blend_mode_enabled";
-     static constexpr std::string_view key_name         = "filter_multi_blend_mode";
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = std::vector<ff_8::tile_operations::BlendModeT<TileT>>;
+     using operation_type = ff_8::tile_operations::BlendMode;
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_blend_mode_enabled";
+     static constexpr std::string_view key_name = "filter_multi_blend_mode";
 };
 
 template<>
 struct ConfigKeys<FilterTag::BlendOther>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::BlendT<TileT>;
-     using operation_type                               = ff_8::tile_operations::Blend;
-     static constexpr std::string_view key_name         = "filter_blend_other";
-     static constexpr std::string_view enabled_key_name = "filter_blend_other_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::BlendT<TileT>;
+     using operation_type = ff_8::tile_operations::Blend;
+     static constexpr std::string_view key_name = "filter_blend_other";
+     static constexpr std::string_view enabled_key_name
+       = "filter_blend_other_enabled";
 };
 
 
 template<>
 struct ConfigKeys<FilterTag::MultiBlendOther>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::BlendT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::Blend;
-     static constexpr std::string_view key_name         = "filter_multi_blend_other";
-     static constexpr std::string_view enabled_key_name = "filter_multi_blend_other_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = std::vector<ff_8::tile_operations::BlendT<TileT>>;
+     using operation_type = ff_8::tile_operations::Blend;
+     static constexpr std::string_view key_name = "filter_multi_blend_other";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_blend_other_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Bpp>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::DepthT<TileT>;
-     using operation_type                               = ff_8::tile_operations::Depth;
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = ff_8::tile_operations::DepthT<TileT>;
+     using operation_type = ff_8::tile_operations::Depth;
      static constexpr std::string_view key_name         = "filter_bpp";
      static constexpr std::string_view enabled_key_name = "filter_bpp_enabled";
 };
@@ -380,27 +405,30 @@ struct ConfigKeys<FilterTag::Bpp>
 template<>
 struct ConfigKeys<FilterTag::MultiBpp>
 {
-     using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = std::vector<ff_8::tile_operations::DepthT<TileT>>;
-     using operation_type                               = ff_8::tile_operations::Depth;
-     static constexpr std::string_view key_name         = "filter_multi_bpp";
-     static constexpr std::string_view enabled_key_name = "filter_multi_bpp_enabled";
+     using TileT          = open_viii::graphics::background::Tile1;
+     using value_type     = std::vector<ff_8::tile_operations::DepthT<TileT>>;
+     using operation_type = ff_8::tile_operations::Depth;
+     static constexpr std::string_view key_name = "filter_multi_bpp";
+     static constexpr std::string_view enabled_key_name
+       = "filter_multi_bpp_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Compact>
 {
-     using value_type                                   = fme::compact_type;
-     static constexpr std::string_view key_name         = "batch_compact_type";
-     static constexpr std::string_view enabled_key_name = "batch_compact_enabled";
+     using value_type                           = fme::compact_type;
+     static constexpr std::string_view key_name = "batch_compact_type";
+     static constexpr std::string_view enabled_key_name
+       = "batch_compact_enabled";
 };
 
 template<>
 struct ConfigKeys<FilterTag::Flatten>
 {
-     using value_type                                   = fme::flatten_type;
-     static constexpr std::string_view key_name         = "batch_flatten_type";
-     static constexpr std::string_view enabled_key_name = "batch_flatten_enabled";
+     using value_type                           = fme::flatten_type;
+     static constexpr std::string_view key_name = "batch_flatten_type";
+     static constexpr std::string_view enabled_key_name
+       = "batch_flatten_enabled";
 };
 
 
@@ -429,7 +457,8 @@ struct FilterLoadStrategy
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
-               value = std::bit_cast<fme::color>(config[id].value_or(std::bit_cast<std::uint32_t>(value)));
+               value = std::bit_cast<fme::color>(
+                 config[id].value_or(std::bit_cast<std::uint32_t>(value)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
@@ -437,27 +466,40 @@ struct FilterLoadStrategy
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
-               value = static_cast<ValueT>(config[id].value_or(std::to_underlying(value)));
+               value = static_cast<ValueT>(
+                 config[id].value_or(std::to_underlying(value)));
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (std::is_enum_v<
+                               glengine::vector_elem_type_t<ValueT>>)
                {
-                    (void)fme::Configuration::
-                      load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
-                        config, id, value);
+                    (void)fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::underlying_type_t<
+                        glengine::vector_elem_type_t<ValueT>>>(
+                      config, id, value);
                }
-               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, open_viii::graphics::BPPT>)
+               else if constexpr (std::same_as<
+                                    glengine::vector_elem_type_t<ValueT>,
+                                    open_viii::graphics::BPPT>)
                {
-                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint8_t>(config, id, value);
+                    (void)fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::uint8_t>(config, id, value);
                }
-               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               else if constexpr (std::same_as<
+                                    glengine::vector_elem_type_t<ValueT>,
+                                    PupuID>)
                {
-                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
+                    (void)fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::uint32_t>(config, id, value);
                }
                else
                {
-                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
+                    (void)fme::Configuration::load_array<
+                      glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
           else
@@ -481,7 +523,10 @@ struct FilterLoadStrategy
      {
           if (load_config)
           {
-               return WithFlag(FilterSettings::Default, FilterSettings::Toggle_Enabled, config[enabled_key_name].value_or(false));
+               return WithFlag(
+                 FilterSettings::Default,
+                 FilterSettings::Toggle_Enabled,
+                 config[enabled_key_name].value_or(false));
           }
           return FilterSettings::All_Disabled;
      }
@@ -499,8 +544,12 @@ struct FilterUpdateStrategy
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
                std::u8string str_val = value.u8string();
-               std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
-               spdlog::debug("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
+               std::ranges::replace(
+                 str_val, u8'\\', u8'/');// normalize to forward slashes
+               spdlog::debug(
+                 "selection<{}>: \"{}\"",
+                 id,
+                 std::filesystem::path(str_val).string());
                config.insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
@@ -520,23 +569,35 @@ struct FilterUpdateStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (std::is_enum_v<
+                               glengine::vector_elem_type_t<ValueT>>)
                {
-                    fme::Configuration::
-                      update_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
-                        config, id, value);
+                    fme::Configuration::update_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::underlying_type_t<
+                        glengine::vector_elem_type_t<ValueT>>>(
+                      config, id, value);
                }
-               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, open_viii::graphics::BPPT>)
+               else if constexpr (std::same_as<
+                                    glengine::vector_elem_type_t<ValueT>,
+                                    open_viii::graphics::BPPT>)
                {
-                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>, std::uint8_t>(config, id, value);
+                    fme::Configuration::update_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::uint8_t>(config, id, value);
                }
-               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               else if constexpr (std::same_as<
+                                    glengine::vector_elem_type_t<ValueT>,
+                                    PupuID>)
                {
-                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
+                    fme::Configuration::update_array<
+                      glengine::vector_elem_type_t<ValueT>,
+                      std::uint32_t>(config, id, value);
                }
                else
                {
-                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
+                    fme::Configuration::update_array<
+                      glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
                spdlog::trace("selection<{}>", id);
           }
@@ -553,8 +614,10 @@ struct FilterUpdateStrategy
        FilterSettings   settings)
      {
           // Check if the Toggle_Enabled flag is set, write it to config
-          const bool enabled = HasFlag(settings, FilterSettings::Toggle_Enabled);
-          config.insert_or_assign(std::string{ enabled_key_name }, toml::value{ enabled });
+          const bool enabled
+            = HasFlag(settings, FilterSettings::Toggle_Enabled);
+          config.insert_or_assign(
+            std::string{ enabled_key_name }, toml::value{ enabled });
      }
 };
 
@@ -603,8 +666,10 @@ struct filter_old
 
      filter_old &reload(const toml::table &table)
      {
-          m_value    = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
-          m_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          m_value = FilterLoadStrategy<value_type>::load_value(
+            table, ConfigKeys<Tag>::key_name);
+          m_settings = FilterLoadStrategy<value_type>::load_settings(
+            table, ConfigKeys<Tag>::enabled_key_name);
           return *this;
      }
 
@@ -621,15 +686,21 @@ struct filter_old
      filter_old &combine(const toml::table &table)
      {
           // Load temporary values
-          const auto tmp_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          const auto tmp_settings
+            = FilterLoadStrategy<value_type>::load_settings(
+              table, ConfigKeys<Tag>::enabled_key_name);
 
           // Only merge if enabled
           if (HasFlag(tmp_settings, FilterSettings::Config_Enabled))
           {
-               auto tmp_value = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+               auto tmp_value = FilterLoadStrategy<value_type>::load_value(
+                 table, ConfigKeys<Tag>::key_name);
                if constexpr (glengine::is_std_vector<value_type>)
                {
-                    m_value.insert(m_value.end(), std::make_move_iterator(tmp_value.begin()), std::make_move_iterator(tmp_value.end()));
+                    m_value.insert(
+                      m_value.end(),
+                      std::make_move_iterator(tmp_value.begin()),
+                      std::make_move_iterator(tmp_value.end()));
                     std::ranges::sort(m_value);
                     const auto not_unique = std::ranges::unique(m_value);
                     m_value.erase(not_unique.begin(), not_unique.end());
@@ -655,8 +726,10 @@ struct filter_old
      {
           if (enabled())
           {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+               FilterUpdateStrategy<value_type>::update_value(
+                 value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(
+                 value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           else
           {
@@ -674,8 +747,10 @@ struct filter_old
      {
           if (enabled())
           {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+               FilterUpdateStrategy<value_type>::update_value(
+                 value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(
+                 value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           else
           {
@@ -690,7 +765,8 @@ struct filter_old
             !std::same_as<
               std::remove_cvref_t<U>,
               value_type>
-            && std::ranges::range<std::remove_cvref_t<U>> && std::ranges::range<value_type>
+            && std::ranges::range<std::remove_cvref_t<U>>
+            && std::ranges::range<value_type>
             && std::indirectly_movable<
               std::ranges::iterator_t<std::remove_cvref_t<U>>,
               std::back_insert_iterator<value_type>>)
@@ -706,7 +782,8 @@ struct filter_old
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
+                    FilterUpdateStrategy<value_type>::update_value(
+                      *config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
                }
           }
@@ -726,9 +803,12 @@ struct filter_old
      {
           const bool not_same = [&]()
           {
-               if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
+               if constexpr (
+                 std::is_enum_v<std::remove_cvref_t<U>>
+                 && std::is_enum_v<std::remove_cvref_t<value_type>>)
                {
-                    return std::to_underlying(m_value) != std::to_underlying(value);
+                    return std::to_underlying(m_value)
+                           != std::to_underlying(value);
                }
                else
                {
@@ -742,7 +822,8 @@ struct filter_old
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
+                    FilterUpdateStrategy<value_type>::update_value(
+                      config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
                }
           }
@@ -763,12 +844,16 @@ struct filter_old
                return *this;
           }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
-          if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
+          if constexpr (std::same_as<
+                          std::remove_cvref_t<
+                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
+                          std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
+                    FilterUpdateStrategy<value_type>::update_settings(
+                      config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -781,12 +866,16 @@ struct filter_old
                return *this;
           }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
-          if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
+          if constexpr (std::same_as<
+                          std::remove_cvref_t<
+                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
+                          std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
+                    FilterUpdateStrategy<value_type>::update_settings(
+                      config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -797,7 +886,8 @@ struct filter_old
      {
           if constexpr (std::ranges::range<value_type>)
           {
-               return std::ranges::any_of(m_value, [&](const auto &current) { return current == cmp; });
+               return std::ranges::any_of(
+                 m_value, [&](const auto &current) { return current == cmp; });
           }
           else
           {
@@ -825,8 +915,8 @@ template<FilterTag Tag>
 struct filter
 {
    public:
-     using value_type                            = ConfigKeys<Tag>::value_type;
-     using operation_type                        = ConfigKeys<Tag>::operation_type;
+     using value_type     = ConfigKeys<Tag>::value_type;
+     using operation_type = ConfigKeys<Tag>::operation_type;
      static constexpr inline FilterTag tag_value = Tag;
 
    private:
@@ -867,8 +957,10 @@ struct filter
 
      filter &reload(const toml::table &table)
      {
-          m_value    = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
-          m_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          m_value = FilterLoadStrategy<value_type>::load_value(
+            table, ConfigKeys<Tag>::key_name);
+          m_settings = FilterLoadStrategy<value_type>::load_settings(
+            table, ConfigKeys<Tag>::enabled_key_name);
           return *this;
      }
 
@@ -876,15 +968,21 @@ struct filter
      filter &combine(const toml::table &table)
      {
           // Load temporary values
-          const auto tmp_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          const auto tmp_settings
+            = FilterLoadStrategy<value_type>::load_settings(
+              table, ConfigKeys<Tag>::enabled_key_name);
 
           // Only merge if enabled
           if (HasFlag(tmp_settings, FilterSettings::Config_Enabled))
           {
-               auto tmp_value = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+               auto tmp_value = FilterLoadStrategy<value_type>::load_value(
+                 table, ConfigKeys<Tag>::key_name);
                if constexpr (glengine::is_std_vector<value_type>)
                {
-                    m_value.insert(m_value.end(), std::make_move_iterator(tmp_value.begin()), std::make_move_iterator(tmp_value.end()));
+                    m_value.insert(
+                      m_value.end(),
+                      std::make_move_iterator(tmp_value.begin()),
+                      std::make_move_iterator(tmp_value.end()));
                     std::ranges::sort(m_value);
                     const auto not_unique = std::ranges::unique(m_value);
                     m_value.erase(not_unique.begin(), not_unique.end());
@@ -918,8 +1016,10 @@ struct filter
      {
           if (enabled())
           {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+               FilterUpdateStrategy<value_type>::update_value(
+                 value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(
+                 value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           else
           {
@@ -930,7 +1030,8 @@ struct filter
      }
      template<typename U>
      filter &update(U &&value)
-          requires open_viii::graphics::background::is_tile<std::remove_cvref_t<U>>
+          requires open_viii::graphics::background::is_tile<
+            std::remove_cvref_t<U>>
      {
           return update(std::invoke(s_operation, value));
      }
@@ -943,8 +1044,10 @@ struct filter
      {
           if (enabled())
           {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+               FilterUpdateStrategy<value_type>::update_value(
+                 value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(
+                 value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           else
           {
@@ -959,7 +1062,8 @@ struct filter
             !std::same_as<
               std::remove_cvref_t<U>,
               value_type>
-            && std::ranges::range<std::remove_cvref_t<U>> && std::ranges::range<value_type>
+            && std::ranges::range<std::remove_cvref_t<U>>
+            && std::ranges::range<value_type>
             && std::indirectly_movable<
               std::ranges::iterator_t<std::remove_cvref_t<U>>,
               std::back_insert_iterator<value_type>>)
@@ -975,7 +1079,8 @@ struct filter
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
+                    FilterUpdateStrategy<value_type>::update_value(
+                      *config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
                }
           }
@@ -995,9 +1100,12 @@ struct filter
      {
           const bool not_same = [&]()
           {
-               if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
+               if constexpr (
+                 std::is_enum_v<std::remove_cvref_t<U>>
+                 && std::is_enum_v<std::remove_cvref_t<value_type>>)
                {
-                    return std::to_underlying(m_value) != std::to_underlying(value);
+                    return std::to_underlying(m_value)
+                           != std::to_underlying(value);
                }
                else
                {
@@ -1011,7 +1119,8 @@ struct filter
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
+                    FilterUpdateStrategy<value_type>::update_value(
+                      config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
                }
           }
@@ -1029,12 +1138,16 @@ struct filter
      filter &enable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
-          if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
+          if constexpr (std::same_as<
+                          std::remove_cvref_t<
+                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
+                          std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
+                    FilterUpdateStrategy<value_type>::update_settings(
+                      config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -1043,12 +1156,16 @@ struct filter
      filter &disable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
-          if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
+          if constexpr (std::same_as<
+                          std::remove_cvref_t<
+                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
+                          std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
                     fme::Configuration config{};
-                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
+                    FilterUpdateStrategy<value_type>::update_settings(
+                      config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -1060,7 +1177,8 @@ struct filter
      {
           if constexpr (std::ranges::range<value_type>)
           {
-               return std::ranges::any_of(m_value, [&](const auto &current) { return current == cmp; });
+               return std::ranges::any_of(
+                 m_value, [&](const auto &current) { return current == cmp; });
           }
           else
           {
@@ -1091,26 +1209,40 @@ struct filter
 };
 
 template<typename FilterT>
-using FilterLoadStrategyFromFilter = FilterLoadStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
+using FilterLoadStrategyFromFilter
+  = FilterLoadStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
 
 template<typename FilterT>
-using FilterUpdateStrategyFromFilter = FilterUpdateStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
+using FilterUpdateStrategyFromFilter
+  = FilterUpdateStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
 
 template<typename T>
 concept IsFilterOld = requires(T obj) {
-     { obj.update(typename std::remove_cvref_t<T>::value_type{}) } -> std::same_as<T &>;
-     { obj.value() } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type const &>;
+     {
+          obj.update(typename std::remove_cvref_t<T>::value_type{})
+     } -> std::same_as<T &>;
+     {
+          obj.value()
+     } -> std::convertible_to<
+       typename std::remove_cvref_t<T>::value_type const &>;
      { obj.enabled() } -> std::convertible_to<const bool &>;
      { obj.enable() } -> std::same_as<T &>;
      { obj.disable() } -> std::same_as<T &>;
      { static_cast<bool>(obj) } -> std::convertible_to<bool>;
-     { static_cast<typename std::remove_cvref_t<T>::value_type>(obj) } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type>;
+     {
+          static_cast<typename std::remove_cvref_t<T>::value_type>(obj)
+     } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type>;
 };
 
 template<typename T, typename TileT>
-concept IsFilter = open_viii::graphics::background::is_tile<TileT> && IsFilterOld<T> && requires(T obj, TileT tile) {
-     { obj(tile) } -> std::convertible_to<bool>;// Ensure it works as a predicate on tiles
-};
+concept IsFilter
+  = open_viii::graphics::background::is_tile<TileT> && IsFilterOld<T>
+    && requires(T obj, TileT tile) {
+            {
+                 obj(tile)
+            } -> std::convertible_to<bool>;// Ensure it works as a predicate on
+                                           // tiles
+       };
 
 template<typename T, typename TileT = void>
 concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
@@ -1233,8 +1365,8 @@ struct filters
           [&table](auto &...operations) { (operations.reload(table), ...); }(
             pupu,
             multi_pupu,
-            // these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
-            // swizzle,
+            // these 4 filters control drawing with external textures. reloading
+            // them from a toml table. is not desired currently. swizzle,
             // deswizzle,
             // swizzle_as_one_image,
             // full_filename,
@@ -1266,8 +1398,8 @@ struct filters
           [&table](auto &...operations) { (operations.combine(table), ...); }(
             pupu,
             multi_pupu,
-            // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
-            // swizzle,
+            // these filters control drawing with external textures. reloading
+            // them from a toml table. is not desired currently. swizzle,
             // deswizzle,
             // swizzle_as_one_image,
             // full_filename,
@@ -1295,11 +1427,13 @@ struct filters
 
      void update(toml::table &table) const
      {
-          [&table](const auto &...operations) { (operations.update(table), ...); }(
-            pupu,
+          [&table](const auto &...operations)
+          {
+               (operations.update(table), ...);
+          }(pupu,
             multi_pupu,
-            // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
-            // swizzle,
+            // these filters control drawing with external textures. reloading
+            // them from a toml table. is not desired currently. swizzle,
             // deswizzle,
             // swizzle_as_one_image,
             // full_filename,
@@ -1329,26 +1463,28 @@ struct filters
      template<open_viii::graphics::background::is_tile ThisTileT>
      bool operator()(const ThisTileT &tile) const
      {
-          return [&tile](const auto &...operations) -> bool { return (std::invoke(operations, tile) && ...); }(
-                                                      draw_bit,
-                                                      z,
-                                                      multi_z,
-                                                      palette,
-                                                      multi_palette,
-                                                      animation_id,
-                                                      multi_animation_id,
-                                                      animation_state,
-                                                      multi_animation_state,
-                                                      layer_id,
-                                                      multi_layer_id,
-                                                      texture_page_id,
-                                                      multi_texture_page_id,
-                                                      blend_mode,
-                                                      multi_blend_mode,
-                                                      blend_other,
-                                                      multi_blend_other,
-                                                      bpp,
-                                                      multi_bpp);
+          return [&tile](const auto &...operations) -> bool
+          {
+               return (std::invoke(operations, tile) && ...);
+          }(draw_bit,
+            z,
+            multi_z,
+            palette,
+            multi_palette,
+            animation_id,
+            multi_animation_id,
+            animation_state,
+            multi_animation_state,
+            layer_id,
+            multi_layer_id,
+            texture_page_id,
+            multi_texture_page_id,
+            blend_mode,
+            multi_blend_mode,
+            blend_other,
+            multi_blend_other,
+            bpp,
+            multi_bpp);
      }
 };
 namespace tile_operations

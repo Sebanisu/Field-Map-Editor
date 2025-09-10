@@ -59,10 +59,13 @@ class RangeConsumer
           return *this;
      }
      RangeConsumer<range_t> &operator+=(range_t &&new_value)
-          requires(std::ranges::forward_range<range_t> && requires(range_t t) { std::back_inserter(t); })
+          requires(std::ranges::forward_range<range_t> && requires(range_t t) {
+               std::back_inserter(t);
+          })
      {
-          const auto offset = std::ranges::distance(std::ranges::begin(m_range), pos);
-          m_range           = std::ranges::move(new_value, std::back_inserter(m_range));
+          const auto offset
+            = std::ranges::distance(std::ranges::begin(m_range), pos);
+          m_range = std::ranges::move(new_value, std::back_inserter(m_range));
           if constexpr (requires(range_t t) { t.clear(); })
           {
                new_value.clear();
@@ -115,7 +118,8 @@ class [[nodiscard]] FutureConsumer
 
      void                                compact()
      {
-          const auto remove_range = std::ranges::remove_if(m_ranges, [](const auto &range) { return range.done(); });
+          const auto remove_range = std::ranges::remove_if(
+            m_ranges, [](const auto &range) { return range.done(); });
           m_ranges.erase(remove_range.begin(), remove_range.end());
      }
 
@@ -134,7 +138,9 @@ class [[nodiscard]] FutureConsumer
                if (item.valid())
                {
                     const auto state = item.wait_for(std::chrono::seconds(0));
-                    if (state != std::future_status::ready && state != std::future_status::deferred)
+                    if (
+                      state != std::future_status::ready
+                      && state != std::future_status::deferred)
                          return;
 
                     std::invoke(std::forward<GetHandler>(handler), item);
@@ -142,7 +148,8 @@ class [[nodiscard]] FutureConsumer
                else
                {
                     spdlog::warn(
-                      "Skipping future: no valid state (possibly moved-from or default-constructed), ranges_size {}, front_size {}  : "
+                      "Skipping future: no valid state (possibly moved-from or "
+                      "default-constructed), ranges_size {}, front_size {}  : "
                       "{}:{}",
                       m_ranges.size(),
                       m_ranges.front().size(),
@@ -207,7 +214,9 @@ class [[nodiscard]] FutureConsumer
                     auto &item = *range;
                     if (item.valid())
                     {
-                         if constexpr (std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+                         if constexpr (std::is_void_v<
+                                         decltype(std::declval<range_value_t>()
+                                                    .get())>)
                          {
                               item.get();
                          }
@@ -244,7 +253,9 @@ class [[nodiscard]] FutureConsumer
      FutureConsumer<range_t> &operator+=(FutureConsumer<range_t> &&other)
      {
           std::ranges::move(other.m_ranges, std::back_inserter(m_ranges));
-          if constexpr (requires(FutureConsumer<range_t> t) { t.m_ranges.clear(); })
+          if constexpr (requires(FutureConsumer<range_t> t) {
+                             t.m_ranges.clear();
+                        })
           {
                other.m_ranges.clear();
           }
@@ -252,22 +263,26 @@ class [[nodiscard]] FutureConsumer
      }
 
      const FutureConsumer<range_t> &operator++()
-          requires(std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+          requires(
+            std::is_void_v<decltype(std::declval<range_value_t>().get())>)
      {
           consume_one([](auto &fut) { fut.get(); });
           return *this;
      }
 
      void consume_one_with_callback(auto &&callback)
-          requires(!std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+          requires(
+            !std::is_void_v<decltype(std::declval<range_value_t>().get())>)
      {
-          consume_one([&callback](auto &fut) { std::invoke(callback, fut.get()); });
+          consume_one([&callback](auto &fut)
+                      { std::invoke(callback, fut.get()); });
      }
 
 
      [[nodiscard]] bool done() const
      {
-          return std::ranges::all_of(m_ranges, [](const auto &range) { return range.done(); });
+          return std::ranges::all_of(
+            m_ranges, [](const auto &range) { return range.done(); });
      }
 
      ~FutureConsumer()
@@ -279,15 +294,17 @@ template<std::ranges::range range_t>
 class [[nodiscard]] FutureOfFutureConsumer
 {
    private:
-     using range_value_t  = std::ranges::range_value_t<range_t>;
-     using future_value_t = std::remove_cvref_t<decltype(range_value_t{}.get())>;
+     using range_value_t = std::ranges::range_value_t<range_t>;
+     using future_value_t
+       = std::remove_cvref_t<decltype(range_value_t{}.get())>;
 
      std::vector<RangeConsumer<range_t>> m_ranges{};
      std::vector<future_value_t>         m_out{};
 
      void                                compact()
      {
-          const auto remove_range = std::ranges::remove_if(m_ranges, [](const auto &range) { return range.done(); });
+          const auto remove_range = std::ranges::remove_if(
+            m_ranges, [](const auto &range) { return range.done(); });
           m_ranges.erase(remove_range.begin(), remove_range.end());
      }
 
@@ -364,7 +381,8 @@ class [[nodiscard]] FutureOfFutureConsumer
           return *this;
      }
 
-     FutureOfFutureConsumer<range_t> &operator+=(FutureOfFutureConsumer<range_t> &&other)
+     FutureOfFutureConsumer<range_t> &
+       operator+=(FutureOfFutureConsumer<range_t> &&other)
      {
           std::ranges::move(other.m_ranges, std::back_inserter(m_ranges));
           std::ranges::move(other.m_out, std::back_inserter(m_out));
@@ -390,10 +408,14 @@ class [[nodiscard]] FutureOfFutureConsumer
                {
                     if (item.valid())
                     {
-                         const auto state = item.wait_for(std::chrono::seconds(0));
-                         if (state != std::future_status::ready && state != std::future_status::deferred)
+                         const auto state
+                           = item.wait_for(std::chrono::seconds(0));
+                         if (
+                           state != std::future_status::ready
+                           && state != std::future_status::deferred)
                          {
-                              // launch policy is async and the future is not yet ready, so skip it
+                              // launch policy is async and the future is not
+                              // yet ready, so skip it
                               return *this;
                          }
 
@@ -406,7 +428,10 @@ class [[nodiscard]] FutureOfFutureConsumer
                     else
                     {
                          spdlog::warn(
-                           "Skipping future: no valid state (possibly moved-from or default-constructed), {}:{}", __FILE__, __LINE__);
+                           "Skipping future: no valid state (possibly "
+                           "moved-from or default-constructed), {}:{}",
+                           __FILE__,
+                           __LINE__);
                     }
                     ++range;
                }
@@ -417,7 +442,8 @@ class [[nodiscard]] FutureOfFutureConsumer
                }
                catch (const std::exception &e)
                {
-                    spdlog::error("Unexpected exception in wait_for: {}", e.what());
+                    spdlog::error(
+                      "Unexpected exception in wait_for: {}", e.what());
                     spdlog::error("{}", std::stacktrace::current());
                }
                catch (...)
@@ -431,7 +457,8 @@ class [[nodiscard]] FutureOfFutureConsumer
 
      [[nodiscard]] bool done() const
      {
-          return std::ranges::all_of(m_ranges, [](const auto &range) { return range.done(); });
+          return std::ranges::all_of(
+            m_ranges, [](const auto &range) { return range.done(); });
      }
 
      [[nodiscard]] bool consumer_ready() const
@@ -444,7 +471,8 @@ class [[nodiscard]] FutureOfFutureConsumer
           return FutureConsumer{ std::exchange(m_out, {}) };
      }
 
-     // [[nodiscard]] FutureOfFutureConsumer<std::vector<future_value_t>> get_future_of_future_consumer()
+     // [[nodiscard]] FutureOfFutureConsumer<std::vector<future_value_t>>
+     // get_future_of_future_consumer()
      // {
      //      return FutureOfFutureConsumer{ std::exchange(m_out, {}) };
      // }
