@@ -138,19 +138,41 @@ struct PupuID
      }
      [[nodiscard]] bool constexpr same_base(PupuID right) const noexcept
      {
-          constexpr auto mask = 0xFFFF'FFF0U;
+          constexpr std::uint32_t mask = ~offset_mask;
+          static_assert(mask == 0xFFFFFFF0u, "same_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
+
+     [[nodiscard]] bool constexpr same_layer_base(PupuID right) const noexcept
+     {
+          constexpr std::uint32_t mask = ~((layer_mask << layer_offset) | offset_mask);
+          static_assert(mask == 0x80FFFFF0u, "same_layer_base mask mismatch");
+          return (m_raw & mask) == (right.raw() & mask);
+     }
+
      [[nodiscard]] bool constexpr same_animation_base(PupuID right) const noexcept
      {
-          constexpr auto mask = 0xFFF0'0000U;
+          constexpr std::uint32_t mask =
+            ~((animation_mask << animation_offset) | (animation_state_mask << animation_state_offset) | offset_mask);
+          static_assert(mask == 0xFFF00000u, "same_animation_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
+
+
+     [[nodiscard]] bool constexpr same_animation_id_base(PupuID right) const noexcept
+     {
+          constexpr std::uint32_t mask = ~((animation_state_mask << animation_state_offset) | offset_mask);
+          static_assert(mask == 0xFFFFF000u, "same_animation_id_base mask mismatch");
+          return (m_raw & mask) == (right.raw() & mask);
+     }
+
      [[nodiscard]] bool constexpr same_animation_state_base(PupuID right) const noexcept
      {
-          constexpr auto mask = 0xFFF0'0FF0U;
+          constexpr std::uint32_t mask = ~((animation_mask << animation_offset) | offset_mask);
+          static_assert(mask == 0xFFF00FF0u, "same_animation_state_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
+
      constexpr auto            operator<=>(const PupuID &) const noexcept = default;
      [[nodiscard]] std::string create_summary() const;
 
