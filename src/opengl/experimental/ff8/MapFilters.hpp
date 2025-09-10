@@ -180,8 +180,9 @@ class MapFilters
                          return changed;
                     };
                     static constexpr auto common_unique
-                      = [](const char *label, auto &&unique, uint32_t row_size)
-                      -> bool
+                      = [](
+                          const char *label, auto &&unique,
+                          uint32_t row_size) -> bool
                     {
                          return common(
                            label,

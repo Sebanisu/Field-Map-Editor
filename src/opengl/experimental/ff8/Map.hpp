@@ -368,28 +368,29 @@ class Map
                           m_map_dims.pressed_mouse_location->x,
                           m_map_dims.pressed_mouse_location->y)
                           .c_str());
-                      if (visit_unsorted_unfiltered_tiles(
-                            common_operation,// todo fix this to use the stored
-                                             // tile indexes
-                            //              MouseTileOverlap<TileFunctions,
-                            //              MapFilters>(
-                            //                MouseToTilePos{
-                            //                *(m_map_dims.pressed_mouse_location)
-                            //                },
-                            //
-                            //                GetMapHistory().filters)
-                            [this](auto &&tile) -> bool
-                            {
-                                 return std::ranges::any_of(
-                                   m_clicked_indexes,
-                                   [&](auto &&j) -> bool
-                                   {
-                                        return std::cmp_equal(
-                                          j,
-                                          GetMapHistory()
-                                            ->get_offset_from_working(tile));
-                                   });
-                            }))
+                      if (
+                        visit_unsorted_unfiltered_tiles(
+                          common_operation,// todo fix this to use the stored
+                                           // tile indexes
+                          //              MouseTileOverlap<TileFunctions,
+                          //              MapFilters>(
+                          //                MouseToTilePos{
+                          //                *(m_map_dims.pressed_mouse_location)
+                          //                },
+                          //
+                          //                GetMapHistory().filters)
+                          [this](auto &&tile) -> bool
+                          {
+                               return std::ranges::any_of(
+                                 m_clicked_indexes,
+                                 [&](auto &&j) -> bool
+                                 {
+                                      return std::cmp_equal(
+                                        j,
+                                        GetMapHistory()
+                                          ->get_offset_from_working(tile));
+                                 });
+                          }))
                       {
                            GetWindow().trigger_refresh_image();
                            // m_changed();

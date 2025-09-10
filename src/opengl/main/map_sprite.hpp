@@ -196,7 +196,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] bool               redo_enabled() const;
      [[nodiscard]] ff_8::filters     &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const
-     //BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     // BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] bool               fallback_textures() const;
      void                             queue_texture_loading() const;
      [[nodiscard]] static colors_type get_colors(
@@ -219,7 +219,7 @@ struct [[nodiscard]] map_sprite// final
           return str_to_lower(std::string{ input });
      }
      //[[nodiscard]] sf::Sprite                     save_intersecting(const
-     //glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
+     // glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(
        BPPT         bpp,
        std::uint8_t palette,

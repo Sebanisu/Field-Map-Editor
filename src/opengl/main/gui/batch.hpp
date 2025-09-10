@@ -82,7 +82,7 @@ class batch
      void               save_input_path();
      void               save_output_path();
      //[[nodiscard]] std::filesystem::path append_file_structure(const
-     //std::filesystem::path &path) const;
+     // std::filesystem::path &path) const;
      [[nodiscard]] bool browse_path(
        std::string_view name,
        bool            &valid_path,
