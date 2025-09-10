@@ -436,12 +436,13 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
-     static constinit bool check_offset           = false;
-     static constinit bool check_layer_id         = false;
-     static constinit bool check_animation        = false;
-     static constinit bool check_animation_id     = false;
-     static constinit bool check_animation_state  = false;
-     static constinit bool check_allow_same_blend = false;
+     static constinit bool check_offset            = false;
+     static constinit bool check_layer_id          = false;
+     static constinit bool check_animation         = false;
+     static constinit bool check_animation_id      = false;
+     static constinit bool check_animation_state   = false;
+     static constinit bool check_allow_same_blend  = false;
+     static constinit bool check_animation_fill_in = false;
      ImGui::BeginDisabled(check_animation);
      if (check_animation)
      {
@@ -477,9 +478,15 @@ void fme::filter_window::render_list_view(
      {
      }
 
+
      tool_tip(
        "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join animations of the same state because they usually don't "
        "overlap.");
+
+     ImGui::NextColumn();
+     if (ImGui::Checkbox("Fill-in", &check_animation_fill_in))
+     {
+     }
 
 
      ImGui::NextColumn();
@@ -496,7 +503,8 @@ void fme::filter_window::render_list_view(
      ImGui::NextColumn();
      combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::Columns(1);
-     ImGui::BeginDisabled(!check_offset && !check_animation && !check_animation_id && !check_animation_state && !check_layer_id);
+     ImGui::BeginDisabled(
+       !check_offset && !check_animation && !check_animation_id && !check_animation_state && !check_layer_id && !check_animation_fill_in);
      if (ImGui::Button("Combine (w/attribute)"))
      {
           [&]() {
@@ -586,6 +594,7 @@ void fme::filter_window::render_list_view(
                          }
                     }
                }
+               
                if (coo_table && check_animation_id)
                {
                     for (auto &&[key, value] : *coo_table)
@@ -669,6 +678,7 @@ void fme::filter_window::render_list_view(
                          }
                     }
                }
+
                if (coo_table && check_animation_state)
                {
                     for (auto &&[key, value] : *coo_table)
@@ -760,6 +770,88 @@ void fme::filter_window::render_list_view(
                          }
                     }
                }
+
+               if (coo_table && check_animation_fill_in)
+               {
+                    for (auto &&[key, value] : *coo_table)
+                    {
+                         if (value.is_table())
+                         {
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                              toml::table                                 &file_table  = *value.as_table();
+                              temp_filter.reload(file_table);// loads from table;
+                              if (!temp_filter.enabled())
+                              {
+                                   continue;
+                              }
+                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
+                                  }))
+                              {
+                                   continue;
+                              }
+                              if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
+                                       if (
+                                         m_excluded_animation_id_from_state.enabled()
+                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                 return pupu_id.animation_id() == id;
+                                            }))
+                                       {
+                                            return false;
+                                       }
+                                       return pupu_id.offset() > 0;
+                                  }))
+                              {
+                                   // mark for deletion
+                                   m_remove_queue.emplace_back(key);
+                                   continue;
+                              }
+                              {
+                                   // append offsets > 0 to these.
+                                   auto copy_values = temp_filter.value();
+                                   bool reload      = false;
+                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   {
+                                        if (
+                                          u_pupu_id.animation_state() != 0u || std::ranges::any_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
+                                             return u_pupu_id == pupu_id || u_pupu_id.same_animation_id_base(pupu_id);
+                                        }) || (m_excluded_animation_id_from_state.enabled()
+                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                  return u_pupu_id.animation_id() == id;
+                                             })))
+                                        {
+                                             continue;
+                                        }
+
+                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        {
+                                             if (
+                                               m_excluded_animation_id_from_state.enabled()
+                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                       return i_pupu_id.animation_id() == id;
+                                                  }))
+                                             {
+                                                  continue;
+                                             }
+                                             copy_values.push_back(u_pupu_id);
+                                             reload = true;
+                                        }
+                                   }
+                                   if (reload)
+                                   {
+                                        m_reload_list.emplace_back(key);
+                                        m_reload_thumbnail = true;
+                                   }
+                                   std::ranges::sort(copy_values);
+                                   const auto remove_range = std::ranges::unique(copy_values);
+                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   temp_filter.update(std::move(copy_values));
+                                   temp_filter.update(file_table);
+                              }
+                         }
+                    }
+               }
+
                if (coo_table && check_layer_id)
                {
                     for (auto &&[key, value] : *coo_table)
