@@ -19938,11 +19938,7 @@ filter_multi_pupu = [ 2097152 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.'eciway11_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[eciway11.x.'eciway11_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
+filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.'eciway11_014FF000.png']
@@ -19954,11 +19950,7 @@ filter_multi_pupu = [ 34607104, 34615296, 34623488 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.'eciway11_024FF000.png']
-filter_multi_pupu = [ 38793216 ]
-filter_multi_pupu_enabled = true
-
-[eciway11.x.'eciway11_024FF001.png']
-filter_multi_pupu = [ 38793217 ]
+filter_multi_pupu = [ 38793216, 38793217 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.'eciway11_03102000.png']
@@ -19974,15 +19966,7 @@ filter_multi_pupu = [ 72347648 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.'eciway11_85C06000.png']
-filter_multi_pupu = [ 2243977216, 2243981312, 2243985408 ]
-filter_multi_pupu_enabled = true
-
-[eciway11.x.'eciway11_86C07000.png']
-filter_multi_pupu = [ 2260758528 ]
-filter_multi_pupu_enabled = true
-
-[eciway11.x.'eciway11_87C08000.png']
-filter_multi_pupu = [ 2277539840 ]
+filter_multi_pupu = [ 2243977216, 2243981312, 2243985408, 2260758528, 2277539840 ]
 filter_multi_pupu_enabled = true
 
 [eciway11.x.unique_pupu_ids]
@@ -20015,11 +19999,7 @@ filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [eciway12.x.'eciway12_02102000.png']
-filter_multi_pupu = [ 34611200 ]
-filter_multi_pupu_enabled = true
-
-[eciway12.x.'eciway12_02103000.png']
-filter_multi_pupu = [ 34615296 ]
+filter_multi_pupu = [ 34611200, 34615296 ]
 filter_multi_pupu_enabled = true
 
 [eciway12.x.'eciway12_024FF000.png']
@@ -20039,23 +20019,7 @@ filter_multi_pupu = [ 72347648 ]
 filter_multi_pupu_enabled = true
 
 [eciway12.x.'eciway12_05C05000.png']
-filter_multi_pupu = [ 96489472 ]
-filter_multi_pupu_enabled = true
-
-[eciway12.x.'eciway12_05C06000.png']
-filter_multi_pupu = [ 96493568 ]
-filter_multi_pupu_enabled = true
-
-[eciway12.x.'eciway12_05C07000.png']
-filter_multi_pupu = [ 96497664 ]
-filter_multi_pupu_enabled = true
-
-[eciway12.x.'eciway12_06C06000.png']
-filter_multi_pupu = [ 113270784 ]
-filter_multi_pupu_enabled = true
-
-[eciway12.x.'eciway12_07C07000.png']
-filter_multi_pupu = [ 130052096 ]
+filter_multi_pupu = [ 96489472, 96493568, 96497664, 113270784, 130052096 ]
 filter_multi_pupu_enabled = true
 
 [eciway12.x.unique_pupu_ids]
@@ -20081,20 +20045,16 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2097152 ]
 filter_multi_pupu_enabled = true
 
+[eciway13.x.'eciway13_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785 ]
+filter_multi_pupu_enabled = true
+
 [eciway13.x.'eciway13_014FF000.png']
 filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [eciway13.x.'eciway13_02101000.png']
-filter_multi_pupu = [ 34607104 ]
-filter_multi_pupu_enabled = true
-
-[eciway13.x.'eciway13_02103000.png']
-filter_multi_pupu = [ 34615296 ]
-filter_multi_pupu_enabled = true
-
-[eciway13.x.'eciway13_02105000.png']
-filter_multi_pupu = [ 34623488 ]
+filter_multi_pupu = [ 34607104, 34615296, 34623488 ]
 filter_multi_pupu_enabled = true
 
 [eciway13.x.'eciway13_024FF000.png']
@@ -20102,11 +20062,7 @@ filter_multi_pupu = [ 38793216 ]
 filter_multi_pupu_enabled = true
 
 [eciway13.x.'eciway13_03102000.png']
-filter_multi_pupu = [ 51388416 ]
-filter_multi_pupu_enabled = true
-
-[eciway13.x.'eciway13_03104000.png']
-filter_multi_pupu = [ 51396608 ]
+filter_multi_pupu = [ 51388416, 51396608 ]
 filter_multi_pupu_enabled = true
 
 [eciway13.x.'eciway13_034FF000.png']
@@ -20119,10 +20075,6 @@ filter_multi_pupu_enabled = true
 
 [eciway13.x.'eciway13_054FF000.png']
 filter_multi_pupu = [ 89124864 ]
-filter_multi_pupu_enabled = true
-
-[eciway13.x.'eciway13_20250828_201220_530.png']
-filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [eciway13.x.unique_pupu_ids]
@@ -20142,15 +20094,11 @@ filter_multi_pupu_enabled = true
 054FF000 = 89124864
 
 [eciway14.x.'eciway14_01104000.png']
-filter_multi_pupu = [ 17842176 ]
+filter_multi_pupu = [ 17842176, 34611200 ]
 filter_multi_pupu_enabled = true
 
 [eciway14.x.'eciway14_014FF000.png']
 filter_multi_pupu = [ 22016000 ]
-filter_multi_pupu_enabled = true
-
-[eciway14.x.'eciway14_02102000.png']
-filter_multi_pupu = [ 34611200 ]
 filter_multi_pupu_enabled = true
 
 [eciway14.x.'eciway14_02103000.png']
