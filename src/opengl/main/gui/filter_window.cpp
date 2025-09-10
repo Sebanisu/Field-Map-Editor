@@ -594,7 +594,7 @@ void fme::filter_window::render_list_view(
                          }
                     }
                }
-               
+
                if (coo_table && check_animation_id)
                {
                     for (auto &&[key, value] : *coo_table)
@@ -814,8 +814,8 @@ void fme::filter_window::render_list_view(
                                    {
                                         if (
                                           u_pupu_id.animation_state() != 0u || std::ranges::any_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                             return u_pupu_id == pupu_id || u_pupu_id.same_animation_id_base(pupu_id);
-                                        }) || (m_excluded_animation_id_from_state.enabled()
+                                             return u_pupu_id == pupu_id || u_pupu_id.blend_mode() != pupu_id.blend_mode() || u_pupu_id.same_animation_id_base(pupu_id);
+                                        }) || (!check_allow_same_blend && u_pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none) ||  (m_excluded_animation_id_from_state.enabled()
                                           && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
                                                   return u_pupu_id.animation_id() == id;
                                              })))
