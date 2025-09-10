@@ -1809,7 +1809,7 @@ void fme::filter_window::draw_thumbnail(
           const auto pop_id = PushPopID();
           if (ImGui::BeginPopupContextItem("FilterOptions"))// right-click menu for this button
           {
-               if (ImGui::MenuItem("Add to selected", nullptr, nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem(ICON_FA_SQUARE_PLUS " Add to selected", nullptr, nullptr, !m_multi_select.empty()))
                {
                     ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
                     const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
@@ -1825,7 +1825,8 @@ void fme::filter_window::draw_thumbnail(
                          save_config(lock_selections);
                     }
                }
-               if (ImGui::MenuItem("Remove from selected", nullptr, nullptr, !m_multi_select.empty()))
+               tool_tip("Add hovered values to selected items.");
+               if (ImGui::MenuItem(ICON_FA_SQUARE_MINUS " Remove from selected", nullptr, nullptr, !m_multi_select.empty()))
                {
                     ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
                     const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
@@ -1841,6 +1842,53 @@ void fme::filter_window::draw_thumbnail(
                          save_config(lock_selections);
                     }
                }
+               tool_tip("Remove hovered values to selected items.");
+               ImGui::Separator();
+               if (ImGui::MenuItem(ICON_FA_LAYER_GROUP " Combine (New)", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+                    save_config(lock_selections);
+               }
+
+               tool_tip("Combine selected entries into a new entry without removing the originals.");
+               if (ImGui::MenuItem(ICON_FA_OBJECT_GROUP " Combine (Replace)", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    std::string temp_name = generate_file_name(lock_map_sprite);
+                    (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
+                    std::ranges::sort(m_multi_select);
+                    m_rename_queue.emplace_back(std::move(temp_name), m_multi_select.front());
+                    std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+                    m_multi_select.clear();
+               }
+               tool_tip("Combine selected entries into one entry and remove the originals.");
+               ImGui::Separator();
+
+               if (ImGui::MenuItem(ICON_FA_COPY " Copy", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    lock_map_sprite->copy_deswizzle_combined_toml_table(
+                      m_multi_select, [&, index = int{}]() mutable { return generate_file_name(lock_map_sprite, index++); });
+                    save_config(lock_selections);
+                    // todo: copy create new entries with generated name (prefix_timestamp_index.png).
+               }
+               tool_tip("Copy selected entries into new entries with generated names.");
+               if (ImGui::MenuItem(ICON_FA_TRASH " Remove", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+                    m_multi_select.clear();
+               }
+               tool_tip("Remove selected entries.");
+
+               if (ImGui::MenuItem(ICON_FA_FILTER " Pupu Filter", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    ImGui::OpenPopup("Pupu Filter Popup");
+               }
+               tool_tip("Bulk enable or disable pupu.");
+               ImGui::Separator();
+               if (ImGui::MenuItem(ICON_FA_BROOM " Clear Selection", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    m_multi_select.clear();
+               }
+               tool_tip("Clear the current selection.");
                ImGui::EndPopup();
           }
           if (ImGui::IsItemHovered())
