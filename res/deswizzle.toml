@@ -32735,10 +32735,6 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 4198464, 5238784, 5238785, 5238786, 5238787, 5238788 ]
 filter_multi_pupu_enabled = true
 
-[fhroof1.x.'fhroof1_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
 [fhroof1.x.unique_pupu_ids]
 00100000 = 1048576
 00401000 = 4198400
