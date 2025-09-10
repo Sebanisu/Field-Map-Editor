@@ -436,9 +436,9 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
-     static constinit bool check_offset                        = false;
-     static constinit bool check_animation_id                  = false;
-     static constinit bool check_animation_state               = false;
+     static constinit bool check_offset           = false;
+     static constinit bool check_animation_id     = false;
+     static constinit bool check_animation_state  = false;
      static constinit bool check_allow_same_blend = false;
      ImGui::BeginDisabled(check_animation_id);
      if (check_animation_id)
@@ -508,8 +508,17 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
+                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       if (
+                                         m_excluded_animation_id_from_state.enabled()
+                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                 return pupu_id.animation_id() == id;
+                                            }))
+                                       {
+                                            return false;
+                                       }
+                                       return pupu_id.offset() > 0;
+                                  }))
                               {
                                    // mark for deletion
                                    m_remove_queue.emplace_back(key);
@@ -523,8 +532,24 @@ void fme::filter_window::render_list_view(
                                    bool reload      = false;
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
+                                        if (
+                                          m_excluded_animation_id_from_state.enabled()
+                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                  return u_pupu_id.animation_id() == id;
+                                             }))
+                                        {
+                                             continue;
+                                        }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
+                                             if (
+                                               m_excluded_animation_id_from_state.enabled()
+                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                       return i_pupu_id.animation_id() == id;
+                                                  }))
+                                             {
+                                                  continue;
+                                             }
                                              if (u_pupu_id != i_pupu_id && u_pupu_id.same_base(i_pupu_id))
                                              {
                                                   copy_values.push_back(u_pupu_id);
@@ -565,8 +590,17 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
+                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       if (
+                                         m_excluded_animation_id_from_state.enabled()
+                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                 return pupu_id.animation_id() == id;
+                                            }))
+                                       {
+                                            return false;
+                                       }
+                                       return pupu_id.offset() > 0;
+                                  }))
                               {
                                    // mark for deletion
                                    m_remove_queue.emplace_back(key);
@@ -673,8 +707,17 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
+                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       if (
+                                         m_excluded_animation_id_from_state.enabled()
+                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                 return pupu_id.animation_id() == id;
+                                            }))
+                                       {
+                                            return false;
+                                       }
+                                       return pupu_id.offset() > 0;
+                                  }))
                               {
                                    // mark for deletion
                                    m_remove_queue.emplace_back(key);
@@ -686,8 +729,24 @@ void fme::filter_window::render_list_view(
                                    bool reload      = false;
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
+                                        if (
+                                          m_excluded_animation_id_from_state.enabled()
+                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                  return u_pupu_id.animation_id() == id;
+                                             }))
+                                        {
+                                             continue;
+                                        }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
+                                             if (
+                                               m_excluded_animation_id_from_state.enabled()
+                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                       return i_pupu_id.animation_id() == id;
+                                                  }))
+                                             {
+                                                  continue;
+                                             }
                                              if (
                                                   u_pupu_id != i_pupu_id &&
                                                   (
@@ -1379,12 +1438,12 @@ void fme::filter_window::combo_exclude_animation_id_from_state(const std::shared
      const auto &pair = lock_map_sprite->uniques().animation_id();
      // ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U || std::ranges::size(pair.strings()) <= 1U);
      // const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
-     const auto gcc          = fme::GenericComboWithMultiFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        "Exclude",
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto          &{ return m_excluded_animation_id_from_state; });
+       [&]() -> auto  &{ return m_excluded_animation_id_from_state; });
      if (!gcc.render())
      {
           return;
