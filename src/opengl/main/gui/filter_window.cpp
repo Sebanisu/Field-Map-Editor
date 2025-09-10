@@ -427,7 +427,7 @@ void fme::filter_window::render_list_view(
           add_new_entry(lock_selections, lock_map_sprite);
      }
      tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
-     ImGui::NextColumn();
+     ImGui::Columns(1);
      if (ImGui::Button(ICON_FA_REPEAT " Regenerate", button_size))
      {
           m_regenerate_items = true;
@@ -495,7 +495,7 @@ void fme::filter_window::render_list_view(
      {
      }
      tool_tip("Combine entries with different layer ids.");
-     ImGui::NextColumn();
+     ImGui::Columns(1);
      combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::NextColumn();
      ImGui::BeginDisabled(!check_offset && !check_animation && !check_animation_id && !check_animation_state && !check_layer_id);
