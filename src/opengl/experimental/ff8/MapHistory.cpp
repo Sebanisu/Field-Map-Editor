@@ -62,13 +62,15 @@ namespace ff_8
 
 std::vector<PupuID> MapHistory::calculate_pupu(const map_t &map)
 {
-     return map.visit_tiles([](const auto &tiles) {
-          std::vector<PupuID> pupu_ids = {};
-          UniquifyPupu        pupu_map = {};
-          pupu_ids.reserve(std::ranges::size(tiles));
-          std::ranges::transform(tiles, std::back_insert_iterator(pupu_ids), pupu_map);
-          return pupu_ids;
-     });
+     return map.visit_tiles(
+       [](const auto &tiles)
+       {
+            std::vector<PupuID> pupu_ids = {};
+            UniquifyPupu        pupu_map = {};
+            pupu_ids.reserve(std::ranges::size(tiles));
+            std::ranges::transform(tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+            return pupu_ids;
+       });
 }
 
 MapHistory::MapHistory(map_t map)

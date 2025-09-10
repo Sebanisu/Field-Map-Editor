@@ -46,7 +46,8 @@ constexpr inline bool remove_empty_values(R &...ranges)
      auto       zip_view   = std::ranges::views::zip(ranges...);
      auto       it         = std::ranges::remove_if(
                  zip_view,
-                 [](const auto &val) {
+                 [](const auto &val)
+                 {
                       if constexpr (std::ranges::range<std::remove_cvref_t<decltype(val)>>)
                       {
                            return std::ranges::empty(val);
@@ -75,28 +76,32 @@ inline bool remove_nonexistent_paths(
   const bool remove_on_error,
   R &...ranges)
 {
-     auto       zip_view = std::ranges::views::zip(ranges...);
-     auto       it       = std::ranges::remove_if(zip_view, [remove_on_error](const auto &group) {
-                    const auto &path = std::get<0>(group);
-                    if constexpr (std::same_as<std::remove_cvref_t<decltype(path)>, std::filesystem::path>)
-                    {
-                         try
-                         {
-                              return !std::filesystem::exists(path);
-                         }
-                         catch (const std::filesystem::filesystem_error &)
-                         {
-                              return remove_on_error;// true treats errors as "path does not exist"
-                              // true might not be desired as you take a disc out of the drive or something it would get removed.
-                         }
-                    }
-                    else
-                    {
-                         return false;
-                    }
-               }).begin();
+     auto zip_view = std::ranges::views::zip(ranges...);
+     auto it       = std::ranges::remove_if(
+                 zip_view,
+                 [remove_on_error](const auto &group)
+                 {
+                      const auto &path = std::get<0>(group);
+                      if constexpr (std::same_as<std::remove_cvref_t<decltype(path)>, std::filesystem::path>)
+                      {
+                           try
+                           {
+                                return !std::filesystem::exists(path);
+                           }
+                           catch (const std::filesystem::filesystem_error &)
+                           {
+                                return remove_on_error;// true treats errors as "path does not exist"
+                                // true might not be desired as you take a disc out of the drive or something it would get removed.
+                           }
+                      }
+                      else
+                      {
+                           return false;
+                      }
+                 })
+                 .begin();
 
-     const auto offset   = std::ranges::distance(zip_view.begin(), it);
+     const auto offset = std::ranges::distance(zip_view.begin(), it);
      if (offset < std::ranges::distance(zip_view))
      {
           (ranges.erase(std::ranges::next(ranges.begin(), offset), ranges.end()), ...);
@@ -152,8 +157,11 @@ constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
      using difference_type = std::ranges::range_difference_t<std::vector<bool>>;
      // Create a view that generates all combinations
      return std::ranges::iota_view(size_t{ 1 }, size_t{ 1ull << n })
-            | std::views::transform([n, &pupu_ids, mask = std::vector<bool>(n, false)](size_t) mutable {
-                   const auto increment_mask = [&]() -> bool {
+            | std::views::transform(
+              [n, &pupu_ids, mask = std::vector<bool>(n, false)](size_t) mutable
+              {
+                   const auto increment_mask = [&]() -> bool
+                   {
                         for (auto &&[index, bit] : std::views::enumerate(mask))
                         {
                              if (!bit)
@@ -169,11 +177,16 @@ constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
                    (void)increment_mask();
 
                    // Generate the combination based on the current mask
-                   return pupu_ids | std::views::enumerate | std::views::filter([&mask](const auto &tuple) {
-                               const auto &[idx, _] = tuple;
-                               return mask[static_cast<std::size_t>(idx)];
-                          })
-                          | std::views::transform([](const auto &tuple) {
+                   return pupu_ids | std::views::enumerate
+                          | std::views::filter(
+                            [&mask](const auto &tuple)
+                            {
+                                 const auto &[idx, _] = tuple;
+                                 return mask[static_cast<std::size_t>(idx)];
+                            })
+                          | std::views::transform(
+                            [](const auto &tuple)
+                            {
                                  const auto &[_, id] = tuple;
                                  return id;
                             });
@@ -186,16 +199,24 @@ constexpr inline auto generate_combinations_64bit(const rangeT &pupu_ids)
      size_t n     = std::ranges::size(pupu_ids);
      size_t total = 1ull << n;
 
-     return std::views::iota(1ull, total) | std::views::transform([n, &pupu_ids](size_t mask) {
-                 return pupu_ids | std::views::enumerate | std::views::filter([mask](const auto &tuple) {
-                             const auto &[idx, _] = tuple;
-                             return mask & (1ull << idx);
-                        })
-                        | std::views::transform([](const auto &tuple) {
-                               const auto &[_, id] = tuple;
-                               return id;
-                          });
-            });
+     return std::views::iota(1ull, total)
+            | std::views::transform(
+              [n, &pupu_ids](size_t mask)
+              {
+                   return pupu_ids | std::views::enumerate
+                          | std::views::filter(
+                            [mask](const auto &tuple)
+                            {
+                                 const auto &[idx, _] = tuple;
+                                 return mask & (1ull << idx);
+                            })
+                          | std::views::transform(
+                            [](const auto &tuple)
+                            {
+                                 const auto &[_, id] = tuple;
+                                 return id;
+                            });
+              });
 }
 
 template<std::ranges::sized_range rangeT>

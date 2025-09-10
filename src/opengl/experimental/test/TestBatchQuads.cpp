@@ -23,7 +23,8 @@ test::TestBatchQuads::TestBatchQuads()
 }
 namespace test
 {
-static std::vector<glengine::Vertex> Vertices = []() {
+static std::vector<glengine::Vertex> Vertices = []()
+{
      std::vector<glengine::Vertex> r{};
      r.reserve(TestBatchQuads::vert_count);
      return r;
@@ -39,7 +40,8 @@ void test::TestBatchQuads::on_update(float ts) const
 }
 void test::TestBatchQuads::generate_quads() const
 {
-     const auto flush = [this]() {
+     const auto flush = [this]()
+     {
           index_buffer_size = m_vertex_buffer.update(Vertices);
           draw();
           Vertices.clear();
@@ -72,12 +74,15 @@ void test::TestBatchQuads::on_render() const
 {
      set_uniforms();
      m_imgui_viewport_window.on_render([&]() { generate_quads(); });
-     GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-          Preview                = true;
-          const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
-          set_uniforms();
-          generate_quads();
-     });
+     GetViewPortPreview().on_render(
+       m_imgui_viewport_window,
+       [this]()
+       {
+            Preview                = true;
+            const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+            set_uniforms();
+            generate_quads();
+       });
 }
 void test::TestBatchQuads::on_im_gui_update() const
 {
@@ -123,7 +128,8 @@ void test::TestBatchQuads::draw() const
 void test::TestBatchQuads::on_event(const glengine::event::Item &) const {}
 void test::TestBatchQuads::set_uniforms() const
 {
-     const glm::mat4 mvp = [&]() {
+     const glm::mat4 mvp = [&]()
+     {
           if (Preview)
           {
                return m_imgui_viewport_window.preview_view_projection_matrix();

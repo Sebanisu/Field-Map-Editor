@@ -163,12 +163,16 @@ static inline void find_intersecting_get_indices(
   out_t         &out,
   const tiles_t &tiles)
 {
-     std::ranges::transform(range, std::back_inserter(out), [&tiles](const auto &tile) {
-          const auto *const start = tiles.data();
-          const auto *const curr  = &tile;
-          // format_tile_text(tile, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
-          return static_cast<std::size_t>(std::distance(start, curr));
-     });
+     std::ranges::transform(
+       range,
+       std::back_inserter(out),
+       [&tiles](const auto &tile)
+       {
+            const auto *const start = tiles.data();
+            const auto *const curr  = &tile;
+            // format_tile_text(tile, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
+            return static_cast<std::size_t>(std::distance(start, curr));
+       });
 }
 
 template<std::ranges::range tilesT>
@@ -186,30 +190,33 @@ template<std::ranges::range tilesT>
      std::vector<std::size_t>                             out          = {};
      static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
      out.reserve(new_capacity);
-     auto filtered_tiles = filtered | std::views::filter([&](const auto &tile) -> bool {
-                                if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
-                                {
-                                     return false;
-                                }
-                                if (std::cmp_equal(tile.texture_id(), texture_page))
-                                {
-                                     static constexpr int max_texture_page_dim = 256;
-                                     if (find_intersecting_in_bounds(
-                                           pixel_pos.x % max_texture_page_dim,
-                                           tile.source_x(),
-                                           tile.source_x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
-                                     {
-                                          if (find_intersecting_in_bounds(
-                                                pixel_pos.y % max_texture_page_dim,
-                                                tile.source_y(),
-                                                tile.source_y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
-                                          {
-                                               return true;
-                                          }
-                                     }
-                                }
-                                return false;
-                           });
+     auto filtered_tiles = filtered
+                           | std::views::filter(
+                             [&](const auto &tile) -> bool
+                             {
+                                  if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
+                                  {
+                                       return false;
+                                  }
+                                  if (std::cmp_equal(tile.texture_id(), texture_page))
+                                  {
+                                       static constexpr int max_texture_page_dim = 256;
+                                       if (find_intersecting_in_bounds(
+                                             pixel_pos.x % max_texture_page_dim,
+                                             tile.source_x(),
+                                             tile.source_x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                                       {
+                                            if (find_intersecting_in_bounds(
+                                                  pixel_pos.y % max_texture_page_dim,
+                                                  tile.source_y(),
+                                                  tile.source_y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                                            {
+                                                 return true;
+                                            }
+                                       }
+                                  }
+                                  return false;
+                             });
      if (!find_all)
      {
           // If palette and bpp are overlapping it causes problems.
@@ -219,9 +226,10 @@ template<std::ranges::range tilesT>
           // min palette well, lower bpp tend to be a lower palette id I think.
           const auto min_palette = (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
           auto       filtered_tiles_with_depth_and_palette
-            = filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
-                   return min_depth->depth() == tile.depth() && min_palette->palette_id() == tile.palette_id();
-              });
+            = filtered_tiles
+              | std::views::filter(
+                [&](const auto &tile) -> bool
+                { return min_depth->depth() == tile.depth() && min_palette->palette_id() == tile.palette_id(); });
           find_intersecting_get_indices(filtered_tiles_with_depth_and_palette, out, tiles);
      }
      else
@@ -245,20 +253,23 @@ template<std::ranges::range tilesT>
      static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
      out.reserve(new_capacity);
      auto filtered_tiles
-       = filtered | std::views::filter([&](const auto &tile) -> bool {
-              if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
-              {
-                   return false;
-              }
-              if (find_intersecting_in_bounds(pixel_pos.x, tile.x(), tile.x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
-              {
-                   if (find_intersecting_in_bounds(pixel_pos.y, tile.y(), tile.y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
-                   {
-                        return true;
-                   }
-              }
-              return false;
-         });
+       = filtered
+         | std::views::filter(
+           [&](const auto &tile) -> bool
+           {
+                if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
+                {
+                     return false;
+                }
+                if (find_intersecting_in_bounds(pixel_pos.x, tile.x(), tile.x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                {
+                     if (find_intersecting_in_bounds(pixel_pos.y, tile.y(), tile.y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                     {
+                          return true;
+                     }
+                }
+                return false;
+           });
 
 
      if (!find_all)

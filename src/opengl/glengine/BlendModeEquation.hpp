@@ -23,7 +23,8 @@ inline namespace impl
      }
      class BlendModeEquationStrings
      {
-          static constexpr auto strings = []() {
+          static constexpr auto strings = []()
+          {
                using namespace std::string_view_literals;
                return std::array{ "GL_FUNC_ADD"sv,             // 0
                                   "GL_FUNC_SUBTRACT"sv,        // 1

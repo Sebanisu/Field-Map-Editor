@@ -54,7 +54,8 @@ struct main_menu_paths
                return;
           }
           const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
-          [&]() {
+          [&]()
+          {
                if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
                {
                     tool_tip(m_settings.browse_tooltip);
@@ -84,7 +85,8 @@ struct main_menu_paths
           elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
           static constexpr size_t max_display_chars = 50;
           static constexpr float  chars_per_second  = 8.0f;
-          [&]() {
+          [&]()
+          {
                if (std::ranges::empty(m_settings.user_paths.get()))
                {
                     return;
@@ -96,11 +98,15 @@ struct main_menu_paths
                     auto zip_path = std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get());
                     for (const auto &[index, path] : transformed_paths)
                     {
-                         auto it      = std::ranges::find_if(zip_path, [&path](const auto &pair) {
-                              const auto &[t_path, t_enabled] = pair;
-                              return std::ranges::equal(path, t_path);
-                         });
-                         bool enabled = [&]() -> bool {
+                         auto it = std::ranges::find_if(
+                           zip_path,
+                           [&path](const auto &pair)
+                           {
+                                const auto &[t_path, t_enabled] = pair;
+                                return std::ranges::equal(path, t_path);
+                           });
+                         bool enabled = [&]() -> bool
+                         {
                               if (it != std::ranges::end(zip_path))
                               {
                                    const auto &[t_path, t_enabled] = *it;
@@ -147,7 +153,8 @@ struct main_menu_paths
                     }
                }
           }();
-          [&]() {
+          [&]()
+          {
                if (
                  std::ranges::empty(m_settings.generated_paths.get())
                  || std::ranges::none_of(m_settings.generated_paths_enabled.get(), std::identity{}))

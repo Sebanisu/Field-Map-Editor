@@ -49,8 +49,8 @@ class VertexArray
           vertex_buffer.bind();
           std::ranges::for_each(
             layout,
-            [i = std::uint32_t{}, offset = static_cast<const std::uint8_t *>(nullptr), &layout](
-              const VertexBufferElement &element) mutable {
+            [i = std::uint32_t{}, offset = static_cast<const std::uint8_t *>(nullptr), &layout](const VertexBufferElement &element) mutable
+            {
                  GlCall{}(glEnableVertexAttribArray, i);
                  if (element.m_type == GL_INT || element.m_type == GL_UNSIGNED_INT)
                  {

@@ -258,7 +258,8 @@ bool path_search::has_swizzle_path(
   const std::filesystem::path &filter_path,
   const std::string           &ext) const
 {
-     return [&]() {
+     return [&]()
+     {
           for (const auto &[bpp, palette_set] : bpp_palette)
           {
                if (bpp.bpp24())
@@ -277,7 +278,8 @@ bool path_search::has_swizzle_path(
                }
           }
           return false;
-     }() || [&]() {
+     }() || [&]()
+     {
           for (const auto &texture_page : texture_page_id.values())
           {
                if (has_swizzle_path(filter_path, texture_page, ext))
@@ -326,7 +328,8 @@ bool path_search::has_swizzle_as_one_image_path(
   const std::string           &ext) const
 {
 
-     return [&]() {
+     return [&]()
+     {
           for (const auto &[bpp, palette_set] : bpp_palette)
           {
                if (bpp.bpp24())
@@ -348,7 +351,8 @@ bool path_search::has_swizzle_as_one_image_path(
                }
           }
           return false;
-     }() || [&]() {
+     }() || [&]()
+     {
           return has_path(
             filter_path.string(),
             { .field_name    = field_name,
@@ -419,14 +423,15 @@ std::vector<std::filesystem::path> path_search::generate_paths(
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     const auto operation = [&](const std::string &pattern) -> std::filesystem::path {
-          return copy_data.replace_tags(pattern, selections, field_root.string());
-     };
+     const auto operation = [&](const std::string &pattern) -> std::filesystem::path
+     { return copy_data.replace_tags(pattern, selections, field_root.string()); };
 
-     const auto transform_and_find_a_match = [&](const auto &...arr) {
+     const auto transform_and_find_a_match = [&](const auto &...arr)
+     {
           std::vector<std::filesystem::path> result = {};
           (
-            [&]() {
+            [&]()
+            {
                  if (result.empty())
                  {
                       for (const auto &path_str : arr | std::ranges::views::transform(operation))
@@ -492,11 +497,13 @@ std::vector<std::filesystem::path> path_search::generate_paths(
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return false;
      }
-     const auto transform_and_find_a_match = [&](const auto &...arr) -> bool {
+     const auto transform_and_find_a_match = [&](const auto &...arr) -> bool
+     {
           return (
             std::ranges::any_of(
               arr,
-              [](const auto &path_str) {
+              [](const auto &path_str)
+              {
                    std::error_code ec{};
                    const auto      status = std::filesystem::status(path_str, ec);
                    if (ec)
@@ -517,9 +524,8 @@ std::vector<std::filesystem::path> path_search::generate_paths(
                    }
                    return false;
               },
-              [&](const std::string &pattern) -> std::filesystem::path {
-                   return copy_data.replace_tags(pattern, selections, field_root.string());
-              })
+              [&](const std::string &pattern) -> std::filesystem::path
+              { return copy_data.replace_tags(pattern, selections, field_root.string()); })
             || ...);
      };
 

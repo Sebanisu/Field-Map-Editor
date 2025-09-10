@@ -51,12 +51,15 @@ void ff_8::Mim::on_render() const
      if (!Saving)
      {
           m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
-          GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-               Preview                = true;
-               const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
-               set_uniforms();
-               render_frame_buffer();
-          });
+          GetViewPortPreview().on_render(
+            m_imgui_viewport_window,
+            [this]()
+            {
+                 Preview                = true;
+                 const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+                 set_uniforms();
+                 render_frame_buffer();
+            });
      }
      else
      {

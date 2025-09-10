@@ -528,7 +528,8 @@ struct colors
               == 255,
        "Floating-point constructor with default alpha failed!");
 
-     static inline const ImGuiStyle DarkStyle = []() {
+     static inline const ImGuiStyle DarkStyle = []()
+     {
           auto s = ImGuiStyle{};
           ImGui::StyleColorsDark(&s);
           return s;

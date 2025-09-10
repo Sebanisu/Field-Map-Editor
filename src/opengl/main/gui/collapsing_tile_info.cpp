@@ -25,7 +25,8 @@ bool collapsing_tile_info(
 
      return std::visit(
        make_visitor(
-         [&](const is_tile auto &original_tile, const is_tile auto &working_tile) -> bool {
+         [&](const is_tile auto &original_tile, const is_tile auto &working_tile) -> bool
+         {
               std::string title      = index == std::numeric_limits<size_t>::max()
                                          ? fmt::format("{}", gui_labels::selected_tile_info)
                                          : fmt::format("{}: {}", gui_labels::selected_tile_info, index);
@@ -50,10 +51,12 @@ bool collapsing_tile_info(
               ImVec2 const table_pos  = ImGui::GetCursorScreenPos();
               if (ImGui::BeginTable("table_tile_info", 2))
               {
-                   auto split_lines = [](const std::string &str) {
-                        return std::views::split(str, '\n') | std::views::transform([](auto &&r) {
-                                    return std::string_view(&*r.begin(), static_cast<std::size_t>(std::ranges::distance(r)));
-                               });
+                   auto split_lines = [](const std::string &str)
+                   {
+                        return std::views::split(str, '\n')
+                               | std::views::transform(
+                                 [](auto &&r)
+                                 { return std::string_view(&*r.begin(), static_cast<std::size_t>(std::ranges::distance(r))); });
                    };
 
                    // Configure columns
@@ -68,7 +71,8 @@ bool collapsing_tile_info(
                    auto              zipped_tile_info     = std::views::zip(split_working_tile, split_original_tile);
                    for (auto [new_line, old_line] : zipped_tile_info)
                    {
-                        auto split_kv = [](std::string_view line) -> std::pair<std::string_view, std::string_view> {
+                        auto split_kv = [](std::string_view line) -> std::pair<std::string_view, std::string_view>
+                        {
                              if (auto pos = line.find(':'); pos != std::string_view::npos)
                              {
                                   return { line.substr(0, pos), line.substr(pos + 1) };

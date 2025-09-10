@@ -26,7 +26,8 @@ class PixelBuffer
        , height(fbs.height)
        , data_size(static_cast<std::ptrdiff_t>(fbs.height) * static_cast<std::ptrdiff_t>(fbs.width) * std::ptrdiff_t{ 4 })
        , pbos{ [](ParameterT ids) { GlCall{}(glDeleteBuffers, static_cast<std::int32_t>(std::ranges::size(ids)), std::ranges::data(ids)); },
-               [&]() {
+               [&]()
+               {
                     auto ids = ValueT{};
                     // create 2 pixel buffer objects, you need to delete them when
                     // program exits. glBufferData() with NULL pointer reserves only

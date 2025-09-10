@@ -37,13 +37,15 @@ void                  test::TestBatchRenderer::generate_quads() const
 }
 
 test::TestBatchRenderer::TestBatchRenderer()
-  : m_textures([]() {
-       std::vector<glengine::Texture> r{};
-       r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "logo.png");
-       r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "mitchell-luo-q9ZiOzsMAhE-unsplash.png");
-       r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "math-yDq60_c-g2E-unsplash.png");
-       return r;
-  }())
+  : m_textures(
+      []()
+      {
+           std::vector<glengine::Texture> r{};
+           r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "logo.png");
+           r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "mitchell-luo-q9ZiOzsMAhE-unsplash.png");
+           r.emplace_back(std::filesystem::current_path() / "res" / "textures" / "math-yDq60_c-g2E-unsplash.png");
+           return r;
+      }())
 {
 }
 
@@ -59,12 +61,15 @@ void test::TestBatchRenderer::on_render() const
 {
      set_uniforms();
      m_imgui_viewport_window.on_render([this]() { generate_quads(); });
-     GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-          Preview                = true;
-          const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
-          set_uniforms();
-          generate_quads();
-     });
+     GetViewPortPreview().on_render(
+       m_imgui_viewport_window,
+       [this]()
+       {
+            Preview                = true;
+            const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+            set_uniforms();
+            generate_quads();
+       });
 }
 void test::TestBatchRenderer::on_im_gui_update() const
 {
@@ -100,7 +105,8 @@ void test::TestBatchRenderer::on_im_gui_update() const
 
 void test::TestBatchRenderer::set_uniforms() const
 {
-     const glm::mat4 mvp = [&]() {
+     const glm::mat4 mvp = [&]()
+     {
           if (Preview)
           {
                return m_imgui_viewport_window.preview_view_projection_matrix();

@@ -272,83 +272,114 @@ void Window::init_callbacks() const
      BeginErrorCallBack();
      // GLFW callBacks
 
-     glfwSetErrorCallback([](int error, const char *description) {
-          spdlog::error("GLFW {:X}: {}", error, description);
-          throw;
-     });
+     glfwSetErrorCallback(
+       [](int error, const char *description)
+       {
+            spdlog::error("GLFW {:X}: {}", error, description);
+            throw;
+       });
 
-     glfwSetWindowSizeCallback(m_window.get(), [](GLFWwindow *window, int width, int height) {
-          auto &data  = get_window_data(window);
-          data.width  = width;
-          data.height = height;
-          data.event_callback(event::WindowResize(width, height));
-     });
+     glfwSetWindowSizeCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int width, int height)
+       {
+            auto &data  = get_window_data(window);
+            data.width  = width;
+            data.height = height;
+            data.event_callback(event::WindowResize(width, height));
+       });
 
-     glfwSetFramebufferSizeCallback(m_window.get(), [](GLFWwindow *window, int width, int height) {
-          auto &data               = get_window_data(window);
-          data.frame_buffer_width  = width;
-          data.frame_buffer_height = height;
-          GlCall{}(glViewport, 0, 0, width, height);
-          data.event_callback(event::FrameBufferResize(width, height));
-     });
+     glfwSetFramebufferSizeCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int width, int height)
+       {
+            auto &data               = get_window_data(window);
+            data.frame_buffer_width  = width;
+            data.frame_buffer_height = height;
+            GlCall{}(glViewport, 0, 0, width, height);
+            data.event_callback(event::FrameBufferResize(width, height));
+       });
 
-     glfwSetWindowCloseCallback(m_window.get(), [](GLFWwindow *window) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::WindowClose());
-     });
+     glfwSetWindowCloseCallback(
+       m_window.get(),
+       [](GLFWwindow *window)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::WindowClose());
+       });
 
-     glfwSetKeyCallback(m_window.get(), [](GLFWwindow *window, int key, [[maybe_unused]] int scancode, int action, int mods) {
-          if (key == +Key::Unknown)
-          {
-               //        spdlog::warn("glfwSetKeyCallback Unsupported Scan Code");
-               return;
-          }
-          auto &data = get_window_data(window);
-          switch (action)
-          {
-               case +Key::Press: {
-                    data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, false));
-                    break;
-               }
-               case +Key::Release: {
-                    data.event_callback(event::KeyReleased(glengine::Key{ key }, glengine::Mods{ mods }));
-                    break;
-               }
-               case +Key::Repeat: {
-                    data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, true));
-                    break;
-               }
-          }
-     });
-     glfwSetMouseButtonCallback(m_window.get(), [](GLFWwindow *window, int button, int action, int mods) {
-          using glengine::Mouse;
-          auto &data = get_window_data(window);
-          switch (action)
-          {
-               case +Mouse::Press: {
-                    data.event_callback(event::MouseButtonPressed(Mouse{ button }, Mods{ mods }));
-                    break;
-               }
-               case +Mouse::Release: {
-                    data.event_callback(event::MouseButtonReleased(Mouse{ button }, Mods{ mods }));
-                    break;
-               }
-          }
-     });
-     glfwSetScrollCallback(m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::MouseScroll(static_cast<float>(x_offset), static_cast<float>(y_offset)));
-     });
+     glfwSetKeyCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int key, [[maybe_unused]] int scancode, int action, int mods)
+       {
+            if (key == +Key::Unknown)
+            {
+                 //        spdlog::warn("glfwSetKeyCallback Unsupported Scan Code");
+                 return;
+            }
+            auto &data = get_window_data(window);
+            switch (action)
+            {
+                 case +Key::Press:
+                 {
+                      data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, false));
+                      break;
+                 }
+                 case +Key::Release:
+                 {
+                      data.event_callback(event::KeyReleased(glengine::Key{ key }, glengine::Mods{ mods }));
+                      break;
+                 }
+                 case +Key::Repeat:
+                 {
+                      data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, true));
+                      break;
+                 }
+            }
+       });
+     glfwSetMouseButtonCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int button, int action, int mods)
+       {
+            using glengine::Mouse;
+            auto &data = get_window_data(window);
+            switch (action)
+            {
+                 case +Mouse::Press:
+                 {
+                      data.event_callback(event::MouseButtonPressed(Mouse{ button }, Mods{ mods }));
+                      break;
+                 }
+                 case +Mouse::Release:
+                 {
+                      data.event_callback(event::MouseButtonReleased(Mouse{ button }, Mods{ mods }));
+                      break;
+                 }
+            }
+       });
+     glfwSetScrollCallback(
+       m_window.get(),
+       [](GLFWwindow *window, double x_offset, double y_offset)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::MouseScroll(static_cast<float>(x_offset), static_cast<float>(y_offset)));
+       });
 
-     glfwSetCursorPosCallback(m_window.get(), [](GLFWwindow *window, double x, double y) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
-     });
+     glfwSetCursorPosCallback(
+       m_window.get(),
+       [](GLFWwindow *window, double x, double y)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
+       });
 
-     glfwSetWindowPosCallback(m_window.get(), [](GLFWwindow *window, int x, int y) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::WindowMoved(x, y));
-     });
+     glfwSetWindowPosCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int x, int y)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::WindowMoved(x, y));
+       });
 
      ImGui_ImplGlfw_InstallCallbacks(m_window.get());
 }

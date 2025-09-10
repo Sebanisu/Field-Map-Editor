@@ -54,7 +54,8 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
                     key = key3.to_view();
                }
 
-               const auto value = [&]() {
+               const auto value = [&]()
+               {
                     if (key == keys::selected_path)
                     {
                          if (selected_path.empty())

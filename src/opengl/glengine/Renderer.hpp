@@ -100,7 +100,8 @@ struct Renderer
 
           // Call backup() for each argument and store in-place
           (
-            [&]() {
+            [&]()
+            {
                  using T = std::decay_t<decltype(ts)>;
                  if constexpr (HasInstanceBackup<T>)
                  {

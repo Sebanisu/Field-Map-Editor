@@ -8,7 +8,8 @@ PupuID UniquifyPupu::operator()(const is_tile auto &tile_const)
      const auto x           = static_cast<int16_t>(tile_const.x() / t);
      const auto y           = static_cast<int16_t>(tile_const.y() / t);
      auto       input_value = PupuKey{ PupuID(tile_const), x, y };
-     auto       insert_key  = [&](PupuKey key) -> PupuID {
+     auto       insert_key  = [&](PupuKey key) -> PupuID
+     {
           if (m_pupu_map.contains(key))
           {
                ++(m_pupu_map.at(key));

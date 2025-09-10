@@ -10,7 +10,8 @@ glengine::DelayedTextures<ff_8::UpscaleTextureCount> ff_8::LoadTextures(const st
 {
      glengine::DelayedTextures<UpscaleTextureCount> rdt{};
      rdt.futures.reserve(UpscaleTextureCount);
-     auto process = [](const std::filesystem::path file_path, glengine::Texture *in_out) -> glengine::DelayedTexturesData {
+     auto process = [](const std::filesystem::path file_path, glengine::Texture *in_out) -> glengine::DelayedTexturesData
+     {
           stbi_set_flip_vertically_on_load(1);
 
           int                  x        = {};
@@ -52,27 +53,31 @@ glengine::DelayedTextures<35U> ff_8::LoadTextures(const open_viii::graphics::bac
 {
      glengine::DelayedTextures<35U> rdt{};
      rdt.futures.reserve(35U);
-     auto bpps     = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 2 }) | std::views::transform([](const std::uint32_t i) {
-                      using namespace open_viii::graphics::literals;
-                      switch (1U << (i + 2U))
-                      {
-                           case open_viii::graphics::BPPT::BPP4:
-                           default:
-                                return 4_bpp;
-                           case open_viii::graphics::BPPT::BPP8:
-                                return 8_bpp;
-                           case open_viii::graphics::BPPT::BPP16:
-                                return 16_bpp;
-                           case open_viii::graphics::BPPT::BPP24:
-                                return 24_bpp;
-                      }
-                 });
+     auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 2 })
+                 | std::views::transform(
+                   [](const std::uint32_t i)
+                   {
+                        using namespace open_viii::graphics::literals;
+                        switch (1U << (i + 2U))
+                        {
+                             case open_viii::graphics::BPPT::BPP4:
+                             default:
+                                  return 4_bpp;
+                             case open_viii::graphics::BPPT::BPP8:
+                                  return 8_bpp;
+                             case open_viii::graphics::BPPT::BPP16:
+                                  return 16_bpp;
+                             case open_viii::graphics::BPPT::BPP24:
+                                  return 24_bpp;
+                        }
+                   });
      auto palettes = std::views::iota(std::uint8_t{}, std::uint8_t{ 16 });
      auto process  = [](
                       const open_viii::graphics::background::Mim in_mim,
                       const open_viii::graphics::BPPT            in_bpp,
                       const std::uint8_t                         in_palette,
-                      glengine::Texture                         *in_out) -> glengine::DelayedTexturesData {
+                      glengine::Texture                         *in_out) -> glengine::DelayedTexturesData
+     {
           auto r = glengine::DelayedTexturesData{ .colors = in_mim.get_colors<glm::vec<4, std::uint8_t>>(in_bpp, in_palette),
                                                   .width  = static_cast<int32_t>(in_mim.get_width(in_bpp)),
                                                   .height = static_cast<int32_t>(in_mim.get_height()),
@@ -108,7 +113,8 @@ glengine::DelayedTextures<35U> ff_8::LoadTextures(const open_viii::graphics::bac
           rdt.futures.emplace_back(
             std::async(
               std::launch::async,
-              [](const open_viii::graphics::background::Mim in_mim, glengine::Texture *in_out) -> glengine::DelayedTexturesData {
+              [](const open_viii::graphics::background::Mim in_mim, glengine::Texture *in_out) -> glengine::DelayedTexturesData
+              {
                    auto r = glengine::DelayedTexturesData{ .colors = in_mim.get_colors<glm::vec<4, std::uint8_t>>({}, {}, true),
                                                            .width  = static_cast<std::int32_t>(in_mim.get_width({}, true)),
                                                            .height = static_cast<std::int32_t>(in_mim.get_height(true)),

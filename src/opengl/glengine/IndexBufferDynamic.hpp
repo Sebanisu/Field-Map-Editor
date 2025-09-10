@@ -36,7 +36,8 @@ class IndexBufferDynamic
      // clang-format on
      IndexBufferDynamic(const R &buffer)
        : m_renderer_id(
-           [&buffer]() -> std::uint32_t {
+           [&buffer]() -> std::uint32_t
+           {
                 const auto           pop_backup = backup();
                 std::uint32_t        tmp{};
                 const std::ptrdiff_t size_in_bytes
@@ -47,7 +48,8 @@ class IndexBufferDynamic
                 GlCall{}(glBufferData, GL_ELEMENT_ARRAY_BUFFER, size_in_bytes, data, GL_STATIC_DRAW);
                 return tmp;
            }(),
-           [](const std::uint32_t id) {
+           [](const std::uint32_t id)
+           {
                 GlCall{}(glDeleteBuffers, 1, &id);
                 IndexBufferDynamic::unbind();
            })

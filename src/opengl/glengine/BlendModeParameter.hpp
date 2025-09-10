@@ -37,7 +37,8 @@ inline namespace impl
      }
      class BlendModeParameterStrings
      {
-          static constexpr auto strings = []() {
+          static constexpr auto strings = []()
+          {
                using namespace std::string_view_literals;
                return std::array{ "GL_ZERO"sv,                    // 0
                                   "GL_ONE"sv,                     // 1

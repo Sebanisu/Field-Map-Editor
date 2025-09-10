@@ -1285,20 +1285,22 @@ struct Selection : SelectionBase
      Selection(
        [[maybe_unused]] const Configuration                &config,
        [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
-       : value([&]() {
-            if constexpr (SelectionUseFFNXConfig<Key>::value)
-            {
-                 if (ffnx_config.has_value())
-                 {
-                      return get_default_value(&ffnx_config.value());
-                 }
-                 return get_default_value(nullptr);
-            }
-            else
-            {
-                 return get_default_value(&config);
-            }
-       }())
+       : value(
+           [&]()
+           {
+                if constexpr (SelectionUseFFNXConfig<Key>::value)
+                {
+                     if (ffnx_config.has_value())
+                     {
+                          return get_default_value(&ffnx_config.value());
+                     }
+                     return get_default_value(nullptr);
+                }
+                else
+                {
+                     return get_default_value(&config);
+                }
+           }())
      {
           if constexpr (SelectionUseFFNXConfig<Key>::value)
           {
@@ -1433,7 +1435,8 @@ struct Selection : SelectionBase
 ;
 consteval inline auto load_selections_id_array()
 {
-     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
+     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
+     {
           return std::array<std::string_view, static_cast<std::size_t>(fme::ConfigKey::All)>{
                SelectionInfo<static_cast<ConfigKey>(Is)>::id...
           };
@@ -1460,22 +1463,24 @@ struct Selections
           // cache these values for use later on.
           std::optional<Configuration>         ffnx_config{};
           std::optional<std::filesystem::path> ff8_path{};
-          return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> SelectionsArrayT {
+          return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> SelectionsArrayT
+          {
                SelectionsArrayT result{};
 
-               ((result[Is] = [&]<ConfigKey Key>() -> std::unique_ptr<Selection<Key>> {
-                     if constexpr (ConfigKey::FF8Path == Key)
-                     {
-                          auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
-                          ff8_path    = tmp->value;
-                          ffnx_config = get_ffnx_config(tmp->value);
-                          return std::move(tmp);
-                     }
-                     else
-                     {
-                          return std::make_unique<Selection<Key>>(config, ffnx_config);
-                     }
-                }.template operator()<static_cast<ConfigKey>(Is)>()),
+               ((result[Is] = [&]<ConfigKey Key>() -> std::unique_ptr<Selection<Key>>
+                                                      {
+                                                           if constexpr (ConfigKey::FF8Path == Key)
+                                                           {
+                                                                auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
+                                                                ff8_path    = tmp->value;
+                                                                ffnx_config = get_ffnx_config(tmp->value);
+                                                                return std::move(tmp);
+                                                           }
+                                                           else
+                                                           {
+                                                                return std::make_unique<Selection<Key>>(config, ffnx_config);
+                                                           }
+                                                      }.template operator()<static_cast<ConfigKey>(Is)>()),
                 ...);
                return result;
           }(std::make_index_sequence<SelectionsSizeT>{});
@@ -1556,15 +1561,15 @@ struct Selections
      {
           if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
           {
-               [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-                    refresh<(static_cast<ConfigKey>(Is))...>();
-               }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+               [&]<std::size_t... Is>(std::index_sequence<Is...>)
+               { refresh<(static_cast<ConfigKey>(Is))...>(); }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
           }
           else
           {
                const std::optional<Configuration> ffnx_config = get_ffnx_config();
                (
-                 [&]<ConfigKey Key> {
+                 [&]<ConfigKey Key>
+                 {
                       static constexpr std::size_t index = static_cast<std::size_t>(Key);
                       if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
                       {
@@ -1584,15 +1589,15 @@ struct Selections
      {
           if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
           {
-               [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-                    update<(static_cast<ConfigKey>(Is))...>();
-               }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+               [&]<std::size_t... Is>(std::index_sequence<Is...>)
+               { update<(static_cast<ConfigKey>(Is))...>(); }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
           }
           else
           {
                Configuration config{};
                (
-                 [&]<ConfigKey Key> {
+                 [&]<ConfigKey Key>
+                 {
                       static constexpr std::size_t index = static_cast<std::size_t>(Key);
                       if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
                       {
@@ -1609,9 +1614,11 @@ struct Selections
      void reset_to_demaster()
      {
           Configuration config{};
-          [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
                (
-                 [&]<ConfigKey Key>() {
+                 [&]<ConfigKey Key>()
+                 {
                       if (m_selections_array[Is])
                       {
                            auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());
@@ -1629,9 +1636,11 @@ struct Selections
      void reset_to_ffnx()
      {
           Configuration config{};
-          [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
                (
-                 [&]<ConfigKey Key>() {
+                 [&]<ConfigKey Key>()
+                 {
                       if (m_selections_array[Is])
                       {
                            auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());

@@ -128,7 +128,8 @@ struct PatternInfo<PatternSelector::PathPatternsWithFullFileName>
 }// namespace fme
 
 
-static const auto trim = [](const std::string &str) -> std::string {
+static const auto trim = [](const std::string &str) -> std::string
+{
      auto start = str.find_first_not_of(" \t\n\r\f\v");
      if (start == std::string::npos)
           return "";// Empty or all spaces
@@ -139,7 +140,8 @@ static const auto trim = [](const std::string &str) -> std::string {
 
 [[nodiscard]] static consteval auto load_pattern_selector_array()
 {
-     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
+     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
+     {
           return std::array<fme::PatternSelector, sizeof...(Is)>{ static_cast<fme::PatternSelector>(Is)... };
      }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
 }
@@ -230,7 +232,8 @@ void fme::custom_paths_window::notify(ConfigKey key) const
 
 fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>)
+     {
           const auto selections = m_selections.lock();
           if (!selections)
           {
@@ -263,7 +266,8 @@ fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 
 std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::string * {
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::string *
+     {
           const auto selections = m_selections.lock();
           if (!selections)
           {
@@ -271,21 +275,23 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
                return nullptr;
           }
           std::string *result = nullptr;
-          (([&]() {
-                if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
-                {
-                     if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::string)
-                     {
-                          result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
-                     }
-                     else if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
-                     {
-                          result = get_current_string_value_from_index(
-                            selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>(),
-                            selections->get<ConfigKey::CurrentPatternIndex>());
-                     }
-                }
-           }()),
+          ((
+             [&]()
+             {
+                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  {
+                       if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::string)
+                       {
+                            result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                       }
+                       else if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                       {
+                            result = get_current_string_value_from_index(
+                              selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>(),
+                              selections->get<ConfigKey::CurrentPatternIndex>());
+                       }
+                  }
+             }()),
            ...);
           if (!result)
           {
@@ -300,7 +306,8 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 
 std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mutable() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::vector<std::string> * {
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::vector<std::string> *
+     {
           const auto selections = m_selections.lock();
           if (!selections)
           {
@@ -308,15 +315,17 @@ std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mu
                return nullptr;
           }
           std::vector<std::string> *result = nullptr;
-          (([&]() {
-                if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
-                {
-                     if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
-                     {
-                          result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
-                     }
-                }
-           }()),
+          ((
+             [&]()
+             {
+                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  {
+                       if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                       {
+                            result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                       }
+                  }
+             }()),
            ...);
           if (!result)
           {
@@ -430,7 +439,8 @@ bool fme::custom_paths_window::combo_selected_pattern() const
 
 void fme::custom_paths_window::save_pattern() const
 {
-     [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+     [&]<std::size_t... Is>(std::index_sequence<Is...>)
+     {
           const auto selections = m_selections.lock();
           if (!selections)
           {
@@ -638,7 +648,8 @@ bool fme::custom_paths_window::vector_pattern() const
      }
      ImGui::TableNextColumn();
      const char *add        = "Add New Pattern";
-     const auto  add_action = [&]() {
+     const auto  add_action = [&]()
+     {
           if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
           {
                mut_vptr->emplace_back();
@@ -831,7 +842,8 @@ bool fme::custom_paths_window::child_keys() const
                ImGui::SetItemTooltip("%s", current_tooltip.data());
           }
      }
-     const auto same_line = []() -> bool {
+     const auto same_line = []() -> bool
+     {
           ImGui::SameLine();
           return {};
      };
@@ -950,12 +962,13 @@ void fme::custom_paths_window::render() const
           return;
      }
      bool      &visible     = selections->get<ConfigKey::DisplayCustomPathsWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               selections->update<ConfigKey::DisplayCustomPathsWindow>();
-          }
-     } };
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
+                                                    {
+                                                         if (was_visable != visible)
+                                                         {
+                                                              selections->update<ConfigKey::DisplayCustomPathsWindow>();
+                                                         }
+                                                    } };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::custom_paths_window.data(), &visible))
      {
@@ -968,10 +981,11 @@ void fme::custom_paths_window::render() const
      const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
      ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
      ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
-     const auto pop_styles = glengine::ScopeGuard{ []() {
-          ImGui::PopStyleColor(2);
-          ImGui::PopStyleVar(3);
-     } };
+     const auto pop_styles = glengine::ScopeGuard{ []()
+                                                   {
+                                                        ImGui::PopStyleColor(2);
+                                                        ImGui::PopStyleVar(3);
+                                                   } };
      if (ImGui::Button("Reset to FFNX"))
      {
           selections->reset_to_ffnx();
@@ -1002,21 +1016,24 @@ void fme::custom_paths_window::render() const
      ImGui::Separator();
      switch (vector_or_string())
      {
-          case VectorOrString::string: {
+          case VectorOrString::string:
+          {
                if (std::ranges::any_of(std::array{ combo_selected_pattern(), textbox_pattern() }, std::identity{}))
                {
                     override_changed = true;
                }
                break;
           }
-          case VectorOrString::vector: {
+          case VectorOrString::vector:
+          {
                if (std::ranges::any_of(std::array{ combo_selected_pattern(), vector_pattern() }, std::identity{}))
                {
                     override_changed = true;
                }
                break;
           }
-          default: {
+          default:
+          {
                spdlog::warn("vector_or_string() is unknown type");
                break;
           }

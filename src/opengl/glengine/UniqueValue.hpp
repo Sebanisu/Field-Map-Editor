@@ -204,7 +204,8 @@ static_assert(
     1>>(
     GlidArray<1>(
       [](GlidArray<1>::ParameterT) {},
-      []() {
+      []()
+      {
            GlidArray<1>::ValueT out{};
            out[0] = 1U;
            return out;
@@ -216,7 +217,8 @@ static_assert(
     1>>(
     UniqueValueArray(
       [](GlidArray<1>::ParameterT) {},
-      []() {
+      []()
+      {
            GlidArray<1>::ValueT out{};
            out[0] = 1U;
            return out;

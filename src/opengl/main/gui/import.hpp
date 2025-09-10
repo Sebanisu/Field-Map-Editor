@@ -70,12 +70,13 @@ class [[nodiscard]] import
        get_next_unused_y_and_texture_page(const tiles_t &tiles) const
      {
           const auto max_texture_id_tile = (std::ranges::max)(tiles, {}, [](const auto &tile) { return tile.texture_id(); });
-          const auto max_source_y_tile   = (std::ranges::max)(tiles | std::ranges::views::filter([&max_texture_id_tile](const auto &tile) {
-                                                                 return tile.texture_id() == max_texture_id_tile.texture_id();
-                                                            }),
-                                                            {},
-                                                            [](const auto &tile) { return tile.source_y(); });
-          int const  tile_y              = max_source_y_tile.source_y() / tile_size_px;
+          const auto max_source_y_tile
+            = (std::ranges::max)(tiles
+                                   | std::ranges::views::filter([&max_texture_id_tile](const auto &tile)
+                                                                { return tile.texture_id() == max_texture_id_tile.texture_id(); }),
+                                 {},
+                                 [](const auto &tile) { return tile.source_y(); });
+          int const tile_y = max_source_y_tile.source_y() / tile_size_px;
           format_imgui_text("Last Used Texture Page {}, and Source Y / 16 = {}", max_texture_id_tile.texture_id(), tile_y);
           const auto         next_source_y = static_cast<uint8_t>((tile_y + 1) % tile_size_px_unsigned);
           const std::uint8_t next_texture_page

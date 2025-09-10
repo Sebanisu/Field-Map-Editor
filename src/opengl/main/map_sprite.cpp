@@ -237,20 +237,24 @@ void map_sprite::queue_texture_loading() const
      std::vector<std::future<std::future<void>>> future_of_futures{};
 
 
-     const auto                                  fofh_consumer = glengine::ScopeGuard{ [&]() {
-          // Consume the collected nested futures immediately to kick off the work
+     const auto                                  fofh_consumer = glengine::ScopeGuard{ [&]()
+                                                      {
+                                                           // Consume the collected nested futures immediately to kick off the work
 
-          m_future_of_future_consumer                          = std::move(future_of_futures);
-     } };
+                                                           m_future_of_future_consumer = std::move(future_of_futures);
+                                                      } };
 
      // Check if the deswizzle filter is enabled
      if (m_filters.deswizzle.enabled())
      {
           // Deswizzling is enabled; load textures based on PupuIDs in order
-          std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
-               future_of_futures.push_back(load_deswizzle_textures(pupu, pos));
-               ++pos;
-          });
+          std::ranges::for_each(
+            working_unique_pupu(),
+            [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable
+            {
+                 future_of_futures.push_back(load_deswizzle_textures(pupu, pos));
+                 ++pos;
+            });
           return;
      }
 
@@ -259,7 +263,8 @@ void map_sprite::queue_texture_loading() const
           // Deswizzling is enabled; load textures based on PupuIDs in order
           const auto filenames = toml_filenames();
           // const auto &unique_pupu = working_unique_pupu();
-          const auto operation = [&](const std::string &filename) {
+          const auto operation = [&](const std::string &filename)
+          {
                // Original
                future_of_futures.push_back(load_full_filename_textures(filename));
 
@@ -338,7 +343,10 @@ void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &fu
      std::vector<std::future<void>> futures{};
      futures.reserve(std::ranges::size(future_of_futures));
      std::ranges::transform(
-       future_of_futures, std::back_inserter(futures), [](std::future<std::future<void>> &future_of_future) -> std::future<void> {
+       future_of_futures,
+       std::back_inserter(futures),
+       [](std::future<std::future<void>> &future_of_future) -> std::future<void>
+       {
             if (future_of_future.valid())
             {
                  future_of_future.wait();
@@ -351,21 +359,27 @@ void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &fu
 
 void map_sprite::consume_futures(std::vector<std::future<void>> &futures)
 {
-     std::ranges::for_each(futures, [](std::future<void> &future) {
-          if (future.valid())
-          {
-               future.get();
-          }
-     });
+     std::ranges::for_each(
+       futures,
+       [](std::future<void> &future)
+       {
+            if (future.valid())
+            {
+                 future.get();
+            }
+       });
 }
 
 bool map_sprite::fallback_textures() const
 {
-     if (std::ranges::all_of(*m_texture.get(), [](const glengine::Texture &texture) {
-              const auto size = texture.get_size();
-              // spdlog::info("{}", size);
-              return size.x == 0 || size.y == 0;
-         }))
+     if (std::ranges::all_of(
+           *m_texture.get(),
+           [](const glengine::Texture &texture)
+           {
+                const auto size = texture.get_size();
+                // spdlog::info("{}", size);
+                return size.x == 0 || size.y == 0;
+           }))
      {
           if (m_filters.swizzle.enabled())
           {
@@ -413,13 +427,16 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
           open_viii::graphics::background::Mim mim     = *m_map_group.mim;
           glengine::Texture *const             texture = &(m_texture->at(pos));
           spdlog::debug("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
-          return { std::async(std::launch::async, [=]() -> std::future<void> {
-               spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
-               return { std::async(
-                 std::launch::deferred,
-                 future_operations::LoadColorsIntoTexture{ texture, get_colors(mim, bpp, palette),
-                                                           glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
-          }) };
+          return { std::async(
+            std::launch::async,
+            [=]() -> std::future<void>
+            {
+                 spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
+                 return { std::async(
+                   std::launch::deferred,
+                   future_operations::LoadColorsIntoTexture{ texture, get_colors(mim, bpp, palette),
+                                                             glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
+            }) };
      }
 }
 
@@ -566,9 +583,10 @@ void map_sprite::update_position(
      const Map &current_original = m_map_group.maps.original();
      Map       &current_map      = m_map_group.maps.copy_working(
        fmt::format("{} ({},{}) -> ({},{})", gui_labels::update_position, pixel_pos.x, pixel_pos.y, down_pixel_pos.x, down_pixel_pos.y));
-     const auto update_tile_positions = [this, &pixel_pos, &down_pixel_pos](/*const auto &map, */ const auto &const_tiles,
-                                                                            auto                            &&tiles,
-                                                                            const std::vector<std::size_t>   &indices) {
+     const auto update_tile_positions
+       = [this, &pixel_pos, &down_pixel_pos](
+           /*const auto &map, */ const auto &const_tiles, auto &&tiles, const std::vector<std::size_t> &indices)
+     {
           for (auto i : indices)
           {
                const auto &original_tile = const_tiles[i];
@@ -583,7 +601,8 @@ void map_sprite::update_position(
                     const std::uint8_t y            = static_cast<std::uint8_t>(((pixel_pos.y - y_offset)));
                     const std::uint8_t texture_page = static_cast<std::uint8_t>(pixel_pos.x / texture_page_width);
                     using namespace open_viii::graphics;
-                    const BPPT bppt = [&]() {
+                    const BPPT bppt = [&]()
+                    {
                          if (x >= 128 || original_tile.depth().bpp4())
                          {
                               return 4_bpp;
@@ -605,9 +624,9 @@ void map_sprite::update_position(
                }
           }
      };
-     current_original.visit_tiles([&](const auto &const_tiles) {
-          current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ const_tiles, tiles, saved_indices); });
-     });
+     current_original.visit_tiles(
+       [&](const auto &const_tiles)
+       { current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ const_tiles, tiles, saved_indices); }); });
      // if (!m_draw_swizzle)
      // {
      //      m_imported_tile_map.visit_tiles(
@@ -634,131 +653,137 @@ void map_sprite::update_position(
      const auto &unique_pupu_ids = working_unique_pupu();
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
-          for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
-               if (pupu_id.raw() == 0)
-               {
-                    throw std::logic_error("pupu_id.raw() returned 0 — this indicates a coding error.");
-               }
-               if (
-                 m_filters.multi_animation_id.enabled()
-                 && std::ranges::all_of(
-                   m_filters.multi_animation_id.value(), [&](const auto &test) -> bool { return test != tile.animation_id(); }))
-               {
-                    return;
-               }
-               if (m_filters.multi_pupu.enabled() && std::ranges::all_of(m_filters.multi_pupu.value(), [&](const auto &test) -> bool {
-                        return test != pupu_id;
-                   }))
-               {
-                    return;
-               }
-               if (m_filters.pupu.enabled() && m_filters.pupu.value() != pupu_id)
-               {
-                    return;
-               }
+          for_all_tiles(
+            [&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id)
+            {
+                 if (pupu_id.raw() == 0)
+                 {
+                      throw std::logic_error("pupu_id.raw() returned 0 — this indicates a coding error.");
+                 }
+                 if (
+                   m_filters.multi_animation_id.enabled()
+                   && std::ranges::all_of(
+                     m_filters.multi_animation_id.value(), [&](const auto &test) -> bool { return test != tile.animation_id(); }))
+                 {
+                      return;
+                 }
+                 if (
+                   m_filters.multi_pupu.enabled()
+                   && std::ranges::all_of(m_filters.multi_pupu.value(), [&](const auto &test) -> bool { return test != pupu_id; }))
+                 {
+                      return;
+                 }
+                 if (m_filters.pupu.enabled() && m_filters.pupu.value() != pupu_id)
+                 {
+                      return;
+                 }
 
-               if (tile.z() != z)
-               {
-                    return;
-               }
-               if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
-               {
-                    return;
-               }
-               const auto *texture = [&]() {
-                    if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
-                    {
-                         return get_texture(pupu_id);
-                    }
-                    else
-                    {
-                         return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
-                    }
-               }();
+                 if (tile.z() != z)
+                 {
+                      return;
+                 }
+                 if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+                 {
+                      return;
+                 }
+                 const auto *texture = [&]()
+                 {
+                      if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
+                      {
+                           return get_texture(pupu_id);
+                      }
+                      else
+                      {
+                           return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+                      }
+                 }();
 
-               if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
-               {
-                    return;
-               }
-               if (!m_disable_blends)
-               {
-                    auto blend_mode = tile.blend_mode();
-                    if (blend_mode != last_blend_mode)
-                    {
-                         spdlog::debug("Blend mode: {}", blend_mode);
-                         target_renderer.draw();// flush buffer.
-                         last_blend_mode = blend_mode;
-                         // if (s_blends.percent_blend_enabled())
-                         // {
-                         switch (blend_mode)
-                         {
-                              case open_viii::graphics::background::BlendModeT::half_add:
-                                   m_uniform_color = s_half_color;
-                                   break;
-                              case open_viii::graphics::background::BlendModeT::quarter_add:
-                                   m_uniform_color = s_quarter_color;
-                                   break;
-                              default:
-                                   m_uniform_color = s_default_color;
-                                   break;
-                         }
-                         shader.set_uniform("u_Tint", m_uniform_color);
-                         // }
-                         switch (blend_mode)
-                         {
-                              case open_viii::graphics::background::BlendModeT::half_add:
-                              case open_viii::graphics::background::BlendModeT::quarter_add:
-                              case open_viii::graphics::background::BlendModeT::add: {
-                                   // s_blends.set_add_blend();
-                                   glengine::BlendModeSettings::add_blend();
-                              }
-                              break;
-                              case open_viii::graphics::background::BlendModeT ::subtract: {
-                                   // s_blends.set_subtract_blend();
-                                   glengine::BlendModeSettings::subtract_blend();
-                              }
-                              break;
-                              default:
-                                   glengine::BlendModeSettings::default_blend();
-                         }
-                    }
-               }
+                 if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
+                 {
+                      return;
+                 }
+                 if (!m_disable_blends)
+                 {
+                      auto blend_mode = tile.blend_mode();
+                      if (blend_mode != last_blend_mode)
+                      {
+                           spdlog::debug("Blend mode: {}", blend_mode);
+                           target_renderer.draw();// flush buffer.
+                           last_blend_mode = blend_mode;
+                           // if (s_blends.percent_blend_enabled())
+                           // {
+                           switch (blend_mode)
+                           {
+                                case open_viii::graphics::background::BlendModeT::half_add:
+                                     m_uniform_color = s_half_color;
+                                     break;
+                                case open_viii::graphics::background::BlendModeT::quarter_add:
+                                     m_uniform_color = s_quarter_color;
+                                     break;
+                                default:
+                                     m_uniform_color = s_default_color;
+                                     break;
+                           }
+                           shader.set_uniform("u_Tint", m_uniform_color);
+                           // }
+                           switch (blend_mode)
+                           {
+                                case open_viii::graphics::background::BlendModeT::half_add:
+                                case open_viii::graphics::background::BlendModeT::quarter_add:
+                                case open_viii::graphics::background::BlendModeT::add:
+                                {
+                                     // s_blends.set_add_blend();
+                                     glengine::BlendModeSettings::add_blend();
+                                }
+                                break;
+                                case open_viii::graphics::background::BlendModeT ::subtract:
+                                {
+                                     // s_blends.set_subtract_blend();
+                                     glengine::BlendModeSettings::subtract_blend();
+                                }
+                                break;
+                                default:
+                                     glengine::BlendModeSettings::default_blend();
+                           }
+                      }
+                 }
 
-               const auto destination_tile_size
-                 = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
-               const auto            source_tile_size    = get_tile_texture_size(texture);
-               const auto            source_texture_size = glm::uvec2{ texture->width(), texture->height() };
-               const ff_8::QuadStrip quad
-                 = get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
+                 const auto destination_tile_size
+                   = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
+                 const auto            source_tile_size    = get_tile_texture_size(texture);
+                 const auto            source_texture_size = glm::uvec2{ texture->width(), texture->height() };
+                 const ff_8::QuadStrip quad
+                   = get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
 
-               //  Extract draw position (x, y) from quad[0] (top-left vertex)
-               glm::vec3            draw_position = glm::vec3(quad.draw_pos, 0.F);
+                 //  Extract draw position (x, y) from quad[0] (top-left vertex)
+                 glm::vec3            draw_position = glm::vec3(quad.draw_pos, 0.F);
 
-               // Create the SubTexture
-               glengine::SubTexture subtexture(*texture, quad.uv_min, quad.uv_max);
+                 // Create the SubTexture
+                 glengine::SubTexture subtexture(*texture, quad.uv_min, quad.uv_max);
 
-               spdlog::trace("Target framebuffer scale: {}", target_framebuffer.scale());
-               spdlog::trace("Destination tile size: ({}, {})", destination_tile_size.x, destination_tile_size.y);
-               spdlog::trace("Source tile size: ({}, {})", source_tile_size.x, source_tile_size.y);
-               spdlog::trace("Source texture size: ({}, {})", source_texture_size.x, source_texture_size.y);
-               spdlog::trace("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
-               spdlog::trace("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
-               spdlog::trace("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
-               const auto find_id = [&]() {
-                    if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
-                    {
-                         return static_cast<int>(it - std::ranges::begin(unique_pupu_ids));
-                    }
-                    return -1;
-               };
-               target_renderer.draw_quad(
-                 subtexture,
-                 draw_position,
-                 glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
-                 static_cast<GLuint>(find_id()));
-               drew = true;
-          });
+                 spdlog::trace("Target framebuffer scale: {}", target_framebuffer.scale());
+                 spdlog::trace("Destination tile size: ({}, {})", destination_tile_size.x, destination_tile_size.y);
+                 spdlog::trace("Source tile size: ({}, {})", source_tile_size.x, source_tile_size.y);
+                 spdlog::trace("Source texture size: ({}, {})", source_texture_size.x, source_texture_size.y);
+                 spdlog::trace("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
+                 spdlog::trace("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
+                 spdlog::trace("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
+                 const auto find_id = [&]()
+                 {
+                      if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
+                      {
+                           return static_cast<int>(it - std::ranges::begin(unique_pupu_ids));
+                      }
+                      return -1;
+                 };
+                 target_renderer.draw_quad(
+                   subtexture,
+                   draw_position,
+                   glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
+                   static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                   static_cast<GLuint>(find_id()));
+                 drew = true;
+            });
      }
      if (drew)
      {
@@ -1284,16 +1309,19 @@ void map_sprite::map_save(const std::filesystem::path &dest_path) const
      const auto              path = dest_path.string();
 
      open_viii::tools::write_buffer(
-       [&map](std::ostream &os) {
-            map.visit_tiles([&os](auto &&tiles) {
-                 for (const auto &tile : tiles)
-                 {
-                      //          std::array<char, sizeof(tile)> data{};
-                      //          std::memcpy(data.data(), &tile, sizeof(tile));
-                      const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
-                      os.write(data.data(), data.size());
-                 }
-            });
+       [&map](std::ostream &os)
+       {
+            map.visit_tiles(
+              [&os](auto &&tiles)
+              {
+                   for (const auto &tile : tiles)
+                   {
+                        //          std::array<char, sizeof(tile)> data{};
+                        //          std::memcpy(data.data(), &tile, sizeof(tile));
+                        const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+                        os.write(data.data(), data.size());
+                   }
+              });
        },
        path,
        "");
@@ -1311,12 +1339,17 @@ void map_sprite::resize_render_texture() const
      {
           return;
      }
-     auto       filtered_textures = *(m_texture.get()) | std::views::filter([](const auto &texture) {
-          const auto &size = texture.get_size();
-          return size.x != 0 && size.y != 0;
-     });
-     const auto check_size        = [this]() {
-          static const GLint max_size = []() {
+     auto filtered_textures = *(m_texture.get())
+                              | std::views::filter(
+                                [](const auto &texture)
+                                {
+                                     const auto &size = texture.get_size();
+                                     return size.x != 0 && size.y != 0;
+                                });
+     const auto check_size = [this]()
+     {
+          static const GLint max_size = []()
+          {
                GLint return_val = {};
                glGetIntegerv(GL_MAX_TEXTURE_SIZE, &return_val);
                return return_val;
@@ -1635,10 +1668,14 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     const auto &unique_palette = unique_values.palette().at(bpp).values();
 
                     // Filter palettes that conflict with the current texture page.
-                    auto        filter_palette = unique_palette | std::views::filter([&conflicting_palettes](const std::uint8_t &palette) {
-                                               return std::ranges::any_of(
-                                                 conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
-                                          });
+                    auto        filter_palette
+                      = unique_palette
+                        | std::views::filter(
+                          [&conflicting_palettes](const std::uint8_t &palette)
+                          {
+                               return std::ranges::any_of(
+                                 conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
+                          });
 
                     for (const auto &palette : filter_palette)
                     {
@@ -1727,14 +1764,16 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Backup and override current settings for exporting textures.
      settings_backup settings                = get_backup_settings(true);
      settings.disable_texture_page_shift     = false;// Disable texture page shifts
-     std::int32_t       height               = static_cast<std::int32_t>(get_max_texture_height());
+     std::int32_t height                     = static_cast<std::int32_t>(get_max_texture_height());
 
-     const auto         max_source_x         = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
-          auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
-                           | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
-          return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
-     });
-     const std::int32_t width                = height * static_cast<std::int32_t>(max_texture_page_id)
+     const auto   max_source_x               = m_map_group.maps.working().visit_tiles(
+       [&](const auto &tiles) -> std::uint8_t
+       {
+            auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
+                             | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
+            return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
+       });
+     const std::int32_t width = height * static_cast<std::int32_t>(max_texture_page_id)
                                 + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
@@ -1770,11 +1809,14 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                const auto &unique_palette = unique_values.palette().at(bpp).values();
 
                // Filter palettes that conflict with the current texture page.
-               auto filter_palette = unique_palette | std::views::filter([&conflicting_palettes_flatten](const std::uint8_t &palette) {
-                                          return std::ranges::any_of(conflicting_palettes_flatten, [&palette](const std::uint8_t &other) {
-                                               return palette == other;
-                                          });
-                                     });
+               auto        filter_palette
+                 = unique_palette
+                   | std::views::filter(
+                     [&conflicting_palettes_flatten](const std::uint8_t &palette)
+                     {
+                          return std::ranges::any_of(
+                            conflicting_palettes_flatten, [&palette](const std::uint8_t &other) { return palette == other; });
+                     });
 
                for (const auto &palette : filter_palette)
                {
@@ -1855,7 +1897,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
          [map  = m_map_group.maps.const_working(),
           pupu = m_map_group.maps.working_pupu() | std::views::transform([](const auto &pupu_id) { return pupu_id.raw(); })
                  | std::ranges::to<std::vector>(),
-          path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable {
+          path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable
+         {
               ;
               map.unshift_from_origin();
               map.save_csv(path, pupu);
@@ -2130,7 +2173,8 @@ void map_sprite::save_deswizzle_generate_toml(
                     std::filesystem::path mask_path
                       = out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
                     spdlog::debug("Queued image save: mask='{}'", mask_path.string());
-                    const auto colors_to_pupu = [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>> {
+                    const auto colors_to_pupu = [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>>
+                    {
                          if (selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>())
                          {
                               return working_unique_color_pupu();
@@ -2181,11 +2225,14 @@ void map_sprite::save_deswizzle_generate_toml(
      {
           return m_cache_framebuffer;
      }
-     if (std::ranges::all_of(*m_texture.get(), [](const glengine::Texture &texture) {
-              const auto size = texture.get_size();
-              // spdlog::info("{}", size);
-              return size.x == 0 || size.y == 0;
-         }))
+     if (std::ranges::all_of(
+           *m_texture.get(),
+           [](const glengine::Texture &texture)
+           {
+                const auto size = texture.get_size();
+                // spdlog::info("{}", size);
+                return size.x == 0 || size.y == 0;
+           }))
      {
           return m_cache_framebuffer;
      }
@@ -2222,37 +2269,42 @@ void map_sprite::save_deswizzle_generate_toml(
           if (!inserted)
                continue;
 
-          futures.emplace_back(std::async(std::launch::deferred, [this, it, &file_node, in_scale]() {
-               const int scale = [&]() {
-                    if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
-                    {
-                         return m_render_framebuffer->scale();
-                    }
-                    return in_scale;
-               }();
-               // Setup an off-screen render texture
-               iRectangle const canvas = m_map_group.maps.const_working().canvas() * scale;
-               const auto       specification
-                 = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
-               // Backup current settings and adjust for saving Pupu textures
-               auto  settings = get_backup_settings(false);
-               auto &filters  = settings.filters.value();
-               filters.reload(*file_node.as_table());
+          futures.emplace_back(
+            std::async(
+              std::launch::deferred,
+              [this, it, &file_node, in_scale]()
+              {
+                   const int scale = [&]()
+                   {
+                        if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
+                        {
+                             return m_render_framebuffer->scale();
+                        }
+                        return in_scale;
+                   }();
+                   // Setup an off-screen render texture
+                   iRectangle const canvas = m_map_group.maps.const_working().canvas() * scale;
+                   const auto       specification
+                     = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
+                   // Backup current settings and adjust for saving Pupu textures
+                   auto  settings = get_backup_settings(false);
+                   auto &filters  = settings.filters.value();
+                   filters.reload(*file_node.as_table());
 
-               // Generate
-               m_cache_framebuffer_tooltips[it->first] = generate_deswizzle_combined_tool_tip(file_node.as_table());
+                   // Generate
+                   m_cache_framebuffer_tooltips[it->first] = generate_deswizzle_combined_tool_tip(file_node.as_table());
 
-               cache_pupuids(it->first, filters);
+                   cache_pupuids(it->first, filters);
 
-               if (glengine::FrameBuffer fb(specification); generate_texture(fb))
-               {
-                    it->second = std::move(fb);// replace empty optional
-               }
-               else
-               {
-                    it->second.reset();// stays empty if generation failed
-               }
-          }));
+                   if (glengine::FrameBuffer fb(specification); generate_texture(fb))
+                   {
+                        it->second = std::move(fb);// replace empty optional
+                   }
+                   else
+                   {
+                        it->second.reset();// stays empty if generation failed
+                   }
+              }));
      }
      m_future_consumer += std::move(futures);
      return m_cache_framebuffer;
@@ -2355,7 +2407,8 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
      if (!field_table)
           return coo_opt.value_or(open_viii::LangT::generic);
 
-     auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
+     auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table *
+     {
           const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
 
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
@@ -2402,7 +2455,8 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
      auto                        config      = Configuration(config_path);
      toml::table                &root_table  = config;
 
-     const auto                  coo_opt     = [&]() {
+     const auto                  coo_opt     = [&]()
+     {
           if (m_map_group.opt_coo.has_value())
           {
                return m_map_group.opt_coo;
@@ -2434,14 +2488,16 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
      const auto failover_sequence = std::to_array(
        { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic, open_viii::LangT::en, open_viii::LangT::fr,
          open_viii::LangT::de, open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
-     const auto get_key_str = [&](const open_viii::LangT lang) {
+     const auto get_key_str = [&](const open_viii::LangT lang)
+     {
           if (lang != open_viii::LangT::generic)
           {
                return std::string(open_viii::LangCommon::to_string_3_char(lang));
           }
           return std::string("x");
      };
-     const auto get_table_by_coo = [&](const std::string &key) -> toml::table * {
+     const auto get_table_by_coo = [&](const std::string &key) -> toml::table *
+     {
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
           {
                spdlog::trace("{}:{}, found key!: {}", __FILE__, __LINE__, key);
@@ -2699,9 +2755,10 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
                copy_filter.reload(*table);
                ff_8::filter_old<ff_8::FilterTag::MultiPupu>::value_type tempvec = {};
 
-               std::ranges::remove_copy_if(copy_filter.value(), std::back_inserter(tempvec), [&](const auto &value) {
-                    return std::ranges::find(new_filter.value(), value) != std::ranges::end(new_filter.value());
-               });
+               std::ranges::remove_copy_if(
+                 copy_filter.value(),
+                 std::back_inserter(tempvec),
+                 [&](const auto &value) { return std::ranges::find(new_filter.value(), value) != std::ranges::end(new_filter.value()); });
                copy_filter.update(std::move(tempvec));
                copy_filter.update(*table);
           }
@@ -2911,14 +2968,19 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
 {
      const auto path = src_path.string();
      open_viii::tools::read_from_file(
-       [&](std::istream &os) {
+       [&](std::istream &os)
+       {
             (void)m_map_group.maps.copy_working(fmt::format("{}: {}", gui_labels::load_map, src_path));
-            m_map_group.maps.original().visit_tiles([this, &os](const auto &const_tiles) {
-                 using tile_t = std::remove_cvref_t<decltype(const_tiles.front())>;
-                 m_map_group.maps.working()
-                   = open_viii::graphics::background::Map([&os]() -> open_viii::graphics::background::Map::variant_tile {
+            m_map_group.maps.original().visit_tiles(
+              [this, &os](const auto &const_tiles)
+              {
+                   using tile_t               = std::remove_cvref_t<decltype(const_tiles.front())>;
+                   m_map_group.maps.working() = open_viii::graphics::background::Map(
+                     [&os]() -> open_viii::graphics::background::Map::variant_tile
+                     {
                           tile_t     tile{};
-                          const auto append = [&os](auto &t) -> bool {
+                          const auto append = [&os](auto &t) -> bool
+                          {
                                // load tile
                                std::array<char, sizeof(t)> data = {};
                                if (!os.read(data.data(), data.size()))
@@ -2937,7 +2999,7 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
                           }
                           return std::monostate{};
                      });
-            });
+              });
             //   shift to origin
             m_map_group.maps.working().shift_to_origin();
             (void)m_map_group.maps.copy_working_to_original(fmt::format("{}: {}", gui_labels::load_map, src_path));
@@ -3155,7 +3217,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
                                      .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
-             texture_page]() -> std::vector<std::filesystem::path> {
+             texture_page]() -> std::vector<std::filesystem::path>
+     {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
      };
@@ -3172,7 +3235,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_a
                                      .opt_coo                             = in_map_sprite.get_opt_coo(),
                                      .field_name                          = in_map_sprite.get_base_name(),
                                      .filters_swizzle_as_one_image_string = in_map_sprite.filter().swizzle_as_one_image.value().string() },
-             palette]() -> std::vector<std::filesystem::path> {
+             palette]() -> std::vector<std::filesystem::path>
+     {
           if (palette.has_value())
           {
                spdlog::debug("Generating swizzle as one image paths for field: '{}', palette: {} ", ps.field_name, palette.value());
@@ -3198,7 +3262,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
                                      .field_name                   = in_map_sprite.get_base_name(),
                                      .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
              texture_page,
-             palette]() -> std::vector<std::filesystem::path> {
+             palette]() -> std::vector<std::filesystem::path>
+     {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {}, palette: {}", ps.field_name, texture_page, palette);
           return ps.generate_swizzle_paths(texture_page, palette, ".png");
      };
@@ -3215,7 +3280,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_deswizzle
                                      .opt_coo                        = in_map_sprite.get_opt_coo(),
                                      .field_name                     = in_map_sprite.get_base_name(),
                                      .filters_deswizzle_value_string = in_map_sprite.filter().deswizzle.value().string() },
-             pupu_id]() -> std::vector<std::filesystem::path> {
+             pupu_id]() -> std::vector<std::filesystem::path>
+     {
           spdlog::debug("Generating deswizzle paths for field: '{}', pupu_id: {}", ps.field_name, pupu_id);
           return ps.generate_deswizzle_paths(pupu_id, ".png");
      };
@@ -3232,7 +3298,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_full_file
                                      .opt_coo                            = in_map_sprite.get_opt_coo(),
                                      .field_name                         = in_map_sprite.get_base_name(),
                                      .filters_full_filename_value_string = in_map_sprite.filter().full_filename.value().string() },
-             filename]() -> std::vector<std::filesystem::path> {
+             filename]() -> std::vector<std::filesystem::path>
+     {
           spdlog::debug("Generating full filename paths for field: '{}', filename: {}", ps.field_name, filename);
           return ps.generate_full_filename_paths(filename);
      };
@@ -3249,7 +3316,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_map_paths
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
                                      .filters_map_value_string
-                                     = in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path> {
+                                     = in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path>
+     {
           spdlog::debug("Generating map paths for field: '{}'", ps.field_name);
           return ps.generate_map_paths(".map");
      };

@@ -42,9 +42,8 @@ struct CompShader
      {
           GLint program_binding{ 0 };// save original
           GlCall{}(glGetIntegerv, GL_CURRENT_PROGRAM, &program_binding);
-          return ScopeGuard{ [=]() {
-               GlCall{}(glUseProgram, program_binding);
-          } };// restore original shader. this might not be doing anything.
+          return ScopeGuard{ [=]()
+                             { GlCall{}(glUseProgram, program_binding); } };// restore original shader. this might not be doing anything.
      }
 
      // Set Uniforms
@@ -153,9 +152,8 @@ struct CompShader
           const int32_t location = get_uniform_location(name);
           if (location == -1)
                return;
-          const auto perform = [&](auto &&fun) {
-               GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<GLsizei>(std::ranges::ssize(v)), std::ranges::data(v));
-          };
+          const auto perform = [&](auto &&fun)
+          { GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<GLsizei>(std::ranges::ssize(v)), std::ranges::data(v)); };
 
           assert(!std::ranges::empty(v));
           if constexpr (decay_same_as<std::ranges::range_value_t<T>, float>)

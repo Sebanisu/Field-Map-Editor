@@ -32,7 +32,8 @@ struct SimilarAdjustments
           using namespace tile_operations;
           static constexpr auto xy_f = XY{};
           static constexpr auto z_f  = Z{};
-          return [=, this](const TileT &other_tile) -> bool {
+          return [=, this](const TileT &other_tile) -> bool
+          {
                const auto compare = [&](bool toggle, auto &&op) -> bool { return !toggle || op(tile) == op(other_tile); };
                return std::ranges::all_of(
                  std::array{ compare(x, X{}), compare(y, Y{}), compare(xy, xy_f), compare(z, z_f),

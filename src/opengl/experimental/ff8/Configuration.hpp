@@ -11,15 +11,17 @@ class Configuration
 {
    public:
      Configuration()
-       : m_table([]() {
-            toml::parse_result result = toml::parse_file(m_path.string());
-            if (!result)
-            {
-                 spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
-                 return toml::table{};
-            }
-            return std::move(result).table();
-       }())
+       : m_table(
+           []()
+           {
+                toml::parse_result result = toml::parse_file(m_path.string());
+                if (!result)
+                {
+                     spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
+                     return toml::table{};
+                }
+                return std::move(result).table();
+           }())
      {
      }
      toml::table *operator->() &

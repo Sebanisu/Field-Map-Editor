@@ -19,13 +19,15 @@ template<is_tile tileT>
           return false;
      }
      const auto tile_texture_size = map->get_tile_texture_size(texture);
-     const auto src_x             = [&]() -> std::uint32_t {
+     const auto src_x             = [&]() -> std::uint32_t
+     {
           if (map->filter().deswizzle.enabled() || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.x());
           }
           auto       source_texture_page_width = tileT::texture_page_width(tile.depth());
-          const auto texture_page_x_offset     = [&]() -> std::uint32_t {
+          const auto texture_page_x_offset     = [&]() -> std::uint32_t
+          {
                if (map->filter().swizzle.enabled())
                {
                     return 0;
@@ -34,7 +36,8 @@ template<is_tile tileT>
           }();
           return tile.source_x() + texture_page_x_offset;
      }();
-     const auto src_y = [&]() -> std::uint32_t {
+     const auto src_y = [&]() -> std::uint32_t
+     {
           if (map->filter().deswizzle.enabled() || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.y());
@@ -81,12 +84,13 @@ template<is_tile tileT>
      }
 
      // Use glengine::ScopeGuard to safely pop style colors and variables
-     const auto pop_style = glengine::ScopeGuard{ [&]() {
-          if (pop_count > 0)
-               ImGui::PopStyleColor(pop_count);
-          if (pop_var_count > 0)
-               ImGui::PopStyleVar(pop_var_count);
-     } };
+     const auto pop_style = glengine::ScopeGuard{ [&]()
+                                                  {
+                                                       if (pop_count > 0)
+                                                            ImGui::PopStyleColor(pop_count);
+                                                       if (pop_var_count > 0)
+                                                            ImGui::PopStyleVar(pop_var_count);
+                                                  } };
      const auto pop_id = PushPopID();
 
      return ImGui::ImageButton(
@@ -150,12 +154,13 @@ template [[nodiscard]] bool fme::create_tile_button(
      }
 
      // Use glengine::ScopeGuard to safely pop style colors and variables
-     const auto pop_style = glengine::ScopeGuard{ [&]() {
-          if (pop_count > 0)
-               ImGui::PopStyleColor(pop_count);
-          if (pop_var_count > 0)
-               ImGui::PopStyleVar(pop_var_count);
-     } };
+     const auto pop_style = glengine::ScopeGuard{ [&]()
+                                                  {
+                                                       if (pop_count > 0)
+                                                            ImGui::PopStyleColor(pop_count);
+                                                       if (pop_var_count > 0)
+                                                            ImGui::PopStyleVar(pop_var_count);
+                                                  } };
      const auto pop_id = PushPopID();
      ImVec2     uv0    = ImVec2(0.0f, 0.0f);
      ImVec2     uv1    = ImVec2(1.0f, 1.0f);

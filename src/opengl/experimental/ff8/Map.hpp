@@ -87,14 +87,17 @@ class [[nodiscard]] MoveTiles
           {
                operations.push_back(tile_operations::WithTextureId{ m_released.z });
           }
-          GetMapHistory()->copy_working_perform_operation<TileT>(m_indexes, [&](TileT &new_tile) {
-               int i = {};
-               for (const auto &op : operations)
-               {
-                    new_tile = op(new_tile);
-                    spdlog::debug("Performed operation {}", i++);
-               }
-          });
+          GetMapHistory()->copy_working_perform_operation<TileT>(
+            m_indexes,
+            [&](TileT &new_tile)
+            {
+                 int i = {};
+                 for (const auto &op : operations)
+                 {
+                      new_tile = op(new_tile);
+                      spdlog::debug("Performed operation {}", i++);
+                 }
+            });
           GetWindow().trigger_refresh_image();
      }
      [[nodiscard]] operator bool() const noexcept
@@ -186,144 +189,153 @@ class Map
           // RestoreViewPortToFrameBuffer();
           m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
           m_has_hover = m_imgui_viewport_window.has_hover();
-          GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-               m_preview              = true;
-               const auto pop_preview = glengine::ScopeGuard([&]() { m_preview = false; });
-               render_frame_buffer();
-          });
+          GetViewPortPreview().on_render(
+            m_imgui_viewport_window,
+            [this]()
+            {
+                 m_preview              = true;
+                 const auto pop_preview = glengine::ScopeGuard([&]() { m_preview = false; });
+                 render_frame_buffer();
+            });
           ff_8::ImGuiTileDisplayWindow::take_control(m_has_hover, m_id);
           draw_to_tiles_window();
      }
      void draw_to_tiles_window() const
      {
 
-          ff_8::ImGuiTileDisplayWindow::on_render_forward(m_id, [this]() {
-               //      ImGui::Text(
-               //        "%s", fmt::format("Map {}",
-               //        static_cast<uint32_t>(m_id)).c_str());
-               float      text_width         = 0.F;
-               ImVec2     last_pos           = {};
-               const auto render_sub_texture = [&text_width, &last_pos](const glengine::SubTexture &sub_texture) -> bool {
-                    const auto imgui_texture_id_ref = ConvertGliDtoImTextureId<std::uint64_t>(sub_texture.id());
-                    const auto uv                   = sub_texture.im_gui_uv<ImVec2>();
-                    const auto id_pop               = glengine::ImGuiPushId();
-                    const auto color                = ImVec4(0.F, 0.F, 0.F, 0.F);
-                    last_pos                        = ImGui::GetCursorPos();
-                    text_width                      = ImGui::GetItemRectMax().x;
-                    ImGui::PushStyleColor(ImGuiCol_Button, color);
-                    const auto pop_color = glengine::ScopeGuard([]() { ImGui::PopStyleColor(1); });
-                    // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
-                    // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-                    bool       value     = ImGui::ImageButton("##tile_display_window", imgui_texture_id_ref, ImVec2(32, 32), uv[0], uv[1]);
-                    text_width           = ImGui::GetStyle().ItemSpacing.x + ImGui::GetItemRectMax().x - text_width;
-                    return value;
-               };
-               const auto  dims              = ImGui::GetContentRegionAvail();
-               std::size_t i                 = {};
+          ff_8::ImGuiTileDisplayWindow::on_render_forward(
+            m_id,
+            [this]()
+            {
+                 //      ImGui::Text(
+                 //        "%s", fmt::format("Map {}",
+                 //        static_cast<uint32_t>(m_id)).c_str());
+                 float      text_width         = 0.F;
+                 ImVec2     last_pos           = {};
+                 const auto render_sub_texture = [&text_width, &last_pos](const glengine::SubTexture &sub_texture) -> bool
+                 {
+                      const auto imgui_texture_id_ref = ConvertGliDtoImTextureId<std::uint64_t>(sub_texture.id());
+                      const auto uv                   = sub_texture.im_gui_uv<ImVec2>();
+                      const auto id_pop               = glengine::ImGuiPushId();
+                      const auto color                = ImVec4(0.F, 0.F, 0.F, 0.F);
+                      last_pos                        = ImGui::GetCursorPos();
+                      text_width                      = ImGui::GetItemRectMax().x;
+                      ImGui::PushStyleColor(ImGuiCol_Button, color);
+                      const auto pop_color = glengine::ScopeGuard([]() { ImGui::PopStyleColor(1); });
+                      // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+                      // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+                      bool       value = ImGui::ImageButton("##tile_display_window", imgui_texture_id_ref, ImVec2(32, 32), uv[0], uv[1]);
+                      text_width       = ImGui::GetStyle().ItemSpacing.x + ImGui::GetItemRectMax().x - text_width;
+                      return value;
+                 };
+                 const auto  dims              = ImGui::GetContentRegionAvail();
+                 std::size_t i                 = {};
 
-               const auto  mta               = MapTileAdjustments<TileFunctions>(GetMapHistory(), GetMapHistory().filters, m_similar);
-               auto       *tile_button_state = &m_tile_button_state;
-               const auto  common_operation  = [&](auto &tile, VisitState &visit_state) -> bool {
-                    auto &local_tile_button_state = *tile_button_state;
-                    using namespace open_viii::graphics::background;
-                    const auto id_pop_2    = glengine::ImGuiPushId();
-                    const auto sub_texture = tile_to_sub_texture(tile);
-                    const auto increment   = glengine::ScopeGuard([&]() { ++i; });
-                    if (!sub_texture)
-                    {
-                         return false;
-                    }
-                    if (render_sub_texture(*sub_texture))
-                    {
-                         local_tile_button_state.at(i).flip();
-                    }
-                    bool changed = false;
-                    if (local_tile_button_state.at(i))
-                    {
-                         ImGui::SameLine();
-                         visit_state = mta(tile, changed, i, sub_texture);
-                    }
-                    else if (dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x) > text_width)
-                    {
-                         if (local_tile_button_state.size() != i + 1 && local_tile_button_state.at(i + 1))
-                         {
-                         }
-                         else
-                         {
-                              ImGui::SameLine();
-                         }
-                    }
-                    return changed;
-               };
-               if (m_has_hover)
-               {
-                    const auto tp = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+                 const auto  mta               = MapTileAdjustments<TileFunctions>(GetMapHistory(), GetMapHistory().filters, m_similar);
+                 auto       *tile_button_state = &m_tile_button_state;
+                 const auto  common_operation  = [&](auto &tile, VisitState &visit_state) -> bool
+                 {
+                      auto &local_tile_button_state = *tile_button_state;
+                      using namespace open_viii::graphics::background;
+                      const auto id_pop_2    = glengine::ImGuiPushId();
+                      const auto sub_texture = tile_to_sub_texture(tile);
+                      const auto increment   = glengine::ScopeGuard([&]() { ++i; });
+                      if (!sub_texture)
+                      {
+                           return false;
+                      }
+                      if (render_sub_texture(*sub_texture))
+                      {
+                           local_tile_button_state.at(i).flip();
+                      }
+                      bool changed = false;
+                      if (local_tile_button_state.at(i))
+                      {
+                           ImGui::SameLine();
+                           visit_state = mta(tile, changed, i, sub_texture);
+                      }
+                      else if (dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x) > text_width)
+                      {
+                           if (local_tile_button_state.size() != i + 1 && local_tile_button_state.at(i + 1))
+                           {
+                           }
+                           else
+                           {
+                                ImGui::SameLine();
+                           }
+                      }
+                      return changed;
+                 };
+                 if (m_has_hover)
+                 {
+                      const auto tp = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
 
-                    ImGui::Text(
-                      "%s",
-                      fmt::format(
-                        "Hovered Texture Page :{}\n"
-                        "Hovered X,Y: ({},{})",
-                        tp.texture_page,
-                        tp.x,
-                        tp.y)
-                        .c_str());
+                      ImGui::Text(
+                        "%s",
+                        fmt::format(
+                          "Hovered Texture Page :{}\n"
+                          "Hovered X,Y: ({},{})",
+                          tp.texture_page,
+                          tp.x,
+                          tp.y)
+                          .c_str());
 
-                    tile_button_state = &m_tile_button_state_hover;
-                    if (visit_unsorted_unfiltered_tiles(
-                          common_operation, MouseTileOverlap<TileFunctions, decltype(m_filters)>(tp, m_filters)))
-                    {
-                         GetWindow().trigger_refresh_image();
-                         // m_changed();
-                    }
-                    ImGui::Text("%s", " ");
-               }
-               if (m_map_dims.pressed_mouse_location)
-               {
-                    tile_button_state = &m_tile_button_state_pressed;
-                    i                 = {};
-                    last_pos          = ImGui::GetCursorPos();
-                    text_width        = ImGui::GetItemRectMax().x;
-                    ImGui::Text(
-                      "%s",
-                      fmt::format(
-                        "Clicked Texture Page :{}\n"
-                        "Clicked X,Y: ({},{})",
-                        m_map_dims.pressed_mouse_location->z,
-                        m_map_dims.pressed_mouse_location->x,
-                        m_map_dims.pressed_mouse_location->y)
-                        .c_str());
-                    if (visit_unsorted_unfiltered_tiles(
-                          common_operation,// todo fix this to use the stored tile indexes
-                          //              MouseTileOverlap<TileFunctions, MapFilters>(
-                          //                MouseToTilePos{
-                          //                *(m_map_dims.pressed_mouse_location) },
-                          //
-                          //                GetMapHistory().filters)
-                          [this](auto &&tile) -> bool {
-                               return std::ranges::any_of(m_clicked_indexes, [&](auto &&j) -> bool {
-                                    return std::cmp_equal(j, GetMapHistory()->get_offset_from_working(tile));
-                               });
-                          }))
-                    {
-                         GetWindow().trigger_refresh_image();
-                         // m_changed();
-                    }
-                    ImGui::Text("%s", " ");
-               }
-               if (ImGui::CollapsingHeader("All Tiles"))
-               {
-                    i                 = {};
-                    tile_button_state = &m_tile_button_state;
-                    last_pos          = ImGui::GetCursorPos();
-                    text_width        = ImGui::GetItemRectMax().x;
-                    if (visit_unsorted_unfiltered_tiles(common_operation, m_filters))
-                    {
-                         GetWindow().trigger_refresh_image();
-                         // m_changed();
-                    }
-               }
-          });
+                      tile_button_state = &m_tile_button_state_hover;
+                      if (visit_unsorted_unfiltered_tiles(
+                            common_operation, MouseTileOverlap<TileFunctions, decltype(m_filters)>(tp, m_filters)))
+                      {
+                           GetWindow().trigger_refresh_image();
+                           // m_changed();
+                      }
+                      ImGui::Text("%s", " ");
+                 }
+                 if (m_map_dims.pressed_mouse_location)
+                 {
+                      tile_button_state = &m_tile_button_state_pressed;
+                      i                 = {};
+                      last_pos          = ImGui::GetCursorPos();
+                      text_width        = ImGui::GetItemRectMax().x;
+                      ImGui::Text(
+                        "%s",
+                        fmt::format(
+                          "Clicked Texture Page :{}\n"
+                          "Clicked X,Y: ({},{})",
+                          m_map_dims.pressed_mouse_location->z,
+                          m_map_dims.pressed_mouse_location->x,
+                          m_map_dims.pressed_mouse_location->y)
+                          .c_str());
+                      if (visit_unsorted_unfiltered_tiles(
+                            common_operation,// todo fix this to use the stored tile indexes
+                            //              MouseTileOverlap<TileFunctions, MapFilters>(
+                            //                MouseToTilePos{
+                            //                *(m_map_dims.pressed_mouse_location) },
+                            //
+                            //                GetMapHistory().filters)
+                            [this](auto &&tile) -> bool
+                            {
+                                 return std::ranges::any_of(
+                                   m_clicked_indexes,
+                                   [&](auto &&j) -> bool { return std::cmp_equal(j, GetMapHistory()->get_offset_from_working(tile)); });
+                            }))
+                      {
+                           GetWindow().trigger_refresh_image();
+                           // m_changed();
+                      }
+                      ImGui::Text("%s", " ");
+                 }
+                 if (ImGui::CollapsingHeader("All Tiles"))
+                 {
+                      i                 = {};
+                      tile_button_state = &m_tile_button_state;
+                      last_pos          = ImGui::GetCursorPos();
+                      text_width        = ImGui::GetItemRectMax().x;
+                      if (visit_unsorted_unfiltered_tiles(common_operation, m_filters))
+                      {
+                           GetWindow().trigger_refresh_image();
+                           // m_changed();
+                      }
+                 }
+            });
      }
      void on_im_gui_update() const
      {
@@ -336,7 +348,8 @@ class Map
                m_changed.set_if_true(
                  std::ranges::any_of(
                    std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
-                               [&]() -> bool {
+                               [&]() -> bool
+                               {
                                     if constexpr (!typename TileFunctions::UseBlending{})
                                     {
                                          return false;
@@ -398,145 +411,158 @@ class Map
           m_imgui_viewport_window.on_event(event);
           m_batch_renderer.on_event(event);
           Dispatcher dispatcher(event);
-          dispatcher.Dispatch<RefreshImage>([this](const RefreshImage &refresh_image) -> bool {
-               spdlog::debug("Refresh Image:{}", refresh_image.changed());
-               if (refresh_image)
-               {
-                    m_changed();
-               }
-               return false;
-          });
-          dispatcher.Dispatch<MouseButtonPressed>([this](const MouseButtonPressed &pressed) -> bool {
-               if (!m_has_hover)
-               {
-                    return true;
-               }
-               if (pressed.button() == Mouse::ButtonLeft)
-               {
-                    m_map_dims.pressed_mouse_location = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
-                    if ((+pressed.mods() & (+Mods::Shift | +Mods::Alt)) == 0)
-                    {
-                         m_clicked_indexes.clear();
-                    }
-                    const MouseTileOverlap overlap = MouseTileOverlap<TileFunctions, decltype(m_filters)>(
-                      MouseToTilePos{ *(m_map_dims.pressed_mouse_location) }, m_filters);
-                    if (pressed.mods() == Mods::Alt)
-                    {
-                         decltype(m_clicked_indexes) tmp{};
-                         visit_unsorted_unfiltered_tiles(
-                           [&](const auto &tile, VisitState &) -> bool {
-                                tmp.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
-                                return false;
-                           },
-                           overlap);
-                         const auto removal = std::ranges::remove_if(m_clicked_indexes, [&](auto item) -> bool {
-                              return std::ranges::any_of(tmp, [=](auto other) -> bool { return item == other; });
-                         });
-                         m_clicked_indexes.erase(removal.begin(), removal.end());
-                    }
-                    else
-                    {
-                         visit_unsorted_unfiltered_tiles(
-                           [this](const auto &tile, VisitState &) -> bool {
-                                m_clicked_indexes.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
-                                return false;
-                           },
-                           overlap);
-                    }
-                    {// sort and remove duplicates
-                         std::ranges::sort(m_clicked_indexes);
-                         const auto not_unique = std::ranges::unique(m_clicked_indexes);
-                         m_clicked_indexes.erase(not_unique.begin(), not_unique.end());
-                    }
-                    spdlog::debug(
-                      "Mouse Pressed: x:{}, y:{}, texture_page:{}, tile count:{}",
-                      m_map_dims.pressed_mouse_location->x,
-                      m_map_dims.pressed_mouse_location->y,
-                      m_map_dims.pressed_mouse_location->z,
-                      m_clicked_indexes.size());
+          dispatcher.Dispatch<RefreshImage>(
+            [this](const RefreshImage &refresh_image) -> bool
+            {
+                 spdlog::debug("Refresh Image:{}", refresh_image.changed());
+                 if (refresh_image)
+                 {
+                      m_changed();
+                 }
+                 return false;
+            });
+          dispatcher.Dispatch<MouseButtonPressed>(
+            [this](const MouseButtonPressed &pressed) -> bool
+            {
+                 if (!m_has_hover)
+                 {
+                      return true;
+                 }
+                 if (pressed.button() == Mouse::ButtonLeft)
+                 {
+                      m_map_dims.pressed_mouse_location = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+                      if ((+pressed.mods() & (+Mods::Shift | +Mods::Alt)) == 0)
+                      {
+                           m_clicked_indexes.clear();
+                      }
+                      const MouseTileOverlap overlap = MouseTileOverlap<TileFunctions, decltype(m_filters)>(
+                        MouseToTilePos{ *(m_map_dims.pressed_mouse_location) }, m_filters);
+                      if (pressed.mods() == Mods::Alt)
+                      {
+                           decltype(m_clicked_indexes) tmp{};
+                           visit_unsorted_unfiltered_tiles(
+                             [&](const auto &tile, VisitState &) -> bool
+                             {
+                                  tmp.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
+                                  return false;
+                             },
+                             overlap);
+                           const auto removal = std::ranges::remove_if(
+                             m_clicked_indexes,
+                             [&](auto item) -> bool
+                             { return std::ranges::any_of(tmp, [=](auto other) -> bool { return item == other; }); });
+                           m_clicked_indexes.erase(removal.begin(), removal.end());
+                      }
+                      else
+                      {
+                           visit_unsorted_unfiltered_tiles(
+                             [this](const auto &tile, VisitState &) -> bool
+                             {
+                                  m_clicked_indexes.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
+                                  return false;
+                             },
+                             overlap);
+                      }
+                      {// sort and remove duplicates
+                           std::ranges::sort(m_clicked_indexes);
+                           const auto not_unique = std::ranges::unique(m_clicked_indexes);
+                           m_clicked_indexes.erase(not_unique.begin(), not_unique.end());
+                      }
+                      spdlog::debug(
+                        "Mouse Pressed: x:{}, y:{}, texture_page:{}, tile count:{}",
+                        m_map_dims.pressed_mouse_location->x,
+                        m_map_dims.pressed_mouse_location->y,
+                        m_map_dims.pressed_mouse_location->z,
+                        m_clicked_indexes.size());
 
-                    std::fill(m_tile_button_state_pressed.begin(), m_tile_button_state_pressed.end(), false);
-                    if (!m_clicked_indexes.empty())
-                    {
-                         m_dragging = true;
-                         (void)GetMapHistory()->copy_back_preemptive();
-                    }
-               }
-               return true;
-          });
+                      std::fill(m_tile_button_state_pressed.begin(), m_tile_button_state_pressed.end(), false);
+                      if (!m_clicked_indexes.empty())
+                      {
+                           m_dragging = true;
+                           (void)GetMapHistory()->copy_back_preemptive();
+                      }
+                 }
+                 return true;
+            });
 
-          dispatcher.Dispatch<MouseMoved>([this](const MouseMoved &) -> bool {
-               if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())// dragging
-                                                                            // set by
-                                                                            // another
-                                                                            // event
-               {
-                    return false;
-               }
-               glm::ivec3 temp       = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
-               const auto move_tiles = MoveTiles<TileFunctions>(
-                 m_clicked_indexes,
-                 (m_map_dims.dragging_mouse_location.has_value() ? *m_map_dims.dragging_mouse_location
-                                                                 : *m_map_dims.pressed_mouse_location),
-                 temp);
-               const bool has_moved               = move_tiles;
-               m_map_dims.dragging_mouse_location = temp;
-               if (!has_moved)
-               {
-                    return true;
-               }
-               spdlog::debug(
-                 "Mouse Dragging: x:{}, y:{}, texture_page:{}, hovered:{}, "
-                 "dragging:{}, moved:{}",
-                 m_map_dims.dragging_mouse_location->x,
-                 m_map_dims.dragging_mouse_location->y,
-                 m_map_dims.dragging_mouse_location->z,
-                 m_has_hover,
-                 m_dragging,
-                 has_moved);
-               move_tiles();
-               return true;
-          });
+          dispatcher.Dispatch<MouseMoved>(
+            [this](const MouseMoved &) -> bool
+            {
+                 if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())// dragging
+                                                                              // set by
+                                                                              // another
+                                                                              // event
+                 {
+                      return false;
+                 }
+                 glm::ivec3 temp       = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+                 const auto move_tiles = MoveTiles<TileFunctions>(
+                   m_clicked_indexes,
+                   (m_map_dims.dragging_mouse_location.has_value() ? *m_map_dims.dragging_mouse_location
+                                                                   : *m_map_dims.pressed_mouse_location),
+                   temp);
+                 const bool has_moved               = move_tiles;
+                 m_map_dims.dragging_mouse_location = temp;
+                 if (!has_moved)
+                 {
+                      return true;
+                 }
+                 spdlog::debug(
+                   "Mouse Dragging: x:{}, y:{}, texture_page:{}, hovered:{}, "
+                   "dragging:{}, moved:{}",
+                   m_map_dims.dragging_mouse_location->x,
+                   m_map_dims.dragging_mouse_location->y,
+                   m_map_dims.dragging_mouse_location->z,
+                   m_has_hover,
+                   m_dragging,
+                   has_moved);
+                 move_tiles();
+                 return true;
+            });
 
-          dispatcher.Dispatch<MouseButtonReleased>([this](const MouseButtonReleased &released) -> bool {
-               if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())
-               {
-                    return true;
-               }
-               if (released.button() == Mouse::ButtonLeft)
-               {
-                    const auto unset_dragging          = glengine::ScopeGuard([this]() {
-                         m_dragging                         = false;
-                         m_map_dims.dragging_mouse_location = std::nullopt;
-                         GetMapHistory()->end_preemptive_copy_mode();
-                         // todo check to see if change occurred.
-                    });
-                    m_map_dims.released_mouse_location = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
-                    const auto move_tiles              = MoveTiles<TileFunctions>(
-                      m_clicked_indexes,
-                      (m_map_dims.dragging_mouse_location.has_value() ? *m_map_dims.dragging_mouse_location
-                                                                                   : *m_map_dims.pressed_mouse_location),
-                      *m_map_dims.released_mouse_location);
-                    const bool moved = move_tiles;
-                    spdlog::debug(
-                      "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}, "
-                      "dragging:{}, moved:{}",
-                      m_map_dims.released_mouse_location->x,
-                      m_map_dims.released_mouse_location->y,
-                      m_map_dims.released_mouse_location->z,
-                      m_has_hover,
-                      m_dragging,
-                      moved);
-                    //          if (!moved)
-                    //          {
-                    //            return true;
-                    //          }
-                    // move_tiles(); //seems to move the tiles extra here for some reason.
-                    (void)GetMapHistory()->remove_duplicate();// checks most recent for
-                                                              // duplicate
-               }
-               return true;
-          });
+          dispatcher.Dispatch<MouseButtonReleased>(
+            [this](const MouseButtonReleased &released) -> bool
+            {
+                 if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())
+                 {
+                      return true;
+                 }
+                 if (released.button() == Mouse::ButtonLeft)
+                 {
+                      const auto unset_dragging = glengine::ScopeGuard(
+                        [this]()
+                        {
+                             m_dragging                         = false;
+                             m_map_dims.dragging_mouse_location = std::nullopt;
+                             GetMapHistory()->end_preemptive_copy_mode();
+                             // todo check to see if change occurred.
+                        });
+                      m_map_dims.released_mouse_location = MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+                      const auto move_tiles              = MoveTiles<TileFunctions>(
+                        m_clicked_indexes,
+                        (m_map_dims.dragging_mouse_location.has_value() ? *m_map_dims.dragging_mouse_location
+                                                                                     : *m_map_dims.pressed_mouse_location),
+                        *m_map_dims.released_mouse_location);
+                      const bool moved = move_tiles;
+                      spdlog::debug(
+                        "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}, "
+                        "dragging:{}, moved:{}",
+                        m_map_dims.released_mouse_location->x,
+                        m_map_dims.released_mouse_location->y,
+                        m_map_dims.released_mouse_location->z,
+                        m_has_hover,
+                        m_dragging,
+                        moved);
+                      //          if (!moved)
+                      //          {
+                      //            return true;
+                      //          }
+                      // move_tiles(); //seems to move the tiles extra here for some reason.
+                      (void)GetMapHistory()->remove_duplicate();// checks most recent for
+                                                                // duplicate
+                 }
+                 return true;
+            });
      }
 
    private:
@@ -574,21 +600,24 @@ class Map
           const auto  palette = tile.palette_id();
           const auto  texture_page_id
             = GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
-          const auto [texture_index, texture_page_width] = [&]() {
+          const auto [texture_index, texture_page_width] = [&]()
+          {
                if (std::ranges::empty(m_swizzle_path))
                {
                     return index_and_page_width(bpp, palette);
                }
                return index_and_page_width(palette, texture_page_id);
           }();
-          const auto texture_page_offset = [&, texture_page_width_copy = texture_page_width]() {
+          const auto texture_page_offset = [&, texture_page_width_copy = texture_page_width]()
+          {
                if (std::ranges::empty(m_swizzle_path))
                {
                     return texture_page_id * texture_page_width_copy;
                }
                return 0;
           }();
-          const auto &texture = [&, texture_index = texture_index]() -> decltype(auto) {
+          const auto &texture = [&, texture_index = texture_index]() -> decltype(auto)
+          {
                if (std::ranges::empty(m_swizzle_path))
                {
                     return mim.delayed_textures.textures->at(texture_index);
@@ -601,18 +630,21 @@ class Map
           const float tile_scale   = static_cast<float>(texture.height()) / static_cast<float>(GetMim()->get_height());
           const float tile_size    = tile_scale * map_dims_statics::TileSize;
           // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-          return GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) {
-               // todo maybe should have a toggle to force back tile.
-               return std::optional<glengine::SubTexture>{
-                    std::in_place_t{}, texture,
-                    glm::vec2{ front_tile.source_x() * tile_scale + static_cast<float>(texture_page_offset),
-                               texture_dims.y - (front_tile.source_y() * tile_scale + tile_size) }
-                      / texture_dims,
-                    glm::vec2{ front_tile.source_x() * tile_scale + static_cast<float>(texture_page_offset) + tile_size,
-                               texture_dims.y - front_tile.source_y() * tile_scale }
-                      / texture_dims
-               };
-          });
+          return GetMapHistory()->get_original_version_of_working_tile(
+            tile,
+            [&](const auto &front_tile)
+            {
+                 // todo maybe should have a toggle to force back tile.
+                 return std::optional<glengine::SubTexture>{
+                      std::in_place_t{}, texture,
+                      glm::vec2{ front_tile.source_x() * tile_scale + static_cast<float>(texture_page_offset),
+                                 texture_dims.y - (front_tile.source_y() * tile_scale + tile_size) }
+                        / texture_dims,
+                      glm::vec2{ front_tile.source_x() * tile_scale + static_cast<float>(texture_page_offset) + tile_size,
+                                 texture_dims.y - front_tile.source_y() * tile_scale }
+                        / texture_dims
+                 };
+            });
      }
      glm::vec3 tile_to_draw_pos(const auto &tile) const
      {
@@ -625,39 +657,43 @@ class Map
      }
      auto visit_tiles(auto &&lambda) const
      {
-          return GetMapHistory()->back().visit_tiles([&](const auto &tiles) {
-               auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{})
-                              | std::views::filter([]([[maybe_unused]] const auto &tile) -> bool {
-                                     if constexpr (typename TileFunctions::UseBlending{})
-                                     {
-                                          return tile.draw();
-                                     }
-                                     else
-                                     {
-                                          return true;
-                                     }
-                                })
-                              | std::views::filter(m_filters);
-               std::vector<std::uint16_t> unique_z{};
-               {
-                    // unique_z.reserve(std::ranges::size(tiles));
-                    std::ranges::transform(f_tiles, std::back_inserter(unique_z), tile_operations::Z{});
-                    std::ranges::sort(unique_z);
-                    auto [begin, end] = std::ranges::unique(unique_z);
-                    unique_z.erase(begin, end);
-               }
+          return GetMapHistory()->back().visit_tiles(
+            [&](const auto &tiles)
+            {
+                 auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{})
+                                | std::views::filter(
+                                  []([[maybe_unused]] const auto &tile) -> bool
+                                  {
+                                       if constexpr (typename TileFunctions::UseBlending{})
+                                       {
+                                            return tile.draw();
+                                       }
+                                       else
+                                       {
+                                            return true;
+                                       }
+                                  })
+                                | std::views::filter(m_filters);
+                 std::vector<std::uint16_t> unique_z{};
+                 {
+                      // unique_z.reserve(std::ranges::size(tiles));
+                      std::ranges::transform(f_tiles, std::back_inserter(unique_z), tile_operations::Z{});
+                      std::ranges::sort(unique_z);
+                      auto [begin, end] = std::ranges::unique(unique_z);
+                      unique_z.erase(begin, end);
+                 }
 
-               auto unique_z_reverse = unique_z | std::views::reverse;
-               for (const auto z : unique_z_reverse)
-               {
-                    auto f_tiles_reverse_filter_z = f_tiles | std::views::reverse | std::views::filter(tile_operations::ZMatch{ z });
-                    for (const auto &tile : f_tiles_reverse_filter_z)
-                    {
-                         if (!lambda(tile))
-                              return;
-                    }
-               }
-          });
+                 auto unique_z_reverse = unique_z | std::views::reverse;
+                 for (const auto z : unique_z_reverse)
+                 {
+                      auto f_tiles_reverse_filter_z = f_tiles | std::views::reverse | std::views::filter(tile_operations::ZMatch{ z });
+                      for (const auto &tile : f_tiles_reverse_filter_z)
+                      {
+                           if (!lambda(tile))
+                                return;
+                      }
+                 }
+            });
      }
      // draws tiles
      void render_tiles() const
@@ -670,21 +706,23 @@ class Map
           m_batch_renderer.bind();
           set_uniforms(m_batch_renderer.shader());
           m_batch_renderer.clear();
-          visit_tiles([this, &last_blend_mode](const auto &tile) -> bool {
-               auto sub_texture = tile_to_sub_texture(tile);
-               if (!sub_texture)
-               {
-                    return true;
-               }
-               update_blend_mode(tile, last_blend_mode);
-               m_batch_renderer.draw_quad(
-                 *sub_texture,
-                 tile_to_draw_pos(tile),
-                 m_map_dims.scaled_tile_size(),
-                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)),
-                 GetMapHistory()->get_pupu_from_working(tile).raw());// change to index to unique pupu
-               return true;
-          });
+          visit_tiles(
+            [this, &last_blend_mode](const auto &tile) -> bool
+            {
+                 auto sub_texture = tile_to_sub_texture(tile);
+                 if (!sub_texture)
+                 {
+                      return true;
+                 }
+                 update_blend_mode(tile, last_blend_mode);
+                 m_batch_renderer.draw_quad(
+                   *sub_texture,
+                   tile_to_draw_pos(tile),
+                   m_map_dims.scaled_tile_size(),
+                   static_cast<int>(GetMapHistory()->get_offset_from_working(tile)),
+                   GetMapHistory()->get_pupu_from_working(tile).raw());// change to index to unique pupu
+                 return true;
+            });
           m_batch_renderer.draw();
           m_batch_renderer.on_render();
           glengine::BlendModeSettings::default_blend();
@@ -725,11 +763,13 @@ class Map
                     {
                          case open_viii::graphics::background::BlendModeT::half_add:
                          case open_viii::graphics::background::BlendModeT::quarter_add:
-                         case open_viii::graphics::background::BlendModeT::add: {
+                         case open_viii::graphics::background::BlendModeT::add:
+                         {
                               s_blends.set_add_blend();
                          }
                          break;
-                         case open_viii::graphics::background::BlendModeT ::subtract: {
+                         case open_viii::graphics::background::BlendModeT ::subtract:
+                         {
                               s_blends.set_subtract_blend();
                          }
                          break;
@@ -780,7 +820,8 @@ class Map
      {
           glengine::BlendModeSettings::default_blend();
           m_imgui_viewport_window.on_render();
-          const auto draw_batch_render = [this](const glengine::BatchRenderer &batch_renderer, uint32_t index = 0) {
+          const auto draw_batch_render = [this](const glengine::BatchRenderer &batch_renderer, uint32_t index = 0)
+          {
                batch_renderer.clear();
                batch_renderer.bind();
                set_uniforms(batch_renderer.shader());
@@ -829,12 +870,14 @@ class Map
           {
                m_changed();
           }
-          const auto changed = glengine::ScopeGuard([&]() {
-               if (s_draw_grid)
-               {
-                    m_changed();
-               }
-          });
+          const auto changed = glengine::ScopeGuard(
+            [&]()
+            {
+                 if (s_draw_grid)
+                 {
+                      m_changed();
+                 }
+            });
           on_render();
           const auto            path   = std::filesystem::path(GetMapHistory().path);
           auto                  string = fmt::format("{}_map.png", (path.parent_path() / path.stem()).string());
@@ -845,39 +888,43 @@ class Map
      }
      auto visit_unsorted_unfiltered_tiles_count() const
      {
-          return GetMapHistory()->back().visit_tiles([&](const auto &tiles) -> std::size_t {
-               auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{});
-               return static_cast<std::size_t>(std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
-          });
+          return GetMapHistory()->back().visit_tiles(
+            [&](const auto &tiles) -> std::size_t
+            {
+                 auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{});
+                 return static_cast<std::size_t>(std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
+            });
      }
      bool visit_unsorted_unfiltered_tiles(
        auto &&lambda,
        auto &&filter) const
      {
-          return GetMapHistory()->back().visit_tiles([&](auto &&tiles) -> bool {
-               auto       f_tiles     = tiles | std::views::filter(tile_operations::NotInvalidTile{}) | std::views::filter(filter);
-               bool       changed     = false;
-               VisitState visit_state = {};
-               for (auto &tile : f_tiles)
-               {
-                    changed = lambda(tile, visit_state) || changed;
-                    if (visit_state == VisitState::ShortCircuit)
-                    {
-                         break;
-                    }
-               }
-               if (visit_state == VisitState::Undo)
-               {
-                    changed = GetMapHistory()->undo();
-                    //        m_changed.enable_undo();
-               }
-               if (visit_state == VisitState::UndoAll)
-               {
-                    changed = true;
-                    GetMapHistory()->undo_all();
-               }
-               return changed;
-          });
+          return GetMapHistory()->back().visit_tiles(
+            [&](auto &&tiles) -> bool
+            {
+                 auto       f_tiles     = tiles | std::views::filter(tile_operations::NotInvalidTile{}) | std::views::filter(filter);
+                 bool       changed     = false;
+                 VisitState visit_state = {};
+                 for (auto &tile : f_tiles)
+                 {
+                      changed = lambda(tile, visit_state) || changed;
+                      if (visit_state == VisitState::ShortCircuit)
+                      {
+                           break;
+                      }
+                 }
+                 if (visit_state == VisitState::Undo)
+                 {
+                      changed = GetMapHistory()->undo();
+                      //        m_changed.enable_undo();
+                 }
+                 if (visit_state == VisitState::UndoAll)
+                 {
+                      changed = true;
+                      GetMapHistory()->undo_all();
+                 }
+                 return changed;
+            });
      }
      void visit_unsorted_unfiltered_tiles() const
      {
@@ -926,9 +973,8 @@ class Map
      mutable bool                       m_has_hover                 = { false };
      mutable bool                       m_dragging                  = { false };
      mutable SimilarAdjustments         m_similar                   = {};
-     static inline const auto           m_filters                   = [](const auto &tile) -> bool {
-          return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_working(tile));
-     };
+     static inline const auto           m_filters                   = [](const auto &tile) -> bool
+     { return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_working(tile)); };
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

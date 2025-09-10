@@ -93,7 +93,8 @@ std::future<void> save_image_pbo(
      // Return deferred CPU-side save
      return std::async(
        std::launch::deferred,
-       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path), fbo = std::move(in_fbo), color_ids = std::move(in_color_ids)]() {
+       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path), fbo = std::move(in_fbo), color_ids = std::move(in_color_ids)]()
+       {
             // Ensure directory exists
             if (!path.parent_path().empty())
             {
@@ -162,7 +163,8 @@ std::future<void> save_image_pbo(
                  if (color_in == fme::colors::Transparent)
                       continue;
 
-                 const auto best_id = [&]() -> ff_8::PupuID {
+                 const auto best_id = [&]() -> ff_8::PupuID
+                 {
                       auto cache_it = best_id_cache.find(color_in);
                       if (cache_it != best_id_cache.end())
                       {
@@ -170,21 +172,25 @@ std::future<void> save_image_pbo(
                       }
                       else
                       {
-                           auto it = std::ranges::min_element(color_ids, [&](const auto &a, const auto &b) {
-                                auto get_conv = [](const glm::vec4 &c) {
-                                     auto nested_it = conv_cache.find(c);
-                                     if (nested_it != conv_cache.end())
-                                          return nested_it->second;
-                                     fme::color conv = static_cast<fme::color>(c);
-                                     conv_cache.emplace(c, conv);
-                                     return conv;
-                                };
+                           auto it = std::ranges::min_element(
+                             color_ids,
+                             [&](const auto &a, const auto &b)
+                             {
+                                  auto get_conv = [](const glm::vec4 &c)
+                                  {
+                                       auto nested_it = conv_cache.find(c);
+                                       if (nested_it != conv_cache.end())
+                                            return nested_it->second;
+                                       fme::color conv = static_cast<fme::color>(c);
+                                       conv_cache.emplace(c, conv);
+                                       return conv;
+                                  };
 
-                                const auto conv_a = get_conv(std::get<0>(a));
-                                const auto conv_b = get_conv(std::get<0>(b));
+                                  const auto conv_a = get_conv(std::get<0>(a));
+                                  const auto conv_b = get_conv(std::get<0>(b));
 
-                                return color_in.difference(conv_a) < color_in.difference(conv_b);
-                           });
+                                  return color_in.difference(conv_a) < color_in.difference(conv_b);
+                             });
 
                            if (it == color_ids.end())
                            {

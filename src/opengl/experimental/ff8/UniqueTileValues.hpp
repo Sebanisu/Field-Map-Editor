@@ -23,12 +23,16 @@ struct UniqueTileValues
        const MapT &map,
        auto      &&transform)
      {
-          return map.front().visit_tiles([&](const auto &f_tiles) {
-               return map.back().visit_tiles([&](const auto &b_tiles) {
-                    return TransformedSortedUniqueCopy(
-                      std::forward<decltype(transform)>(transform), {}, {}, {}, filtered(f_tiles), filtered(b_tiles));
-               });
-          });
+          return map.front().visit_tiles(
+            [&](const auto &f_tiles)
+            {
+                 return map.back().visit_tiles(
+                   [&](const auto &b_tiles)
+                   {
+                        return TransformedSortedUniqueCopy(
+                          std::forward<decltype(transform)>(transform), {}, {}, {}, filtered(f_tiles), filtered(b_tiles));
+                   });
+            });
      }
      //  static auto visit_back_only(const MapT &map, auto &&transform)
      //  {
@@ -98,7 +102,8 @@ struct UniqueTileValues
      }
 
    public:
-     static constexpr auto blendmode_to_string = [](open_viii::graphics::background::BlendModeT in_blend_mode) -> const std::string & {
+     static constexpr auto blendmode_to_string = [](open_viii::graphics::background::BlendModeT in_blend_mode) -> const std::string &
+     {
           using namespace std::string_literals;
           if (in_blend_mode == open_viii::graphics::background::BlendModeT::none)
           {
@@ -127,7 +132,8 @@ struct UniqueTileValues
           }
           throw std::invalid_argument("Invalid blend mode!");
      };
-     static constexpr auto bpp_to_string = [](open_viii::graphics::BPPT in_bpp) -> const std::string & {
+     static constexpr auto bpp_to_string = [](open_viii::graphics::BPPT in_bpp) -> const std::string &
+     {
           using namespace std::string_literals;
           if (in_bpp.bpp4())
           {

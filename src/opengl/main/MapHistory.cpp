@@ -44,14 +44,16 @@ namespace ff_8
  */
 static std::vector<PupuID> calculate_pupu(const map_t &map)
 {
-     return map.visit_tiles([](const auto &tiles) {
-          std::vector<PupuID> pupu_ids = {};
-          UniquifyPupu const  pupu_map = {};
-          pupu_ids.reserve(std::ranges::size(tiles));
+     return map.visit_tiles(
+       [](const auto &tiles)
+       {
+            std::vector<PupuID> pupu_ids = {};
+            UniquifyPupu const  pupu_map = {};
+            pupu_ids.reserve(std::ranges::size(tiles));
 
-          std::ranges::transform(tiles | Map::filter_view_invalid(), std::back_insert_iterator(pupu_ids), pupu_map);
-          return pupu_ids;
-     });
+            std::ranges::transform(tiles | Map::filter_view_invalid(), std::back_insert_iterator(pupu_ids), pupu_map);
+            return pupu_ids;
+       });
 }
 
 /**
@@ -99,13 +101,15 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  */
 [[nodiscard]] static source_tile_conflicts calculate_conflicts(const map_t &map)
 {
-     return map.visit_tiles([](const auto &tiles) {
-          source_tile_conflicts stc{};
-          std::ranges::for_each(tiles | Map::filter_view_invalid(), [&](const auto &tile) {
-               stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile));
-          });
-          return stc;
-     });
+     return map.visit_tiles(
+       [](const auto &tiles)
+       {
+            source_tile_conflicts stc{};
+            std::ranges::for_each(
+              tiles | Map::filter_view_invalid(),
+              [&](const auto &tile) { stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile)); });
+            return stc;
+       });
 }
 
 
@@ -138,21 +142,24 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
     std::ranges::range auto &&range_of_tile_indices)
 {
 
-     return map.visit_tiles([&](const auto &tiles) {
-          std::map<normalized_source_tile, std::uint8_t> ret     = {};
-          const auto                                     to_tile = [&](const auto index) {
-               assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
-               auto begin = std::ranges::cbegin(tiles);
-               std::ranges::advance(begin, index);
-               return *begin;
-          };
-          auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
-          for (const auto tile : transform_view)
-          {// Increment the count for the current tile (default initializes to 0 if not found)
-               ++ret[tile];
-          }
-          return ret;
-     });
+     return map.visit_tiles(
+       [&](const auto &tiles)
+       {
+            std::map<normalized_source_tile, std::uint8_t> ret     = {};
+            const auto                                     to_tile = [&](const auto index)
+            {
+                 assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                 auto begin = std::ranges::cbegin(tiles);
+                 std::ranges::advance(begin, index);
+                 return *begin;
+            };
+            auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+            for (const auto tile : transform_view)
+            {// Increment the count for the current tile (default initializes to 0 if not found)
+                 ++ret[tile];
+            }
+            return ret;
+       });
 }
 
 /**
@@ -183,21 +190,24 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
     std::ranges::range auto &&range_of_tile_indices)
 {
 
-     return map.visit_tiles([&](const auto &tiles) {
-          std::map<normalized_source_animated_tile, std::uint8_t> ret     = {};
-          const auto                                              to_tile = [&](const auto index) {
-               assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
-               auto begin = std::ranges::cbegin(tiles);
-               std::ranges::advance(begin, index);
-               return *begin;
-          };
-          auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
-          for (const auto &tile : transform_view)
-          {// Increment the count for the current tile (default initializes to 0 if not found)
-               ++ret[tile];
-          }
-          return ret;
-     });
+     return map.visit_tiles(
+       [&](const auto &tiles)
+       {
+            std::map<normalized_source_animated_tile, std::uint8_t> ret     = {};
+            const auto                                              to_tile = [&](const auto index)
+            {
+                 assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                 auto begin = std::ranges::cbegin(tiles);
+                 std::ranges::advance(begin, index);
+                 return *begin;
+            };
+            auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+            for (const auto &tile : transform_view)
+            {// Increment the count for the current tile (default initializes to 0 if not found)
+                 ++ret[tile];
+            }
+            return ret;
+       });
 }
 
 // /**
@@ -246,23 +256,26 @@ static void disambiguate_normalized_tiles(
   ff_8::MapHistory::nsat_map &working_animation_counts)
 {
      assert(std::cmp_greater_equal(std::ranges::size(working_similar_counts), std::ranges::size(working_animation_counts)));
-     std::ranges::for_each(working_similar_counts, [&](auto &similar) {
-          if (std::cmp_equal(similar.first.m_animation_id, (std::numeric_limits<std::uint8_t>::max)()))
-          {
-               if (similar.second > 1)
-               {
-                    auto &animated = working_animation_counts[similar.first];
-                    animated       = 0;// similar is more specific
-               }
-               else
-               {
-                    similar.second = 0;// assume animation is more important
-               }
-               return;
-          }
+     std::ranges::for_each(
+       working_similar_counts,
+       [&](auto &similar)
+       {
+            if (std::cmp_equal(similar.first.m_animation_id, (std::numeric_limits<std::uint8_t>::max)()))
+            {
+                 if (similar.second > 1)
+                 {
+                      auto &animated = working_animation_counts[similar.first];
+                      animated       = 0;// similar is more specific
+                 }
+                 else
+                 {
+                      similar.second = 0;// assume animation is more important
+                 }
+                 return;
+            }
 
-          similar.second = 0;// assume animation is more important
-     });
+            similar.second = 0;// assume animation is more important
+       });
 }
 
 
@@ -628,16 +641,18 @@ template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile3 &) con
 template<open_viii::graphics::background::is_tile TileT>
 std::vector<TileT>::difference_type ff_8::MapHistory::get_offset_from_working(const TileT &tile) const
 {
-     return working().visit_tiles([&](const auto &tiles) -> std::vector<TileT>::difference_type {
-          if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
-          {
-               return static_cast<std::vector<TileT>::difference_type>(std::ranges::distance(&tiles.front(), &tile));
-          }
-          else
-          {
-               return {};
-          }
-     });
+     return working().visit_tiles(
+       [&](const auto &tiles) -> std::vector<TileT>::difference_type
+       {
+            if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+            {
+                 return static_cast<std::vector<TileT>::difference_type>(std::ranges::distance(&tiles.front(), &tile));
+            }
+            else
+            {
+                 return {};
+            }
+       });
 }
 
 template std::vector<Tile1>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile1 &) const;

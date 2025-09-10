@@ -63,12 +63,13 @@ struct field_file_window
                return;
           }
           bool      &visible     = selections->get<ConfigKey::DisplayFieldFileWindow>();
-          const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-               if (was_visable != visible)
-               {
-                    selections->update<ConfigKey::DisplayFieldFileWindow>();
-               }
-          } };
+          const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
+                                                         {
+                                                              if (was_visable != visible)
+                                                              {
+                                                                   selections->update<ConfigKey::DisplayFieldFileWindow>();
+                                                              }
+                                                         } };
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           if (!ImGui::Begin(gui_labels::field_file_window.data(), &visible))
           {

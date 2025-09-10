@@ -25,7 +25,8 @@ class UniquifyPupu
           const auto x_position  = static_cast<int16_t>(tile_const.x() / tile_size);
           const auto y_position  = static_cast<int16_t>(tile_const.y() / tile_size);
           auto       input_value = PupuKey{ PupuID(tile_const), x_position, y_position };
-          auto       insert_key  = [&](PupuKey key) -> PupuID {
+          auto       insert_key  = [&](PupuKey key) -> PupuID
+          {
                if (m_pupu_map.contains(key))
                {
                     ++(m_pupu_map.at(key));

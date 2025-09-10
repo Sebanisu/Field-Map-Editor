@@ -21,11 +21,13 @@ class Bpps
      int                              index() const;
 
    private:
-     static constexpr auto m_values = []() {
+     static constexpr auto m_values = []()
+     {
           using namespace open_viii::graphics::literals;
           return std::array{ 4_bpp, 8_bpp, 16_bpp };
      }();
-     static constexpr auto m_strings = []() {
+     static constexpr auto m_strings = []()
+     {
           using namespace std::string_view_literals;
           return std::array{ "4"sv, "8"sv, "16"sv };
      }();

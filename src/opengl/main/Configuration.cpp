@@ -10,44 +10,49 @@
 
 fme::Configuration::Configuration(std::filesystem::path in_path)
   : m_path(std::move(in_path))
-  , m_table([&]() {
-       auto it = s_tables.find(m_path);
-       if (it == s_tables.end())
-       {
-            toml::parse_result result = toml::parse_file(m_path.string());
-            if (!result)
-            {
-                 spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
-                 it = s_tables.emplace(m_path, toml::table{}).first;
-            }
-            else
-            {
-                 it = s_tables.emplace(m_path, std::move(result).table()).first;
-            }
-       }
-       return &it->second;
-  }())
+  , m_table(
+      [&]()
+      {
+           auto it = s_tables.find(m_path);
+           if (it == s_tables.end())
+           {
+                toml::parse_result result = toml::parse_file(m_path.string());
+                if (!result)
+                {
+                     spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
+                     it = s_tables.emplace(m_path, toml::table{}).first;
+                }
+                else
+                {
+                     it = s_tables.emplace(m_path, std::move(result).table()).first;
+                }
+           }
+           return &it->second;
+      }())
 {
 }
 
 fme::Configuration::Configuration()
-  : fme::Configuration([]() -> const std::filesystem::path & {
-       static std::filesystem::path path;// path is cached across calls
-       static bool                  initialized = false;
+  : fme::Configuration(
+      []() -> const std::filesystem::path &
+      {
+           static std::filesystem::path path;// path is cached across calls
+           static bool                  initialized = false;
 
-       if (!initialized)
-       {
-            std::error_code error_code{};
-            path = std::filesystem::current_path(error_code) / "res" / "field-map-editor.toml";
-            if (error_code)
-            {
-                 spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path.string());
-            }
-            initialized = true;
-       }
+           if (!initialized)
+           {
+                std::error_code error_code{};
+                path = std::filesystem::current_path(error_code) / "res" / "field-map-editor.toml";
+                if (error_code)
+                {
+                     spdlog::warn(
+                       "{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path.string());
+                }
+                initialized = true;
+           }
 
-       return path;
-  }())
+           return path;
+      }())
 {
 }
 
@@ -99,14 +104,16 @@ toml::node_view<const toml::node> fme::Configuration::operator()(
 
 void fme::Configuration::save(const bool remove_from_cache) const
 {
-     const auto      pop_erase  = glengine::ScopeGuard([&]() {
-          if (remove_from_cache)
-          {
-               s_tables.erase(m_path);
-               m_table = nullptr;
-               m_path  = std::filesystem::path{};
-          }
-     });
+     const auto pop_erase = glengine::ScopeGuard(
+       [&]()
+       {
+            if (remove_from_cache)
+            {
+                 s_tables.erase(m_path);
+                 m_table = nullptr;
+                 m_path  = std::filesystem::path{};
+            }
+       });
 
      std::error_code error_code = {};
      (void)std::filesystem::create_directories(m_path.parent_path(), error_code);

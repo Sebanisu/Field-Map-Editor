@@ -20,7 +20,8 @@ struct [[nodiscard]] draw_window
        , m_mim_sprite(std::move(in_mim_sprite))
        , m_map_sprite(std::move(in_map_sprite))
        , m_checkerboard_batchrenderer{ 4,
-                                       []() -> std::filesystem::path {
+                                       []() -> std::filesystem::path
+                                       {
                                             std::error_code       ec;
 
                                             // Get current path safely

@@ -242,9 +242,9 @@ struct all_unique_values_and_strings
           std::map<keyT, unique_values_and_strings<valT>> ret = {};
           for (const auto &key : keys.values())
           {
-               ret.emplace(key, unique_values_and_strings<valT>(tiles, lambda, sort, [&key, &filter](const auto &tile) {
-                                return filter(key, tile);
-                           }));
+               ret.emplace(
+                 key,
+                 unique_values_and_strings<valT>(tiles, lambda, sort, [&key, &filter](const auto &tile) { return filter(key, tile); }));
           }
           return ret;
      }

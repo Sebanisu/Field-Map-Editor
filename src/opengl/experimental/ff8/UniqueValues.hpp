@@ -16,10 +16,12 @@ class UniqueValues
        std::vector<T>         values,
        transform_to_stringT &&transform_to_string = {})
        : m_values(std::move(values))
-       , m_strings([&]() {
-            auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
-            return std::vector<std::string>{ transform.begin(), transform.end() };
-       }())
+       , m_strings(
+           [&]()
+           {
+                auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
+                return std::vector<std::string>{ transform.begin(), transform.end() };
+           }())
        , m_enable([&]() { return std::vector<std::uint8_t>(std::ranges::size(m_values), std::uint8_t{ true }); }())
      {
           //    for (const auto &string : m_strings)

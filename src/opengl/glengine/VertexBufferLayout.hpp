@@ -28,26 +28,31 @@ struct VertexBufferElement
           {
                     // glVertexAttribPointer and glVertexAttribIPointer
                case GL_BYTE:
-               case GL_UNSIGNED_BYTE: {
+               case GL_UNSIGNED_BYTE:
+               {
                     static_assert(sizeof(GLbyte) == sizeof(GLubyte));
                     return sizeof(GLbyte);
                }
                case GL_SHORT:
-               case GL_UNSIGNED_SHORT: {
+               case GL_UNSIGNED_SHORT:
+               {
                     static_assert(sizeof(GLshort) == sizeof(GLushort));
                     return sizeof(GLshort);
                }
                case GL_INT:
-               case GL_UNSIGNED_INT: {
+               case GL_UNSIGNED_INT:
+               {
                     static_assert(sizeof(GLint) == sizeof(GLuint));
                     return sizeof(GLint);
                }
                     // glVertexAttribPointer
-               case GL_FLOAT: {
+               case GL_FLOAT:
+               {
                     return sizeof(GLfloat);
                }
                     // glVertexAttribLPointer or glVertexAttribPointer
-               case GL_DOUBLE: {
+               case GL_DOUBLE:
+               {
                     return sizeof(GLdouble);
                }
           }
@@ -95,7 +100,8 @@ struct VertexBufferElementType
 
    private:
      std::uint32_t m_count = {};
-     std::uint32_t m_type  = []() {
+     std::uint32_t m_type  = []()
+     {
           if constexpr (std::is_same_v<ValueType, GLdouble>)
           {
                return GL_DOUBLE;

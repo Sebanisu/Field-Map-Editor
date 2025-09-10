@@ -13,13 +13,15 @@ void fme::keyboard_shortcuts_window::render() const
           return;
      }
      bool       show_keyboard_shortcuts = selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>();
-     const auto pop_enabled             = glengine::ScopeGuard([&]() {
-          if (show_keyboard_shortcuts != selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>())
-          {
-               selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>() = show_keyboard_shortcuts;
-               selections->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
-          }
-     });
+     const auto pop_enabled             = glengine::ScopeGuard(
+       [&]()
+       {
+            if (show_keyboard_shortcuts != selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>())
+            {
+                 selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>() = show_keyboard_shortcuts;
+                 selections->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
+            }
+       });
      if (!show_keyboard_shortcuts)
      {
           return;

@@ -27,11 +27,14 @@ class TestClearColor
           if FME_NOT_CONSTEVAL
           {
                m_imgui_viewport_window.on_render([]() { local_clear(); });
-               GetViewPortPreview().on_render(m_imgui_viewport_window, []() {
-                    const auto pop_preview = glengine::ScopeGuard([]() { preview = false; });
-                    preview                = true;
-                    local_clear();
-               });
+               GetViewPortPreview().on_render(
+                 m_imgui_viewport_window,
+                 []()
+                 {
+                      const auto pop_preview = glengine::ScopeGuard([]() { preview = false; });
+                      preview                = true;
+                      local_clear();
+                 });
           }
      }
      constexpr void on_im_gui_update() const

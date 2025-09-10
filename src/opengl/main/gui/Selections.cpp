@@ -57,7 +57,8 @@ void fme::Selections::sort_paths()
 {
      const bool remove_on_error = true;// or false depending on behavior you want
 
-     auto       process         = [&]<ConfigKey... Keys>() {
+     auto       process         = [&]<ConfigKey... Keys>()
+     {
           auto args           = std::forward_as_tuple(get<Keys>()...);// tuple of references
           auto args_with_bool = std::tuple_cat(std::make_tuple(remove_on_error), args);
 

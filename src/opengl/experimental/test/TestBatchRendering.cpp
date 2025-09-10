@@ -24,21 +24,27 @@ void test::TestBatchRendering::on_im_gui_update() const
 }
 void test::TestBatchRendering::on_render() const
 {
-     m_imgui_viewport_window.on_render([this]() {
-          set_uniforms();
-          render_frame_buffer();
-     });
+     m_imgui_viewport_window.on_render(
+       [this]()
+       {
+            set_uniforms();
+            render_frame_buffer();
+       });
 
-     GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-          const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
-          Preview                = true;
-          set_uniforms();
-          render_frame_buffer();
-     });
+     GetViewPortPreview().on_render(
+       m_imgui_viewport_window,
+       [this]()
+       {
+            const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+            Preview                = true;
+            set_uniforms();
+            render_frame_buffer();
+       });
 }
 void test::TestBatchRendering::set_uniforms() const
 {
-     const glm::mat4 mvp = [&]() {
+     const glm::mat4 mvp = [&]()
+     {
           if (Preview)
           {
                return m_imgui_viewport_window.preview_view_projection_matrix();
@@ -77,11 +83,14 @@ test::TestBatchRendering::TestBatchRendering()
      //      glm::translate(glm::mat4{ 1.F }, glm::vec3{ 2.F, 0.F, 0.F });
      for (int i = -1; const auto &color : colors)
      {
-          std::ranges::transform(vertices_init, std::back_inserter(vertices), [&i, &color](glengine::Vertex vertex) {
-               vertex.location.x += 2.F * static_cast<float>(i);
-               vertex.color = color;
-               return vertex;
-          });
+          std::ranges::transform(
+            vertices_init, std::back_inserter(vertices),
+            [&i, &color](glengine::Vertex vertex)
+            {
+                 vertex.location.x += 2.F * static_cast<float>(i);
+                 vertex.color = color;
+                 return vertex;
+            });
           ++i;
      }
      m_vertex_buffer       = glengine::VertexBuffer{ vertices };

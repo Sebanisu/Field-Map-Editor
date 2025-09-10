@@ -30,7 +30,8 @@ class MouseToTilePos
        const MapDims<TileFunctions> &m_map_dims)
      {
           static constexpr bool has_texture_page = std::is_same_v<typename TileFunctions::TexturePage, tile_operations::TextureId>;
-          texture_page                           = [&]() -> std::uint8_t {
+          texture_page                           = [&]() -> std::uint8_t
+          {
                if constexpr (has_texture_page)
                {
                     return static_cast<std::uint8_t>(

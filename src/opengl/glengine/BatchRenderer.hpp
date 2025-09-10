@@ -87,11 +87,12 @@ class BatchRenderer
      std::size_t                 m_quad_count    = { 100U };
      VertexBufferDynamic         m_vertex_buffer = { quad_count() };
      IndexBufferDynamic          m_index_buffer  = { quad_count() };
-     mutable std::vector<Vertex> m_vertices      = { [this]() {
-          std::vector<Vertex>    r{};
-          r.reserve(vert_count());
-          return r;
-     }() };
+     mutable std::vector<Vertex> m_vertices      = { [this]()
+                                                     {
+                                                     std::vector<Vertex> r{};
+                                                     r.reserve(vert_count());
+                                                     return r;
+                                                }() };
      mutable IndexBufferDynamicSize     index_buffer_size       = {};
      glengine::Shader                   m_shader                = {};
      VertexArray                        m_vertex_array          = {};

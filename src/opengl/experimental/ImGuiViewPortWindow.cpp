@@ -186,9 +186,8 @@ inline namespace impl
        glm::vec2 bottomleft) const
      {
           const auto convert_range
-            = [](float OldValue, const float OldMin, const float OldMax, const float NewMin = -1.F, const float NewMax = 1.F) {
-                   return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin;
-              };
+            = [](float OldValue, const float OldMin, const float OldMax, const float NewMin = -1.F, const float NewMax = 1.F)
+          { return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin; };
           return glm::vec4{ convert_range(m_clamp_mouse_pos.x, bottomleft.x, topright.x),
                             convert_range(m_clamp_mouse_pos.y, bottomleft.y, topright.y), 0.F, 1.F };
      }
@@ -211,9 +210,8 @@ inline namespace impl
           m_clamp_mouse_pos.x = std::clamp(m_clamp_mouse_pos.x, m_min.x, m_max.x);
           m_clamp_mouse_pos.y = std::clamp(m_clamp_mouse_pos.y, m_min.y, m_max.y);
           const auto convert_range
-            = [](float OldValue, const float OldMin, const float OldMax, const float NewMin = -1.F, const float NewMax = 1.F) {
-                   return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin;
-              };
+            = [](float OldValue, const float OldMin, const float OldMax, const float NewMin = -1.F, const float NewMax = 1.F)
+          { return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin; };
           m_viewport_mouse_pos = glm::vec4{ convert_range(m_clamp_mouse_pos.x, m_min.x, m_max.x),
                                             convert_range(m_clamp_mouse_pos.y, m_min.y, m_max.y), 0.F, 1.F };
           m_viewport_int_mouse_pos

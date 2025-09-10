@@ -22,7 +22,8 @@ bool GlCheckError(
             location.column(),
             location.function_name(),
             error,
-            [&error]() {
+            [&error]()
+            {
                  switch (error)
                  {
                       case GL_INVALID_ENUM:
@@ -77,7 +78,8 @@ void BeginErrorCallBack()
          GLenum                       severity,
          [[maybe_unused]] GLsizei     length,
          const GLchar                *message,
-         [[maybe_unused]] const void *user_param) {
+         [[maybe_unused]] const void *user_param)
+       {
             using namespace std::string_view_literals;
             static const std::unordered_map<GLenum, std::string_view> error_source_map{
                  { GL_DEBUG_SOURCE_API, "SOURCE_API"sv },
@@ -111,20 +113,24 @@ void BeginErrorCallBack()
               = fmt::format("GL CALLBACK: {0:s} type = {1:s}, severity = {2:s}, message = {3:s}", src, tp, sv, message);
             switch (severity)
             {
-                 case GL_DEBUG_SEVERITY_NOTIFICATION: {
+                 case GL_DEBUG_SEVERITY_NOTIFICATION:
+                 {
                       spdlog::info(error_message);
                       break;
                  }
-                 case GL_DEBUG_SEVERITY_LOW: {
+                 case GL_DEBUG_SEVERITY_LOW:
+                 {
                       spdlog::warn(error_message);
                       break;
                  }
-                 case GL_DEBUG_SEVERITY_MEDIUM: {
+                 case GL_DEBUG_SEVERITY_MEDIUM:
+                 {
                       spdlog::error(error_message);
                       break;
                  }
                  case GL_DEBUG_SEVERITY_HIGH:
-                 default: {
+                 default:
+                 {
                       spdlog::critical(error_message);
                       break;
                  }

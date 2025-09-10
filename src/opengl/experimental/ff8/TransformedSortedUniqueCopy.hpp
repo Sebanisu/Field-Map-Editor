@@ -28,7 +28,8 @@ static inline auto TransformedSortedUniqueCopy(
 
      std::vector<typename std::projected<std::ranges::iterator_t<glengine::first_t<rangeT...>>, transformT>::value_type> out = {};
      (
-       [&]() {
+       [&]()
+       {
             auto transformed_range = std::forward<rangeT>(range) | std::views::transform(transform);
             std::ranges::copy(transformed_range, std::back_inserter(out));
        }(),

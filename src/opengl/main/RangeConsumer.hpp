@@ -37,11 +37,13 @@ class RangeConsumer
      {
      }
      explicit RangeConsumer(value_t in_value)
-       : RangeConsumer([&] {
-            range_t ret{};
-            ret.emplace_back(std::move(in_value));
-            return ret;
-       }())
+       : RangeConsumer(
+           [&]
+           {
+                range_t ret{};
+                ret.emplace_back(std::move(in_value));
+                return ret;
+           }())
      {
      }
      void restart()

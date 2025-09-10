@@ -26,7 +26,8 @@ namespace ff_8
 template<open_viii::graphics::background::is_tile tileT>
 static constexpr auto to_hex(const tileT &tile)
 {
-     constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char {
+     constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char
+     {
           constexpr std::uint8_t number_of_values_in_nibble = 16U;
           constexpr char         threshold_of_A_to_F        = 10;
           char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
@@ -298,7 +299,8 @@ struct fmt::formatter<fme::BackgroundSettings>
 
           bool       first      = true;
 
-          const auto write_part = [&](std::string_view part) {
+          const auto write_part = [&](std::string_view part)
+          {
                if (!first)
                     fmt::format_to(ctx.out(), " | ");
                fmt::format_to(ctx.out(), "{}", part);

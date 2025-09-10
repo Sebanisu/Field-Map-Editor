@@ -401,9 +401,9 @@ struct [[nodiscard]] map_sprite// final
      template<typename funcT>
      auto const_visit_tiles_both(funcT &&p_function) const
      {
-          return m_map_group.maps.const_working().visit_tiles([&](const auto &back) {
-               return m_map_group.maps.original().visit_tiles([&](const auto &front) { return p_function(back, front); });
-          });
+          return m_map_group.maps.const_working().visit_tiles(
+            [&](const auto &back)
+            { return m_map_group.maps.original().visit_tiles([&](const auto &front) { return p_function(back, front); }); });
      }
 
      template<open_viii::graphics::background::is_tile tileT>
@@ -417,31 +417,33 @@ struct [[nodiscard]] map_sprite// final
           else
           {
                // pupu_ids
-               return const_visit_original_tiles([&tile, this](const auto &tiles) -> const glengine::Texture * {
-                    if (tiles.empty())
-                    {
-                         return nullptr;
-                    }
-                    using TileT1 = std::remove_cvref<decltype(tiles.front())>;
-                    using TileT2 = std::remove_cvref<decltype(tile)>;
-                    if constexpr (std::is_same_v<TileT1, TileT2>)
-                    {
-                         const auto found_iterator = std::ranges::find_if(tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
-                         const auto distance       = std::ranges::distance(tiles.begin(), found_iterator);
+               return const_visit_original_tiles(
+                 [&tile, this](const auto &tiles) -> const glengine::Texture *
+                 {
+                      if (tiles.empty())
+                      {
+                           return nullptr;
+                      }
+                      using TileT1 = std::remove_cvref<decltype(tiles.front())>;
+                      using TileT2 = std::remove_cvref<decltype(tile)>;
+                      if constexpr (std::is_same_v<TileT1, TileT2>)
+                      {
+                           const auto found_iterator = std::ranges::find_if(tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
+                           const auto distance       = std::ranges::distance(tiles.begin(), found_iterator);
 
-                         if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.original_pupu()), distance))
-                         {
-                              auto pupu_it = m_map_group.maps.original_pupu().cbegin();
-                              std::ranges::advance(pupu_it, distance);
-                              return get_texture(*pupu_it);
-                         }
-                         return static_cast<const glengine::Texture *>(nullptr);
-                    }
-                    else
-                    {
-                         return static_cast<const glengine::Texture *>(nullptr);
-                    }
-               });
+                           if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.original_pupu()), distance))
+                           {
+                                auto pupu_it = m_map_group.maps.original_pupu().cbegin();
+                                std::ranges::advance(pupu_it, distance);
+                                return get_texture(*pupu_it);
+                           }
+                           return static_cast<const glengine::Texture *>(nullptr);
+                      }
+                      else
+                      {
+                           return static_cast<const glengine::Texture *>(nullptr);
+                      }
+                 });
           }
      }
 
@@ -471,19 +473,23 @@ struct [[nodiscard]] map_sprite// final
 
      auto duel_visitor(auto &&lambda) const
      {
-          return m_map_group.maps.original().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_map_group.maps.working().visit_tiles([&lambda, &tiles_const](const auto &tiles) {
-                    return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, tiles);
-               });
-          });
+          return m_map_group.maps.original().visit_tiles(
+            [this, &lambda](auto const &tiles_const)
+            {
+                 return m_map_group.maps.working().visit_tiles(
+                   [&lambda, &tiles_const](const auto &tiles)
+                   { return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, tiles); });
+            });
      }
      auto duel_visitor(auto &&lambda)
      {
-          return m_map_group.maps.original().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_map_group.maps.working().visit_tiles([&lambda, &tiles_const](auto &&tiles) {
-                    return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, std::forward<decltype(tiles)>(tiles));
-               });
-          });
+          return m_map_group.maps.original().visit_tiles(
+            [this, &lambda](auto const &tiles_const)
+            {
+                 return m_map_group.maps.working().visit_tiles(
+                   [&lambda, &tiles_const](auto &&tiles)
+                   { return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, std::forward<decltype(tiles)>(tiles)); });
+            });
      }
      void for_all_tiles(
        auto const &tiles_const,
@@ -528,10 +534,12 @@ struct [[nodiscard]] map_sprite// final
        bool   skip_invalid  = true,
        bool   regular_order = false) const
      {
-          duel_visitor([&lambda, &skip_invalid, &regular_order, this](auto const &tiles_const, auto &&tiles) {
-               this->for_all_tiles(
-                 tiles_const, std::forward<decltype(tiles)>(tiles), std::forward<decltype(lambda)>(lambda), skip_invalid, regular_order);
-          });
+          duel_visitor(
+            [&lambda, &skip_invalid, &regular_order, this](auto const &tiles_const, auto &&tiles)
+            {
+                 this->for_all_tiles(
+                   tiles_const, std::forward<decltype(tiles)>(tiles), std::forward<decltype(lambda)>(lambda), skip_invalid, regular_order);
+            });
      }
 
 
@@ -620,7 +628,8 @@ struct [[nodiscard]] map_sprite// final
        open_viii::graphics::background::is_tile auto      &&tile,
        bool                                                 imported = false) const
      {
-          const auto src = [this, &tile_const, &imported]() {
+          const auto src = [this, &tile_const, &imported]()
+          {
                if (imported)
                {
                     return to_vec2(ff_8::source_coords_for_imported(tile_const));
@@ -642,7 +651,8 @@ struct [[nodiscard]] map_sprite// final
                }
                return to_vec2(ff_8::source_coords_for_default(tile_const));
           }();
-          const auto dest = [this, &tile]() {
+          const auto dest = [this, &tile]()
+          {
                if (m_draw_swizzle)
                {
                     if (m_disable_texture_page_shift)

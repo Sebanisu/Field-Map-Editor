@@ -12,12 +12,14 @@ VertexArray::VertexArray()
 }
 Glid VertexArray::init_id()
 {
-     return { []() -> std::uint32_t {
-                  std::uint32_t tmp{};
-                  GlCall{}(glGenVertexArrays, 1, &tmp);
-                  return tmp;
-             }(),
-              [](const std::uint32_t id) {
+     return { []() -> std::uint32_t
+              {
+                   std::uint32_t tmp{};
+                   GlCall{}(glGenVertexArrays, 1, &tmp);
+                   return tmp;
+              }(),
+              [](const std::uint32_t id)
+              {
                    GlCall{}(glDeleteVertexArrays, 1, &id);
                    VertexArray::unbind();
               } };

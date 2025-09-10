@@ -70,9 +70,8 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> archives_group::field(const i
      {
           fields().execute_with_nested(
             { m_mapdata.at(static_cast<std::size_t>(current_map)) },
-            [&archive](auto &&field) {
-                 archive = std::make_shared<open_viii::archive::FIFLFS<false>>(std::forward<decltype(field)>(field));
-            },
+            [&archive](auto &&field)
+            { archive = std::make_shared<open_viii::archive::FIFLFS<false>>(std::forward<decltype(field)>(field)); },
             {},
             [](auto &&) { return true; },
             true);

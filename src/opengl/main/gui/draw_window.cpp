@@ -67,64 +67,66 @@ void fme::draw_window::render() const
      const auto        is_valid_float  = [](const float f) -> bool { return !std::isnan(f) && !std::isinf(f); };
      const auto        is_valid_ImVec2 = [&is_valid_float](const ImVec2 v) -> bool { return is_valid_float(v.x) && is_valid_float(v.y); };
      static const auto DrawCheckerboardBackground
-       = [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
-              if (
-                window_size.x < 1.f || window_size.y < 1.f || !is_valid_ImVec2(window_pos) || !is_valid_ImVec2(window_size)
-                || !is_valid_float(tile_size))
-              {
-                   return;
-              }
-              const auto fbb  = m_checkerboard_framebuffer.backup();
-              const auto fbrb = m_checkerboard_batchrenderer.backup();
-              if (
-                m_checkerboard_framebuffer.width() != static_cast<int>(window_size.x)
-                || m_checkerboard_framebuffer.height() != static_cast<int>(window_size.y))
-              {
-                   glengine::FrameBufferSpecification spec
-                     = { .width = static_cast<int>(window_size.x), .height = static_cast<int>(window_size.y) };
-                   m_checkerboard_framebuffer = glengine::FrameBuffer{ spec };
-              }
+       = [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2)
+     {
+          if (
+            window_size.x < 1.f || window_size.y < 1.f || !is_valid_ImVec2(window_pos) || !is_valid_ImVec2(window_size)
+            || !is_valid_float(tile_size))
+          {
+               return;
+          }
+          const auto fbb  = m_checkerboard_framebuffer.backup();
+          const auto fbrb = m_checkerboard_batchrenderer.backup();
+          if (
+            m_checkerboard_framebuffer.width() != static_cast<int>(window_size.x)
+            || m_checkerboard_framebuffer.height() != static_cast<int>(window_size.y))
+          {
+               glengine::FrameBufferSpecification spec
+                 = { .width = static_cast<int>(window_size.x), .height = static_cast<int>(window_size.y) };
+               m_checkerboard_framebuffer = glengine::FrameBuffer{ spec };
+          }
 
-              m_checkerboard_framebuffer.bind();
-              glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
-              glengine::Renderer::Clear();
-              m_checkerboard_batchrenderer.bind();
-              m_fixed_render_camera.set_projection(
-                0.f, static_cast<float>(m_checkerboard_framebuffer.width()), 0.f, static_cast<float>(m_checkerboard_framebuffer.height()));
+          m_checkerboard_framebuffer.bind();
+          glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
+          glengine::Renderer::Clear();
+          m_checkerboard_batchrenderer.bind();
+          m_fixed_render_camera.set_projection(
+            0.f, static_cast<float>(m_checkerboard_framebuffer.width()), 0.f, static_cast<float>(m_checkerboard_framebuffer.height()));
 
-              m_checkerboard_batchrenderer.shader().set_uniform("tile_size", tile_size);
-              //   m_checkerboard_batchrenderer.shader().set_uniform(
-              //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
-              m_checkerboard_batchrenderer.shader().set_uniform("color1", glm::vec4{ color1 });
-              m_checkerboard_batchrenderer.shader().set_uniform("color2", glm::vec4{ color2 });
-              m_checkerboard_batchrenderer.shader().set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
-              m_checkerboard_batchrenderer.clear();
-              m_checkerboard_batchrenderer.draw_quad(
-                glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
-              m_checkerboard_batchrenderer.draw();
-              m_checkerboard_framebuffer.bind_color_attachment();
-              if (!ImGuizmo::IsOver())
-              {
-                   ImGui::InvisibleButton("##DrawWindowViewport", window_size, ImGuiButtonFlags_None);
-              }
-              else
-              {
-                   ImGui::Dummy(window_size);// Doesn't generate a hoverable item
-              }
-              ImGui::GetWindowDrawList()->AddImage(
-                glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()),
-                window_pos,
-                ImVec2{ window_pos.x + window_size.x, window_pos.y + window_size.y });
-              ImGui::SetCursorScreenPos(window_pos);
-         };
+          m_checkerboard_batchrenderer.shader().set_uniform("tile_size", tile_size);
+          //   m_checkerboard_batchrenderer.shader().set_uniform(
+          //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+          m_checkerboard_batchrenderer.shader().set_uniform("color1", glm::vec4{ color1 });
+          m_checkerboard_batchrenderer.shader().set_uniform("color2", glm::vec4{ color2 });
+          m_checkerboard_batchrenderer.shader().set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+          m_checkerboard_batchrenderer.clear();
+          m_checkerboard_batchrenderer.draw_quad(
+            glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+          m_checkerboard_batchrenderer.draw();
+          m_checkerboard_framebuffer.bind_color_attachment();
+          if (!ImGuizmo::IsOver())
+          {
+               ImGui::InvisibleButton("##DrawWindowViewport", window_size, ImGuiButtonFlags_None);
+          }
+          else
+          {
+               ImGui::Dummy(window_size);// Doesn't generate a hoverable item
+          }
+          ImGui::GetWindowDrawList()->AddImage(
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()),
+            window_pos,
+            ImVec2{ window_pos.x + window_size.x, window_pos.y + window_size.y });
+          ImGui::SetCursorScreenPos(window_pos);
+     };
 
      bool      &visible     = selections->get<ConfigKey::DisplayDrawWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               selections->update<ConfigKey::DisplayDrawWindow>();
-          }
-     } };
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
+                                                    {
+                                                         if (was_visable != visible)
+                                                         {
+                                                              selections->update<ConfigKey::DisplayDrawWindow>();
+                                                         }
+                                                    } };
 
      const auto map_test = [&]() { return !t_map_sprite->fail() && selections->get<ConfigKey::DrawMode>() == draw_mode::draw_map; };
      const auto mim_test = [&]() { return !t_mim_sprite->fail() && selections->get<ConfigKey::DrawMode>() == draw_mode::draw_mim; };
@@ -192,7 +194,8 @@ void fme::draw_window::render() const
           const ImVec2              scaled_size(static_cast<float>(img_size.x) * scale, static_cast<float>(img_size.y) * scale);
 
           const BackgroundSettings &bg_settings = selections->get<ConfigKey::BackgroundSettings>();
-          const auto                color1      = [&]() {
+          const auto                color1      = [&]()
+          {
                if (HasFlag(bg_settings, BackgroundSettings::Solid) || HasFlag(bg_settings, BackgroundSettings::TwoColors))
                {
                     return selections->get<ConfigKey::BackgroundColor>();
@@ -200,7 +203,8 @@ void fme::draw_window::render() const
                return selections->get<ConfigKey::BackgroundColor>().fade(-0.2F);
           }();
 
-          const auto color2 = [&]() {
+          const auto color2 = [&]()
+          {
                if (HasFlag(bg_settings, BackgroundSettings::Solid))
                {
                     return selections->get<ConfigKey::BackgroundColor>();
@@ -322,10 +326,12 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(
 
           if (m_mouse_positions.mouse_moved)
           {
-               t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                    m_hovered_tiles_indices
-                      = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
-               });
+               t_map_sprite->const_visit_working_tiles(
+                 [&](const auto &tiles)
+                 {
+                      m_hovered_tiles_indices
+                        = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                 });
           }
 
           if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
@@ -337,10 +343,12 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(
                }
                else
                {
-                    t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                         m_clicked_tile_indices
-                           = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
-                    });
+                    t_map_sprite->const_visit_working_tiles(
+                      [&](const auto &tiles)
+                      {
+                           m_clicked_tile_indices
+                             = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                      });
 
                     m_mouse_positions.down_pixel = m_mouse_positions.pixel;
                }
@@ -420,149 +428,159 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(
           return;
      }
      const auto &framebuffer = t_map_sprite->get_framebuffer();
-     t_map_sprite->const_visit_working_tiles([&](const auto &working_tiles) {
-          const auto &similar_counts   = t_map_sprite->working_similar_counts();
-          const auto &animation_counts = t_map_sprite->working_animation_counts();
+     t_map_sprite->const_visit_working_tiles(
+       [&](const auto &working_tiles)
+       {
+            const auto &similar_counts   = t_map_sprite->working_similar_counts();
+            const auto &animation_counts = t_map_sprite->working_animation_counts();
 
-          for (const auto &indices : t_map_sprite->working_conflicts().range_of_conflicts())
-          {
-               const auto action = [&](const auto index) {
-                    assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "Index out of Range...");
-                    const auto index_to_working_tile = [&working_tiles](const auto i) {
-                         auto begin = std::ranges::cbegin(working_tiles);
-                         std::ranges::advance(begin, i);
-                         return *begin;
-                    };
-                    const auto        &working_tile  = index_to_working_tile(index);
-                    const std::uint8_t similar_count = [&]() -> std::uint8_t {
-                         if (auto it = similar_counts.find(working_tile); it != similar_counts.end())
-                         {
-                              return it->second;
-                         }
-                         return {};
-                    }();
-                    const bool         similar_over_1  = std::cmp_greater(similar_count, 1);
-                    const std::uint8_t animation_count = [&]() -> std::uint8_t {
-                         if (auto it = animation_counts.find(working_tile); it != animation_counts.end())
-                         {
-                              return it->second;
-                         }
-                         return {};
-                    }();
-                    const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
+            for (const auto &indices : t_map_sprite->working_conflicts().range_of_conflicts())
+            {
+                 const auto action = [&](const auto index)
+                 {
+                      assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "Index out of Range...");
+                      const auto index_to_working_tile = [&working_tiles](const auto i)
+                      {
+                           auto begin = std::ranges::cbegin(working_tiles);
+                           std::ranges::advance(begin, i);
+                           return *begin;
+                      };
+                      const auto        &working_tile  = index_to_working_tile(index);
+                      const std::uint8_t similar_count = [&]() -> std::uint8_t
+                      {
+                           if (auto it = similar_counts.find(working_tile); it != similar_counts.end())
+                           {
+                                return it->second;
+                           }
+                           return {};
+                      }();
+                      const bool         similar_over_1  = std::cmp_greater(similar_count, 1);
+                      const std::uint8_t animation_count = [&]() -> std::uint8_t
+                      {
+                           if (auto it = animation_counts.find(working_tile); it != animation_counts.end())
+                           {
+                                return it->second;
+                           }
+                           return {};
+                      }();
+                      const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
 
-                    const float x                = [&]() {
-                         if (selections->get<ConfigKey::DrawSwizzle>())
-                         {
-                              return screen_pos.x
+                      const float x                = [&]()
+                      {
+                           if (selections->get<ConfigKey::DrawSwizzle>())
+                           {
+                                return screen_pos.x
                             + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(framebuffer.scale()));
-                         }
-                         return screen_pos.x + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(framebuffer.scale()));
-                    }();
-                    const float y = [&]() {
-                         if (selections->get<ConfigKey::DrawSwizzle>())
-                         {
-                              return screen_pos.y
-                                     + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(framebuffer.scale()));
-                         }
-                         return screen_pos.y + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(framebuffer.scale()));
-                    }();
-                    const float tile_size     = 16.0f * scale * static_cast<float>(framebuffer.scale());
-                    const auto [c, thickness] = [&]() -> std::pair<color, float> {
-                         const auto default_thickness = 3.F;
-                         const auto hover_thickeness  = 4.5F;
-                         if (
-                           (!selections->get<ConfigKey::DrawSwizzle>() && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
-                           || ((selections->get<ConfigKey::DrawSwizzle>() || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
-                         {
-                              if (
-                                std::ranges::empty(m_hovered_tiles_indices)
-                                || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                     == std::ranges::end(m_hovered_tiles_indices)
-                                || !m_mouse_positions.mouse_enabled)
-                              {
-                                   if (similar_over_1)
-                                   {
-                                        return { colors::ButtonGreen.opaque().fade(-.2F), default_thickness };
-                                   }
-                                   if (animation_over_1)
-                                   {
-                                        return { colors::ButtonPink.opaque().fade(-.2F), default_thickness };
-                                   }
-                                   return { colors::Button.opaque().fade(-.2F), default_thickness };
-                              }
-                              if (m_mouse_positions.left)
-                              {
-                                   if (similar_over_1)
-                                   {
-                                        return { colors::ButtonGreenActive.opaque().fade(-.2F), default_thickness };
-                                   }
-                                   if (animation_over_1)
-                                   {
-                                        return { colors::ButtonPinkActive.opaque().fade(-.2F), default_thickness };
-                                   }
-                                   return { colors::ButtonActive.opaque().fade(-.2F), default_thickness };
-                              }
+                           }
+                           return screen_pos.x + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(framebuffer.scale()));
+                      }();
+                      const float y = [&]()
+                      {
+                           if (selections->get<ConfigKey::DrawSwizzle>())
+                           {
+                                return screen_pos.y
+                                       + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(framebuffer.scale()));
+                           }
+                           return screen_pos.y + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(framebuffer.scale()));
+                      }();
+                      const float tile_size     = 16.0f * scale * static_cast<float>(framebuffer.scale());
+                      const auto [c, thickness] = [&]() -> std::pair<color, float>
+                      {
+                           const auto default_thickness = 3.F;
+                           const auto hover_thickeness  = 4.5F;
+                           if (
+                             (!selections->get<ConfigKey::DrawSwizzle>() && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
+                             || ((selections->get<ConfigKey::DrawSwizzle>() || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
+                           {
+                                if (
+                                  std::ranges::empty(m_hovered_tiles_indices)
+                                  || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
+                                       == std::ranges::end(m_hovered_tiles_indices)
+                                  || !m_mouse_positions.mouse_enabled)
+                                {
+                                     if (similar_over_1)
+                                     {
+                                          return { colors::ButtonGreen.opaque().fade(-.2F), default_thickness };
+                                     }
+                                     if (animation_over_1)
+                                     {
+                                          return { colors::ButtonPink.opaque().fade(-.2F), default_thickness };
+                                     }
+                                     return { colors::Button.opaque().fade(-.2F), default_thickness };
+                                }
+                                if (m_mouse_positions.left)
+                                {
+                                     if (similar_over_1)
+                                     {
+                                          return { colors::ButtonGreenActive.opaque().fade(-.2F), default_thickness };
+                                     }
+                                     if (animation_over_1)
+                                     {
+                                          return { colors::ButtonPinkActive.opaque().fade(-.2F), default_thickness };
+                                     }
+                                     return { colors::ButtonActive.opaque().fade(-.2F), default_thickness };
+                                }
 
-                              if (selections->get<ConfigKey::DrawSwizzle>())
-                              {
-                                   std::string strtooltip = fmt::format(
-                                     "Indicies: {}\n{}", indices, indices | std::ranges::views::transform(index_to_working_tile));
-                                   tool_tip(strtooltip, true);
-                              }
-                              else
-                              {
-                                   std::string strtooltip = fmt::format(
-                                     "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
-                                     index,
-                                     working_tile,
-                                     similar_over_1 ? similar_count : 0,
-                                     animation_over_1 ? animation_count : 0);
+                                if (selections->get<ConfigKey::DrawSwizzle>())
+                                {
+                                     std::string strtooltip = fmt::format(
+                                       "Indicies: {}\n{}", indices, indices | std::ranges::views::transform(index_to_working_tile));
+                                     tool_tip(strtooltip, true);
+                                }
+                                else
+                                {
+                                     std::string strtooltip = fmt::format(
+                                       "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
+                                       index,
+                                       working_tile,
+                                       similar_over_1 ? similar_count : 0,
+                                       animation_over_1 ? animation_count : 0);
 
-                                   tool_tip(strtooltip, true);
-                              }
-                         }
-                         if (similar_over_1)
-                         {
-                              return { colors::ButtonGreenHovered.opaque(), hover_thickeness };
-                         }
+                                     tool_tip(strtooltip, true);
+                                }
+                           }
+                           if (similar_over_1)
+                           {
+                                return { colors::ButtonGreenHovered.opaque(), hover_thickeness };
+                           }
 
-                         if (animation_over_1)
-                         {
-                              return { colors::ButtonPinkHovered.opaque(), hover_thickeness };
-                         }
-                         return { colors::ButtonHovered.opaque(), hover_thickeness };
-                    }();
+                           if (animation_over_1)
+                           {
+                                return { colors::ButtonPinkHovered.opaque(), hover_thickeness };
+                           }
+                           return { colors::ButtonHovered.opaque(), hover_thickeness };
+                      }();
 
-                    ImGui::GetWindowDrawList()->AddRect(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), ImU32{ c }, {}, {}, thickness);
+                      ImGui::GetWindowDrawList()->AddRect(
+                        ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), ImU32{ c }, {}, {}, thickness);
 
-                    // todo add hover action using the hovered_indices and change color for if similar counts >1
-               };
-               if (selections->get<ConfigKey::DrawSwizzle>())
-               {// all are drawn in the same spot so we only need to draw one.
-                    if (std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices))
-                    {
-                         std::ranges::for_each(indices | std::ranges::views::take(1), action);
-                    }
-                    else
-                    {
-                         action(m_hovered_index);
-                    }
+                      // todo add hover action using the hovered_indices and change color for if similar counts >1
+                 };
+                 if (selections->get<ConfigKey::DrawSwizzle>())
+                 {// all are drawn in the same spot so we only need to draw one.
+                      if (std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices))
+                      {
+                           std::ranges::for_each(indices | std::ranges::views::take(1), action);
+                      }
+                      else
+                      {
+                           action(m_hovered_index);
+                      }
 
 
-                    // there might be different kinds of conflicts in the same location. but here we're assuming your either one or
-                    // another. because we can't quite draw all the colors in the same place.
-               }
-               else
-               {
-                    std::ranges::for_each(indices, action);
-                    if (std::ranges::find(indices, m_hovered_index) != std::ranges::end(indices))
-                    {
-                         action(m_hovered_index);
-                    }
-               }
-          }
-     });
+                      // there might be different kinds of conflicts in the same location. but here we're assuming your either one or
+                      // another. because we can't quite draw all the colors in the same place.
+                 }
+                 else
+                 {
+                      std::ranges::for_each(indices, action);
+                      if (std::ranges::find(indices, m_hovered_index) != std::ranges::end(indices))
+                      {
+                           action(m_hovered_index);
+                      }
+                 }
+            }
+       });
 }
 void fme::draw_window::draw_map_grid_lines_for_texture_page(
   const ImVec2 &screen_pos,
@@ -664,7 +682,8 @@ void fme::draw_window::draw_mim_grid_lines_for_texture_page(
 
      // Calculate grid spacing
 
-     const float  grid_spacing = [&]() {
+     const float  grid_spacing = [&]()
+     {
           using namespace open_viii::graphics;
           if (selections->get<ConfigKey::Bpp>().bpp4())
           {
@@ -730,7 +749,8 @@ void fme::draw_window::UseImGuizmo(
      if (ImGuizmo::IsUsing())
      {
           ImVec2     scroll        = { ImGui::GetScrollX(), ImGui::GetScrollY() };
-          const auto update_scroll = [&] {
+          const auto update_scroll = [&]
+          {
                spdlog::info("scroll: ({},{}), max: ({},{})", scroll.x, scroll.y, ImGui::GetScrollMaxX(), ImGui::GetScrollMaxY());
                scroll.y = std::clamp(scroll.y, 0.0f, ImGui::GetScrollMaxY());
                scroll.x = std::clamp(scroll.x, 0.0f, ImGui::GetScrollMaxX());
@@ -791,7 +811,8 @@ void fme::draw_window::UseImGuizmo(
 
      const glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
 
-     glm::mat4       objectMatrix = [&] {
+     glm::mat4       objectMatrix = [&]
+     {
           const glm::vec3 tilePosition = glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(framebuffer.scale());
           // Your object transform matrix, e.g. tile transform
           return glm::translate(glm::mat4(1.0f), tilePosition);
@@ -850,10 +871,12 @@ void fme::draw_window::UseImGuizmo(
                m_translation_in_progress = true;
                t_map_sprite->begin_multi_frame_working(fmt::format("ImGuizmo {}, {}", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ICON_FA_SPINNER));
 
-               t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                    m_hovered_tiles_indices
-                      = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
-               });
+               t_map_sprite->const_visit_working_tiles(
+                 [&](const auto &tiles)
+                 {
+                      m_hovered_tiles_indices
+                        = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                 });
 
                t_map_sprite->update_position(m_mouse_positions.pixel, m_mouse_positions.down_pixel, m_clicked_tile_indices);
           }

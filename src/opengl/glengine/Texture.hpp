@@ -115,12 +115,13 @@ class Texture
           {
                return;
           }
-          m_renderer_id = Glid{ []() -> std::uint32_t {
-                                    std::uint32_t tmp;
-                                    GlCall{}(glGenTextures, 1, &tmp);
-                                    GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-                                    return tmp;
-                               }(),
+          m_renderer_id = Glid{ []() -> std::uint32_t
+                                {
+                                     std::uint32_t tmp;
+                                     GlCall{}(glGenTextures, 1, &tmp);
+                                     GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+                                     return tmp;
+                                }(),
                                 destroy };
           GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
           GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
@@ -192,11 +193,12 @@ class Texture
           const auto            stride_in_bytes = static_cast<std::size_t>(stride) * sizeof_value;
           auto                  buffer          = std::make_unique<char[]>(stride_in_bytes);
           const auto            swap_memory
-            = [tmp = buffer.get(), stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right) {
-                   std::memcpy(tmp, &left, stride_in_bytes);
-                   std::memcpy(&left, &right, stride_in_bytes);
-                   std::memcpy(&right, tmp, stride_in_bytes);
-              };
+            = [tmp = buffer.get(), stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right)
+          {
+               std::memcpy(tmp, &left, stride_in_bytes);
+               std::memcpy(&left, &right, stride_in_bytes);
+               std::memcpy(&right, tmp, stride_in_bytes);
+          };
           auto b = std::ranges::begin(range);
           auto m = std::ranges::end(range);
           while (b < m)

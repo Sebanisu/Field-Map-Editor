@@ -101,13 +101,16 @@ static std::uint32_t GenerateFramebuffer(
 
 static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &spec)
 {
-     auto convert = [&spec](FrameBufferTextureFormat format) -> decltype(auto) {
+     auto convert = [&spec](FrameBufferTextureFormat format) -> decltype(auto)
+     {
           switch (format)
           {
-               case FrameBufferTextureFormat::RGBA8: {
+               case FrameBufferTextureFormat::RGBA8:
+               {
                     return Glid{ AttachColorTexture(spec.width, spec.height, GL_RGBA8, GL_RGBA), Texture::destroy };
                }
-               case FrameBufferTextureFormat::RGBA8UI: {
+               case FrameBufferTextureFormat::RGBA8UI:
+               {
                     return Glid{ AttachColorTexture(
                                    spec.width,
                                    spec.height,
@@ -117,7 +120,8 @@ static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &s
                                    ),
                                  Texture::destroy };
                }
-               case FrameBufferTextureFormat::RED_INTEGER: {
+               case FrameBufferTextureFormat::RED_INTEGER:
+               {
                     return Glid{ AttachColorTexture(spec.width, spec.height, GL_R32I, GL_RED_INTEGER, GL_INT), Texture::destroy };
                }
                case FrameBufferTextureFormat::None:
@@ -137,14 +141,16 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
 {
      // Sometimes the textures wouldn't be defined before defining m_renderer_id
      // So I moved this code inside here.
-     m_renderer_id = Glid{ GenerateFramebuffer(m_color_attachment, m_depth_attachment), [](std::uint32_t id) {
-                               GlCall{}(glDeleteFramebuffers, 1, &id);
-                               FrameBuffer::unbind();
-                          } };
-     m_renderer_id_first = Glid{ GenerateFramebuffer(m_color_attachment, m_depth_attachment, true), [](std::uint32_t id) {
-                                     GlCall{}(glDeleteFramebuffers, 1, &id);
-                                     FrameBuffer::unbind();
-                                } };
+     m_renderer_id = Glid{ GenerateFramebuffer(m_color_attachment, m_depth_attachment), [](std::uint32_t id)
+                           {
+                                GlCall{}(glDeleteFramebuffers, 1, &id);
+                                FrameBuffer::unbind();
+                           } };
+     m_renderer_id_first = Glid{ GenerateFramebuffer(m_color_attachment, m_depth_attachment, true), [](std::uint32_t id)
+                                 {
+                                      GlCall{}(glDeleteFramebuffers, 1, &id);
+                                      FrameBuffer::unbind();
+                                 } };
      unbind();
 }
 
@@ -186,7 +192,8 @@ SubTexture FrameBuffer::bind_color_attachment(std::uint32_t index) const
      r.bind();
      switch (m_specification.attachments[index])
      {
-          case FrameBufferTextureFormat::RGBA8: {
+          case FrameBufferTextureFormat::RGBA8:
+          {
                GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
                break;
           }
@@ -300,25 +307,29 @@ FrameBuffer::Pixel FrameBuffer::read_pixel(
           return std::monostate{};// invalid attachment
      switch (m_specification.attachments[attachment_index])
      {
-          case FrameBufferTextureFormat::RGBA8: {
+          case FrameBufferTextureFormat::RGBA8:
+          {
                std::array<uint8_t, 4> pixel_data = { 0 };
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel_data);
                return pixel_data;
           }
-          case FrameBufferTextureFormat::RGBA8UI: {
+          case FrameBufferTextureFormat::RGBA8UI:
+          {
                std::array<uint8_t, 4> pixel_data = { 0 };
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, &pixel_data);
                return pixel_data;
           }
-          case FrameBufferTextureFormat::RED_INTEGER: {
+          case FrameBufferTextureFormat::RED_INTEGER:
+          {
                int pixel_data = 0;
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
                break;
           }
-          case FrameBufferTextureFormat::None: {
+          case FrameBufferTextureFormat::None:
+          {
                return std::monostate{};// invalid attachment
           }
      }

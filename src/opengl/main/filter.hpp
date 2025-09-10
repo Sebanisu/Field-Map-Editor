@@ -724,7 +724,8 @@ struct filter_old
 
      filter_old &update(U &&value)
      {
-          const bool not_same = [&]() {
+          const bool not_same = [&]()
+          {
                if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
                {
                     return std::to_underlying(m_value) != std::to_underlying(value);
@@ -992,7 +993,8 @@ struct filter
 
      filter &update(U &&value)
      {
-          const bool not_same = [&]() {
+          const bool not_same = [&]()
+          {
                if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
                {
                     return std::to_underlying(m_value) != std::to_underlying(value);
@@ -1228,9 +1230,8 @@ struct filters
 
      void reload(const toml::table &table)
      {
-          [&table](auto &...operations) {
-               (operations.reload(table), ...);
-          }(pupu,
+          [&table](auto &...operations) { (operations.reload(table), ...); }(
+            pupu,
             multi_pupu,
             // these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
             // swizzle,
@@ -1262,9 +1263,8 @@ struct filters
 
      void combine(const toml::table &table)
      {
-          [&table](auto &...operations) {
-               (operations.combine(table), ...);
-          }(pupu,
+          [&table](auto &...operations) { (operations.combine(table), ...); }(
+            pupu,
             multi_pupu,
             // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
             // swizzle,
@@ -1295,9 +1295,8 @@ struct filters
 
      void update(toml::table &table) const
      {
-          [&table](const auto &...operations) {
-               (operations.update(table), ...);
-          }(pupu,
+          [&table](const auto &...operations) { (operations.update(table), ...); }(
+            pupu,
             multi_pupu,
             // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
             // swizzle,
@@ -1330,27 +1329,26 @@ struct filters
      template<open_viii::graphics::background::is_tile ThisTileT>
      bool operator()(const ThisTileT &tile) const
      {
-          return [&tile](const auto &...operations) -> bool {
-               return (std::invoke(operations, tile) && ...);
-          }(draw_bit,
-                                                    z,
-                                                    multi_z,
-                                                    palette,
-                                                    multi_palette,
-                                                    animation_id,
-                                                    multi_animation_id,
-                                                    animation_state,
-                                                    multi_animation_state,
-                                                    layer_id,
-                                                    multi_layer_id,
-                                                    texture_page_id,
-                                                    multi_texture_page_id,
-                                                    blend_mode,
-                                                    multi_blend_mode,
-                                                    blend_other,
-                                                    multi_blend_other,
-                                                    bpp,
-                                                    multi_bpp);
+          return [&tile](const auto &...operations) -> bool { return (std::invoke(operations, tile) && ...); }(
+                                                      draw_bit,
+                                                      z,
+                                                      multi_z,
+                                                      palette,
+                                                      multi_palette,
+                                                      animation_id,
+                                                      multi_animation_id,
+                                                      animation_state,
+                                                      multi_animation_state,
+                                                      layer_id,
+                                                      multi_layer_id,
+                                                      texture_page_id,
+                                                      multi_texture_page_id,
+                                                      blend_mode,
+                                                      multi_blend_mode,
+                                                      blend_other,
+                                                      multi_blend_other,
+                                                      bpp,
+                                                      multi_bpp);
      }
 };
 namespace tile_operations

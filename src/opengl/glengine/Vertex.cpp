@@ -55,9 +55,10 @@ std::vector<std::uint32_t> QuadIndices(std::size_t count)
      static constexpr auto quad_size = std::size(Quad{});
      for (std::size_t i{}; i != count; ++i)
      {
-          std::ranges::transform(QuadIndicesInit, std::back_inserter(indices), [&i](std::uint32_t index) {
-               return static_cast<std::uint32_t>(index + i * quad_size);
-          });
+          std::ranges::transform(
+            QuadIndicesInit,
+            std::back_inserter(indices),
+            [&i](std::uint32_t index) { return static_cast<std::uint32_t>(index + i * quad_size); });
      }
      return indices;
 }

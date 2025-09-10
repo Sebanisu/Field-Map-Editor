@@ -71,9 +71,12 @@ struct mim_bpp
  * @return false Otherwise.
  */
 static constexpr auto are_indices_in_both_ranges
-  = [](std::ranges::range auto &&hovered_tiles_indices, std::ranges::range auto &&conflicts_range) -> bool {
+  = [](std::ranges::range auto &&hovered_tiles_indices, std::ranges::range auto &&conflicts_range) -> bool
+{
      return std::ranges::any_of(
-       std::forward<decltype(hovered_tiles_indices)>(hovered_tiles_indices), [&](const std::integral auto &hovered_tile) -> bool {
+       std::forward<decltype(hovered_tiles_indices)>(hovered_tiles_indices),
+       [&](const std::integral auto &hovered_tile) -> bool
+       {
             return std::ranges::any_of(
               std::forward<decltype(conflicts_range)>(conflicts_range),
               [&](const std::integral auto &conflict_tile) -> bool { return std::cmp_equal(hovered_tile, conflict_tile); });
@@ -102,7 +105,8 @@ static constexpr auto are_indices_in_both_ranges
  * @param buttonSpacing The spacing between buttons.
  * @return std::uint16_t The number of buttons that can fit per row, ensuring it's even and at least 2.
  */
-static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpacing) -> std::uint16_t {
+static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpacing) -> std::uint16_t
+{
      const auto count_per_row_in
        = (std::max)(static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))),
                     std::uint16_t{ 2 });
@@ -136,7 +140,8 @@ static void DebugCallback(
 {
      switch (severity)
      {
-          case GL_DEBUG_SEVERITY_HIGH: {
+          case GL_DEBUG_SEVERITY_HIGH:
+          {
                spdlog::error("OpenGL high: {}", message);
                spdlog::error("{}", std::stacktrace::current());
                // throw;
@@ -405,12 +410,13 @@ void gui::control_panel_window()
      }
 
      bool      &visible     = m_selections->get<ConfigKey::DisplayControlPanelWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [this, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               m_selections->update<ConfigKey::DisplayControlPanelWindow>();
-          }
-     } };
+     const auto pop_visible = glengine::ScopeGuard{ [this, &visible, was_visable = visible]
+                                                    {
+                                                         if (was_visable != visible)
+                                                         {
+                                                              m_selections->update<ConfigKey::DisplayControlPanelWindow>();
+                                                         }
+                                                    } };
      const auto imgui_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::control_panel.data(), &visible))
      {
@@ -460,174 +466,179 @@ void gui::tile_conflicts_panel()
      {
           return;
      }
-     m_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, const auto &original_tiles) {
-          if (!ImGui::CollapsingHeader("Conflicting Tiles"))
-          {
-               return;
-          }
-          static constexpr float buttonWidth        = 32.F;
-          static constexpr float buttonSpacing      = 12.F;
-          const auto             count_per_row      = get_count_per_row(buttonWidth, buttonSpacing);
+     m_map_sprite->const_visit_tiles_both(
+       [&](const auto &working_tiles, const auto &original_tiles)
+       {
+            if (!ImGui::CollapsingHeader("Conflicting Tiles"))
+            {
+                 return;
+            }
+            static constexpr float buttonWidth        = 32.F;
+            static constexpr float buttonSpacing      = 12.F;
+            const auto             count_per_row      = get_count_per_row(buttonWidth, buttonSpacing);
 
-          const auto            &conflicts          = m_map_sprite->working_conflicts();
-          auto                   range_of_conflicts = conflicts.range_of_conflicts();
-          const auto            &similar_counts     = m_map_sprite->working_similar_counts();
-          const auto            &animation_counts   = m_map_sprite->working_animation_counts();
+            const auto            &conflicts          = m_map_sprite->working_conflicts();
+            auto                   range_of_conflicts = conflicts.range_of_conflicts();
+            const auto            &similar_counts     = m_map_sprite->working_similar_counts();
+            const auto            &animation_counts   = m_map_sprite->working_animation_counts();
 
-          const auto             pop_table_id       = PushPopID();
-          // Default hover options for ImGuiCol_ButtonHovered
-          const auto options_hover   = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonHovered };
+            const auto             pop_table_id       = PushPopID();
+            // Default hover options for ImGuiCol_ButtonHovered
+            const auto options_hover   = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonHovered };
 
-          // Default regular options for ImGuiCol_Button
-          const auto options_regular = tile_button_options{ .size = { buttonWidth, buttonWidth } };
+            // Default regular options for ImGuiCol_Button
+            const auto options_regular = tile_button_options{ .size = { buttonWidth, buttonWidth } };
 
-          // New options for when the similar count is greater than 1 (green tint)
-          const auto options_similar = tile_button_options{ .size                = { buttonWidth, buttonWidth },
-                                                            .button_color        = colors::ButtonGreen,
-                                                            .button_hover_color  = colors::ButtonGreenHovered,
-                                                            .button_active_color = colors::ButtonGreenActive };
+            // New options for when the similar count is greater than 1 (green tint)
+            const auto options_similar = tile_button_options{ .size                = { buttonWidth, buttonWidth },
+                                                              .button_color        = colors::ButtonGreen,
+                                                              .button_hover_color  = colors::ButtonGreenHovered,
+                                                              .button_active_color = colors::ButtonGreenActive };
 
-          // New hover options for similar tiles (green hover)
-          const auto options_similar_hover = tile_button_options{
-               .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonGreenHovered// Green hover tint
-          };
+            // New hover options for similar tiles (green hover)
+            const auto options_similar_hover = tile_button_options{
+                 .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonGreenHovered// Green hover tint
+            };
 
-          // New options for when the animation count is greater than 1 (pink tint)
-          const auto options_animation       = tile_button_options{ .size                = { buttonWidth, buttonWidth },
-                                                                    .button_color        = colors::ButtonPink,
-                                                                    .button_hover_color  = colors::ButtonPinkHovered,
-                                                                    .button_active_color = colors::ButtonPinkActive };
+            // New options for when the animation count is greater than 1 (pink tint)
+            const auto options_animation       = tile_button_options{ .size                = { buttonWidth, buttonWidth },
+                                                                      .button_color        = colors::ButtonPink,
+                                                                      .button_hover_color  = colors::ButtonPinkHovered,
+                                                                      .button_active_color = colors::ButtonPinkActive };
 
-          // New hover options for animation tiles (pink hover)
-          const auto options_animation_hover = tile_button_options{
-               .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonPinkHovered// pink hover tint
-          };
+            // New hover options for animation tiles (pink hover)
+            const auto options_animation_hover = tile_button_options{
+                 .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonPinkHovered// pink hover tint
+            };
 
-          format_imgui_text("{}", "Legend: ");
-          ImGui::SameLine();
-          blue_color_button();
-          const bool hovered_conflicts = ImGui::IsItemHovered();
-          tool_tip("Button Color - Conflicts with different tiles.");
-          ImGui::SameLine();
-          green_color_button();
-          const bool hovered_similar = ImGui::IsItemHovered();
-          tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
-          ImGui::SameLine();
-          pink_color_button();
-          const bool hovered_animation = ImGui::IsItemHovered();
-          tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
-
-
-          for (const auto &conflict_group : range_of_conflicts)
-          {
-               {
-                    const auto  first_index = conflict_group.front();
-                    const auto &first_tile  = [&]() {
-                         auto begin = std::ranges::cbegin(working_tiles);
-                         std::ranges::advance(begin, first_index);
-                         return *begin;
-                    }();
-
-                    format_imgui_text(
-                      "X = {}, (X + T * 256 = {}), Y = {}, T = {}: ",
-                      first_tile.source_x(),
-                      first_tile.source_x() + first_tile.texture_id() * ff_8::source_tile_conflicts::GRID_SIZE,
-                      first_tile.source_y(),
-                      first_tile.texture_id());
-               }
-               format_imgui_text("index count: {}", std::ranges::size(conflict_group));
-               if (ImGui::BeginTable(
-                     "##table_overlaps",
-                     count_per_row,
-                     ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
-               {
-
-                    for (const auto index : conflict_group)
-                    {
-                         assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "index out of range!");
-                         assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
+            format_imgui_text("{}", "Legend: ");
+            ImGui::SameLine();
+            blue_color_button();
+            const bool hovered_conflicts = ImGui::IsItemHovered();
+            tool_tip("Button Color - Conflicts with different tiles.");
+            ImGui::SameLine();
+            green_color_button();
+            const bool hovered_similar = ImGui::IsItemHovered();
+            tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
+            ImGui::SameLine();
+            pink_color_button();
+            const bool hovered_animation = ImGui::IsItemHovered();
+            tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
 
 
-                         // ImGui::TableNextColumn();
-                         // format_imgui_text("{:4}", index);
+            for (const auto &conflict_group : range_of_conflicts)
+            {
+                 {
+                      const auto  first_index = conflict_group.front();
+                      const auto &first_tile  = [&]()
+                      {
+                           auto begin = std::ranges::cbegin(working_tiles);
+                           std::ranges::advance(begin, first_index);
+                           return *begin;
+                      }();
 
-                         ImGui::TableNextColumn();
-                         const auto get_tile = [&](const auto &tiles) -> decltype(auto) {
-                              auto begin = std::ranges::cbegin(tiles);
-                              std::ranges::advance(begin, index);
-                              return *begin;
-                         };
+                      format_imgui_text(
+                        "X = {}, (X + T * 256 = {}), Y = {}, T = {}: ",
+                        first_tile.source_x(),
+                        first_tile.source_x() + first_tile.texture_id() * ff_8::source_tile_conflicts::GRID_SIZE,
+                        first_tile.source_y(),
+                        first_tile.texture_id());
+                 }
+                 format_imgui_text("index count: {}", std::ranges::size(conflict_group));
+                 if (ImGui::BeginTable(
+                       "##table_overlaps",
+                       count_per_row,
+                       ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
+                 {
 
-                         const auto &working_tile  = get_tile(working_tiles);
-                         const auto &original_tile = get_tile(original_tiles);
-                         assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
-                         const auto similar_count  = similar_counts.at(working_tile);
-                         const bool similar_over_1 = std::cmp_greater(similar_count, 1);
+                      for (const auto index : conflict_group)
+                      {
+                           assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "index out of range!");
+                           assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
 
-                         assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
-                         const auto animation_count  = animation_counts.at(working_tile);
-                         const bool animation_over_1 = std::cmp_greater(animation_count, 1);
 
-                         const auto options          = [&]() {
-                              if (animation_over_1 && !similar_over_1 && hovered_animation)
-                              {
-                                   return options_animation_hover;
-                              }
-                              if (similar_over_1 && hovered_similar)
-                              {
-                                   return options_similar_hover;
-                              }
-                              if (!similar_over_1 && !animation_over_1 && hovered_conflicts)
-                              {
-                                   return options_hover;
-                              }
-                              if (
-                                std::ranges::empty(m_draw_window.hovered_tiles_indices())
-                                || std::ranges::find(m_draw_window.hovered_tiles_indices(), static_cast<std::size_t>(index))
-                                     == std::ranges::end(m_draw_window.hovered_tiles_indices())
-                                || !m_draw_window.mouse_positions().mouse_enabled)
-                              {
-                                   if (similar_over_1)
-                                   {
-                                        return options_similar;
-                                   }
-                                   if (animation_over_1)
-                                   {
-                                        return options_animation;
-                                   }
-                                   return options_regular;
-                              }
-                              if (similar_over_1)
-                              {
-                                   return options_similar_hover;
-                              }
-                              if (animation_over_1)
-                              {
-                                   return options_animation_hover;
-                              }
-                              return options_hover;
-                         }();
+                           // ImGui::TableNextColumn();
+                           // format_imgui_text("{:4}", index);
 
-                         (void)create_tile_button(m_map_sprite, original_tile, options);
-                         if (ImGui::IsItemHovered())
-                         {
-                              m_draw_window.hovered_index(index);
-                         }
-                         // Ensure subsequent buttons are on the same row
-                         std::string strtooltip = fmt::format(
-                           "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
-                           index,
-                           working_tile,
-                           similar_over_1 ? similar_count : 0,
-                           animation_over_1 ? animation_count : 0);
-                         tool_tip(strtooltip);
-                    }
-                    // Break the line after finishing a conflict group
+                           ImGui::TableNextColumn();
+                           const auto get_tile = [&](const auto &tiles) -> decltype(auto)
+                           {
+                                auto begin = std::ranges::cbegin(tiles);
+                                std::ranges::advance(begin, index);
+                                return *begin;
+                           };
 
-                    ImGui::EndTable();
-               }
-          }
-     });
+                           const auto &working_tile  = get_tile(working_tiles);
+                           const auto &original_tile = get_tile(original_tiles);
+                           assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
+                           const auto similar_count  = similar_counts.at(working_tile);
+                           const bool similar_over_1 = std::cmp_greater(similar_count, 1);
+
+                           assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
+                           const auto animation_count  = animation_counts.at(working_tile);
+                           const bool animation_over_1 = std::cmp_greater(animation_count, 1);
+
+                           const auto options          = [&]()
+                           {
+                                if (animation_over_1 && !similar_over_1 && hovered_animation)
+                                {
+                                     return options_animation_hover;
+                                }
+                                if (similar_over_1 && hovered_similar)
+                                {
+                                     return options_similar_hover;
+                                }
+                                if (!similar_over_1 && !animation_over_1 && hovered_conflicts)
+                                {
+                                     return options_hover;
+                                }
+                                if (
+                                  std::ranges::empty(m_draw_window.hovered_tiles_indices())
+                                  || std::ranges::find(m_draw_window.hovered_tiles_indices(), static_cast<std::size_t>(index))
+                                       == std::ranges::end(m_draw_window.hovered_tiles_indices())
+                                  || !m_draw_window.mouse_positions().mouse_enabled)
+                                {
+                                     if (similar_over_1)
+                                     {
+                                          return options_similar;
+                                     }
+                                     if (animation_over_1)
+                                     {
+                                          return options_animation;
+                                     }
+                                     return options_regular;
+                                }
+                                if (similar_over_1)
+                                {
+                                     return options_similar_hover;
+                                }
+                                if (animation_over_1)
+                                {
+                                     return options_animation_hover;
+                                }
+                                return options_hover;
+                           }();
+
+                           (void)create_tile_button(m_map_sprite, original_tile, options);
+                           if (ImGui::IsItemHovered())
+                           {
+                                m_draw_window.hovered_index(index);
+                           }
+                           // Ensure subsequent buttons are on the same row
+                           std::string strtooltip = fmt::format(
+                             "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
+                             index,
+                             working_tile,
+                             similar_over_1 ? similar_count : 0,
+                             animation_over_1 ? animation_count : 0);
+                           tool_tip(strtooltip);
+                      }
+                      // Break the line after finishing a conflict group
+
+                      ImGui::EndTable();
+                 }
+            }
+       });
 }
 
 void gui::selected_tiles_panel()
@@ -645,22 +656,26 @@ void gui::selected_tiles_panel()
      }
 
      std::optional<std::size_t> remove_index = {};
-     m_map_sprite->const_visit_original_tiles([&](const auto &original_tiles) {
-          m_map_sprite->const_visit_working_tiles([&](const auto &working_tiles) {
-               for (const auto &i : m_draw_window.clicked_tile_indices())
-               {
-                    if (i < std::ranges::size(original_tiles) && i < std::ranges::size(working_tiles))
-                    {
-                         const auto &original_tile = original_tiles[i];
-                         const auto &working_tile  = working_tiles[i];
-                         if (collapsing_tile_info(m_map_sprite, original_tile, working_tile, {}, i))
-                         {
-                              remove_index = i;
-                         }
-                    }
-               }
-          });
-     });
+     m_map_sprite->const_visit_original_tiles(
+       [&](const auto &original_tiles)
+       {
+            m_map_sprite->const_visit_working_tiles(
+              [&](const auto &working_tiles)
+              {
+                   for (const auto &i : m_draw_window.clicked_tile_indices())
+                   {
+                        if (i < std::ranges::size(original_tiles) && i < std::ranges::size(working_tiles))
+                        {
+                             const auto &original_tile = original_tiles[i];
+                             const auto &working_tile  = working_tiles[i];
+                             if (collapsing_tile_info(m_map_sprite, original_tile, working_tile, {}, i))
+                             {
+                                  remove_index = i;
+                             }
+                        }
+                   }
+              });
+       });
      if (remove_index.has_value())
      {
           m_draw_window.remove_clicked_index(remove_index.value());
@@ -832,59 +847,63 @@ void gui::consume_one_future()
      {
           m_future_paths_consumer += m_future_of_future_paths_consumer.get_consumer();
      }
-     m_future_paths_consumer.consume_one_with_callback([&](PathsAndEnabled pande) {
-          if (pande.path.empty())
-          {
-               return;
-          }
-          spdlog::info("Updating path config [{}] with {} entries", m_selections->get_id(pande.path_key), pande.path.size());
-          switch (pande.path_key)
-          {
-               case ConfigKey::CacheTextureAndMapPaths:
-                    m_selections->get<ConfigKey::CacheTextureAndMapPaths>() = std::move(pande.path);
-                    m_selections->update<ConfigKey::CacheTextureAndMapPaths>();
-                    break;
-               default: {
-                    spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(pande.path_key));
-               }
-          }
+     m_future_paths_consumer.consume_one_with_callback(
+       [&](PathsAndEnabled pande)
+       {
+            if (pande.path.empty())
+            {
+                 return;
+            }
+            spdlog::info("Updating path config [{}] with {} entries", m_selections->get_id(pande.path_key), pande.path.size());
+            switch (pande.path_key)
+            {
+                 case ConfigKey::CacheTextureAndMapPaths:
+                      m_selections->get<ConfigKey::CacheTextureAndMapPaths>() = std::move(pande.path);
+                      m_selections->update<ConfigKey::CacheTextureAndMapPaths>();
+                      break;
+                 default:
+                 {
+                      spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(pande.path_key));
+                 }
+            }
 
-          for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
-          {
-               if (enabled.empty())
-               {
-                    continue;
-               }
-               spdlog::info("Updating enabled config [{}] with {} entries", m_selections->get_id(key), enabled.size());
-               switch (key)
-               {
-                    case ConfigKey::CacheSwizzlePathsEnabled:
-                         m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>() = std::move(enabled);
-                         m_selections->update<ConfigKey::CacheSwizzlePathsEnabled>();
-                         break;
-                    case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
-                         m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>() = std::move(enabled);
-                         m_selections->update<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>();
-                         break;
-                    case ConfigKey::CacheDeswizzlePathsEnabled:
-                         m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>() = std::move(enabled);
-                         m_selections->update<ConfigKey::CacheDeswizzlePathsEnabled>();
-                         break;
-                    case ConfigKey::CacheFullFileNamePathsEnabled:
-                         m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>() = std::move(enabled);
-                         m_selections->update<ConfigKey::CacheFullFileNamePathsEnabled>();
-                         break;
-                    case ConfigKey::CacheMapPathsEnabled:
-                         m_selections->get<ConfigKey::CacheMapPathsEnabled>() = std::move(enabled);
-                         m_selections->update<ConfigKey::CacheMapPathsEnabled>();
-                         break;
-                    default: {
-                         spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(key));
-                         throw;
-                    }
-               }
-          }
-     });
+            for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
+            {
+                 if (enabled.empty())
+                 {
+                      continue;
+                 }
+                 spdlog::info("Updating enabled config [{}] with {} entries", m_selections->get_id(key), enabled.size());
+                 switch (key)
+                 {
+                      case ConfigKey::CacheSwizzlePathsEnabled:
+                           m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>() = std::move(enabled);
+                           m_selections->update<ConfigKey::CacheSwizzlePathsEnabled>();
+                           break;
+                      case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
+                           m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>() = std::move(enabled);
+                           m_selections->update<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>();
+                           break;
+                      case ConfigKey::CacheDeswizzlePathsEnabled:
+                           m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>() = std::move(enabled);
+                           m_selections->update<ConfigKey::CacheDeswizzlePathsEnabled>();
+                           break;
+                      case ConfigKey::CacheFullFileNamePathsEnabled:
+                           m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>() = std::move(enabled);
+                           m_selections->update<ConfigKey::CacheFullFileNamePathsEnabled>();
+                           break;
+                      case ConfigKey::CacheMapPathsEnabled:
+                           m_selections->get<ConfigKey::CacheMapPathsEnabled>() = std::move(enabled);
+                           m_selections->update<ConfigKey::CacheMapPathsEnabled>();
+                           break;
+                      default:
+                      {
+                           spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(key));
+                           throw;
+                      }
+                 }
+            }
+       });
 
      if (!m_future_of_future_consumer.done())
      {
@@ -931,76 +950,79 @@ void gui::hovered_tiles_panel()
      }
 
 
-     m_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, const auto &original_tiles) {
-          const auto &hovered_tiles_indices = m_draw_window.hovered_tiles_indices();
-          format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(hovered_tiles_indices));
-          if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
-          {
-               return;
-          }
-          if (!m_draw_window.mouse_positions().mouse_enabled)
-          {
-               return;
-          }
-          if (std::ranges::empty(hovered_tiles_indices))
-          {
-               return;
-          }
-          static constexpr float buttonWidth   = 32.F;
-          static constexpr float buttonSpacing = 12.F;
-          const auto             columns       = get_count_per_row(buttonWidth, buttonSpacing);
+     m_map_sprite->const_visit_tiles_both(
+       [&](const auto &working_tiles, const auto &original_tiles)
+       {
+            const auto &hovered_tiles_indices = m_draw_window.hovered_tiles_indices();
+            format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(hovered_tiles_indices));
+            if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
+            {
+                 return;
+            }
+            if (!m_draw_window.mouse_positions().mouse_enabled)
+            {
+                 return;
+            }
+            if (std::ranges::empty(hovered_tiles_indices))
+            {
+                 return;
+            }
+            static constexpr float buttonWidth   = 32.F;
+            static constexpr float buttonSpacing = 12.F;
+            const auto             columns       = get_count_per_row(buttonWidth, buttonSpacing);
 
-          if (!ImGui::BeginTable(
-                "##table", columns, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
-          {
-               return;
-          }
-          const auto &conflicts_obj          = m_map_sprite->working_conflicts();
-          auto        conflict_range         = conflicts_obj.range_of_conflicts_flattened();
-          const bool  hovering_over_conflict = are_indices_in_both_ranges(hovered_tiles_indices, conflict_range);
-
-
-          const auto &similar_counts         = m_map_sprite->working_similar_counts();
-          const auto &animation_counts       = m_map_sprite->working_animation_counts();
-          for (const auto index : hovered_tiles_indices)
-          {
-               assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
-               const auto c = [&]() {
-                    const auto &working_tile = working_tiles[index];
-                    if (hovering_over_conflict)
-                    {
-                         if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
-                         {
-                              return colors::ButtonGreenHovered;
-                         }
-                         if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
-                         {
-                              return colors::ButtonPinkHovered;
-                         }
-                         return colors::ButtonHovered;
-                    }
-
-                    if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
-                    {
-                         return colors::ButtonGreen;
-                    }
-                    if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
-                    {
-                         return colors::ButtonPink;
-                    }
-                    return colors::Button;
-               }();
-               const auto options = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = c };
+            if (!ImGui::BeginTable(
+                  "##table", columns, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
+            {
+                 return;
+            }
+            const auto &conflicts_obj          = m_map_sprite->working_conflicts();
+            auto        conflict_range         = conflicts_obj.range_of_conflicts_flattened();
+            const bool  hovering_over_conflict = are_indices_in_both_ranges(hovered_tiles_indices, conflict_range);
 
 
-               ImGui::TableNextColumn();
-               format_imgui_text("{:4}", index);
-               ImGui::TableNextColumn();
+            const auto &similar_counts         = m_map_sprite->working_similar_counts();
+            const auto &animation_counts       = m_map_sprite->working_animation_counts();
+            for (const auto index : hovered_tiles_indices)
+            {
+                 assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
+                 const auto c = [&]()
+                 {
+                      const auto &working_tile = working_tiles[index];
+                      if (hovering_over_conflict)
+                      {
+                           if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
+                           {
+                                return colors::ButtonGreenHovered;
+                           }
+                           if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
+                           {
+                                return colors::ButtonPinkHovered;
+                           }
+                           return colors::ButtonHovered;
+                      }
 
-               (void)create_tile_button(m_map_sprite, original_tiles[index], options);
-          }
-          ImGui::EndTable();
-     });
+                      if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
+                      {
+                           return colors::ButtonGreen;
+                      }
+                      if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
+                      {
+                           return colors::ButtonPink;
+                      }
+                      return colors::Button;
+                 }();
+                 const auto options = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = c };
+
+
+                 ImGui::TableNextColumn();
+                 format_imgui_text("{:4}", index);
+                 ImGui::TableNextColumn();
+
+                 (void)create_tile_button(m_map_sprite, original_tiles[index], options);
+            }
+            ImGui::EndTable();
+       });
 }
 void gui::combo_coo()
 {
@@ -1065,15 +1087,19 @@ void gui::combo_field()
      const auto gcc = GenericCombo(
        gui_labels::field,
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
-       [this]() {
-            return m_archives_group->mapdata() | std::ranges::views::transform([](const std::string &str) -> std::string_view {
-                        using namespace std::string_view_literals;
-                        return (
-                          std::string_view(str).starts_with("ma"sv)
-                              || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
-                            ? ""sv
-                            : std::string_view(str));
-                   });
+       [this]()
+       {
+            return m_archives_group->mapdata()
+                   | std::ranges::views::transform(
+                     [](const std::string &str) -> std::string_view
+                     {
+                          using namespace std::string_view_literals;
+                          return (
+                            std::string_view(str).starts_with("ma"sv)
+                                || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
+                              ? ""sv
+                              : std::string_view(str));
+                     });
        },
        m_field_index);
 
@@ -1742,11 +1768,13 @@ void gui::edit_menu()
                                                   std::string_view                       label,
                                                   ff_8::HasValuesAndStringsAndZip auto &&pair,
                                                   ff_8::IsFilterOld auto                &filter,
-                                                  std::invocable auto                  &&lambda) {
+                                                  std::invocable auto                  &&lambda)
+               {
                     if (ImGui::BeginMenu(label.data()))
                     {
                          const auto pop_menu1       = glengine::ScopeGuard(&ImGui::EndMenu);
-                         const auto process_element = [&](auto &value, auto &str) {
+                         const auto process_element = [&](auto &value, auto &str)
+                         {
                               const bool selected = filter.value() == value;
                               bool       checked  = selected && filter.enabled();
                               if (ImGui::MenuItem(str.data(), nullptr, &checked))
@@ -2240,12 +2268,14 @@ void gui::menu_swizzle_as_one_image_paths()
            std::forward_as_tuple(m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle, m_map_sprite->filter().full_filename),
            mmps };
      mmp.render(
-       [&]() {
+       [&]()
+       {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
        [&]() { refresh_render_texture(true); },
-       [&]() {
+       [&]()
+       {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
             m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzleAsOneImagePath>());
@@ -2271,12 +2301,14 @@ void gui::menu_swizzle_paths()
              m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle),
            mmps };
      mmp.render(
-       [&]() {
+       [&]()
+       {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
        [&]() { refresh_render_texture(true); },
-       [&]() {
+       [&]()
+       {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
             m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzlePath>());
@@ -2302,12 +2334,14 @@ void gui::menu_deswizzle_paths()
              m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle),
            mmps };
      mmp.render(
-       [&]() {
+       [&]()
+       {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
        [&]() { refresh_render_texture(true); },
-       [&]() {
+       [&]()
+       {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
             m_directory_browser.SetDirectory(m_selections->get<ConfigKey::DeswizzlePath>());
@@ -2334,12 +2368,14 @@ void gui::menu_full_filename_paths()
              m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle),
            mmps };
      mmp.render(
-       [&]() {
+       [&]()
+       {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
        [&]() { refresh_render_texture(true); },
-       [&]() {
+       [&]()
+       {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
             m_directory_browser.SetDirectory(m_selections->get<ConfigKey::FullFileNamePath>());
@@ -2361,11 +2397,13 @@ void gui::menu_map_paths()
                                              .browse_tooltip          = "Browse for a directory containing .map files." };
      const main_menu_paths          mmp  = { m_map_sprite->filter().map, {}, mmps };
      mmp.render(
-       [&]() {
+       [&]()
+       {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
-       [&]() {
+       [&]()
+       {
             if (m_map_sprite->filter().map.enabled())
             {
                  if (const auto paths = fme::generate_map_paths(m_selections, *m_map_sprite)(); !std::ranges::empty(paths))
@@ -2384,7 +2422,8 @@ void gui::menu_map_paths()
             }
             refresh_render_texture();
        },
-       [&]() {
+       [&]()
+       {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::load_map_file.data());
             m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzlePath>());
@@ -2474,13 +2513,14 @@ void gui::directory_browser_display()
      {
           return;
      }
-     const auto              pop_directory = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
-     [[maybe_unused]] bool   changed       = false;
-     const auto              selected_path = m_directory_browser.GetSelected();
+     const auto              pop_directory      = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
+     [[maybe_unused]] bool   changed            = false;
+     const auto              selected_path      = m_directory_browser.GetSelected();
 
-     const ff_8::path_search ps            = static_cast<ff_8::path_search>(*m_map_sprite);
+     const ff_8::path_search ps                 = static_cast<ff_8::path_search>(*m_map_sprite);
 
-     const auto add_path_to_config         = [&]<ConfigKey Key = ConfigKey::ExternalTexturesAndMapsDirectoryPaths, ConfigKey... Keys>() {
+     const auto              add_path_to_config = [&]<ConfigKey Key = ConfigKey::ExternalTexturesAndMapsDirectoryPaths, ConfigKey... Keys>()
+     {
           std::apply(
             [&](auto *...paths) { (paths->push_back(selected_path), ...); },
             std::tuple(&m_selections->get<Key>(), &m_selections->get<ConfigKey::CacheTextureAndMapPaths>()));
@@ -2497,17 +2537,18 @@ void gui::directory_browser_display()
               std::pair(&m_selections->get<ConfigKey::CacheMapPathsEnabled>(), ps.has_map_path(selected_path, ".map"))));
 
           m_selections->update<
-                    Key,
-                    Keys...,
-                    ConfigKey::CacheTextureAndMapPaths,
-                    ConfigKey::CacheSwizzlePathsEnabled,
-                    ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-                    ConfigKey::CacheDeswizzlePathsEnabled,
-                    ConfigKey::CacheFullFileNamePathsEnabled,
-                    ConfigKey::CacheMapPathsEnabled>();
+            Key,
+            Keys...,
+            ConfigKey::CacheTextureAndMapPaths,
+            ConfigKey::CacheSwizzlePathsEnabled,
+            ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+            ConfigKey::CacheDeswizzlePathsEnabled,
+            ConfigKey::CacheFullFileNamePathsEnabled,
+            ConfigKey::CacheMapPathsEnabled>();
      };
 
-     const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) -> bool {
+     const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) -> bool
+     {
           if (m_selections->get<Key>().back())
           {
                filter.update(selected_path).enable();
@@ -2517,7 +2558,8 @@ void gui::directory_browser_display()
           return false;
      };
 
-     const auto try_enable_map_filter = [&]() -> bool {
+     const auto try_enable_map_filter = [&]() -> bool
+     {
           if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
           {
                m_map_sprite->filter().map.update(selected_path).enable();
@@ -2526,12 +2568,14 @@ void gui::directory_browser_display()
           return false;
      };
 
-     const auto optional_coo = [&]() -> std::optional<open_viii::LangT> {
+     const auto optional_coo = [&]() -> std::optional<open_viii::LangT>
+     {
           const auto coo = m_selections->get<ConfigKey::Coo>();
           return (coo != open_viii::LangT::generic && m_map_sprite->using_coo()) ? std::optional{ coo } : std::nullopt;
      }();
 
-     const auto save_map_with_pattern = [&]<ConfigKey Key>() {
+     const auto save_map_with_pattern = [&]<ConfigKey Key>()
+     {
           const key_value_data cpm = {
                .field_name    = m_map_sprite->get_base_name(),
                .ext           = ".map",
@@ -2540,7 +2584,8 @@ void gui::directory_browser_display()
           m_map_sprite->save_modified_map(cpm.replace_tags(m_selections->get<Key>(), m_selections, selected_path));
      };
 
-     const auto ensure_directory = [&](const std::filesystem::path &path) {
+     const auto ensure_directory = [&](const std::filesystem::path &path)
+     {
           std::error_code ec;
           std::filesystem::create_directories(path, ec);
           if (ec)
@@ -2552,7 +2597,8 @@ void gui::directory_browser_display()
      switch (m_modified_directory_map)
      {
                // todo modify these two functions :P to use the imported image.
-          case map_directory_mode::save_swizzle_textures: {
+          case map_directory_mode::save_swizzle_textures:
+          {
                m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzlePath>();
                ensure_directory(selected_path);
@@ -2563,7 +2609,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::save_swizzle_as_one_image_textures: {
+          case map_directory_mode::save_swizzle_as_one_image_textures:
+          {
                m_selections->get<ConfigKey::SwizzleAsOneImagePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                ensure_directory(selected_path);
@@ -2574,7 +2621,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::save_deswizzle_textures: {
+          case map_directory_mode::save_deswizzle_textures:
+          {
                m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
                m_selections->update<ConfigKey::DeswizzlePath>();
                ensure_directory(selected_path);
@@ -2585,7 +2633,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::ff8_install_directory: {
+          case map_directory_mode::ff8_install_directory:
+          {
                m_selections->get<ConfigKey::FF8Path>() = selected_path;
                add_path_to_config.template operator()<ConfigKey::FF8DirectoryPaths, ConfigKey::FF8Path>();
                m_selections->sort_paths();
@@ -2593,7 +2642,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::load_swizzle_textures: {
+          case map_directory_mode::load_swizzle_textures:
+          {
                m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzlePath>();
                add_path_to_config();
@@ -2613,7 +2663,8 @@ void gui::directory_browser_display()
           break;
 
 
-          case map_directory_mode::load_swizzle_as_one_image_textures: {
+          case map_directory_mode::load_swizzle_as_one_image_textures:
+          {
                m_selections->get<ConfigKey::SwizzleAsOneImagePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                add_path_to_config();
@@ -2632,7 +2683,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::load_deswizzle_textures: {
+          case map_directory_mode::load_deswizzle_textures:
+          {
                m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
                m_selections->update<ConfigKey::DeswizzlePath>();
                add_path_to_config();
@@ -2651,7 +2703,8 @@ void gui::directory_browser_display()
           }
           break;
 
-          case map_directory_mode::load_full_filename_textures: {
+          case map_directory_mode::load_full_filename_textures:
+          {
                m_selections->get<ConfigKey::FullFileNamePath>() = selected_path;
                m_selections->update<ConfigKey::FullFileNamePath>();
                add_path_to_config();
@@ -2669,7 +2722,8 @@ void gui::directory_browser_display()
                }
           }
           break;
-          case map_directory_mode::load_map: {
+          case map_directory_mode::load_map:
+          {
                m_selections->get<ConfigKey::OutputMapPath>() = selected_path;
                m_selections->update<ConfigKey::OutputMapPath>();
                add_path_to_config();
@@ -2699,7 +2753,8 @@ void gui::file_browser_display()
      {
           [[maybe_unused]] const auto &selected_path             = m_save_file_browser.GetSelected();
           [[maybe_unused]] const auto &selected_directory        = m_save_file_browser.GetDirectory();
-          const auto                   update_selected_toml_path = [&]() {
+          const auto                   update_selected_toml_path = [&]()
+          {
                m_map_sprite->clear_toml_cached_framebuffers();
                m_selections->get<ConfigKey::TomlPath>() = selected_path;
                m_selections->get<ConfigKey::TomlPaths>().push_back(selected_path);
@@ -2713,21 +2768,24 @@ void gui::file_browser_display()
           {
                switch (m_file_dialog_mode)
                {
-                    case file_dialog_mode::save_mim_file: {
+                    case file_dialog_mode::save_mim_file:
+                    {
                          m_mim_sprite->mim_save(selected_path);
                          m_selections->get<ConfigKey::OutputMimPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMimPath>();
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::save_image_file: {
+                    case file_dialog_mode::save_image_file:
+                    {
                          m_mim_sprite->save(selected_path);
                          m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::select_toml_file: {
+                    case file_dialog_mode::select_toml_file:
+                    {
                          update_selected_toml_path();
                     }
                     break;
@@ -2741,21 +2799,24 @@ void gui::file_browser_display()
           {
                switch (m_file_dialog_mode)
                {
-                    case file_dialog_mode::save_modified_map_file: {
+                    case file_dialog_mode::save_modified_map_file:
+                    {
                          m_map_sprite->save_modified_map(selected_path);
                          m_selections->get<ConfigKey::OutputMapPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::save_unmodified_map_file: {
+                    case file_dialog_mode::save_unmodified_map_file:
+                    {
                          m_map_sprite->map_save(selected_path);
                          m_selections->get<ConfigKey::OutputMapPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::load_map_file: {
+                    case file_dialog_mode::load_map_file:
+                    {
                          /// TODO load in as a filter? or leave as is... For now we'll disable the filter and just load the selected
                          /// file.
                          m_map_sprite->filter().map.disable();
@@ -2766,14 +2827,16 @@ void gui::file_browser_display()
                          m_changed = true;
                     }
                     break;
-                    case file_dialog_mode::save_image_file: {
+                    case file_dialog_mode::save_image_file:
+                    {
                          m_map_sprite->save(selected_path);
                          m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::select_toml_file: {
+                    case file_dialog_mode::select_toml_file:
+                    {
                          update_selected_toml_path();
                     }
                     break;
@@ -3002,7 +3065,8 @@ bool gui::combo_path()
      const auto gcc         = GenericCombo(
        gui_labels::path,
        [&]() { return m_selections->get<ConfigKey::FF8DirectoryPaths>(); },
-       [&]() {
+       [&]()
+       {
             return m_selections->get<ConfigKey::FF8DirectoryPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },
@@ -3056,9 +3120,8 @@ void gui::bind_shortcuts()
      constexpr auto flags      = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
 
      // Inside your GUI update loop where you already handle shortcuts
-     const auto     test_field = [](std::string_view test) -> bool {
-          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv) || test == "ggroad4"sv;
-     };
+     const auto     test_field = [](std::string_view test) -> bool
+     { return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv) || test == "ggroad4"sv; };
 
      if (const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);
          ImGui::Shortcut(escapeChord, flags) || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
@@ -3335,13 +3398,15 @@ gui::gui(GLFWwindow *const window)
           m_future_of_future_paths_consumer += generate_sort_paths();
      }
 
-     m_custom_paths_window.register_callback([&](const ConfigKey key) {
-          if (key != ConfigKey::OutputTomlPattern || !m_map_sprite)
-          {
-               return;
-          }
-          m_map_sprite->clear_toml_cached_framebuffers();
-     });
+     m_custom_paths_window.register_callback(
+       [&](const ConfigKey key)
+       {
+            if (key != ConfigKey::OutputTomlPattern || !m_map_sprite)
+            {
+                 return;
+            }
+            m_map_sprite->clear_toml_cached_framebuffers();
+       });
      //      if (!m_drag_sprite_shader)
      //      {
      //           m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
@@ -3575,68 +3640,81 @@ void gui::combo_map_path()
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_sort_paths()
 {
-     return std::async(std::launch::deferred, [selections = m_selections]() -> std::future<PathsAndEnabled> {
-          return std::async(std::launch::deferred, [selections]() -> PathsAndEnabled {
-               selections->sort_paths();
-               return {};// default-constructed PathsAndEnabled
-          });
-     });
+     return std::async(
+       std::launch::deferred,
+       [selections = m_selections]() -> std::future<PathsAndEnabled>
+       {
+            return std::async(
+              std::launch::deferred,
+              [selections]() -> PathsAndEnabled
+              {
+                   selections->sort_paths();
+                   return {};// default-constructed PathsAndEnabled
+              });
+       });
 }
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_texture_paths()
 {
-     return std::async(std::launch::async, [ps = static_cast<ff_8::path_search>(*m_map_sprite)]() -> std::future<PathsAndEnabled> {
-          gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheTextureAndMapPaths,
-                                      .enabled_key = { ConfigKey::CacheSwizzlePathsEnabled, ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-                                                       ConfigKey::CacheDeswizzlePathsEnabled, ConfigKey::CacheFullFileNamePathsEnabled } };
+     return std::async(
+       std::launch::async,
+       [ps = static_cast<ff_8::path_search>(*m_map_sprite)]() -> std::future<PathsAndEnabled>
+       {
+            gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheTextureAndMapPaths,
+                                        .enabled_key
+                                        = { ConfigKey::CacheSwizzlePathsEnabled, ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+                                            ConfigKey::CacheDeswizzlePathsEnabled, ConfigKey::CacheFullFileNamePathsEnabled } };
 
-          const auto           get_map_paths_joined = [&](const auto &container) {
-               return container | std::views::transform([&](const std::filesystem::path &path) {
-                           return ff_8::path_search::get_paths(ps.selections, ps.opt_coo, path);
-                      })
-                      | std::views::join;
-          };
+            const auto           get_map_paths_joined = [&](const auto &container)
+            {
+                 return container
+                        | std::views::transform([&](const std::filesystem::path &path)
+                                                { return ff_8::path_search::get_paths(ps.selections, ps.opt_coo, path); })
+                        | std::views::join;
+            };
 
-          const auto process = [&](const auto &...ranges) {
-               (
-                 [&](const auto &range) {
-                      for (const auto &path : get_map_paths_joined(range))
+            const auto process = [&](const auto &...ranges)
+            {
+                 (
+                   [&](const auto &range)
+                   {
+                        for (const auto &path : get_map_paths_joined(range))
+                        {
+                             pande.path.emplace_back(path.string());
+                        }
+                   }(ranges),
+                   ...);
+            };
+
+            process(
+              ps.selections->get<ConfigKey::FF8DirectoryPaths>(), ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
+
+            pande.enabled.resize(pande.enabled_key.size());
+            for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
+            {
+                 for (const auto &path : pande.path)
+                 {
+                      switch (key)
                       {
-                           pande.path.emplace_back(path.string());
+                           case ConfigKey::CacheSwizzlePathsEnabled:
+                                enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
+                                break;
+                           case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
+                                enabled.push_back(ps.has_swizzle_as_one_image_path(std::filesystem::path{ path }));
+                                break;
+                           case ConfigKey::CacheDeswizzlePathsEnabled:
+                                enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
+                                break;
+                           case ConfigKey::CacheFullFileNamePathsEnabled:
+                                enabled.push_back(ps.has_full_filename_path(std::filesystem::path{ path }));
+                                break;
+                           default:
+                                throw;
                       }
-                 }(ranges),
-                 ...);
-          };
-
-          process(
-            ps.selections->get<ConfigKey::FF8DirectoryPaths>(), ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
-
-          pande.enabled.resize(pande.enabled_key.size());
-          for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
-          {
-               for (const auto &path : pande.path)
-               {
-                    switch (key)
-                    {
-                         case ConfigKey::CacheSwizzlePathsEnabled:
-                              enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
-                              break;
-                         case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
-                              enabled.push_back(ps.has_swizzle_as_one_image_path(std::filesystem::path{ path }));
-                              break;
-                         case ConfigKey::CacheDeswizzlePathsEnabled:
-                              enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
-                              break;
-                         case ConfigKey::CacheFullFileNamePathsEnabled:
-                              enabled.push_back(ps.has_full_filename_path(std::filesystem::path{ path }));
-                              break;
-                         default:
-                              throw;
-                    }
-               }
-          }
-          return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
-     });
+                 }
+            }
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
+       });
 }
 
 
@@ -3644,25 +3722,28 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
 {
      return std::async(
        std::launch::async,
-       [ps
-        = ff_8::path_search{ .selections                   = m_selections,
-                             .opt_coo                      = get_coo(),
-                             .field_name                   = m_map_sprite->get_base_name(),
-                             .filters_swizzle_value_string = m_map_sprite->filter().swizzle.value().string(),
-                             .filters_map_value_string = m_map_sprite->filter().map.value().string() }]() -> std::future<PathsAndEnabled> {
+       [ps = ff_8::path_search{ .selections                   = m_selections,
+                                .opt_coo                      = get_coo(),
+                                .field_name                   = m_map_sprite->get_base_name(),
+                                .filters_swizzle_value_string = m_map_sprite->filter().swizzle.value().string(),
+                                .filters_map_value_string = m_map_sprite->filter().map.value().string() }]() -> std::future<PathsAndEnabled>
+       {
             gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheTextureAndMapPaths,
                                         .enabled_key = { ConfigKey::CacheMapPathsEnabled } };
 
-            const auto           get_map_paths_joined = [&](const auto &container) {
-                 return container | std::views::transform([&](const std::filesystem::path &path) {
-                             return ps.get_paths(ps.selections, ps.opt_coo, path);
-                        })
+            const auto           get_map_paths_joined = [&](const auto &container)
+            {
+                 return container
+                        | std::views::transform([&](const std::filesystem::path &path)
+                                                { return ps.get_paths(ps.selections, ps.opt_coo, path); })
                         | std::views::join;
             };
 
-            const auto process = [&](const auto &...ranges) {
+            const auto process = [&](const auto &...ranges)
+            {
                  (
-                   [&](const auto &range) {
+                   [&](const auto &range)
+                   {
                         for (const auto &path : get_map_paths_joined(range))
                         {
                              pande.path.emplace_back(path);
@@ -3680,7 +3761,8 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
                  {
                       switch (key)
                       {
-                           case ConfigKey::CacheMapPathsEnabled: {
+                           case ConfigKey::CacheMapPathsEnabled:
+                           {
                                 bool e = ps.has_map_path(std::filesystem::path{ path }, ".map");
                                 enabled.push_back(e);
                                 if (e)
@@ -3704,7 +3786,8 @@ bool gui::combo_swizzle_path(ff_8::filter_old<ff_8::FilterTag::Swizzle> &filter)
        gui_labels::swizzle_path,
        [this]() { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(); },
-       [this]() {
+       [this]()
+       {
             return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },
@@ -3721,7 +3804,8 @@ bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<ff_8::FilterTag::Swiz
        gui_labels::swizzle_as_one_image_path,
        [this]() { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(); },
-       [this]() {
+       [this]()
+       {
             return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },
@@ -3737,7 +3821,8 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<ff_8::FilterTag::Deswizzle> &fil
        gui_labels::deswizzle_path,
        [this]() { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(); },
-       [this]() {
+       [this]()
+       {
             return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },
@@ -3753,7 +3838,8 @@ bool gui::combo_full_filename_path(ff_8::filter_old<ff_8::FilterTag::FullFileNam
        gui_labels::full_filename_path,
        [this]() { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>(); },
-       [this]() {
+       [this]()
+       {
             return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },
@@ -3769,7 +3855,8 @@ bool gui::combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const
        gui_labels::map_path,
        [this]() { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheMapPathsEnabled>(); },
-       [this]() {
+       [this]()
+       {
             return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
                    | std::ranges::views::transform([](const std::filesystem::path &path) { return path.string(); });
        },

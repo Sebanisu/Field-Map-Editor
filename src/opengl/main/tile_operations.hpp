@@ -9,7 +9,8 @@
 namespace ff_8::tile_operations
 {
 template<open_viii::graphics::background::is_tile TileT>
-static constexpr TileT MaxTile = []() {
+static constexpr TileT MaxTile = []()
+{
      std::array<std::uint8_t, sizeof(TileT)> tmp{};
      // std::fill(tmp.begin(), tmp.end(), 0xFFU);
      tmp.fill((std::numeric_limits<std::uint8_t>::max)());
@@ -227,7 +228,8 @@ static constexpr TileT MaxTile = []() {
             : current(get{}(tile))                                                                                                     \
           {                                                                                                                            \
           }                                                                                                                            \
-          static constexpr value_type min_value = []() -> value_type {                                                                 \
+          static constexpr value_type min_value = []() -> value_type                                                                   \
+          {                                                                                                                            \
                if constexpr (std::signed_integral<value_type>)                                                                         \
                {                                                                                                                       \
                     return (std::numeric_limits<value_type>::min)();                                                                   \
@@ -238,7 +240,8 @@ static constexpr TileT MaxTile = []() {
                     return get_f(TileT{});                                                                                             \
                }                                                                                                                       \
           }();                                                                                                                         \
-          static constexpr value_type max_value = []() -> value_type {                                                                 \
+          static constexpr value_type max_value = []() -> value_type                                                                   \
+          {                                                                                                                            \
                if constexpr (std::signed_integral<value_type>)                                                                         \
                {                                                                                                                       \
                     return (std::numeric_limits<value_type>::max)();                                                                   \

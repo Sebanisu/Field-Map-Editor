@@ -10,7 +10,8 @@
 #include <fmt/format.h>
 #include <imgui.h>
 #include <utility>
-inline const auto format_imgui_text = []<std::size_t sizeT = 0x3FFU, typename... T>(fmt::format_string<T...> fmt, T &&...items) {
+inline const auto format_imgui_text = []<std::size_t sizeT = 0x3FFU, typename... T>(fmt::format_string<T...> fmt, T &&...items)
+{
      std::array<char, sizeT> buffer{};
      const auto              it = fmt::vformat_to_n(
        std::begin(buffer),
@@ -21,7 +22,8 @@ inline const auto format_imgui_text = []<std::size_t sizeT = 0x3FFU, typename...
      ImGui::Text("%s", std::data(buffer));
      // it seems ImGui::Text is coping the values into it's own buffer.
 };
-inline const auto format_imgui_wrapped_text = []<std::size_t sizeT = 0x3FFU, typename... T>(fmt::format_string<T...> fmt, T &&...items) {
+inline const auto format_imgui_wrapped_text = []<std::size_t sizeT = 0x3FFU, typename... T>(fmt::format_string<T...> fmt, T &&...items)
+{
      std::array<char, sizeT> buffer{};
      const auto              it = fmt::vformat_to_n(
        std::begin(buffer),

@@ -56,13 +56,15 @@ class [[nodiscard]] MapHistory
 
      auto                        debug_count_print(std::source_location source_location = std::source_location::current()) const
      {
-          return glengine::ScopeGuard([=, this]() {
-               spdlog::debug(
-                 "Map History Count: {}\n\t{}:{}",
-                 m_back_history.size() + m_front_history.size() + 2U,
-                 source_location.file_name(),
-                 source_location.line());
-          });
+          return glengine::ScopeGuard(
+            [=, this]()
+            {
+                 spdlog::debug(
+                   "Map History Count: {}\n\t{}:{}",
+                   m_back_history.size() + m_front_history.size() + 2U,
+                   source_location.file_name(),
+                   source_location.line());
+            });
      }
 
      template<
@@ -73,29 +75,31 @@ class [[nodiscard]] MapHistory
        const PosT pos,
        LambdaT  &&lambda) const
      {
-          return front().visit_tiles([&](auto &tiles) {
-               if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
-               {
-                    auto front_tile = tiles.cbegin();
+          return front().visit_tiles(
+            [&](auto &tiles)
+            {
+                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 {
+                      auto front_tile = tiles.cbegin();
 
-                    if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
-                    {
-                         spdlog::error("{}:{} pos in front to be 0 < {} < {} ", __FILE__, __LINE__, pos, std::ranges::size(tiles));
-                         throw std::exception();
-                    }
-                    std::ranges::advance(front_tile, pos);
-                    return lambda(*front_tile);
-               }
-               else
-               {
-                    if constexpr (!requires(TileT tile_t) {
-                                       { lambda(tile_t) } -> std::same_as<void>;
-                                  })
-                    {
-                         return typename std::remove_cvref_t<std::invoke_result_t<decltype(lambda), TileT>>{};
-                    }
-               }
-          });
+                      if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
+                      {
+                           spdlog::error("{}:{} pos in front to be 0 < {} < {} ", __FILE__, __LINE__, pos, std::ranges::size(tiles));
+                           throw std::exception();
+                      }
+                      std::ranges::advance(front_tile, pos);
+                      return lambda(*front_tile);
+                 }
+                 else
+                 {
+                      if constexpr (!requires(TileT tile_t) {
+                                         { lambda(tile_t) } -> std::same_as<void>;
+                                    })
+                      {
+                           return typename std::remove_cvref_t<std::invoke_result_t<decltype(lambda), TileT>>{};
+                      }
+                 }
+            });
      }
 
      template<
@@ -106,25 +110,27 @@ class [[nodiscard]] MapHistory
        const PosT pos,
        LambdaT  &&lambda) const
      {
-          return back().visit_tiles([&](auto &tiles) {
-               if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
-               {
-                    auto tile = tiles.begin();
-                    std::ranges::advance(tile, pos);
-                    return lambda(*tile);
-               }
-               else
-               {
-                    if constexpr (!requires(TileT tile_t) {
-                                       { lambda(tile_t) } -> std::same_as<void>;
-                                  })
-                    {
-                         TileT v{};
-                         using T = std::remove_cvref_t<decltype(lambda(v))>;
-                         return T{};
-                    }
-               }
-          });
+          return back().visit_tiles(
+            [&](auto &tiles)
+            {
+                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 {
+                      auto tile = tiles.begin();
+                      std::ranges::advance(tile, pos);
+                      return lambda(*tile);
+                 }
+                 else
+                 {
+                      if constexpr (!requires(TileT tile_t) {
+                                         { lambda(tile_t) } -> std::same_as<void>;
+                                    })
+                      {
+                           TileT v{};
+                           using T = std::remove_cvref_t<decltype(lambda(v))>;
+                           return T{};
+                      }
+                 }
+            });
      }
 
      static std::vector<PupuID> calculate_pupu(const map_t &map);
@@ -145,16 +151,18 @@ class [[nodiscard]] MapHistory
      template<typename TileT>
      [[nodiscard]] auto get_offset_from_working(const TileT &tile) const
      {
-          return back().visit_tiles([&](const auto &tiles) {
-               if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
-               {
-                    return std::ranges::distance(&tiles.front(), &tile);
-               }
-               else
-               {
-                    return std::ranges::range_difference_t<std::remove_cvref_t<decltype(tiles)>>{};
-               }
-          });
+          return back().visit_tiles(
+            [&](const auto &tiles)
+            {
+                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 {
+                      return std::ranges::distance(&tiles.front(), &tile);
+                 }
+                 else
+                 {
+                      return std::ranges::range_difference_t<std::remove_cvref_t<decltype(tiles)>>{};
+                 }
+            });
      }
 
      [[nodiscard]] std::size_t  count() const;
@@ -201,16 +209,18 @@ class [[nodiscard]] MapHistory
        LambdaT       &&lambda) const
      {
           (void)copy_working();
-          back().visit_tiles([&](auto &tiles) {
-               if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
-               {
-                    auto filtered_tiles = tiles | std::views::filter(filter);
-                    for (auto &tile : filtered_tiles)
-                    {
-                         lambda(tile);
-                    }
-               }
-          });
+          back().visit_tiles(
+            [&](auto &tiles)
+            {
+                 if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+                 {
+                      auto filtered_tiles = tiles | std::views::filter(filter);
+                      for (auto &tile : filtered_tiles)
+                      {
+                           lambda(tile);
+                      }
+                 }
+            });
      }
 
      template<

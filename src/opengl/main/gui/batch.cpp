@@ -62,12 +62,13 @@ void fme::batch::draw_window()
           return;
      }
      bool      &visible     = selections->get<ConfigKey::DisplayBatchWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               selections->update<ConfigKey::DisplayBatchWindow>();
-          }
-     } };
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible]
+                                                    {
+                                                         if (was_visable != visible)
+                                                         {
+                                                              selections->update<ConfigKey::DisplayBatchWindow>();
+                                                         }
+                                                    } };
      const auto end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::batch_operation_window.data(), &visible))
      {
@@ -656,7 +657,8 @@ void fme::batch::combo_compact_type_ffnx()
      const auto            tool_tip_pop = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
      static constexpr auto values       = std::array{ compact_type::map_order_ffnx };
      static constexpr auto tool_tips    = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
-     static auto           filter       = []() {
+     static auto           filter       = []()
+     {
           ff_8::filter_old<ff_8::FilterTag::Compact> f{ ff_8::FilterSettings::All_Disabled };
           f.update(compact_type::map_order_ffnx);
           f.enable();
@@ -712,7 +714,8 @@ void fme::batch::combo_flatten_type_bpp()
      static constexpr auto tool_tips    = std::array{ gui_labels::flatten_bpp_tooltip };
 
 
-     static auto           filter       = []() {
+     static auto           filter       = []()
+     {
           ff_8::filter_old<ff_8::FilterTag::Flatten> f{ ff_8::FilterSettings::All_Disabled };
           f.update(flatten_type::bpp);
           f.enable();
@@ -832,7 +835,8 @@ bool fme::batch::draw_multi_column_list_box(
 
           const auto  pop_id     = PushPopID();
           const auto  pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
-          const auto  selectable = [&]() {
+          const auto  selectable = [&]()
+          {
                if (ImGui::Selectable(item.c_str(), enable))
                {
                     enable  = !enable;
@@ -875,10 +879,11 @@ void fme::batch::button_start()
      }
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
-     const auto end_function = glengine::ScopeGuard{ []() {
-          ImGui::PopStyleColor(3);
-          ImGui::EndDisabled();
-     } };
+     const auto end_function = glengine::ScopeGuard{ []()
+                                                     {
+                                                          ImGui::PopStyleColor(3);
+                                                          ImGui::EndDisabled();
+                                                     } };
      ImGui::BeginDisabled(
        ((selections->get<ConfigKey::BatchInputType>() == input_types::mim
          || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
@@ -924,10 +929,11 @@ void fme::batch::button_stop()
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
-     const auto end_function = glengine::ScopeGuard{ []() {
-          ImGui::PopStyleColor(3);
-          ImGui::EndDisabled();
-     } };
+     const auto end_function = glengine::ScopeGuard{ []()
+                                                     {
+                                                          ImGui::PopStyleColor(3);
+                                                          ImGui::EndDisabled();
+                                                     } };
      ImGui::BeginDisabled(
        ((selections->get<ConfigKey::BatchInputType>() == input_types::mim
          || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
@@ -984,12 +990,14 @@ bool fme::batch::browse_path(
                ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.8F, 0.8F)));// lighter red on hover
                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
           }
-          const auto pop_color = glengine::ScopeGuard([valid = valid_path]() {
-               if (!valid)
-               {
-                    ImGui::PopStyleColor(3);
-               }
-          });
+          const auto pop_color = glengine::ScopeGuard(
+            [valid = valid_path]()
+            {
+                 if (!valid)
+                 {
+                      ImGui::PopStyleColor(3);
+                 }
+            });
           if (ImGui::InputText("##Empty", path_buffer.data(), path_buffer.size()))
           {
                // Check if the folder path exists when the text box changes
@@ -1087,12 +1095,14 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           return;
      }
 
-     const auto pop_next = glengine::ScopeGuard([this]() {
-          reset_for_next();// Clean up and prepare for next processing cycle
-     });
+     const auto pop_next = glengine::ScopeGuard(
+       [this]()
+       {
+            reset_for_next();// Clean up and prepare for next processing cycle
+       });
 
      // Update status with the field and language info
-     m_status            = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
+     m_status = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
 
      // Generate the visual representation of the map
      generate_map_sprite();
@@ -1217,12 +1227,14 @@ void fme::batch::generate_map_sprite()
        = get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
      switch (selections->get<ConfigKey::BatchInputType>())
      {
-          case input_types::mim: {
+          case input_types::mim:
+          {
                // No filters applied for MIM input and no .map files are loaded automaticly.
                break;
           }
 
-          case input_types::deswizzle: {
+          case input_types::deswizzle:
+          {
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
@@ -1230,7 +1242,8 @@ void fme::batch::generate_map_sprite()
                break;
           }
 
-          case input_types::swizzle: {
+          case input_types::swizzle:
+          {
                // Enable swizzle filter using the input path
                filters.swizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
@@ -1238,7 +1251,8 @@ void fme::batch::generate_map_sprite()
                break;
           }
 
-          case input_types::swizzle_as_one_image: {
+          case input_types::swizzle_as_one_image:
+          {
                // Enable swizzle as one image filter using the input path
                filters.swizzle_as_one_image.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
@@ -1246,13 +1260,15 @@ void fme::batch::generate_map_sprite()
                break;
           }
 
-          case input_types::deswizzle_full_filename: {
+          case input_types::deswizzle_full_filename:
+          {
                filters.full_filename.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
                     filters.map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
-          default: {
+          default:
+          {
                spdlog::warn("input_types is not yet handled");
                break;
           }
@@ -1530,12 +1546,14 @@ void fme::batch::open_directory_browser()
      // const auto         tmp           = safedir(selected_path);
      switch (m_directory_browser_mode)
      {
-          case directory_mode::input_mode: {
+          case directory_mode::input_mode:
+          {
                m_input_path_valid = safe_copy_string(selected_path, m_input_path);
                save_input_path();
           }
           break;
-          case directory_mode::output_mode: {
+          case directory_mode::output_mode:
+          {
                m_output_path_valid = safe_copy_string(selected_path, m_output_path);
                save_output_path();
           }

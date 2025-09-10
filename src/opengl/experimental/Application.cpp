@@ -36,7 +36,8 @@ Application::Application(
         glengine::Window::WindowData{ .title          = std::move(title),
                                       .width          = std::move(width),
                                       .height         = std::move(height),
-                                      .event_callback = [&](const glengine::event::Item &e) {
+                                      .event_callback = [&](const glengine::event::Item &e)
+                                      {
                                            const glengine::event::Dispatcher dispatcher = { e };
                                            //      [[maybe_unused]]const bool skip
                                            //            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
@@ -47,13 +48,15 @@ Application::Application(
 
                                            dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
                                            dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
-                                           dispatcher.Dispatch<glengine::event::Reload>([](const glengine::event::Reload &reload) -> bool {
-                                                if (reload)
-                                                {
-                                                     ReloadMimAndMap();
-                                                }
-                                                return true;
-                                           });
+                                           dispatcher.Dispatch<glengine::event::Reload>(
+                                             [](const glengine::event::Reload &reload) -> bool
+                                             {
+                                                  if (reload)
+                                                  {
+                                                       ReloadMimAndMap();
+                                                  }
+                                                  return true;
+                                             });
                                            layers.on_event(e);
                                            local_preview.on_event(e);
                                            local_tile_display.on_event(e);

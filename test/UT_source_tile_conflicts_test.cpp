@@ -18,7 +18,8 @@ int main()
        = std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::Y_SIZE })
          | std::ranges::views::transform([](const auto i) { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
      // Test case to validate the reverse mapping
-     test("Reverse index validation") = [&] {
+     test("Reverse index validation") = [&]
+     {
           const ff_8::source_tile_conflicts stc{};
           for (const auto t : t_range)
           {

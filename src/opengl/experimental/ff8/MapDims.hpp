@@ -48,15 +48,17 @@ class MapDims
      mutable float                     tile_scale              = { 1.F };
      MapDims(const MapT &map)
      {
-          map.visit_tiles([&](const auto &tiles) {
-               {
-                    auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{});
-                    get_x(f_tiles);
-                    get_y(f_tiles);
-                    get_true_x(f_tiles);
-                    get_true_y(f_tiles);
-               }
-          });
+          map.visit_tiles(
+            [&](const auto &tiles)
+            {
+                 {
+                      auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{});
+                      get_x(f_tiles);
+                      get_y(f_tiles);
+                      get_true_x(f_tiles);
+                      get_true_y(f_tiles);
+                 }
+            });
           size     = glm::vec2{ max.x - min.x + map_dims_statics::TileSize, max.y - min.y + map_dims_statics::TileSize };
           offset   = glm::vec2{ size.x / 2.F + min.x, size.y / 2.F + min.y - map_dims_statics::TileSize };
           position = glm::vec3{ -size.x / 2.F, -size.y / 2.F, 0.F };
@@ -80,16 +82,18 @@ class MapDims
                     return;
                }
                min.x = x(*i_min_x);
-               max.x = static_cast<float>([&, i_max_x = i_max_x]() {
-                    if constexpr (typename TileFunctions::UseTexturePage{})
-                    {
-                         return x(*i_max_x);
-                    }
-                    else
-                    {
-                         return (texture_page(*i_max_texture_page) + 1) * map_dims_statics::TexturePageWidth;
-                    }
-               }());
+               max.x = static_cast<float>(
+                 [&, i_max_x = i_max_x]()
+                 {
+                      if constexpr (typename TileFunctions::UseTexturePage{})
+                      {
+                           return x(*i_max_x);
+                      }
+                      else
+                      {
+                           return (texture_page(*i_max_texture_page) + 1) * map_dims_statics::TexturePageWidth;
+                      }
+                 }());
           }
      }
      template<std::ranges::range TilesR>

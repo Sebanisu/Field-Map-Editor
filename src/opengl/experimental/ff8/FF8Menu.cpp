@@ -45,14 +45,16 @@ void ff_8::Ff8Menu::on_update(float delta_time) const
 void ff_8::Ff8Menu::on_event(const glengine::event::Item &e) const
 {
      const auto dispatcher = glengine::event::Dispatcher(e);
-     dispatcher.Dispatch<glengine::event::Reload>([this](const glengine::event::Reload &reload) -> bool {
-          if (reload)
-          {
-               m_menu.reload();
-               m_swizzles.reload();
-          }
-          return true;
-     });
+     dispatcher.Dispatch<glengine::event::Reload>(
+       [this](const glengine::event::Reload &reload) -> bool
+       {
+            if (reload)
+            {
+                 m_menu.reload();
+                 m_swizzles.reload();
+            }
+            return true;
+       });
      m_menu.on_event(e);
      m_swizzles.on_event(e);
 }

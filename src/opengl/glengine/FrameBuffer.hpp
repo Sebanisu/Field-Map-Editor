@@ -119,12 +119,14 @@ class FrameBuffer
           {
                switch (m_specification.attachments[i])
                {
-                    case FrameBufferTextureFormat::RGBA8UI: {
+                    case FrameBufferTextureFormat::RGBA8UI:
+                    {
                          static constexpr const std::array<GLuint, 4> clearValue = {};
                          GlCall{}(glClearTexImage, m_color_attachment[1], 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, clearValue.data());
                          break;
                     }
-                    case FrameBufferTextureFormat::RED_INTEGER: {
+                    case FrameBufferTextureFormat::RED_INTEGER:
+                    {
                          static constexpr const int value = -1;
                          GlCall{}(glClearTexImage, m_color_attachment[i], 0, GL_RED_INTEGER, GL_INT, &value);
                          break;

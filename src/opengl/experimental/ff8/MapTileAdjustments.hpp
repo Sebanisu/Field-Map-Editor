@@ -135,7 +135,8 @@ class MapTileAdjustments
                ImGui::InputText("OpenGL Texture ID", const_cast<char *>(id_str.data()), id_str.size(), ImGuiInputTextFlags_ReadOnly);
           }
           {
-               const std::string hex = [&]() -> std::string {
+               const std::string hex = [&]() -> std::string
+               {
                     std::stringstream ss = {};
                     tile.to_hex(ss);
                     return ss.str();
@@ -149,7 +150,8 @@ class MapTileAdjustments
        bool        &changed) const
      {
           std::array<const char *, 3> bpp_options           = { "4", "8", "16" };
-          int                         current_bpp_selection = [&]() -> int {
+          int                         current_bpp_selection = [&]() -> int
+          {
                switch (static_cast<int>(tile.depth()))
                {
                     case 4:
@@ -167,22 +169,26 @@ class MapTileAdjustments
           const auto  pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
           if (ImGui::Combo("BPP", &current_bpp_selection, bpp_options.data(), 3))
           {
-               m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                    using namespace open_viii::graphics::literals;
-                    switch (current_bpp_selection)
-                    {
-                         case 0:
-                         default:
-                              new_tile = new_tile.with_depth(4_bpp);
-                              break;
-                         case 1:
-                              new_tile = new_tile.with_depth(8_bpp);
-                              break;
-                         case 2:
-                              new_tile = new_tile.with_depth(16_bpp);
-                              break;
-                    }
-               });
+               m_map_history.copy_working_perform_operation(
+                 tile,
+                 m_matching,
+                 [&](TileT &new_tile)
+                 {
+                      using namespace open_viii::graphics::literals;
+                      switch (current_bpp_selection)
+                      {
+                           case 0:
+                           default:
+                                new_tile = new_tile.with_depth(4_bpp);
+                                break;
+                           case 1:
+                                new_tile = new_tile.with_depth(8_bpp);
+                                break;
+                           case 2:
+                                new_tile = new_tile.with_depth(16_bpp);
+                                break;
+                      }
+                 });
                m_filters.unique_tile_values().refresh_bpp(m_map_history);
                changed = true;
           }
@@ -333,9 +339,11 @@ class MapTileAdjustments
                if constexpr (has_with_blend_mode<TileT>)
                {
                     changed = true;
-                    m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                         new_tile = new_tile.with_blend_mode(static_cast<BlendModeT<TileT>>(current_blend_mode_selection));
-                    });
+                    m_map_history.copy_working_perform_operation(
+                      tile,
+                      m_matching,
+                      [&](TileT &new_tile)
+                      { new_tile = new_tile.with_blend_mode(static_cast<BlendModeT<TileT>>(current_blend_mode_selection)); });
                     m_filters.unique_tile_values().refresh_blend_mode(m_map_history);
                }
           }
@@ -358,9 +366,10 @@ class MapTileAdjustments
                if constexpr (has_with_layer_id<TileT>)
                {
                     changed = true;
-                    m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                         new_tile = new_tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
-                    });
+                    m_map_history.copy_working_perform_operation(
+                      tile,
+                      m_matching,
+                      [&](TileT &new_tile) { new_tile = new_tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id)); });
                     m_filters.unique_tile_values().refresh_layer_id(m_map_history);
                }
           }
@@ -385,9 +394,10 @@ class MapTileAdjustments
                 ImGuiSliderFlags_AlwaysClamp))
           {
                changed = true;
-               m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                    new_tile = new_tile.with_texture_id(static_cast<TextureIdT<TileT>>(texture_page_id));
-               });
+               m_map_history.copy_working_perform_operation(
+                 tile,
+                 m_matching,
+                 [&](TileT &new_tile) { new_tile = new_tile.with_texture_id(static_cast<TextureIdT<TileT>>(texture_page_id)); });
                m_filters.unique_tile_values().refresh_texture_page_id(m_map_history);
           }
      }
@@ -407,9 +417,10 @@ class MapTileAdjustments
 
           {
                changed = true;
-               m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                    new_tile = new_tile.with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id));
-               });
+               m_map_history.copy_working_perform_operation(
+                 tile,
+                 m_matching,
+                 [&](TileT &new_tile) { new_tile = new_tile.with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id)); });
                m_filters.unique_tile_values().refresh_palette_id(m_map_history);
           }
      }
@@ -458,9 +469,10 @@ class MapTileAdjustments
                     if constexpr (has_with_animation_id<TileT>)
                     {
                          changed = true;
-                         m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                              new_tile = new_tile.with_animation_id(static_cast<AnimationIdT<TileT>>(animation_id));
-                         });
+                         m_map_history.copy_working_perform_operation(
+                           tile,
+                           m_matching,
+                           [&](TileT &new_tile) { new_tile = new_tile.with_animation_id(static_cast<AnimationIdT<TileT>>(animation_id)); });
                          m_filters.unique_tile_values().refresh_animation_id(m_map_history);
                     }
                }
@@ -481,9 +493,11 @@ class MapTileAdjustments
                     if constexpr (has_with_animation_state<TileT>)
                     {
                          changed = true;
-                         m_map_history.copy_working_perform_operation(tile, m_matching, [&](TileT &new_tile) {
-                              new_tile = new_tile.with_animation_state(static_cast<AnimationStateT<TileT>>(animation_state));
-                         });
+                         m_map_history.copy_working_perform_operation(
+                           tile,
+                           m_matching,
+                           [&](TileT &new_tile)
+                           { new_tile = new_tile.with_animation_state(static_cast<AnimationStateT<TileT>>(animation_state)); });
                          m_filters.unique_tile_values().refresh_animation_frame(m_map_history);
                     }
                }

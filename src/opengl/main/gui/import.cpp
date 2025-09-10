@@ -79,19 +79,21 @@ void import::render() const
      generate_map_for_imported_image(current_tile, changed);
      collapsing_header_generated_tiles();
      // I need to detect the last used texture page and the highest source_y.
-     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-          if (std::ranges::empty(tiles))
-          {
-               return;
-          }
-          const auto [next_source_y, next_texture_page] = get_next_unused_y_and_texture_page(tiles);
-          if (changed)
-          {
-               adjust_source_xy_texture_page_for_import_map(next_source_y, next_texture_page);
-               update_scaled_up_render_texture();
-               update_imported_render_texture();
-          }
-     });
+     map_sprite->const_visit_working_tiles(
+       [&](const auto &tiles)
+       {
+            if (std::ranges::empty(tiles))
+            {
+                 return;
+            }
+            const auto [next_source_y, next_texture_page] = get_next_unused_y_and_texture_page(tiles);
+            if (changed)
+            {
+                 adjust_source_xy_texture_page_for_import_map(next_source_y, next_texture_page);
+                 update_scaled_up_render_texture();
+                 update_imported_render_texture();
+            }
+       });
      // I think I have the new tiles coords generated correctly for the swizzle and
      // for drawing in game. just need to render it into an image and merge the new
      // tiles into the `.map`
@@ -146,19 +148,19 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      }
 
      static std::string current_item_str = {};
-     const auto         save_config      = [&]() {
+     const auto         save_config      = [&]()
+     {
           selections->update<ConfigKey::ImportSelectedTile>();
           current_item_str = std::holds_alternative<std::monostate>(current_tile)
-                                            ? ""
-                                            : fmt::format("{}", selections->get<ConfigKey::ImportSelectedTile>());
+                               ? ""
+                               : fmt::format("{}", selections->get<ConfigKey::ImportSelectedTile>());
      };
      const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
 
      const float button_size  = ImGui::GetFrameHeight();
      const float button_count = 2.0f;
-     const auto  end_action   = glengine::ScopeGuard([&, current_tile_id = selections->get<ConfigKey::ImportSelectedTile>(), this]() {
-          changed = current_tile_id != selections->get<ConfigKey::ImportSelectedTile>();
-     });
+     const auto  end_action   = glengine::ScopeGuard([&, current_tile_id = selections->get<ConfigKey::ImportSelectedTile>(), this]()
+                                                  { changed = current_tile_id != selections->get<ConfigKey::ImportSelectedTile>(); });
      // combo box with all the tiles.
      find_selected_tile_for_import(current_tile);
      // todo fix it so saving only happens when something changes.
@@ -181,94 +183,105 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
           const auto            cols_pop      = glengine::ScopeGuard([]() { ImGui::Columns(1); });
           ImGui::Columns(num_columns, "##columns", false);
           const auto the_end_combo = glengine::ScopeGuard([]() { ImGui::EndCombo(); });
-          map_sprite->const_visit_original_tiles([&](const auto &tiles) {
-               for (int tile_id = {}; const auto &tile : tiles)
-               {
-                    const auto next_col_pop = glengine::ScopeGuard([]() { ImGui::NextColumn(); });
-                    const auto the_end_id_1 = PushPopID();
-                    const auto iterate      = glengine::ScopeGuard([&tile_id]() { ++tile_id; });
-                    bool       is_selected
-                      = (selections->get<ConfigKey::ImportSelectedTile>() == tile_id);// You can store your selection however you
-                                                                                      // want, outside or inside your objects
-                    if (std::ranges::any_of(
-                          std::array{ [&]() -> bool {
-                                          bool const selected = ImGui::Selectable("", is_selected);
-                                          tool_tip([&]() {
-                                               format_imgui_text("{}", tile_id);
-                                               const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
-                                               (void)create_tile_button(map_sprite, tile, options);
-                                               // map_sprite->enable_square(tile);
-                                               was_hovered = true;
-                                          });
-                                          return selected;
-                                     }(),
-                                      []() -> bool {
-                                           ImGui::SameLine();
-                                           return false;
-                                      }(),
-                                      create_tile_button(map_sprite, tile),
-                                      []() -> bool {
-                                           ImGui::SameLine();
-                                           return false;
-                                      }(),
-                                      [&tile_id]() -> bool {
-                                           format_imgui_text("{}", tile_id);
-                                           return false;
-                                      }() },
-                          std::identity{}))
-                    {
-                         selections->get<ConfigKey::ImportSelectedTile>() = tile_id;
-                         current_tile                                     = tile;
-                         save_config();
-                    }
-                    if (is_selected)
-                    {
-                         ImGui::SetItemDefaultFocus();// You may set the initial focus when
-                                                      // opening the combo (scrolling + for
-                                                      // keyboard navigation support)
-                    }
-               }
-          });
+          map_sprite->const_visit_original_tiles(
+            [&](const auto &tiles)
+            {
+                 for (int tile_id = {}; const auto &tile : tiles)
+                 {
+                      const auto next_col_pop = glengine::ScopeGuard([]() { ImGui::NextColumn(); });
+                      const auto the_end_id_1 = PushPopID();
+                      const auto iterate      = glengine::ScopeGuard([&tile_id]() { ++tile_id; });
+                      bool       is_selected
+                        = (selections->get<ConfigKey::ImportSelectedTile>() == tile_id);// You can store your selection however you
+                                                                                        // want, outside or inside your objects
+                      if (std::ranges::any_of(
+                            std::array{ [&]() -> bool
+                                        {
+                                             bool const selected = ImGui::Selectable("", is_selected);
+                                             tool_tip(
+                                               [&]()
+                                               {
+                                                    format_imgui_text("{}", tile_id);
+                                                    const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
+                                                    (void)create_tile_button(map_sprite, tile, options);
+                                                    // map_sprite->enable_square(tile);
+                                                    was_hovered = true;
+                                               });
+                                             return selected;
+                                        }(),
+                                        []() -> bool
+                                        {
+                                             ImGui::SameLine();
+                                             return false;
+                                        }(),
+                                        create_tile_button(map_sprite, tile),
+                                        []() -> bool
+                                        {
+                                             ImGui::SameLine();
+                                             return false;
+                                        }(),
+                                        [&tile_id]() -> bool
+                                        {
+                                             format_imgui_text("{}", tile_id);
+                                             return false;
+                                        }() },
+                            std::identity{}))
+                      {
+                           selections->get<ConfigKey::ImportSelectedTile>() = tile_id;
+                           current_tile                                     = tile;
+                           save_config();
+                      }
+                      if (is_selected)
+                      {
+                           ImGui::SetItemDefaultFocus();// You may set the initial focus when
+                                                        // opening the combo (scrolling + for
+                                                        // keyboard navigation support)
+                      }
+                 }
+            });
      }
      else if (was_hovered)
      {
           was_hovered = false;
           // map_sprite->disable_square();
      }
-     map_sprite->const_visit_original_tiles([&](const auto &tiles) {
-          {
-               // Left
-               const auto pop_id_left = PushPopID();
-               ImGui::SameLine(0, spacing);
-               const bool disabled
-                 = std::cmp_less_equal(selections->get<ConfigKey::ImportSelectedTile>(), 0)
-                   || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() - 1, std::ranges::size(tiles));
-               ImGui::BeginDisabled(disabled);
-               if (ImGui::ArrowButton("##l", ImGuiDir_Left))
-               {
-                    --selections->get<ConfigKey::ImportSelectedTile>();
-                    current_tile = tiles[static_cast<std::size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
-                    save_config();
-                    changed = true;
-               }
-               ImGui::EndDisabled();
-          }
-          {
-               // Right
-               const auto pop_id_right = PushPopID();
-               ImGui::SameLine(0, spacing);
-               const bool disabled = std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() + 1, std::ranges::size(tiles));
-               ImGui::BeginDisabled(disabled);
-               if (ImGui::ArrowButton("##r", ImGuiDir_Right))
-               {
-                    ++selections->get<ConfigKey::ImportSelectedTile>();
-                    current_tile = tiles[static_cast<std::size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
-                    save_config();
-                    changed = true;
-               }
-               ImGui::EndDisabled();
-          }
-     });
+     map_sprite->const_visit_original_tiles(
+       [&](const auto &tiles)
+       {
+            {
+                 // Left
+                 const auto pop_id_left = PushPopID();
+                 ImGui::SameLine(0, spacing);
+                 const bool disabled
+                   = std::cmp_less_equal(selections->get<ConfigKey::ImportSelectedTile>(), 0)
+                     || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() - 1, std::ranges::size(tiles));
+                 ImGui::BeginDisabled(disabled);
+                 if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+                 {
+                      --selections->get<ConfigKey::ImportSelectedTile>();
+                      current_tile = tiles[static_cast<std::size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
+                      save_config();
+                      changed = true;
+                 }
+                 ImGui::EndDisabled();
+            }
+            {
+                 // Right
+                 const auto pop_id_right = PushPopID();
+                 ImGui::SameLine(0, spacing);
+                 const bool disabled
+                   = std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() + 1, std::ranges::size(tiles));
+                 ImGui::BeginDisabled(disabled);
+                 if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+                 {
+                      ++selections->get<ConfigKey::ImportSelectedTile>();
+                      current_tile = tiles[static_cast<std::size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
+                      save_config();
+                      changed = true;
+                 }
+                 ImGui::EndDisabled();
+            }
+       });
 
      ImGui::SameLine(0, spacing);
      format_imgui_text("{}", gui_labels::select_existing_tile);
@@ -435,44 +448,44 @@ void import::generate_map_for_imported_image(
      format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.get_size() != glm::ivec2{})
      {
-          m_import_image_map
-            = open_viii::graphics::background::Map{ [&current_tile,
-                                                     x_tile = uint8_t{},
-                                                     y_tile = uint8_t{},
-                                                     &tiles_high,
-                                                     &tiles_wide]() mutable -> open_viii::graphics::background::Map::variant_tile {
-                   return std::visit(
-                     [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
-                          if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
-                          {
-                               if (x_tile == tiles_wide)
-                               {
-                                    x_tile = 0;
-                                    ++y_tile;
-                               }
-                               if (y_tile == tiles_high)
-                               {
-                                    return std::monostate{};
-                               }
-                               //   * Set new tiles to 4 bit to get max amount of tiles.
-                               tile
-                                 = tile.with_depth(BPPT::BPP4_CONST())
-                                     .with_source_xy(
-                                       { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
-                                         static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
-                                     .with_xy({ static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
+          m_import_image_map = open_viii::graphics::background::Map{
+               [&current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}, &tiles_high, &tiles_wide]() mutable
+                 -> open_viii::graphics::background::Map::variant_tile
+               {
+                    return std::visit(
+                      [&](auto tile) -> open_viii::graphics::background::Map::variant_tile
+                      {
+                           if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
+                           {
+                                if (x_tile == tiles_wide)
+                                {
+                                     x_tile = 0;
+                                     ++y_tile;
+                                }
+                                if (y_tile == tiles_high)
+                                {
+                                     return std::monostate{};
+                                }
+                                //   * Set new tiles to 4 bit to get max amount of tiles.
+                                tile = tile.with_depth(BPPT::BPP4_CONST())
+                                         .with_source_xy(
+                                           { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
+                                             static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
+                                         .with_xy(
+                                           { static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
 
-                               // iterate
-                               ++x_tile;
-                               return tile;
-                          }
-                          else
-                          {
-                               return std::monostate{};
-                          }
-                     },
-                     current_tile);
-              } };
+                                // iterate
+                                ++x_tile;
+                                return tile;
+                           }
+                           else
+                           {
+                                return std::monostate{};
+                           }
+                      },
+                      current_tile);
+               }
+          };
           filter_empty_import_tiles();
      }
 }
@@ -501,33 +514,35 @@ void import::collapsing_header_generated_tiles() const
           return;
      }
      const auto the_end_tile_table = glengine::ScopeGuard([]() { ImGui::EndTable(); });
-     m_import_image_map.visit_tiles([&](auto &tiles) {
-          std::uint32_t i{};
-          for (const auto &tile : tiles)
-          {
-               ImGui::TableNextColumn();
-               const auto             texSize = m_loaded_image_texture.get_size();
-               const glm::ivec4       rect    = { static_cast<int>(tile.x() / tile_size_px * selections->get<ConfigKey::TileSizeValue>()),
-                                                  static_cast<int>(tile.y() / tile_size_px * selections->get<ConfigKey::TileSizeValue>()),
-                                                  static_cast<int>(selections->get<ConfigKey::TileSizeValue>()),
-                                                  static_cast<int>(selections->get<ConfigKey::TileSizeValue>()) };
-               const ImVec2           uv0     = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
-                                                  static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
+     m_import_image_map.visit_tiles(
+       [&](auto &tiles)
+       {
+            std::uint32_t i{};
+            for (const auto &tile : tiles)
+            {
+                 ImGui::TableNextColumn();
+                 const auto             texSize = m_loaded_image_texture.get_size();
+                 const glm::ivec4       rect    = { static_cast<int>(tile.x() / tile_size_px * selections->get<ConfigKey::TileSizeValue>()),
+                                                    static_cast<int>(tile.y() / tile_size_px * selections->get<ConfigKey::TileSizeValue>()),
+                                                    static_cast<int>(selections->get<ConfigKey::TileSizeValue>()),
+                                                    static_cast<int>(selections->get<ConfigKey::TileSizeValue>()) };
+                 const ImVec2           uv0     = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
+                                                    static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
 
-               const ImVec2           uv1     = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
-                                                  static_cast<float>(rect.y + rect.w) / static_cast<float>(texSize.y) };
-               const auto             the_end_tile_table_tile = PushPopID();
-               static constexpr float button_size             = 32.F;
+                 const ImVec2           uv1     = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
+                                                    static_cast<float>(rect.y + rect.w) / static_cast<float>(texSize.y) };
+                 const auto             the_end_tile_table_tile = PushPopID();
+                 static constexpr float button_size             = 32.F;
 
-               const auto             str                     = fmt::format("tb{}", i++);
-               ImGui::ImageButton(
-                 str.c_str(),
-                 glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()),
-                 ImVec2(button_size, button_size),
-                 uv0,
-                 uv1);
-          }
-     });
+                 const auto             str                     = fmt::format("tb{}", i++);
+                 ImGui::ImageButton(
+                   str.c_str(),
+                   glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()),
+                   ImVec2(button_size, button_size),
+                   uv0,
+                   uv1);
+            }
+       });
 }
 
 void import::update_scaled_up_render_texture() const
@@ -591,26 +606,28 @@ void import::adjust_source_xy_texture_page_for_import_map(
   uint8_t       next_source_y,
   const uint8_t next_texture_page) const
 {
-     m_import_image_map.visit_tiles([&](auto &&import_tiles) {
-          auto       tile_i   = import_tiles.begin();
-          const auto tile_end = import_tiles.end();
-          for (uint8_t tp = next_texture_page; tp < tile_size_px; ++tp)
-          {
-               for (uint8_t pixel_y = next_source_y; pixel_y < tile_size_px; ++pixel_y)
-               {
-                    next_source_y = 0;
-                    for (uint8_t pixel_x = 0; pixel_x < tile_size_px; ++pixel_x)
-                    {
-                         if (tile_i == tile_end)
-                         {
-                              return;
-                         }
-                         *tile_i = tile_i->with_source_xy(pixel_x * tile_size_px, pixel_y * tile_size_px).with_texture_id(tp);
-                         ++tile_i;
-                    }
-               }
-          }
-     });
+     m_import_image_map.visit_tiles(
+       [&](auto &&import_tiles)
+       {
+            auto       tile_i   = import_tiles.begin();
+            const auto tile_end = import_tiles.end();
+            for (uint8_t tp = next_texture_page; tp < tile_size_px; ++tp)
+            {
+                 for (uint8_t pixel_y = next_source_y; pixel_y < tile_size_px; ++pixel_y)
+                 {
+                      next_source_y = 0;
+                      for (uint8_t pixel_x = 0; pixel_x < tile_size_px; ++pixel_x)
+                      {
+                           if (tile_i == tile_end)
+                           {
+                                return;
+                           }
+                           *tile_i = tile_i->with_source_xy(pixel_x * tile_size_px, pixel_y * tile_size_px).with_texture_id(tp);
+                           ++tile_i;
+                      }
+                 }
+            }
+       });
 }
 
 
@@ -674,34 +691,37 @@ void import::find_selected_tile_for_import(open_viii::graphics::background::Map:
           spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
           return;
      }
-     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-          if (
-            selections->get<ConfigKey::ImportSelectedTile>() < 0
-            || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>(), tiles.size()))
-          {
-               current_tile = std::monostate{};
-               return;
-          }
-          std::visit(
-            [&](const auto &tile) {
-                 if (std::cmp_less(selections->get<ConfigKey::ImportSelectedTile>(), tiles.size()))
-                 {
-                      const auto &tmp_tile = tiles[static_cast<size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
-                      if constexpr (std::is_same_v<std::decay_t<decltype(tile)>, std::decay_t<decltype(tmp_tile)>>)
-                      {
-                           if (tile != tmp_tile)
-                           {
-                                current_tile = tmp_tile;
-                           }
-                      }
-                      else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
-                      {
-                           current_tile = tmp_tile;
-                      }
-                 }
-            },
-            current_tile);
-     });
+     map_sprite->const_visit_working_tiles(
+       [&](const auto &tiles)
+       {
+            if (
+              selections->get<ConfigKey::ImportSelectedTile>() < 0
+              || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>(), tiles.size()))
+            {
+                 current_tile = std::monostate{};
+                 return;
+            }
+            std::visit(
+              [&](const auto &tile)
+              {
+                   if (std::cmp_less(selections->get<ConfigKey::ImportSelectedTile>(), tiles.size()))
+                   {
+                        const auto &tmp_tile = tiles[static_cast<size_t>(selections->get<ConfigKey::ImportSelectedTile>())];
+                        if constexpr (std::is_same_v<std::decay_t<decltype(tile)>, std::decay_t<decltype(tmp_tile)>>)
+                        {
+                             if (tile != tmp_tile)
+                             {
+                                  current_tile = tmp_tile;
+                             }
+                        }
+                        else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
+                        {
+                             current_tile = tmp_tile;
+                        }
+                   }
+              },
+              current_tile);
+       });
 }
 
 void import::filter_empty_import_tiles() const

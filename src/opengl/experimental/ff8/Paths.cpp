@@ -9,9 +9,12 @@ static constexpr auto ff8_directory_paths      = std::string_view{ "ff8_director
 static constexpr auto ff8_directory_path_index = std::string_view{ "ff8_directory_path_index" };
 bool                  ff_8::Paths::on_im_gui_update() const
 {
-     if (glengine::GenericCombo("Path", m_current, m_paths | std::ranges::views::transform([](auto &&value) -> decltype(auto) {
-                                                        return value.template ref<std::string>();
-                                                   }))// todo filter by if is directory check
+     if (glengine::GenericCombo(
+           "Path",
+           m_current,
+           m_paths
+             | std::ranges::views::transform(
+               [](auto &&value) -> decltype(auto) { return value.template ref<std::string>(); }))// todo filter by if is directory check
      )
      {
           auto config = Configuration{};
@@ -31,22 +34,24 @@ const std::string &ff_8::Paths::string() const
      return empty;
 }
 ff_8::Paths::Paths(Configuration config)
-  : m_paths([&]() {
-       if (!config->contains(ff8_directory_paths))
-       {
-            const auto &default_paths = open_viii::Paths::get();
-            // todo get all default paths for linux and windows.
-            toml::array paths_array{};
-            paths_array.reserve(default_paths.size());
-            for (const auto &path : default_paths)
-            {
-                 paths_array.push_back(path);
-            }
-            config->insert_or_assign(ff8_directory_paths, std::move(paths_array));
-            config.save();
-       }
-       return *(config->get_as<toml::array>(ff8_directory_paths));
-  }())
+  : m_paths(
+      [&]()
+      {
+           if (!config->contains(ff8_directory_paths))
+           {
+                const auto &default_paths = open_viii::Paths::get();
+                // todo get all default paths for linux and windows.
+                toml::array paths_array{};
+                paths_array.reserve(default_paths.size());
+                for (const auto &path : default_paths)
+                {
+                     paths_array.push_back(path);
+                }
+                config->insert_or_assign(ff8_directory_paths, std::move(paths_array));
+                config.save();
+           }
+           return *(config->get_as<toml::array>(ff8_directory_paths));
+      }())
   , m_current(config[ff8_directory_path_index].value_or(int{}))
 {
      // todo move path clean up to after loading the here.

@@ -24,7 +24,8 @@ void OrthographicCameraController::check_input(float ts) const
      }
 
      const auto lateral_speed  = m_translation_speed * ts;
-     const auto relative_speed = [&]() {
+     const auto relative_speed = [&]()
+     {
           auto r = lateral_speed * m_zoom_level;
           if (m_bounds)
           {
@@ -128,10 +129,12 @@ bool OrthographicCameraController::on_im_gui_update() const
 void OrthographicCameraController::check_event(const event::Item &e) const
 {
      event::Dispatcher dispatcher(e);
-     dispatcher.Dispatch<event::MouseScroll>([this](const event::MouseScroll &ms) {
-          zoom(ms.y_offset());
-          return true;
-     });
+     dispatcher.Dispatch<event::MouseScroll>(
+       [this](const event::MouseScroll &ms)
+       {
+            zoom(ms.y_offset());
+            return true;
+       });
 }
 void OrthographicCameraController::zoom(float offset) const
 {
@@ -265,17 +268,19 @@ void OrthographicCameraController::set_projection() const
 void OrthographicCameraController::on_event(const event::Item &e) const
 {
      event::Dispatcher dispatcher(e);
-     dispatcher.Dispatch<event::FrameBufferResize>([this](const event::FrameBufferResize &fbr) -> bool {
-          if (fbr.width() == 0 || fbr.height() == 0)
-          {
-               return false;
-          }
-          // RefreshAspectRatio();
-          //  m_aspect_ratio =
-          //  static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
-          set_projection();
-          return true;
-     });
+     dispatcher.Dispatch<event::FrameBufferResize>(
+       [this](const event::FrameBufferResize &fbr) -> bool
+       {
+            if (fbr.width() == 0 || fbr.height() == 0)
+            {
+                 return false;
+            }
+            // RefreshAspectRatio();
+            //  m_aspect_ratio =
+            //  static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
+            set_projection();
+            return true;
+       });
 }
 void OrthographicCameraController::on_update(float) const
 {
@@ -283,7 +288,8 @@ void OrthographicCameraController::on_update(float) const
      {
           // const auto bounds     = CurrentBounds();
 
-          const auto fix_bounds = [](float &pos, [[maybe_unused]] glm::vec2 img_max, [[maybe_unused]] glm::vec2 viewport_scaled) {
+          const auto fix_bounds = [](float &pos, [[maybe_unused]] glm::vec2 img_max, [[maybe_unused]] glm::vec2 viewport_scaled)
+          {
                float minpos = (std::min)(viewport_scaled.x + img_max.y, viewport_scaled.y + img_max.x);
                float maxpos = (std::max)(viewport_scaled.x + img_max.y, viewport_scaled.y + img_max.x);
                pos          = std::clamp(pos, minpos, maxpos);

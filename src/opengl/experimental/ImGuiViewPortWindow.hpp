@@ -73,7 +73,8 @@ inline namespace impl
                               if (m_debug_text)
                               {
                                    m_tile_id = std::visit(
-                                     [](auto &&value) -> int {
+                                     [](auto &&value) -> int
+                                     {
                                           if constexpr (std::is_same_v<std::decay_t<decltype(value)>, int>)
                                           {
                                                return value;

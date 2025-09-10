@@ -36,7 +36,8 @@ template<std::ranges::random_access_range dataT>
           const auto            pop_width   = glengine::ImGuiPushItemWidth(width - spacing * 2.0f - button_size * 2.0f);
           const auto            disabled    = glengine::ImGuiDisabled(std::ranges::empty(data));
 
-          static constexpr auto c_str       = [](auto &&v) {
+          static constexpr auto c_str       = [](auto &&v)
+          {
                using StrT = std::remove_cvref_t<decltype(v)>;
                if constexpr (std::is_same_v<StrT, std::string_view>)
                {
@@ -45,7 +46,8 @@ template<std::ranges::random_access_range dataT>
                else
                     return v.c_str();
           };
-          const char *current_string = [&]() {
+          const char *current_string = [&]()
+          {
                if (std::ranges::empty(data))
                {
                     return "";

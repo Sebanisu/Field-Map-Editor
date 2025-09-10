@@ -16,8 +16,8 @@ class MapFilters
        const MapHistory &map,
        auto            &&lambda)
      {
-          return map.front().visit_tiles(
-            [&](const auto &f_tiles) { return map.back().visit_tiles([&](const auto &b_tiles) { return lambda(f_tiles, b_tiles); }); });
+          return map.front().visit_tiles([&](const auto &f_tiles)
+                                         { return map.back().visit_tiles([&](const auto &b_tiles) { return lambda(f_tiles, b_tiles); }); });
      }
      // const MapHistory *map_history = { nullptr };
 
@@ -58,7 +58,8 @@ class MapFilters
                                                  std::ranges::random_access_range auto &&possible_value_range,
                                                  std::ranges::random_access_range auto &&possible_value_string_range,
                                                  std::ranges::random_access_range auto &&used_value_range,
-                                                 uint32_t                                line_count) {
+                                                 uint32_t                                line_count)
+                    {
                          bool changed = false;
                          assert(std::ranges::size(possible_value_range) == std::ranges::size(possible_value_string_range));
                          assert(std::ranges::size(bool_range) == std::ranges::size(possible_value_range));
@@ -131,9 +132,8 @@ class MapFilters
                          }
                          return changed;
                     };
-                    static constexpr auto common_unique = [](const char *label, auto &&unique, uint32_t row_size) -> bool {
-                         return common(label, unique.enable(), unique.values(), unique.strings(), unique.values(), row_size);
-                    };
+                    static constexpr auto common_unique = [](const char *label, auto &&unique, uint32_t row_size) -> bool
+                    { return common(label, unique.enable(), unique.values(), unique.strings(), unique.values(), row_size); };
                     const auto changes = std::array{ common(
                                                        "BPP",
                                                        m_possible_tile_values.bpp.enable(),

@@ -9,9 +9,9 @@ static constexpr auto swizzle_paths_index  = std::string_view("swizzle_paths_ind
 static constexpr auto upscale_paths_vector = std::string_view("upscale_paths_vector");
 bool                  ff_8::Upscales::on_im_gui_update() const
 {
-     if (glengine::GenericCombo("Swizzle Path", m_current, m_paths | std::ranges::views::transform([](auto &&value) -> decltype(auto) {
-                                                                return value.template ref<std::string>();
-                                                           })))
+     if (glengine::GenericCombo(
+           "Swizzle Path", m_current,
+           m_paths | std::ranges::views::transform([](auto &&value) -> decltype(auto) { return value.template ref<std::string>(); })))
      {
           auto config = Configuration{};
           config->insert_or_assign(swizzle_paths_index, m_current);
@@ -31,22 +31,25 @@ const std::string &ff_8::Upscales::string() const
 }
 static void remove_unreachable_paths(std::vector<std::string> &paths)
 {
-     const auto [first, last] = std::ranges::remove_if(paths, [](const std::filesystem::path path) {
-          std::error_code ec{};
-          const bool      found = std::filesystem::exists(path, ec);
-          if (ec)
-          {
-               spdlog::error("{}:{} - {}: {} - \"{}\"", __FILE__, __LINE__, ec.value(), ec.message(), path.string());
-               ec.clear();
-          }
-          const bool is_dir = std::filesystem::is_directory(path, ec);
-          if (ec)
-          {
-               spdlog::error("{}:{} - {}: {} - \"{}\"", __FILE__, __LINE__, ec.value(), ec.message(), path.string());
-               ec.clear();
-          }
-          return !found || !is_dir;
-     });
+     const auto [first, last] = std::ranges::remove_if(
+       paths,
+       [](const std::filesystem::path path)
+       {
+            std::error_code ec{};
+            const bool      found = std::filesystem::exists(path, ec);
+            if (ec)
+            {
+                 spdlog::error("{}:{} - {}: {} - \"{}\"", __FILE__, __LINE__, ec.value(), ec.message(), path.string());
+                 ec.clear();
+            }
+            const bool is_dir = std::filesystem::is_directory(path, ec);
+            if (ec)
+            {
+                 spdlog::error("{}:{} - {}: {} - \"{}\"", __FILE__, __LINE__, ec.value(), ec.message(), path.string());
+                 ec.clear();
+            }
+            return !found || !is_dir;
+       });
      paths.erase(first, last);
 }
 static void check_paths(std::vector<std::string> &paths)
@@ -55,7 +58,8 @@ static void check_paths(std::vector<std::string> &paths)
      {
           const auto     &path = paths.front();
           std::error_code ec{};
-          const auto      handle_error = [&ec](int line, const auto &extra) {
+          const auto      handle_error = [&ec](int line, const auto &extra)
+          {
                if (ec)
                {
                     spdlog::error("{}:{} - {}: {}, - \"{}\"", __FILE__, line, ec.value(), ec.message(), extra);
@@ -81,11 +85,14 @@ static void check_paths(std::vector<std::string> &paths)
                          handle_error(__LINE__, sub_path.path().string());
                          continue;
                     }
-                    const auto count = std::ranges::count_if(counting_path, [&handle_error, &ec](const auto &item) {
-                         bool is_regular_file = std::filesystem::is_regular_file(item, ec);
-                         handle_error(__LINE__, item.path().string());
-                         return is_regular_file;
-                    });
+                    const auto count = std::ranges::count_if(
+                      counting_path,
+                      [&handle_error, &ec](const auto &item)
+                      {
+                           bool is_regular_file = std::filesystem::is_regular_file(item, ec);
+                           handle_error(__LINE__, item.path().string());
+                           return is_regular_file;
+                      });
                     if (count > 0)
                     {
                          spdlog::debug("path: \"{}\",\tfile count: {}", sub_path.path().string(), count);
@@ -114,22 +121,24 @@ ff_8::Upscales::Upscales()
 }
 ff_8::Upscales::Upscales(Configuration config)
   : m_current(config[swizzle_paths_index].value_or(int{}))
-  , m_paths([&]() -> toml::array {
-       if (!config->contains(upscale_paths_vector))
-       {
-            static const auto default_paths = get_default_paths();
-            // todo get all default paths for linux and windows.
-            toml::array       paths_array{};
-            paths_array.reserve(default_paths.size());
-            for (const auto &path : default_paths)
-            {
-                 paths_array.push_back(path);
-            }
-            config->insert_or_assign(upscale_paths_vector, std::move(paths_array));
-            config.save();
-       }
-       return *(config->get_as<toml::array>(upscale_paths_vector));
-  }())
+  , m_paths(
+      [&]() -> toml::array
+      {
+           if (!config->contains(upscale_paths_vector))
+           {
+                static const auto default_paths = get_default_paths();
+                // todo get all default paths for linux and windows.
+                toml::array       paths_array{};
+                paths_array.reserve(default_paths.size());
+                for (const auto &path : default_paths)
+                {
+                     paths_array.push_back(path);
+                }
+                config->insert_or_assign(upscale_paths_vector, std::move(paths_array));
+                config.save();
+           }
+           return *(config->get_as<toml::array>(upscale_paths_vector));
+      }())
 {
 }
 

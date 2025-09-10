@@ -11,7 +11,8 @@ inline namespace impl
 {
      class BlendModeEquationsStrings
      {
-          constexpr static auto strings = []() {
+          constexpr static auto strings = []()
+          {
                using namespace std::string_view_literals;
                return std::array{ "modeRGB"sv, "modeAlpha"sv };
           }();
