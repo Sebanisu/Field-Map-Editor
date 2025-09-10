@@ -1341,8 +1341,16 @@ void fme::filter_window::draw_filename_controls(
      ImGui::SameLine();
      if (ImGui::Button(ICON_FA_TRASH))
      {
-          m_remove_queue.push_back(std::move(m_selected_file_name));
-          unselect_file();
+          if (m_next_file_name)
+          {
+               m_remove_queue.push_back(std::move(m_selected_file_name));
+               select_file(m_next_file_name.value(), lock_map_sprite);
+          }
+          else
+          {
+               m_remove_queue.push_back(std::move(m_selected_file_name));
+               unselect_file();
+          }
      }
      else
      {
