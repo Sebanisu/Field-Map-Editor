@@ -30445,11 +30445,7 @@ filter_multi_pupu = [ 35647488 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80101000.png']
-filter_multi_pupu = [ 2148536320 ]
-filter_multi_pupu_enabled = true
-
-[feroad1.x.'feroad1_80101010.png']
-filter_multi_pupu = [ 2148536336 ]
+filter_multi_pupu = [ 2148536320, 2148536336 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80400000.png']
@@ -30461,23 +30457,23 @@ filter_multi_pupu = [ 2151677968, 2151686160, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80402020.png']
-filter_multi_pupu = [ 2151686176, 2152722432 ]
+filter_multi_pupu = [ 2151677968, 2151686160, 2151686176, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80402030.png']
-filter_multi_pupu = [ 2151686192, 2152722432 ]
+filter_multi_pupu = [ 2151677968, 2151686160, 2151686192, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80402040.png']
-filter_multi_pupu = [ 2151686208, 2152722432 ]
+filter_multi_pupu = [ 2151677968, 2151686160, 2151686208, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_80402050.png']
-filter_multi_pupu = [ 2151686224, 2152722432 ]
+filter_multi_pupu = [ 2151677968, 2151686160, 2151686224, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.'feroad1_804FF000.png']
-filter_multi_pupu = [ 2152722432 ]
+filter_multi_pupu = [ 2151677968, 2151686160, 2152722432 ]
 filter_multi_pupu_enabled = true
 
 [feroad1.x.unique_pupu_ids]
@@ -30507,7 +30503,7 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[ferrst1.x.'ferrst1_20250828_235103_617.png']
+[ferrst1.x.'ferrst1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
