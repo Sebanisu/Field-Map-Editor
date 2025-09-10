@@ -11663,43 +11663,51 @@ filter_multi_pupu = [ 3141632 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.'bgsido1a_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 20975616, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.'bgsido1a_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 20975616, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.'bgsido1a_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 20975616, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.'bgsido1a_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975616, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.'bgsido1a_004FF000.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975632, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
-[bgsido1a.x.'bgsido1a_20250828_014605_329.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975648, 22016000, 22016001, 22016002 ]
+[bgsido1a.x.'bgsido1a_01401000.png']
+filter_multi_pupu = [ 20975616, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
-[bgsido1a.x.'bgsido1a_20250828_014606_102.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975664, 22016000, 22016001, 22016002 ]
+[bgsido1a.x.'bgsido1a_01401010.png']
+filter_multi_pupu = [ 20975632, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
-[bgsido1a.x.'bgsido1a_20250828_014607_660.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975680, 22016000, 22016001, 22016002 ]
+[bgsido1a.x.'bgsido1a_01401020.png']
+filter_multi_pupu = [ 20975648, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
-[bgsido1a.x.'bgsido1a_20250828_014658_721.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975696, 22016000, 22016001, 22016002 ]
+[bgsido1a.x.'bgsido1a_01401030.png']
+filter_multi_pupu = [ 20975664, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
-[bgsido1a.x.'bgsido1a_20250828_014843_653.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+[bgsido1a.x.'bgsido1a_01401040.png']
+filter_multi_pupu = [ 20975680, 22016000, 22016001, 22016002 ]
+filter_multi_pupu_enabled = true
+
+[bgsido1a.x.'bgsido1a_01401050.png']
+filter_multi_pupu = [ 20975696, 22016000, 22016001, 22016002 ]
+filter_multi_pupu_enabled = true
+
+[bgsido1a.x.'bgsido1a_014FF000.png']
+filter_multi_pupu = [ 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido1a.x.unique_pupu_ids]
@@ -11732,12 +11740,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093057 ]
 filter_multi_pupu_enabled = true
 
-[bgsido5a.x.'bgsido5a_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido5a.x.'bgsido5a_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido5a.x.'bgsido5a_20250828_013258_080.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 22016000 ]
+[bgsido5a.x.'bgsido5a_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido5a.x.unique_pupu_ids]
@@ -11769,55 +11777,51 @@ filter_multi_pupu = [ 3141632 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_004FF000.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 22016000, 22016001, 22016002 ]
-filter_multi_pupu_enabled = true
-
-[bgsido_1.x.'bgsido_1_004FF001.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401000.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975616, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975616, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401010.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975632, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975632, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401020.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975648, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975648, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975664, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975664, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401040.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975680, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975680, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_01401050.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 20975696, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 20975696, 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.'bgsido_1_014FF000.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 22016000, 22016001, 22016002 ]
+filter_multi_pupu = [ 22016000, 22016001, 22016002 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_1.x.unique_pupu_ids]
@@ -11846,12 +11850,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_2.x.'bgsido_2_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_2.x.'bgsido_2_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_2.x.'bgsido_2_20250828_015648_484.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 22016000 ]
+[bgsido_2.x.'bgsido_2_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_2.x.unique_pupu_ids]
@@ -11866,12 +11870,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_3.x.'bgsido_3_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_3.x.'bgsido_3_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_3.x.'bgsido_3_20250828_015745_897.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 22016000 ]
+[bgsido_3.x.'bgsido_3_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_3.x.unique_pupu_ids]
@@ -11885,12 +11889,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_4.x.'bgsido_4_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_4.x.'bgsido_4_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_4.x.'bgsido_4_20250828_015834_189.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 22016000 ]
+[bgsido_4.x.'bgsido_4_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_4.x.unique_pupu_ids]
@@ -11908,12 +11912,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093057 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_5.x.'bgsido_5_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_5.x.'bgsido_5_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_5.x.'bgsido_5_20250828_015905_657.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 22016000 ]
+[bgsido_5.x.'bgsido_5_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_5.x.unique_pupu_ids]
@@ -11928,11 +11932,11 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_6.x.'bgsido_6_20250828_020002_013.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 22016000 ]
+[bgsido_6.x.'bgsido_6_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_6.x.'bgsido_6_20250828_020014_856.png']
+[bgsido_6.x.'bgsido_6_014FF000.png']
 filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
@@ -11948,12 +11952,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_7.x.'bgsido_7_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_7.x.'bgsido_7_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_7.x.'bgsido_7_20250828_020047_981.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 22016000 ]
+[bgsido_7.x.'bgsido_7_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_7.x.unique_pupu_ids]
@@ -11968,12 +11972,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_8.x.'bgsido_8_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_8.x.'bgsido_8_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_8.x.'bgsido_8_20250828_020103_656.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 22016000 ]
+[bgsido_8.x.'bgsido_8_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_8.x.unique_pupu_ids]
@@ -11987,12 +11991,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_9.x.'bgsido_9_014FF000.png']
-filter_multi_pupu = [ 22016000 ]
+[bgsido_9.x.'bgsido_9_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[bgsido_9.x.'bgsido_9_20250828_020301_397.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
+[bgsido_9.x.'bgsido_9_014FF000.png']
+filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
 [bgsido_9.x.unique_pupu_ids]
@@ -12002,12 +12006,12 @@ filter_multi_pupu_enabled = true
 004FF002 = 5238786
 014FF000 = 22016000
 
-[bvboat_1.x.'bvboat_1_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
+[bvboat_1.x.'bvboat_1_00400000.png']
+filter_multi_pupu = [ 4194304, 4194305, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
-[bvboat_1.x.'bvboat_1_20250828_020427_044.png']
-filter_multi_pupu = [ 4194304, 4194305, 5238784, 5238785, 5238786, 5238787 ]
+[bvboat_1.x.'bvboat_1_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_1.x.unique_pupu_ids]
@@ -12019,119 +12023,119 @@ filter_multi_pupu_enabled = true
 004FF003 = 5238787
 
 [bvboat_2.x.'bvboat_2_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400060.png']
-filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400070.png']
-filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400080.png']
-filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400090.png']
-filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000A0.png']
-filter_multi_pupu = [ 4194464, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194464, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000B0.png']
-filter_multi_pupu = [ 4194480, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194480, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000C0.png']
-filter_multi_pupu = [ 4194496, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194496, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000D0.png']
-filter_multi_pupu = [ 4194512, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194512, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000E0.png']
-filter_multi_pupu = [ 4194528, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194528, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004000F0.png']
-filter_multi_pupu = [ 4194544, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194544, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400100.png']
-filter_multi_pupu = [ 4194560, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194560, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400110.png']
-filter_multi_pupu = [ 4194576, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194576, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400120.png']
-filter_multi_pupu = [ 4194592, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194592, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400130.png']
-filter_multi_pupu = [ 4194608, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194608, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400140.png']
-filter_multi_pupu = [ 4194624, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194624, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400150.png']
-filter_multi_pupu = [ 4194640, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194640, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400160.png']
-filter_multi_pupu = [ 4194656, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194656, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400170.png']
-filter_multi_pupu = [ 4194672, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194672, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400180.png']
-filter_multi_pupu = [ 4194688, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194688, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_00400190.png']
-filter_multi_pupu = [ 4194704, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194704, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004001A0.png']
-filter_multi_pupu = [ 4194720, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194720, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004001B0.png']
-filter_multi_pupu = [ 4194736, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194736, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.'bvboat_2_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bvboat_2.x.unique_pupu_ids]
@@ -12167,7 +12171,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[bvcar_1.x.'bvcar_1_20250828_020831_876.png']
+[bvcar_1.x.'bvcar_1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
@@ -12182,83 +12186,67 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194320, 4198416, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194336, 4198432, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400060.png']
-filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400070.png']
-filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194416, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400080.png']
-filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194432, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_00400090.png']
-filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194448, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000A0.png']
-filter_multi_pupu = [ 4194464, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194464, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000B0.png']
-filter_multi_pupu = [ 4194480, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194480, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000C0.png']
-filter_multi_pupu = [ 4194496, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194496, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000D0.png']
-filter_multi_pupu = [ 4194512, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194512, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000E0.png']
-filter_multi_pupu = [ 4194528, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194528, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.'bvtr_1_004000F0.png']
-filter_multi_pupu = [ 4194544, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_1.x.'bvtr_1_00401000.png']
-filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_1.x.'bvtr_1_00401010.png']
-filter_multi_pupu = [ 4194304, 4198416, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_1.x.'bvtr_1_00401020.png']
-filter_multi_pupu = [ 4194304, 4198432, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_1.x.'bvtr_1_004FF000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194544, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_1.x.unique_pupu_ids]
@@ -12285,7 +12273,7 @@ filter_multi_pupu_enabled = true
 004FF000 = 5238784
 004FF001 = 5238785
 
-[bvtr_107.x.'bvtr_107_20250828_021357_813.png']
+[bvtr_107.x.'bvtr_107_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788, 5238789, 5238790, 5238791 ]
 filter_multi_pupu_enabled = true
 
@@ -12299,7 +12287,7 @@ filter_multi_pupu_enabled = true
 004FF006 = 5238790
 004FF007 = 5238791
 
-[bvtr_2.x.'bvtr_2_20250828_021550_663.png']
+[bvtr_2.x.'bvtr_2_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788, 5238789, 5238790, 5238791, 5238792 ]
 filter_multi_pupu_enabled = true
 
@@ -12641,83 +12629,67 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194320, 4198416, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194336, 4198432, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400060.png']
-filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400070.png']
-filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194416, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400080.png']
-filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194432, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_00400090.png']
-filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194448, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000A0.png']
-filter_multi_pupu = [ 4194464, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194464, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000B0.png']
-filter_multi_pupu = [ 4194480, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194480, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000C0.png']
-filter_multi_pupu = [ 4194496, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194496, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000D0.png']
-filter_multi_pupu = [ 4194512, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194512, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000E0.png']
-filter_multi_pupu = [ 4194528, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194528, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.'bvtr_4_004000F0.png']
-filter_multi_pupu = [ 4194544, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_4.x.'bvtr_4_00401000.png']
-filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_4.x.'bvtr_4_00401010.png']
-filter_multi_pupu = [ 4194304, 4198416, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_4.x.'bvtr_4_00401020.png']
-filter_multi_pupu = [ 4194304, 4198432, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[bvtr_4.x.'bvtr_4_004FF000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194544, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bvtr_4.x.unique_pupu_ids]
@@ -13070,16 +13042,12 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 22016000 ]
 filter_multi_pupu_enabled = true
 
+[cdfield1.x.'cdfield1_024FF000.png']
+filter_multi_pupu = [ 38793216, 55570432 ]
+filter_multi_pupu_enabled = true
+
 [cdfield1.x.'cdfield1_041FF000.png']
 filter_multi_pupu = [ 69201920 ]
-filter_multi_pupu_enabled = true
-
-[cdfield1.x.'cdfield1_20250828_021956_163.png']
-filter_multi_pupu = [ 22016000, 38793216, 55570432 ]
-filter_multi_pupu_enabled = true
-
-[cdfield1.x.'cdfield1_20250828_022036_774.png']
-filter_multi_pupu = [ 38793216, 55570432 ]
 filter_multi_pupu_enabled = true
 
 [cdfield1.x.unique_pupu_ids]
@@ -13093,47 +13061,47 @@ filter_multi_pupu = [ 2101248 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400060.png']
-filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400070.png']
-filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400080.png']
-filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194432, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_00400090.png']
-filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194448, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.'cdfield2_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [cdfield2.x.unique_pupu_ids]
@@ -13158,10 +13126,6 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [cdfield3.x.'cdfield3_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[cdfield3.x.'cdfield3_004FF001.png']
 filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
@@ -13170,7 +13134,7 @@ filter_multi_pupu_enabled = true
 004FF000 = 5238784
 004FF001 = 5238785
 
-[cdfield4.x.'cdfield4_20250828_022351_395.png']
+[cdfield4.x.'cdfield4_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
@@ -13193,27 +13157,27 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 
 [cdfield6.x.'cdfield6_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.'cdfield6_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.'cdfield6_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.'cdfield6_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.'cdfield6_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.'cdfield6_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [cdfield6.x.unique_pupu_ids]
@@ -13226,7 +13190,7 @@ filter_multi_pupu_enabled = true
 004FF000 = 5238784
 004FF001 = 5238785
 
-[cdfield7.x.'cdfield7_20250828_022534_331.png']
+[cdfield7.x.'cdfield7_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -13243,22 +13207,10 @@ filter_multi_pupu_enabled = true
 80102000 = 2148540416
 
 [cdfield8.x.'cdfield8_00100000.png']
-filter_multi_pupu = [ 1048576 ]
+filter_multi_pupu = [ 1048576, 1052672, 1056768, 2093056 ]
 filter_multi_pupu_enabled = true
 
-[cdfield8.x.'cdfield8_00101000.png']
-filter_multi_pupu = [ 1052672 ]
-filter_multi_pupu_enabled = true
-
-[cdfield8.x.'cdfield8_00102000.png']
-filter_multi_pupu = [ 1056768 ]
-filter_multi_pupu_enabled = true
-
-[cdfield8.x.'cdfield8_001FF000.png']
-filter_multi_pupu = [ 2093056 ]
-filter_multi_pupu_enabled = true
-
-[cdfield8.x.'cdfield8_20250828_022623_158.png']
+[cdfield8.x.'cdfield8_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -13271,7 +13223,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[crenter1.x.'crenter1_20250828_022635_793.png']
+[crenter1.x.'crenter1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
@@ -13330,7 +13282,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[cropen1.x.'cropen1_20250828_022749_619.png']
+[cropen1.x.'cropen1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -13344,23 +13296,23 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194320, 4198416, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194336, 4198432, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194352, 4198448, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787 ]
+filter_multi_pupu = [ 4194368, 4198464, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400050.png']
@@ -13373,26 +13325,6 @@ filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_00400070.png']
 filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[crpower1.x.'crpower1_00401000.png']
-filter_multi_pupu = [ 4198400, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[crpower1.x.'crpower1_00401010.png']
-filter_multi_pupu = [ 4198416, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[crpower1.x.'crpower1_00401020.png']
-filter_multi_pupu = [ 4198432, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[crpower1.x.'crpower1_00401030.png']
-filter_multi_pupu = [ 4198448, 5238784, 5238785, 5238786, 5238787 ]
-filter_multi_pupu_enabled = true
-
-[crpower1.x.'crpower1_00401040.png']
-filter_multi_pupu = [ 4198464, 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [crpower1.x.'crpower1_004FF000.png']
@@ -13440,14 +13372,10 @@ filter_multi_pupu = [ 1052736, 1060928 ]
 filter_multi_pupu_enabled = true
 
 [crroof1.x.'crroof1_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 4202496, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
-[crroof1.x.'crroof1_00402000.png']
-filter_multi_pupu = [ 4202496 ]
-filter_multi_pupu_enabled = true
-
-[crroof1.x.'crroof1_20250828_023127_186.png']
+[crroof1.x.'crroof1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -13468,7 +13396,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[crsanc1.x.'crsanc1_20250828_023148_566.png']
+[crsanc1.x.'crsanc1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
@@ -13481,39 +13409,39 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400010.png']
-filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400020.png']
-filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400030.png']
-filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194352, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400040.png']
-filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194368, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400050.png']
-filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194384, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400060.png']
-filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194400, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_00400070.png']
-filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194416, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.'crsphi1_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crsphi1.x.unique_pupu_ids]
@@ -13535,67 +13463,63 @@ filter_multi_pupu = [ 1052672 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[crtower1.x.'crtower1_00402000.png']
-filter_multi_pupu = [ 4202496, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 4202496, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402010.png']
-filter_multi_pupu = [ 4202512, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202512, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402020.png']
-filter_multi_pupu = [ 4202528, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202528, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402030.png']
-filter_multi_pupu = [ 4202544, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202544, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402040.png']
-filter_multi_pupu = [ 4202560, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202560, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402050.png']
-filter_multi_pupu = [ 4202576, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202576, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402060.png']
-filter_multi_pupu = [ 4202592, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202592, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402070.png']
-filter_multi_pupu = [ 4202608, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202608, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402080.png']
-filter_multi_pupu = [ 4202624, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202624, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_00402090.png']
-filter_multi_pupu = [ 4202640, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202640, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_004020A0.png']
-filter_multi_pupu = [ 4202656, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202656, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_004020B0.png']
-filter_multi_pupu = [ 4202672, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202672, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_004020C0.png']
-filter_multi_pupu = [ 4202688, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202688, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_004020D0.png']
-filter_multi_pupu = [ 4202704, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4202704, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.'crtower1_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower1.x.unique_pupu_ids]
@@ -13620,23 +13544,11 @@ filter_multi_pupu_enabled = true
 004FF002 = 5238786
 
 [crtower2.x.'crtower2_00400000.png']
-filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[crtower2.x.'crtower2_00400001.png']
-filter_multi_pupu = [ 4194305, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[crtower2.x.'crtower2_00401000.png']
-filter_multi_pupu = [ 4198400, 5238784, 5238785, 5238786, 5238787, 5238788 ]
-filter_multi_pupu_enabled = true
-
-[crtower2.x.'crtower2_00402000.png']
-filter_multi_pupu = [ 4202496, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 4194304, 4194305, 4198400, 4202496, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower2.x.'crtower2_004FF000.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower2.x.unique_pupu_ids]
@@ -13649,119 +13561,63 @@ filter_multi_pupu_enabled = true
 004FF002 = 5238786
 
 [crtower3.x.'crtower3_00001000.png']
-filter_multi_pupu = [ 4096, 4192 ]
+filter_multi_pupu = [ 4096 ]
+filter_multi_pupu_enabled = true
+
+[crtower3.x.'crtower3_00001060.png']
+filter_multi_pupu = [ 4192 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00101010.png']
-filter_multi_pupu = [ 1052688 ]
+filter_multi_pupu = [ 1052688, 1060880, 1073168, 1077264, 1081360, 1085456, 1089552 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00101020.png']
-filter_multi_pupu = [ 1052704 ]
+filter_multi_pupu = [ 1052704, 1060896, 1073184, 1077280, 1081376, 1085472, 1089568 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00101030.png']
-filter_multi_pupu = [ 1052720 ]
+filter_multi_pupu = [ 1052720, 1060912, 1073200, 1077296, 1081392, 1085488, 1089584 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00101040.png']
-filter_multi_pupu = [ 1052736 ]
+filter_multi_pupu = [ 1052736, 1060928, 1073216, 1077312, 1081408, 1085504, 1089600 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00101050.png']
-filter_multi_pupu = [ 1052752 ]
+filter_multi_pupu = [ 1052752, 1060944, 1073232, 1077328, 1081424, 1085520, 1089616 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00103000.png']
-filter_multi_pupu = [ 1060864 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00103010.png']
-filter_multi_pupu = [ 1060880 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00103020.png']
-filter_multi_pupu = [ 1060896 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00103030.png']
-filter_multi_pupu = [ 1060912 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00103040.png']
-filter_multi_pupu = [ 1060928 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00103050.png']
-filter_multi_pupu = [ 1060944 ]
+filter_multi_pupu = [ 1060864, 1073152, 1077248, 1081344, 1085440, 1089536 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00103060.png']
-filter_multi_pupu = [ 1060960 ]
+filter_multi_pupu = [ 1060960, 1073248, 1077344, 1081440, 1085536, 1089632 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00103070.png']
-filter_multi_pupu = [ 1060976 ]
+filter_multi_pupu = [ 1060976, 1073264, 1077360, 1081456, 1085552, 1089648 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00103080.png']
-filter_multi_pupu = [ 1060992 ]
+filter_multi_pupu = [ 1060992, 1073280, 1077376, 1081472, 1085568, 1089664 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00103090.png']
-filter_multi_pupu = [ 1061008 ]
+filter_multi_pupu = [ 1061008, 1073296, 1077392, 1081488, 1085584, 1089680 ]
+filter_multi_pupu_enabled = true
+
+[crtower3.x.'crtower3_00104000.png']
+filter_multi_pupu = [ 1064960 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00105000.png']
 filter_multi_pupu = [ 1069056 ]
 filter_multi_pupu_enabled = true
 
-[crtower3.x.'crtower3_00106000.png']
-filter_multi_pupu = [ 1073152, 1077248, 1081344, 1085440, 1089536 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106010.png']
-filter_multi_pupu = [ 1073168, 1077264, 1081360, 1085456, 1089552 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106020.png']
-filter_multi_pupu = [ 1073184, 1077280, 1081376, 1085472, 1089568 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106030.png']
-filter_multi_pupu = [ 1073200, 1077296, 1081392, 1085488, 1089584 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106040.png']
-filter_multi_pupu = [ 1073216, 1077312, 1081408, 1085504, 1089600 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106050.png']
-filter_multi_pupu = [ 1073232, 1077328, 1081424, 1085520, 1089616 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106060.png']
-filter_multi_pupu = [ 1073248, 1077344, 1081440, 1085536, 1089632 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106070.png']
-filter_multi_pupu = [ 1073264, 1077360, 1081456, 1085552, 1089648 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106080.png']
-filter_multi_pupu = [ 1073280, 1077376, 1081472, 1085568, 1089664 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_00106090.png']
-filter_multi_pupu = [ 1073296, 1077392, 1081488, 1085584, 1089680 ]
-filter_multi_pupu_enabled = true
-
 [crtower3.x.'crtower3_001FF000.png']
 filter_multi_pupu = [ 2093056 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_001FF001.png']
-filter_multi_pupu = [ 2093057 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_001FF010.png']
@@ -13805,55 +13661,51 @@ filter_multi_pupu = [ 2093232 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_00400000.png']
-filter_multi_pupu = [ 4194304, 4202496 ]
-filter_multi_pupu_enabled = true
-
-[crtower3.x.'crtower3_0040B000.png']
-filter_multi_pupu = [ 1064960, 4239360, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4194304, 4202496, 4239360, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B010.png']
-filter_multi_pupu = [ 1064960, 4239376, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239376, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B020.png']
-filter_multi_pupu = [ 1064960, 4239392, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239392, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B030.png']
-filter_multi_pupu = [ 1064960, 4239408, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239408, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B040.png']
-filter_multi_pupu = [ 1064960, 4239424, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239424, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B050.png']
-filter_multi_pupu = [ 1064960, 4239440, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239440, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B060.png']
-filter_multi_pupu = [ 1064960, 4239456, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239456, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B070.png']
-filter_multi_pupu = [ 1064960, 4239472, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239472, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B080.png']
-filter_multi_pupu = [ 1064960, 4239488, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239488, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B090.png']
-filter_multi_pupu = [ 1064960, 4239504, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239504, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_0040B0A0.png']
-filter_multi_pupu = [ 1064960, 4239520, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 4239520, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.'crtower3_004FF000.png']
-filter_multi_pupu = [ 1064960, 5238784, 5238785, 5238786, 5238787, 5238788 ]
+filter_multi_pupu = [ 1064960, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [crtower3.x.unique_pupu_ids]
@@ -13955,7 +13807,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[crview1.x.'crview1_20250828_030904_547.png']
+[crview1.x.'crview1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
@@ -13963,7 +13815,7 @@ filter_multi_pupu_enabled = true
 004FF000 = 5238784
 004FF001 = 5238785
 
-[cwwood1.x.'cwwood1_20250828_030927_179.png']
+[cwwood1.x.'cwwood1_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -13972,7 +13824,7 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 004FF002 = 5238786
 
-[cwwood2.x.'cwwood2_20250828_030934_853.png']
+[cwwood2.x.'cwwood2_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
@@ -13982,7 +13834,7 @@ filter_multi_pupu_enabled = true
 004FF002 = 5238786
 004FF003 = 5238787
 
-[cwwood3.x.'cwwood3_20250828_030942_562.png']
+[cwwood3.x.'cwwood3_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
