@@ -32,8 +32,8 @@ class VertexArray
           m_renderer_id         = init_id();
           push_back(vertex_buffer, layout);
      }
-     void                      bind() const;
-     static void               unbind();
+     void        bind() const;
+     static void unbind();
      template<Bindable bindableT, size_t ElementCount>
      void push_back(const bindableT &vertex_buffer, const VertexBufferLayout<ElementCount> &layout)
      {// todo tag vertex_buffers so we can exclude other types.

@@ -1,9 +1,9 @@
 #ifndef CC65C6B1_E0C1_485A_BC29_965EB1AE26A7
 #define CC65C6B1_E0C1_485A_BC29_965EB1AE26A7
 #include <concepts>
+#include <imgui.h>
 #include <open_viii/Concepts.hpp>
 #include <type_traits>
-#include <imgui.h>
 
 template<typename T>
 concept is_enum = std::is_enum_v<T>;

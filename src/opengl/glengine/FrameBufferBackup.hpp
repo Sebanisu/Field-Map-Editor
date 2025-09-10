@@ -14,11 +14,11 @@ namespace glengine
  */
 class [[nodiscard]] FrameBufferBackup final : public AnyScopeGuard
 {
-     Glid m_render_id       = {};
+     Glid m_render_id      = {};
 
-     Glid m_render_id_read  = {};
+     Glid m_render_id_read = {};
 
-     Glid m_render_id_draw  = {};
+     Glid m_render_id_draw = {};
 
    public:
      FrameBufferBackup();

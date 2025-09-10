@@ -26,9 +26,9 @@ struct [[nodiscard]] Shader
      Glid                                                       m_renderer_id{};
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
-     [[nodiscard]] static  ShaderProgramSource                   parse_shader(const std::filesystem::path &path);
-     [[nodiscard]] static  std::uint32_t                         compile_shader(const std::uint32_t type, const std::string_view source);
-     [[nodiscard]] static  std::uint32_t                         create_shader(const std::string_view, const std::string_view);
+     [[nodiscard]] static ShaderProgramSource                   parse_shader(const std::filesystem::path &path);
+     [[nodiscard]] static std::uint32_t                         compile_shader(const std::uint32_t type, const std::string_view source);
+     [[nodiscard]] static std::uint32_t                         create_shader(const std::string_view, const std::string_view);
      [[nodiscard]] std::int32_t                                 get_uniform_location(std::string_view name) const;
 
    public:

@@ -121,7 +121,7 @@ bool OrthographicCameraController::on_im_gui_update() const
               m_camera.bounds().w)
               .c_str());
           ImGui::Separator();
-          //m_camera.on_im_gui_update();
+          // m_camera.on_im_gui_update();
      }
      return false;
 }

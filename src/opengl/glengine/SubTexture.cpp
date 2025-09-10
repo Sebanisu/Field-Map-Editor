@@ -13,7 +13,7 @@ void glengine::SubTexture::bind(std::int32_t slot) const
 void glengine::SubTexture::bind_read_only(int slot) const
 {
      GlCall{}(glBindImageTexture, slot, m_render_id, 0, static_cast<GLboolean>(GL_FALSE), 0, GL_READ_ONLY, Texture::s_sized_interal_format);
-     //bind(slot);
+     // bind(slot);
 }
 void glengine::SubTexture::bind_write_only(int slot) const
 {

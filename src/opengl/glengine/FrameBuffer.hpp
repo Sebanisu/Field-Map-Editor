@@ -97,7 +97,7 @@ class FrameBuffer
       * @return A new FrameBuffer instance that is a deep copy of this one.
       */
      [[nodiscard]] FrameBuffer                     clone() const;
-     operator bool()
+                                                   operator bool()
      {
           return std::ranges::any_of(m_color_attachment, [](const auto &id) { return id != 0U; }) && m_renderer_id != 0U
                  && m_depth_attachment != 0U;

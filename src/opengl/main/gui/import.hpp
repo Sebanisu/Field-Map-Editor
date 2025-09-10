@@ -17,19 +17,19 @@ namespace fme
 class [[nodiscard]] import
 {
    private:
-     static constexpr std::int8_t                 tile_size_px                  = { 16 };
-     static constexpr std::uint8_t                tile_size_px_unsigned         = { 16U };
+     static constexpr std::int8_t                 tile_size_px             = { 16 };
+     static constexpr std::uint8_t                tile_size_px_unsigned    = { 16U };
 
-     mutable std::weak_ptr<Selections>            m_selections                  = {};
-     mutable std::weak_ptr<map_sprite>            m_map_sprite                  = {};
-     mutable open_viii::graphics::background::Map m_import_image_map            = {};
-     mutable std::string                          m_import_image_path           = {};
+     mutable std::weak_ptr<Selections>            m_selections             = {};
+     mutable std::weak_ptr<map_sprite>            m_map_sprite             = {};
+     mutable open_viii::graphics::background::Map m_import_image_map       = {};
+     mutable std::string                          m_import_image_path      = {};
 
-     mutable glengine::Texture                    m_loaded_image_texture        = {};
-     //mutable sf::RenderTexture                    m_loaded_image_render_texture = {};
-    //  mutable sf::Image                            m_loaded_image_cpu            = {};
+     mutable glengine::Texture                    m_loaded_image_texture   = {};
+     // mutable sf::RenderTexture                    m_loaded_image_render_texture = {};
+     //  mutable sf::Image                            m_loaded_image_cpu            = {};
 
-     mutable map_directory_mode                   m_modified_directory_map      = {};
+     mutable map_directory_mode                   m_modified_directory_map = {};
 
 
      mutable ImGui::FileBrowser m_load_file_browser{ ImGuiFileBrowserFlags_EditPathString | ImGuiFileBrowserFlags_EnterNewFilename };

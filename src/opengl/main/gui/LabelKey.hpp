@@ -33,7 +33,7 @@ struct LabelKey
      constexpr std::string_view operator*() const
      {
           return key;
-     }     
+     }
      constexpr size_t size() const
      {
           return key.size();

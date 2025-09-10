@@ -352,7 +352,7 @@ class [[nodiscard]] source_tile_conflicts final
           namespace v = std::ranges::views;
           return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; });
      }
-     
+
      /**
       * @brief Retrieves a flattened range of tile indexes for each conflict.
       *

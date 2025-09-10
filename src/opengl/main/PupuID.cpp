@@ -82,7 +82,8 @@ namespace ff_8
 // };
 // struct PupuIDComparator
 // {
-//      const std::unordered_map<PupuID, size_t> *pupuCount; //not sure what this will do lol. the ids are stored in a vector and we know the count from std::size()
+//      const std::unordered_map<PupuID, size_t> *pupuCount; //not sure what this will do lol. the ids are stored in a vector and we know
+//      the count from std::size()
 
 //      bool                                      operator()(const PupuID &a, const PupuID &b) const
 //      {
@@ -99,4 +100,9 @@ namespace ff_8
 //      }
 // };
 
-// hmm since each file entry will have one or more pupu ids. would we like use the comparitor to sort the list of pupu ids and then choose the one that is first?  I plan on having like one set of keys and once one gets used up it won't be able to be used by another image. then we'll pass those images through the maskes to hide the unused pixels.hmm since each file entry will have one or more pupu ids. would we like use the comparitor to sort the list of pupu ids and then choose the one that is first?  I plan on having like one set of keys and once one gets used up it won't be able to be used by another image. then we'll pass those images through the maskes to hide the unused pixels.
+// hmm since each file entry will have one or more pupu ids. would we like use the comparitor to sort the list of pupu ids and then choose
+// the one that is first?  I plan on having like one set of keys and once one gets used up it won't be able to be used by another image.
+// then we'll pass those images through the maskes to hide the unused pixels.hmm since each file entry will have one or more pupu ids. would
+// we like use the comparitor to sort the list of pupu ids and then choose the one that is first?  I plan on having like one set of keys and
+// once one gets used up it won't be able to be used by another image. then we'll pass those images through the maskes to hide the unused
+// pixels.

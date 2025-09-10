@@ -34,7 +34,7 @@ class Texture
      static const constexpr GLenum s_base_interal_format  = GL_RGBA;
      static const constexpr GLenum s_type                 = GL_UNSIGNED_BYTE;
 
-     operator bool() const noexcept
+                                   operator bool() const noexcept
      {
           return m_renderer_id != 0U;
      }
@@ -183,9 +183,9 @@ class Texture
      }
 
      GlidCopy              id() const noexcept;
-     //use for sampler2d
+     // use for sampler2d
      void                  bind(int slot = 0) const;
-     //use for image2d
+     // use for image2d
      void                  bind_read_only(int slot) const;
      void                  bind_write_only(int slot) const;
      constexpr static void destroy(const std::uint32_t id)

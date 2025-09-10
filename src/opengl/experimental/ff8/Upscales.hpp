@@ -16,7 +16,7 @@ class Upscales
      void               on_render() const {}
      [[nodiscard]] bool on_im_gui_update() const;
      void               on_event(const glengine::event::Item &) const {}
-     operator std::filesystem::path() const;
+                        operator std::filesystem::path() const;
      Upscales();
      Upscales(Configuration);
 

@@ -12,11 +12,11 @@ namespace ff_8
 class Palettes
 {
    public:
-     void on_update(float) const {}
-     void on_render() const {}
-     bool on_im_gui_update() const;
-     void on_event(const glengine::event::Item &) const {}
-     operator std::uint8_t() const;
+     void             on_update(float) const {}
+     void             on_render() const {}
+     bool             on_im_gui_update() const;
+     void             on_event(const glengine::event::Item &) const {}
+                      operator std::uint8_t() const;
      std::string_view string() const;
      int              index() const;
 

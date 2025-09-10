@@ -67,7 +67,7 @@ enum struct output_types
           //      return input_types::deswizzle_generate_toml;
           case output_types::deswizzle_full_filename:
                return input_types::deswizzle_full_filename;
-          //case output_types::csv:
+          // case output_types::csv:
           default:
                return std::nullopt;// input_types::mim has no mapping
      }

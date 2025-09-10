@@ -8,7 +8,7 @@ namespace glengine
 {
 namespace event
 {
-  class Item;
+     class Item;
 }
 template<typename T>
 concept Renderable =
@@ -48,22 +48,22 @@ concept Renderable =
 template<Renderable T>
 inline auto OnImGuiUpdate(const T &t)
 {
-  return t.on_im_gui_update();
+     return t.on_im_gui_update();
 }
 template<Renderable T>
 inline auto OnUpdate(const T &t, const float ts)
 {
-  return t.on_update(ts);
+     return t.on_update(ts);
 }
 template<Renderable T>
 inline auto OnRender(const T &t)
 {
-  return t.on_render();
+     return t.on_render();
 }
 template<Renderable T>
 inline auto OnEvent(const T &t, const event::Item &e)
 {
-  return t.on_event(e);
+     return t.on_event(e);
 }
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_RENDERABLE_HPP

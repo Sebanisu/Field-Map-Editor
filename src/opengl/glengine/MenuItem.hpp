@@ -93,7 +93,7 @@ class MenuItem
      MenuItem(MenuItem &&other) noexcept            = default;
      MenuItem &operator=(MenuItem &&other) noexcept = default;
 
-     operator bool() const;
+               operator bool() const;
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_MENUITEM_HPP

@@ -133,4 +133,4 @@ void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
 {
      return m_mim;
 }
-}
+}// namespace fme

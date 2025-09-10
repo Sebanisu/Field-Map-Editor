@@ -102,8 +102,7 @@ MapHistory::MapHistory(map_t map)
  * For when a change could happen. we make a copy ahead of time.
  * @return back map
  */
-[[nodiscard]] MapHistory::map_t &
-  MapHistory::copy_back_preemptive(std::source_location source_location) const
+[[nodiscard]] MapHistory::map_t &MapHistory::copy_back_preemptive(std::source_location source_location) const
 {
      if (!preemptive_copy_mode)
      {

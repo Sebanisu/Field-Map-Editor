@@ -74,7 +74,7 @@ struct [[nodiscard]] draw_window
      mutable std::vector<std::size_t>     m_clicked_tile_indices       = {};
      mutable std::vector<std::size_t>     m_hovered_tiles_indices      = {};
      std::ptrdiff_t                       m_hovered_index              = { -1 };
-     mutable glm::ivec2                           m_location_backup            = {};
+     mutable glm::ivec2                   m_location_backup            = {};
      mutable bool                         m_translation_in_progress    = { false };
      void                                 update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale) const;
      void draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;

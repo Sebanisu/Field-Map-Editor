@@ -88,7 +88,7 @@ namespace Layer
           Item(Item &&other) noexcept            = default;
           Item &operator=(Item &&other) noexcept = default;
 
-          operator bool() const;
+                operator bool() const;
      };
 }// namespace Layer
 }// namespace glengine

@@ -55,9 +55,9 @@ class IndexBufferDynamic
      {
      }
 
-     void                      bind() const;
-     static void               unbind();
-     IndexType type() const;
+     void        bind() const;
+     static void unbind();
+     IndexType   type() const;
 };
 static_assert(Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
 }// namespace glengine

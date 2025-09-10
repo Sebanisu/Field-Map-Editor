@@ -42,7 +42,7 @@ struct archives_group
      [[nodiscard]] const open_viii::archive::Archives      &archives() const noexcept;
      [[nodiscard]] const open_viii::archive::FIFLFS<true>  &fields() const;
      [[nodiscard]] bool                                     failed() const noexcept;
-     [[nodiscard]] operator bool() const noexcept
+     [[nodiscard]]                                          operator bool() const noexcept
      {
           return !m_failed;
      }

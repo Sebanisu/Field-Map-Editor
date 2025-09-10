@@ -21,7 +21,7 @@ class UniqueValue
      UniqueValue(const UniqueValue &) = delete;
      constexpr ~UniqueValue() noexcept
      {
-          //value of 0 is valid because sometimes nothing is bound.
+          // value of 0 is valid because sometimes nothing is bound.
           if (m_function != nullptr)
           {
                std::invoke(m_function, std::move(m_value));

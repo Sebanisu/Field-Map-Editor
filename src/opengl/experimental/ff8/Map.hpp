@@ -677,7 +677,7 @@ class Map
                  tile_to_draw_pos(tile),
                  m_map_dims.scaled_tile_size(),
                  static_cast<int>(GetMapHistory()->get_offset_from_working(tile)),
-                 GetMapHistory()->get_pupu_from_working(tile).raw()); // change to index to unique pupu
+                 GetMapHistory()->get_pupu_from_working(tile).raw());// change to index to unique pupu
                return true;
           });
           m_batch_renderer.draw();

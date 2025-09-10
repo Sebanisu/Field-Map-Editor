@@ -15,10 +15,10 @@ class Coos
 {
    public:
      Coos();
-     void on_update(float) const {}
-     void on_render() const {}
-     bool on_im_gui_update() const;
-     void on_event(const glengine::event::Item &) const {}
+     void          on_update(float) const {}
+     void          on_render() const {}
+     bool          on_im_gui_update() const;
+     void          on_event(const glengine::event::Item &) const {}
      //[[nodiscard]] std::string_view operator*() const;
      [[nodiscard]] operator std::string_view() const;
 

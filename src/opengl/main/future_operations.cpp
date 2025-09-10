@@ -108,7 +108,7 @@ std::future<void> future_operations::GetImageFromFromFirstValidPathCreateFuture:
             | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
           if (filtered_paths.begin() == filtered_paths.end())
           {
-               spdlog::warn("{}:{} - filtered_paths empty. m_paths.size() = {}",__FILE__,__LINE__, std::ranges::size(m_paths));
+               spdlog::warn("{}:{} - filtered_paths empty. m_paths.size() = {}", __FILE__, __LINE__, std::ranges::size(m_paths));
                return {};
           }
           return GetImageFromPathCreateFuture{ m_texture, *filtered_paths.begin() }();

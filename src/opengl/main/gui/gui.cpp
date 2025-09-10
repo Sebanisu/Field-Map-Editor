@@ -3030,8 +3030,7 @@ void gui::bind_shortcuts()
 
      // Inside your GUI update loop where you already handle shortcuts
      const auto     test_field = [](std::string_view test) -> bool {
-          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv)
-                 || test == "ggroad4"sv;
+          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv) || test == "ggroad4"sv;
      };
 
      if (const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);

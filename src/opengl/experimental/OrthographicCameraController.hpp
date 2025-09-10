@@ -50,7 +50,7 @@ class OrthographicCameraController
           float bottom{};
           float top{};
 
-          operator glengine::OrthographicCamera() const
+                operator glengine::OrthographicCamera() const
           {
                return glengine::OrthographicCamera(left, right, bottom, top);
           }

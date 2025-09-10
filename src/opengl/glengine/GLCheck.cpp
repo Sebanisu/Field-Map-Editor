@@ -3,8 +3,8 @@
 //
 
 #include "GLCheck.hpp"
-#include <iostream>
 #include "Formatters.hpp"
+#include <iostream>
 namespace glengine
 {
 bool GlCheckError(std::string_view prefix, const std::source_location location)
@@ -58,8 +58,8 @@ void GlGetError(const std::source_location location)
 {
      while (GlCheckError("Error", location))
      {
-          //TODO figure out why clone fails sometimes like when changing ff8 path.
-          //assert(false);
+          // TODO figure out why clone fails sometimes like when changing ff8 path.
+          // assert(false);
      }
 }
 

@@ -69,8 +69,7 @@ static constexpr TileT MaxTile = []() {
           ValueT m_value = {};                                                                                                       \
      };                                                                                                                              \
      template<open_viii::graphics::background::is_tile TileT>                                                                        \
-       CONCAT(STRING, Match)                                                                                                         \
-       (const TileT &)->CONCAT(STRING, Match)                                                                                        \
+       CONCAT(STRING, Match)(const TileT &)->CONCAT(STRING, Match)                                                                   \
        < CONCAT(STRING, T) < TileT >> ;                                                                                              \
      struct CONCAT(STRING, DefaultValue)                                                                                             \
      {                                                                                                                               \
