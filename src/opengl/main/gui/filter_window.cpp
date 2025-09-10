@@ -470,9 +470,8 @@ void fme::filter_window::render_list_view(
      {
      }
 
-     tool_tip(
-       "mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join animations ids of not the same state.");
-       
+     tool_tip("mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join animations ids of not the same state.");
+
      ImGui::NextColumn();
      if (ImGui::Checkbox("State", &check_animation_state))
      {
@@ -481,7 +480,6 @@ void fme::filter_window::render_list_view(
      tool_tip(
        "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join animations of the same state because they usually don't "
        "overlap.");
-
 
 
      ImGui::NextColumn();
@@ -495,9 +493,9 @@ void fme::filter_window::render_list_view(
      {
      }
      tool_tip("Combine entries with different layer ids.");
-     ImGui::Columns(1);
-     combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::NextColumn();
+     combo_exclude_animation_id_from_state(lock_map_sprite);
+     ImGui::Columns(1);
      ImGui::BeginDisabled(!check_offset && !check_animation && !check_animation_id && !check_animation_state && !check_layer_id);
      if (ImGui::Button("Combine (w/attribute)"))
      {
@@ -649,14 +647,8 @@ void fme::filter_window::render_list_view(
                                                   continue;
                                              }
                                              if (
-                                                  u_pupu_id != i_pupu_id &&
-                                                  (
-                                                       u_pupu_id.same_base(i_pupu_id) ||
-                                                       (
-                                                            u_pupu_id.same_animation_id_base(i_pupu_id)
-                                                       )
-                                                  )
-                                             )
+                                               u_pupu_id != i_pupu_id
+                                               && (u_pupu_id.same_base(i_pupu_id) || (u_pupu_id.same_animation_id_base(i_pupu_id))))
                                              {
                                                   copy_values.push_back(u_pupu_id);
                                                   reload = true;
