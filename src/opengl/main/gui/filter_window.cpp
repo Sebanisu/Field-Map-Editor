@@ -508,7 +508,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
                                        if (
                                          m_excluded_animation_id_from_state.enabled()
                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
@@ -590,7 +590,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
                                        if (
                                          m_excluded_animation_id_from_state.enabled()
                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
@@ -707,7 +707,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::all_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
                                        if (
                                          m_excluded_animation_id_from_state.enabled()
                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
