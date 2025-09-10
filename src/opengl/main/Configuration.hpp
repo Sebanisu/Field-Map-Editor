@@ -31,8 +31,8 @@ class Configuration
 
      Configuration(std::filesystem::path);
 
-     operator toml::table &() &;
-     operator const toml::table &() const &;
+                                       operator toml::table &() &;
+                                       operator const toml::table &() const &;
      toml::table                      &operator*() &;
      toml::table const                &operator*() const &;
 
