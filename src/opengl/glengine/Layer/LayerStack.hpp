@@ -15,7 +15,9 @@ namespace Layer
      {
         public:
           Stack() = default;
-          Stack(std::span<Item> layers, std::span<Item> overlays = {})
+          Stack(
+            std::span<Item> layers,
+            std::span<Item> overlays = {})
           {
                m_layers.reserve(std::ranges::size(layers) + std::ranges::size(overlays));
                std::ranges::move(layers, std::back_inserter(m_layers));

@@ -11,12 +11,12 @@ int main()
      using namespace boost::ut;
 
      static constexpr auto t_range = std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::T_SIZE });
-     static constexpr auto x_range =
-       std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::X_SIZE })
-       | std::ranges::views::transform([](const auto i) { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
-     static constexpr auto y_range =
-       std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::Y_SIZE })
-       | std::ranges::views::transform([](const auto i) { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
+     static constexpr auto x_range
+       = std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::X_SIZE })
+         | std::ranges::views::transform([](const auto i) { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
+     static constexpr auto y_range
+       = std::ranges::views::iota(std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::Y_SIZE })
+         | std::ranges::views::transform([](const auto i) { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
      // Test case to validate the reverse mapping
      test("Reverse index validation") = [&] {
           const ff_8::source_tile_conflicts stc{};

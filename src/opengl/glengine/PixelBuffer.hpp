@@ -50,7 +50,10 @@ class PixelBuffer
       * @param full pointer to bool if all values are present.
       * @return true if any values are present
       */
-     bool operator()(const glengine::FrameBuffer &fb, std::filesystem::path path, bool *const full = nullptr) const
+     bool operator()(
+       const glengine::FrameBuffer &fb,
+       std::filesystem::path        path,
+       bool *const                  full = nullptr) const
      {
           next();
           to_pbo(fb, std::move(path));
@@ -65,7 +68,11 @@ class PixelBuffer
       * @param call_back accepts image data and does something
       * @return true if any values are still present
       */
-     bool operator()(std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto &&call_back) const
+     bool operator()(std::invocable<
+                     std::span<std::uint8_t>,
+                     std::filesystem::path,
+                     int,
+                     int> auto &&call_back) const
      {
           next();
           from_pbo(std::forward<decltype(call_back)>(call_back));
@@ -73,7 +80,12 @@ class PixelBuffer
      }
 
    private:
-     void from_pbo(std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto &&call_back) const
+     void from_pbo(
+       std::invocable<
+         std::span<std::uint8_t>,
+         std::filesystem::path,
+         int,
+         int> auto &&call_back) const
      {
           // map the PBO to process its data by CPU
           const auto unbind_pbo_buffer = ScopeGuard([] { unbind(); });
@@ -88,7 +100,9 @@ class PixelBuffer
                }
           }
      }
-     void to_pbo(const glengine::FrameBuffer &fb, std::filesystem::path path) const
+     void to_pbo(
+       const glengine::FrameBuffer &fb,
+       std::filesystem::path        path) const
      {
           // set the target framebuffer to read
           fb.bind();

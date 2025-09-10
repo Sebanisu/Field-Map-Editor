@@ -41,7 +41,9 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           spdlog::error("Exception caught while creating texture: {}", e.what());
      }
 }
-future_operations::LoadImageIntoTexture::LoadImageIntoTexture(glengine::Texture *const in_texture, glengine::Image in_image)
+future_operations::LoadImageIntoTexture::LoadImageIntoTexture(
+  glengine::Texture *const in_texture,
+  glengine::Image          in_image)
   : m_texture(in_texture)
   , m_image(std::move(in_image))
 {
@@ -103,9 +105,10 @@ std::future<void> future_operations::GetImageFromFromFirstValidPathCreateFuture:
      try
      {
           std::vector<std::filesystem::path> m_paths = m_paths_get();
-          auto                               filtered_paths =
-            m_paths | std::ranges::views::transform([](auto &&path) -> std::filesystem::path { return std::forward<decltype(path)>(path); })
-            | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+          auto                               filtered_paths
+            = m_paths
+              | std::ranges::views::transform([](auto &&path) -> std::filesystem::path { return std::forward<decltype(path)>(path); })
+              | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
           if (filtered_paths.begin() == filtered_paths.end())
           {
                spdlog::warn("{}:{} - filtered_paths empty. m_paths.size() = {}", __FILE__, __LINE__, std::ranges::size(m_paths));

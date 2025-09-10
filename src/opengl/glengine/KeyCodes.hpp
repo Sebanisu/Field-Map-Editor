@@ -170,11 +170,15 @@ enum class Key : int
      Press        = 1,
      Repeat       = 2,
 };
-static constexpr auto operator+(Key e) noexcept -> std::enable_if_t<std::is_enum<Key>::value, std::underlying_type_t<Key>>
+static constexpr auto operator+(Key e) noexcept -> std::enable_if_t<
+  std::is_enum<Key>::value,
+  std::underlying_type_t<Key>>
 {
      return static_cast<std::underlying_type_t<Key>>(e);
 }
-static constexpr auto operator+(Mods e) noexcept -> std::enable_if_t<std::is_enum<Mods>::value, std::underlying_type_t<Mods>>
+static constexpr auto operator+(Mods e) noexcept -> std::enable_if_t<
+  std::is_enum<Mods>::value,
+  std::underlying_type_t<Mods>>
 {
      return static_cast<std::underlying_type_t<Mods>>(e);
 }

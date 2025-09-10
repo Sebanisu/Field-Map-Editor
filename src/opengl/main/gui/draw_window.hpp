@@ -19,36 +19,37 @@ struct [[nodiscard]] draw_window
        : m_selections(std::move(in_selections))
        , m_mim_sprite(std::move(in_mim_sprite))
        , m_map_sprite(std::move(in_map_sprite))
-       , m_checkerboard_batchrenderer{ 4, []() -> std::filesystem::path {
-                                           std::error_code       ec;
+       , m_checkerboard_batchrenderer{ 4,
+                                       []() -> std::filesystem::path {
+                                            std::error_code       ec;
 
-                                           // Get current path safely
-                                           std::filesystem::path currentPath = std::filesystem::current_path(ec);
-                                           if (ec)
-                                           {
-                                                spdlog::error("Failed to get current path: {}", ec.message());
-                                                return {};
-                                           }
+                                            // Get current path safely
+                                            std::filesystem::path currentPath = std::filesystem::current_path(ec);
+                                            if (ec)
+                                            {
+                                                 spdlog::error("Failed to get current path: {}", ec.message());
+                                                 return {};
+                                            }
 
-                                           // Construct the target path
-                                           std::filesystem::path shaderPath = currentPath / "res" / "shader" / "checkerboard.shader";
+                                            // Construct the target path
+                                            std::filesystem::path shaderPath = currentPath / "res" / "shader" / "checkerboard.shader";
 
-                                           // Check if it exists
-                                           if (!std::filesystem::exists(shaderPath, ec))
-                                           {
-                                                if (ec)
-                                                {
-                                                     spdlog::error(
-                                                       "Failed to check existence of path '{}': {}", shaderPath.string(), ec.message());
-                                                }
-                                                else
-                                                {
-                                                     spdlog::error("Shader file does not exist: {}", shaderPath.string());
-                                                }
-                                                return {};
-                                           }
-                                           return shaderPath;
-                                      }() }
+                                            // Check if it exists
+                                            if (!std::filesystem::exists(shaderPath, ec))
+                                            {
+                                                 if (ec)
+                                                 {
+                                                      spdlog::error(
+                                                        "Failed to check existence of path '{}': {}", shaderPath.string(), ec.message());
+                                                 }
+                                                 else
+                                                 {
+                                                      spdlog::error("Shader file does not exist: {}", shaderPath.string());
+                                                 }
+                                                 return {};
+                                            }
+                                            return shaderPath;
+                                       }() }
      {
      }
      void                            update(std::weak_ptr<Selections> in_selections);
@@ -76,13 +77,31 @@ struct [[nodiscard]] draw_window
      std::ptrdiff_t                       m_hovered_index              = { -1 };
      mutable glm::ivec2                   m_location_backup            = {};
      mutable bool                         m_translation_in_progress    = { false };
-     void                                 update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale) const;
-     void draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
-     void draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale) const;
-     void draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
-     void draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
-     void draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
-     void UseImGuizmo(const float scale, const ImVec2 &screen_pos) const;
+     void                                 update_hover_and_mouse_button_status_for_map(
+                                       const ImVec2 &img_start,
+                                       const float   scale) const;
+     void draw_map_grid_lines_for_tiles(
+       const ImVec2 &screen_pos,
+       const ImVec2 &scaled_size,
+       const float   scale) const;
+     void draw_map_grid_for_conflict_tiles(
+       const ImVec2 &screen_pos,
+       const float   scale) const;
+     void draw_map_grid_lines_for_texture_page(
+       const ImVec2 &screen_pos,
+       const ImVec2 &scaled_size,
+       const float   scale) const;
+     void draw_mim_grid_lines_for_tiles(
+       const ImVec2 &screen_pos,
+       const ImVec2 &scaled_size,
+       const float   scale) const;
+     void draw_mim_grid_lines_for_texture_page(
+       const ImVec2 &screen_pos,
+       const ImVec2 &scaled_size,
+       const float   scale) const;
+     void UseImGuizmo(
+       const float   scale,
+       const ImVec2 &screen_pos) const;
 };
 }// namespace fme
 

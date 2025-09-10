@@ -56,7 +56,12 @@ class BlendModeGenerics
 
      constexpr BlendModeGenerics() = default;
      template<typename... Ts>
-          requires((std::constructible_from<UsedSelectionsT, Ts> && ...) && sizeof...(Ts) == std::ranges::size(LabelsLambdaT()()))
+          requires(
+            (std::constructible_from<
+               UsedSelectionsT,
+               Ts>
+             && ...)
+            && sizeof...(Ts) == std::ranges::size(LabelsLambdaT()()))
      constexpr BlendModeGenerics(Ts &&...ts)
        : m_selections(std::array{ UsedSelectionsT{ std::forward<Ts>(ts) }... })
      {

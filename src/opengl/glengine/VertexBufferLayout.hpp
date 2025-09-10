@@ -138,7 +138,14 @@ class VertexBufferLayout
      template<is_VertexBufferElementType... Ts>
      constexpr VertexBufferLayout(Ts &&...ts)
        : m_elements{ static_cast<VertexBufferElement>(std::forward<Ts>(ts))... }
-       , m_stride(std::reduce(std::begin(m_elements), std::end(m_elements), std::size_t{ 0U }, [](auto l, auto r) { return l + r; }))
+       , m_stride(
+           std::reduce(
+             std::begin(m_elements),
+             std::end(m_elements),
+             std::size_t{ 0U },
+             [](
+               auto l,
+               auto r) { return l + r; }))
      {
      }
      constexpr auto begin() const noexcept

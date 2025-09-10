@@ -15,7 +15,9 @@ struct [[nodiscard]] Image
      Image()                                              = default;
 
      Image(Image &&)                                      = default;
-     Image(std::filesystem::path in_path, bool in_flip = false);
+     Image(
+       std::filesystem::path in_path,
+       bool                  in_flip = false);
 };
 }// namespace glengine
 

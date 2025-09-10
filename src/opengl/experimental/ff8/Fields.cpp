@@ -12,7 +12,11 @@ namespace ff_8
 static constexpr auto fields_index  = std::string_view("fields_index");
 static constexpr auto fields_string = std::string_view("fields_string");
 MimData::MimData(const Fields &fields)
-  : mim(LoadMim(fields, fields.coo(), path, coo_chosen))
+  : mim(LoadMim(
+      fields,
+      fields.coo(),
+      path,
+      coo_chosen))
 {
      if (!std::empty(path))
      {
@@ -21,8 +25,11 @@ MimData::MimData(const Fields &fields)
           delayed_textures = LoadTextures(mim);
      }
 }
-open_viii::graphics::background::Mim
-  LoadMim(open_viii::archive::FIFLFS<false> in_field, std::string_view coo, std::string &out_path, bool &coo_was_used)
+open_viii::graphics::background::Mim LoadMim(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  std::string                      &out_path,
+  bool                             &coo_was_used)
 {
      std::size_t out_path_pos   = {};
      auto        lang_name      = fmt::format("_{}{}", coo, open_viii::graphics::background::Mim::EXT);
@@ -31,9 +38,7 @@ open_viii::graphics::background::Mim
 
 
      auto        buffer         = in_field.get_entry_data(
-       { std::string_view(long_lang_name),
-                        std::string_view(long_name),
-                        std::string_view(lang_name),
+       { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name),
                         open_viii::graphics::background::Mim::EXT },
        &out_path,
        &out_path_pos);
@@ -47,8 +52,12 @@ open_viii::graphics::background::Mim
      return {};
 }
 
-open_viii::graphics::background::Map
-  LoadMap(open_viii::archive::FIFLFS<false> in_field, std::string_view coo, const MimData &mim, std::string &out_path, bool &coo_was_used)
+open_viii::graphics::background::Map LoadMap(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  const MimData                    &mim,
+  std::string                      &out_path,
+  bool                             &coo_was_used)
 {
      bool        shift          = false;
      std::size_t out_path_pos   = {};
@@ -56,9 +65,7 @@ open_viii::graphics::background::Map
      auto        long_lang_name = fmt::format("{}_{}{}", in_field.get_base_name(), coo, open_viii::graphics::background::Map::EXT);
      auto        long_name      = fmt::format("{}{}", in_field.get_base_name(), open_viii::graphics::background::Map::EXT);
      auto        buffer         = in_field.get_entry_data(
-       { std::string_view(long_lang_name),
-                        std::string_view(long_name),
-                        std::string_view(lang_name),
+       { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name),
                         open_viii::graphics::background::Map::Map::EXT },
        &out_path,
        &out_path_pos);

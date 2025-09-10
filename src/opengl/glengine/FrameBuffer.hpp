@@ -20,16 +20,16 @@ enum class FrameBufferTextureFormat
 };
 struct FrameBufferSpecification
 {
-     std::array<FrameBufferTextureFormat, 4U> attachments = { FrameBufferTextureFormat::RGBA8,
-                                                              FrameBufferTextureFormat::RGBA8,
-                                                              FrameBufferTextureFormat::RED_INTEGER,
-                                                              {} };
-     int                                      width       = {};
-     int                                      height      = {};
-     int                                      scale       = { 1 };
+     std::array<FrameBufferTextureFormat, 4U> attachments
+       = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, {} };
+     int                      width  = {};
+     int                      height = {};
+     int                      scale  = { 1 };
      // uint32_t samples           = { 1 };
      //  bool     swap_chain_target = { false };
-     FrameBufferSpecification                 resize(int in_width, int in_height) const
+     FrameBufferSpecification resize(
+       int in_width,
+       int in_height) const
      {
           auto ret   = *this;
           ret.width  = in_width;
@@ -108,9 +108,12 @@ class FrameBuffer
      [[nodiscard]] int        scale() const;
      [[nodiscard]] int       &mutable_scale();
      void                     set_scale(int);
-     [[nodiscard]] Pixel      read_pixel(uint32_t attachment_index, int x, int y) const;
+     [[nodiscard]] Pixel      read_pixel(
+            uint32_t attachment_index,
+            int      x,
+            int      y) const;
 
-     void                     clear_non_standard_color_attachments() const
+     void clear_non_standard_color_attachments() const
      {
           for (uint8_t i{}; i != 4U; ++i)
           {

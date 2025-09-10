@@ -27,9 +27,15 @@ static ImGuiTreeNodeFlags flags{};
  * @return true if the copy succeeded and the resulting path exists and is a directory.
  * @return false if the destination was too small or the path is not a valid directory.
  */
-template<std::ranges::contiguous_range Src, std::ranges::contiguous_range Dst>
-     requires std::indirectly_copyable<std::ranges::iterator_t<Src>, std::ranges::iterator_t<Dst>>
-static bool safe_copy_string(const Src &src, Dst &dst)
+template<
+  std::ranges::contiguous_range Src,
+  std::ranges::contiguous_range Dst>
+     requires std::indirectly_copyable<
+       std::ranges::iterator_t<Src>,
+       std::ranges::iterator_t<Dst>>
+static bool safe_copy_string(
+  const Src &src,
+  Dst       &dst)
 {
      const auto src_size = static_cast<std::ranges::range_difference_t<Src>>(std::ranges::ssize(src));
      const auto dst_size = std::ranges::ssize(dst);
@@ -76,8 +82,8 @@ void fme::batch::draw_window()
           if (selections->get<ConfigKey::BatchOutputType>() == output_types::deswizzle_generate_toml)
           {
                const key_value_data        config_path_values = { .ext = ".toml" };
-               const std::filesystem::path config_path =
-                 config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+               const std::filesystem::path config_path
+                 = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
                auto config = Configuration(config_path);
                config.save();
           }
@@ -150,17 +156,12 @@ void fme::batch::combo_input_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values   = std::array{ input_types::mim,
-                                                input_types::deswizzle,
-                                                input_types::swizzle,
-                                                input_types::swizzle_as_one_image,
-                                                input_types::deswizzle_full_filename };
-     static constexpr auto tooltips = std::array{ gui_labels::input_mim_tooltip,
-                                                  gui_labels::input_deswizzle_tooltip,
-                                                  gui_labels::input_swizzle_tooltip,
-                                                  gui_labels::input_swizzle_as_one_image_tooltip,
-                                                  gui_labels::input_full_filename_image_tooltip };
-     const auto            gcc      = fme::GenericCombo(
+     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle,
+                                                input_types::swizzle_as_one_image, input_types::deswizzle_full_filename };
+     static constexpr auto tooltips
+       = std::array{ gui_labels::input_mim_tooltip, gui_labels::input_deswizzle_tooltip, gui_labels::input_swizzle_tooltip,
+                     gui_labels::input_swizzle_as_one_image_tooltip, gui_labels::input_full_filename_image_tooltip };
+     const auto gcc = fme::GenericCombo(
        gui_labels::input_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -173,8 +174,11 @@ void fme::batch::combo_input_type()
 }
 
 
-static void
-  render_output_example_table(const char *table_id, const std::string &main_pattern, const std::string &map_pattern, bool show_map)
+static void render_output_example_table(
+  const char        *table_id,
+  const std::string &main_pattern,
+  const std::string &map_pattern,
+  bool               show_map)
 {
      if (ImGui::BeginTable(table_id, 1, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchSame))
      {
@@ -193,7 +197,9 @@ static void
      }
 };
 // remember to pass in a path string that won't go poof.
-static const std::string &get_selected_path(const std::string &custom_path, fme::root_path_types path_type)
+static const std::string &get_selected_path(
+  const std::string   &custom_path,
+  fme::root_path_types path_type)
 {
      static const std::string ff8_path     = "{ff8_path}";
      static const std::string current_path = "{current_path}";
@@ -231,8 +237,8 @@ void fme::batch::example_input_paths()
      static const std::string    ff8_path     = "{ff8_path}";
      static const std::string    current_path = "{current_path}";
 
-     const std::string          &selected_string =
-       get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
+     const std::string          &selected_string
+       = get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
 
      // currently input and output use the same patterns this might change later.
      render_output_example_table(
@@ -362,8 +368,8 @@ void fme::batch::example_output_paths()
                                                  .pupu_id       = 9999U };
      static const key_value_data map_example = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
 
-     const std::string          &selected_string =
-       get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
+     const std::string          &selected_string
+       = get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
 
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
@@ -471,8 +477,8 @@ void fme::batch::browse_input_path()
      }
 
      static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
-     static constexpr auto tooltips =
-       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
+     static constexpr auto tooltips
+       = std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::input_root_path_type,
        []() { return values; },
@@ -488,8 +494,8 @@ void fme::batch::browse_input_path()
           const float        button_size  = ImGui::GetFrameHeight();
           const float        button_width = button_size * 3.0F;
           const auto         pop_id       = PushPopID();
-          const std::string &selected_string =
-            get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
+          const std::string &selected_string
+            = get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
           std::string processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
@@ -520,8 +526,8 @@ void fme::batch::browse_output_path()
           return;
      }
      static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
-     static constexpr auto tooltips =
-       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
+     static constexpr auto tooltips
+       = std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::output_root_path_type,
        []() { return values; },
@@ -537,8 +543,8 @@ void fme::batch::browse_output_path()
           const float        button_size  = ImGui::GetFrameHeight();
           const float        button_width = button_size * 3.0F;
           const auto         pop_id       = PushPopID();
-          const std::string &selected_string =
-            get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
+          const std::string &selected_string
+            = get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
           std::string processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
@@ -678,21 +684,18 @@ void fme::batch::combo_compact_type()
      }
      const auto        tool_tip_pop = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
 
-     static const auto values       = std::array{
-          compact_type::rows, compact_type::all, compact_type::move_only_conflicts, compact_type::map_order, compact_type::map_order_ffnx
-     };
-     static const auto tool_tips = std::array{ gui_labels::compact_rows_tooltip,
-                                               gui_labels::compact_all_tooltip,
-                                               gui_labels::move_conflicts_only_tooltip,
-                                               gui_labels::compact_map_order_tooltip,
-                                               gui_labels::compact_map_order_ffnx_tooltip };
+     static const auto values       = std::array{ compact_type::rows, compact_type::all, compact_type::move_only_conflicts,
+                                            compact_type::map_order, compact_type::map_order_ffnx };
+     static const auto tool_tips
+       = std::array{ gui_labels::compact_rows_tooltip, gui_labels::compact_all_tooltip, gui_labels::move_conflicts_only_tooltip,
+                     gui_labels::compact_map_order_tooltip, gui_labels::compact_map_order_ffnx_tooltip };
 
-     const auto        gcc       = fme::GenericComboWithFilter(
+     const auto gcc = fme::GenericComboWithFilter(
        gui_labels::compact,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tool_tips; },
-       [&]() -> auto              &{ return selections->get<ConfigKey::BatchCompactType>(); });
+       [&]() -> auto & { return selections->get<ConfigKey::BatchCompactType>(); });
 
      (void)gcc.render();
 }
@@ -738,8 +741,8 @@ void fme::batch::combo_flatten_type()
                                       || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order)
                                       || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx);
      static constexpr auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
-     static constexpr auto tool_tips =
-       std::array{ gui_labels::flatten_bpp_tooltip, gui_labels::flatten_palette_tooltip, gui_labels::flatten_both_tooltip };
+     static constexpr auto tool_tips
+       = std::array{ gui_labels::flatten_bpp_tooltip, gui_labels::flatten_palette_tooltip, gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette    = std::array{ flatten_type::palette };
      static constexpr auto tool_tips_only_palette = std::array{ gui_labels::flatten_palette_tooltip };
      if (all_or_only_palette)
@@ -770,7 +773,10 @@ void fme::batch::combo_flatten_type()
      }
      // selections->update<ConfigKey::BatchFlatten>();
 }
-bool fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
+bool fme::batch::draw_multi_column_list_box(
+  const std::string_view          name,
+  const std::vector<std::string> &items,
+  std::vector<bool>              &enabled)
 {
      bool changed = false;
      if (!ImGui::CollapsingHeader(name.data()))
@@ -878,9 +884,9 @@ void fme::batch::button_start()
          || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
         && (!m_output_path_valid && selections->get<ConfigKey::BatchOutputRootPathType>() == root_path_types::selected_path))
        || !archives_group);
-     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
+     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));       // Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
-     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
+     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F)); // Dark green active
      if (!ImGui::Button(
            gui_labels::begin_batch_operation.data(), ImVec2{ ImGui::GetContentRegionAvail().x * 0.75F - spacing, ImGui::GetFrameHeight() }))
      {
@@ -889,8 +895,8 @@ void fme::batch::button_start()
      if (selections->get<ConfigKey::BatchOutputType>() == output_types::deswizzle_generate_toml)
      {
           const key_value_data        config_path_values = { .ext = ".toml" };
-          const std::filesystem::path config_path =
-            config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+          const std::filesystem::path config_path
+            = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
           auto config = Configuration(config_path);
           config->clear();
      }
@@ -927,9 +933,9 @@ void fme::batch::button_stop()
          || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
         && (!m_output_path_valid && selections->get<ConfigKey::BatchOutputRootPathType>() == root_path_types::selected_path))
        || !archives_group);
-     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
+     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));       // Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
-     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F));// Dark red active
+     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F)); // Dark red active
      if (!ImGui::Button(gui_labels::stop.data(), ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
      {
           return;
@@ -953,7 +959,12 @@ void fme::batch::button_output_browse()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::output_mode;
 };
-bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
+bool fme::batch::browse_path(
+  std::string_view name,
+  bool            &valid_path,
+  std::array<
+    char,
+    m_buffer_size> &path_buffer)
 {
      bool              changed      = false;
      const ImGuiStyle &style        = ImGui::GetStyle();
@@ -1096,13 +1107,13 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      flatten();
 
      // Choose output method based on batch output type
-     const std::string &selected_string =
-       get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
+     const std::string &selected_string
+       = get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
      switch (selections->get<ConfigKey::BatchOutputType>())
      {
           case output_types::deswizzle:
-               m_future_consumer +=
-                 m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
+               m_future_consumer
+                 += m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::deswizzle_generate_toml:
                m_map_sprite.save_deswizzle_generate_toml(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
@@ -1202,8 +1213,8 @@ void fme::batch::generate_map_sprite()
      ff_8::filters      filters = { false };
 
      // Enable specific filters depending on the input type
-     const std::string &selected_string =
-       get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
+     const std::string &selected_string
+       = get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
      switch (selections->get<ConfigKey::BatchInputType>())
      {
           case input_types::mim: {
@@ -1576,7 +1587,9 @@ void fme::batch::stop()
      m_field.reset();
 }
 
-fme::batch::batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<archives_group> existing_group)
+fme::batch::batch(
+  std::weak_ptr<Selections>     existing_selections,
+  std::weak_ptr<archives_group> existing_group)
 {
      operator=(std::move(existing_selections));
      operator=(std::move(existing_group));

@@ -29,55 +29,84 @@ struct path_search
 
 
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_deswizzle_paths(const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
+     [[nodiscard]] std::vector<std::filesystem::path>                             generate_deswizzle_paths(
+                                   const std::filesystem::path &path,
+                                   const std::string           &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(
+       const ff_8::PupuID pupu,
+       const std::string &ext = ".png") const;
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_full_filename_paths(const std::string &) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_full_filename_paths(const std::filesystem::path &, const std::string &) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_full_filename_paths(
+       const std::filesystem::path &,
+       const std::string &) const;
 
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(
+       const std::filesystem::path &path,
+       const std::string           &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(
+       const std::uint8_t texture_page,
+       std::uint8_t       palette,
+       const std::string &ext = ".png") const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(
+       const std::uint8_t texture_page,
+       const std::string &ext = ".png") const;
 
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_as_one_image_paths(const std::optional<std::uint8_t> &palette, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_as_one_image_paths(
+       const std::optional<std::uint8_t> &palette,
+       const std::string                 &ext) const;
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_map_paths(const std::string &ext = ".map") const;
-     [[nodiscard]] std::vector<std::filesystem::path> generate_map_paths(const std::filesystem::path &path, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_map_paths(
+       const std::filesystem::path &path,
+       const std::string           &ext) const;
 
-     [[nodiscard]] bool                               has_map_path(
-                                     const std::filesystem::path &filter_path,
-                                     const std::string           &ext                      = ".map",
-                                     const std::string           &secondary_output_pattern = "") const;
-     [[nodiscard]] bool has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_deswizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_map_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext                      = ".map",
+       const std::string           &secondary_output_pattern = "") const;
+     [[nodiscard]] bool has_deswizzle_path(
+       const ff_8::PupuID pupu,
+       const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_deswizzle_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext = ".png") const;
 
      [[nodiscard]] bool has_full_filename_path() const;
      [[nodiscard]] bool has_full_filename_path(const std::filesystem::path &) const;
-     [[nodiscard]] bool has_full_filename_path(const std::filesystem::path &, const std::string &) const;
-     [[nodiscard]] bool
-       has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_full_filename_path(
+       const std::filesystem::path &,
+       const std::string &) const;
+     [[nodiscard]] bool has_deswizzle_path(
+       const std::filesystem::path &filter_path,
+       const ff_8::PupuID           pupu,
+       const std::string           &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(
+       const std::uint8_t texture_page,
+       std::uint8_t       palette,
+       const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(
+       const std::uint8_t texture_page,
+       const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext = ".png") const;
      [[nodiscard]] bool has_swizzle_path(
        const std::filesystem::path &filter_path,
        const std::uint8_t           texture_page,
        std::uint8_t                 palette,
        const std::string           &ext = ".png") const;
-     bool
-       has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext = ".png") const;
+     bool has_swizzle_path(
+       const std::filesystem::path &filter_path,
+       const std::uint8_t           texture_page,
+       const std::string           &ext = ".png") const;
 
 
-     [[nodiscard]] bool has_swizzle_as_one_image_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_as_one_image_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext = ".png") const;
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
        const std::string                      &filter_path,
@@ -103,8 +132,10 @@ struct path_search
       * @param copy_data Data used to determine which keys and values to process.
       * @return true if found any match for generated paths for textures or map output.
       */
-     [[nodiscard]] static bool
-       has_path(const std::filesystem::path &field_root, fme::key_value_data copy_data, std::shared_ptr<const fme::Selections> selections);
+     [[nodiscard]] static bool has_path(
+       const std::filesystem::path           &field_root,
+       fme::key_value_data                    copy_data,
+       std::shared_ptr<const fme::Selections> selections);
 
      /**
       * @brief Gets a list of base paths for external paths for textures.

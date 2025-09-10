@@ -26,9 +26,15 @@ struct GlCall
        : m_source_location(location)
      {
      }
-     template<typename FuncT, typename... ArgsT>
-          requires std::invocable<FuncT, ArgsT...>
-     [[nodiscard]] auto operator()(FuncT &&func, ArgsT &&...args) &&
+     template<
+       typename FuncT,
+       typename... ArgsT>
+          requires std::invocable<
+            FuncT,
+            ArgsT...>
+     [[nodiscard]] auto operator()(
+       FuncT &&func,
+       ArgsT &&...args) &&
      {
           using ReturnValueT = std::remove_cvref_t<std::invoke_result_t<FuncT, ArgsT...>>;
           GlClearError(m_source_location);

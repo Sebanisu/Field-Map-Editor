@@ -56,8 +56,7 @@ void test::TestBatchQuads::generate_quads() const
                float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
                Vertices += glengine::CreateQuad(
                  { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F,
-                   static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F,
-                   0.F },
+                   static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F, 0.F },
                  { r, g, 1.F, 1.F },
                  0);
                if (std::ranges::size(Vertices) == max_count)

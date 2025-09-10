@@ -133,8 +133,14 @@ class [[nodiscard]] source_tile_conflicts final
       * @param t The texture page of the tile.
       * @return The calculated index of the tile.
       */
-     template<std::unsigned_integral X, std::unsigned_integral Y, std::unsigned_integral T>
-     [[nodiscard]] static constexpr std::unsigned_integral auto calculate_index(X x, Y y, T t) noexcept
+     template<
+       std::unsigned_integral X,
+       std::unsigned_integral Y,
+       std::unsigned_integral T>
+     [[nodiscard]] static constexpr std::unsigned_integral auto calculate_index(
+       X x,
+       Y y,
+       T t) noexcept
      {
           validate_inputs(x, y, t);
           auto index = t * (GRID_SIZE) + y + (x / X_SIZE);
@@ -158,8 +164,14 @@ class [[nodiscard]] source_tile_conflicts final
       * @param y The y-coordinate to validate.
       * @param t The texture page to validate.
       */
-     template<std::unsigned_integral X, std::unsigned_integral Y, std::unsigned_integral T>
-     static constexpr void validate_inputs([[maybe_unused]] X x, [[maybe_unused]] Y y, [[maybe_unused]] T t) noexcept
+     template<
+       std::unsigned_integral X,
+       std::unsigned_integral Y,
+       std::unsigned_integral T>
+     static constexpr void validate_inputs(
+       [[maybe_unused]] X x,
+       [[maybe_unused]] Y y,
+       [[maybe_unused]] T t) noexcept
      {
           if constexpr (!std::is_same_v<X, std::uint8_t>)
           {
@@ -195,8 +207,8 @@ class [[nodiscard]] source_tile_conflicts final
           assert(std::cmp_less(index, X_SIZE * Y_SIZE * T_SIZE) && "the index is out of range");
           l.t = static_cast<std::uint8_t>(static_cast<std::make_unsigned<Index>::type>(index) / GRID_SIZE);// Reverse the t calculation
           const Index remaining = static_cast<std::make_unsigned<Index>::type>(index) % GRID_SIZE;// Remaining part after extracting t
-          l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);// y is the remainder
-          l.x                   = static_cast<std::uint8_t>((remaining % Y_SIZE) * X_SIZE);// Calculate x by reversing the division
+          l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);       // y is the remainder
+          l.x                   = static_cast<std::uint8_t>((remaining % Y_SIZE) * X_SIZE);       // Calculate x by reversing the division
           return l;
      }
 
@@ -213,7 +225,10 @@ class [[nodiscard]] source_tile_conflicts final
       * @param t The texture page (t-coordinate).
       * @return A reference to the grid element at the specified coordinates.
       */
-     [[nodiscard]] constexpr auto &operator[](std::uint16_t x, std::uint16_t y, std::uint8_t t) noexcept
+     [[nodiscard]] constexpr auto &operator[](
+       std::uint16_t x,
+       std::uint16_t y,
+       std::uint8_t  t) noexcept
      {
           return m_grid.get()->at(calculate_index(x, y, t));
      }
@@ -229,7 +244,10 @@ class [[nodiscard]] source_tile_conflicts final
       * @param t The texture page (t-coordinate).
       * @return The grid element at the specified coordinates.
       */
-     [[nodiscard]] constexpr auto operator[](std::uint16_t x, std::uint16_t y, std::uint8_t t) const noexcept
+     [[nodiscard]] constexpr auto operator[](
+       std::uint16_t x,
+       std::uint16_t y,
+       std::uint8_t  t) const noexcept
      {
           return m_grid.get()->at(calculate_index(x, y, t));
      }
@@ -277,7 +295,10 @@ class [[nodiscard]] source_tile_conflicts final
       * @param t The texture page (t-coordinate).
       * @return A reference to the grid element at the specified coordinates.
       */
-     [[nodiscard]] constexpr auto &operator()(const std::uint8_t x, const std::uint8_t y, const std::uint8_t t) noexcept
+     [[nodiscard]] constexpr auto &operator()(
+       const std::uint8_t x,
+       const std::uint8_t y,
+       const std::uint8_t t) noexcept
      {
           return m_grid.get()->at(calculate_index(x, y, t));
      }
@@ -292,7 +313,10 @@ class [[nodiscard]] source_tile_conflicts final
       * @param t The texture page (t-coordinate).
       * @return The grid element at the specified coordinates.
       */
-     [[nodiscard]] constexpr auto operator()(const std::uint8_t x, const std::uint8_t y, const std::uint8_t t) const noexcept
+     [[nodiscard]] constexpr auto operator()(
+       const std::uint8_t x,
+       const std::uint8_t y,
+       const std::uint8_t t) const noexcept
      {
           return m_grid.get()->at(calculate_index(x, y, t));
      }

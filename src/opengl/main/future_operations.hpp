@@ -34,7 +34,9 @@ namespace future_operations
           glengine::Image          m_image;
 
         public:
-          LoadImageIntoTexture(glengine::Texture *const in_texture, glengine::Image in_image);
+          LoadImageIntoTexture(
+            glengine::Texture *const in_texture,
+            glengine::Image          in_image);
           void operator()();
      };
      class GetImageFromPathCreateFuture
@@ -43,7 +45,9 @@ namespace future_operations
           std::filesystem::path    m_path;
 
         public:
-          GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
+          GetImageFromPathCreateFuture(
+            glengine::Texture *const in_texture,
+            std::filesystem::path    in_path);
           std::future<void> operator()();
      };
 

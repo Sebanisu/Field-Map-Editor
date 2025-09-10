@@ -14,13 +14,13 @@ struct normalized_source_tile
 {
    public:
      using impl_type                     = normalized_source_tile;
-     TexIdBuffer         m_tex_id_buffer = {};///< Buffer holding texture ID, blending, depth, and draw flags.
-     PaletteID           m_palette_id    = {};///< Identifier for the palette associated with the tile.
-     Point<std::uint8_t> m_source_xy     = {};///< Source position (x, y) of the tile within the texture.
-     LayerID             m_layer_id      = {};///< Identifier for the layer this tile belongs to.
+     TexIdBuffer         m_tex_id_buffer = {};              ///< Buffer holding texture ID, blending, depth, and draw flags.
+     PaletteID           m_palette_id    = {};              ///< Identifier for the palette associated with the tile.
+     Point<std::uint8_t> m_source_xy     = {};              ///< Source position (x, y) of the tile within the texture.
+     LayerID             m_layer_id      = {};              ///< Identifier for the layer this tile belongs to.
      BlendModeT          m_blend_mode    = BlendModeT::none;///< Blending mode of the tile.
      std::uint8_t m_animation_id    = (std::numeric_limits<std::uint8_t>::max)();///< Identifier for the animation (default: no animation).
-     std::uint8_t m_animation_state = {};///< Current animation state of the tile.
+     std::uint8_t m_animation_state = {};                                        ///< Current animation state of the tile.
 
 
      /// @brief Default constructor.
@@ -37,8 +37,8 @@ struct normalized_source_tile
       */
      constexpr normalized_source_tile(const is_tile auto &tile)
      {
-          m_tex_id_buffer =
-            m_tex_id_buffer.with_id(tile.texture_id()).with_blend(tile.blend()).with_depth(tile.depth()).with_draw(tile.draw());
+          m_tex_id_buffer
+            = m_tex_id_buffer.with_id(tile.texture_id()).with_blend(tile.blend()).with_depth(tile.depth()).with_draw(tile.draw());
           m_palette_id = m_palette_id.with_id(tile.palette_id());
           assert(std::cmp_less(tile.source_x(), (std::numeric_limits<std::uint8_t>::max)()));
           assert(std::cmp_less(tile.source_y(), (std::numeric_limits<std::uint8_t>::max)()));
@@ -58,8 +58,8 @@ struct normalized_source_tile
       */
      constexpr normalized_source_tile &operator=(const is_tile auto &tile)
      {
-          m_tex_id_buffer =
-            m_tex_id_buffer.with_id(tile.texture_id()).with_blend(tile.blend()).with_depth(tile.depth()).with_draw(tile.draw());
+          m_tex_id_buffer
+            = m_tex_id_buffer.with_id(tile.texture_id()).with_blend(tile.blend()).with_depth(tile.depth()).with_draw(tile.draw());
           m_palette_id = m_palette_id.with_id(tile.palette_id());
           assert(std::cmp_less(tile.source_x(), (std::numeric_limits<std::uint8_t>::max)()));
           assert(std::cmp_less(tile.source_y(), (std::numeric_limits<std::uint8_t>::max)()));
@@ -143,7 +143,8 @@ struct normalized_source_animated_tile
        , m_palette_id{ tile.animation_id() != (std::numeric_limits<std::uint8_t>::max)()
                          ? PaletteID{}.with_id((std::numeric_limits<std::uint8_t>::max)())
                          : PaletteID{}.with_id(tile.palette_id()) }
-       , m_source_xy{ Point<std::uint8_t>{ static_cast<std::uint8_t>(tile.source_x()), static_cast<std::uint8_t>(tile.source_y()) } }
+       , m_source_xy{ Point<std::uint8_t>{ static_cast<std::uint8_t>(tile.source_x()),
+                                           static_cast<std::uint8_t>(tile.source_y()) } }
        , m_layer_id{ LayerID{}.with_id(tile.layer_id()) }
        , m_animation_id{ tile.animation_id() }
      {

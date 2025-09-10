@@ -21,15 +21,21 @@ class MapTileAdjustments
      using DimsT = MapDims<TileFunctions>;
 
    public:
-     MapTileAdjustments(const MapHistory &map, MapFilters &filters, SimilarAdjustments &similar_adjustments)
+     MapTileAdjustments(
+       const MapHistory   &map,
+       MapFilters         &filters,
+       SimilarAdjustments &similar_adjustments)
        : m_map_history(map)
        , m_filters(filters)
        , m_matching(similar_adjustments)
      {
      }
      template<typename TileT>
-     [[nodiscard]] VisitState
-       operator()(const TileT &tile, bool &changed, std::size_t i, const std::optional<glengine::SubTexture> &sub_texture) const
+     [[nodiscard]] VisitState operator()(
+       const TileT                               &tile,
+       bool                                      &changed,
+       std::size_t                                i,
+       const std::optional<glengine::SubTexture> &sub_texture) const
      {
           VisitState visit_state = {};
           check_box_draw(tile, changed);
@@ -69,20 +75,29 @@ class MapTileAdjustments
      const MapHistory   &m_map_history;
      MapFilters         &m_filters;
      SimilarAdjustments &m_matching;
-     static auto         generate_inner_width(int components, float neg_width = {}) -> std::pair<float, float>
+     static auto         generate_inner_width(
+               int   components,
+               float neg_width = {})
+       -> std::pair<
+         float,
+         float>
      {
           components          = std::clamp(components, 1, std::numeric_limits<int>::max());
           const float f_count = static_cast<float>(components);
           const auto &style   = ImGui::GetStyle();
           const float w_full  = ImGui::CalcItemWidth();
-          const float w_item_one =
-            (std::max)(1.0f, std::floor((w_full - neg_width - (style.ItemInnerSpacing.x) * static_cast<float>(components - 1)) / f_count));
-          const float w_item_last =
-            (std::max)(1.0f, std::floor(w_full - neg_width - (w_item_one + style.ItemInnerSpacing.x) * static_cast<float>(components - 1)));
+          const float w_item_one
+            = (std::max)(1.0f,
+                         std::floor((w_full - neg_width - (style.ItemInnerSpacing.x) * static_cast<float>(components - 1)) / f_count));
+          const float w_item_last
+            = (std::max)(1.0f,
+                         std::floor(w_full - neg_width - (w_item_one + style.ItemInnerSpacing.x) * static_cast<float>(components - 1)));
           return { w_item_one, w_item_last };
      }
      template<typename TileT>
-     void check_box_draw(const TileT &tile, bool &changed) const
+     void check_box_draw(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           bool draw = tile.draw();
@@ -98,7 +113,10 @@ class MapTileAdjustments
                  tile, m_matching, [&](TileT &new_tile) { new_tile = new_tile.with_draw(static_cast<DrawT<TileT>>(draw)); });
           }
      }
-     void inputs_read_only(const auto &tile, const int index, const int id) const
+     void inputs_read_only(
+       const auto &tile,
+       const int   index,
+       const int   id) const
      {
           // ImGui doesn't seem to have const pointer versions of their functions,
           // ReadOnly flag is set on the functions. It's ment to display the data in a
@@ -126,7 +144,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     int combo_bpp(const TileT &tile, bool &changed) const
+     int combo_bpp(
+       const TileT &tile,
+       bool        &changed) const
      {
           std::array<const char *, 3> bpp_options           = { "4", "8", "16" };
           int                         current_bpp_selection = [&]() -> int {
@@ -176,7 +196,10 @@ class MapTileAdjustments
           }
      }
 
-     bool checkbox_tool_tip(const char *label, const char *tooltip, bool &toggle) const
+     bool checkbox_tool_tip(
+       const char *label,
+       const char *tooltip,
+       bool       &toggle) const
      {
           bool ret = ImGui::Checkbox(label, &toggle);
           tool_tip(tooltip);
@@ -185,7 +208,11 @@ class MapTileAdjustments
      }
 
      template<typename GroupT>
-     bool generic_slider_int(GroupT &group, float width = {}, int step = 1, std::optional<int> override_max = std::nullopt) const
+     bool generic_slider_int(
+       GroupT            &group,
+       float              width        = {},
+       int                step         = 1,
+       std::optional<int> override_max = std::nullopt) const
      {
           const auto pop_width = glengine::ImGuiPushItemWidth(width);
           const auto pop_id    = glengine::ImGuiPushId();
@@ -212,7 +239,10 @@ class MapTileAdjustments
           return false;
      }
      template<typename TileT>
-     void slider_int_2_source_xy(const TileT &tile, bool &changed, const int current_bpp_selection) const
+     void slider_int_2_source_xy(
+       const TileT &tile,
+       bool        &changed,
+       const int    current_bpp_selection) const
      {
           using namespace tile_operations;
           const float                   checkbox_width = get_checkbox_width(3U);
@@ -245,7 +275,9 @@ class MapTileAdjustments
           return (ImGui::GetStyle().ItemInnerSpacing.x + ImGui::GetFrameHeight()) * static_cast<float>(count);
      }
      template<typename TileT>
-     void slider_int_3_xyz(const TileT &tile, bool &changed) const
+     void slider_int_3_xyz(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           const float                   checkbox_width = get_checkbox_width(5U);
@@ -283,7 +315,9 @@ class MapTileAdjustments
           ImGui::Text("%s", fmt::format("Destination Pos: ({}, {}, {})", x.current, y.current, z.current).c_str());
      }
      template<typename TileT>
-     void combo_blend_modes(const TileT &tile, bool &changed) const
+     void combo_blend_modes(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           const auto                            disabled                     = glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
@@ -307,7 +341,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     void slider_int_layer_id(const TileT &tile, bool &changed) const
+     void slider_int_layer_id(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           using namespace open_viii::graphics::background;
@@ -330,7 +366,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     void slider_int_texture_page_id(const TileT &tile, bool &changed) const
+     void slider_int_texture_page_id(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           int         texture_page_id = static_cast<int>(tile.texture_id());
@@ -354,7 +392,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     void slider_int_palette_id(const TileT &tile, bool &changed) const
+     void slider_int_palette_id(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           const float checkbox_width = get_checkbox_width(1U);
@@ -374,7 +414,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     void slider_int_blend_other(const TileT &tile, bool &changed) const
+     void slider_int_blend_other(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           int         blend          = tile.blend();
@@ -391,7 +433,9 @@ class MapTileAdjustments
           }
      }
      template<typename TileT>
-     void slider_int_2_animation(const TileT &tile, bool &changed) const
+     void slider_int_2_animation(
+       const TileT &tile,
+       bool        &changed) const
      {
           using namespace tile_operations;
           using namespace open_viii::graphics::background;

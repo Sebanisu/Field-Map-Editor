@@ -13,10 +13,18 @@ namespace glengine
 template<std::ranges::random_access_range dataT>
 
      requires(
-       std::is_same_v<std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string>
-       || std::is_same_v<std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string_view>)
+       std::is_same_v<
+         std::remove_cvref_t<std::ranges::range_value_t<dataT>>,
+         std::string>
+       || std::is_same_v<
+         std::remove_cvref_t<std::ranges::range_value_t<dataT>>,
+         std::string_view>)
 
-[[nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data, float sub_width = 0.F)
+[[nodiscard]] inline bool GenericCombo(
+  const char  *label,
+  int         &current_index,
+  const dataT &data,
+  float        sub_width = 0.F)
 {
      bool              changed = false;
      const ImGuiStyle &style   = ImGui::GetStyle();

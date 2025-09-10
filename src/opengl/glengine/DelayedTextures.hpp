@@ -41,8 +41,8 @@ struct DelayedTextures
      {
           if (!std::ranges::empty(futures))
           {
-               const auto [first, last] =
-                 std::ranges::remove_if(futures, [](const std::future<DelayedTexturesData> &future) { return !future.valid(); });
+               const auto [first, last]
+                 = std::ranges::remove_if(futures, [](const std::future<DelayedTexturesData> &future) { return !future.valid(); });
                futures.erase(first, last);
           }
      }

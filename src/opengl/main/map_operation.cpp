@@ -61,12 +61,14 @@ void compact_map_order_ffnx(map_group::Map &map)
           }
      });
 }
-void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflicts &conflicts)
+void compact_move_conflicts_only(
+  map_group::Map              &map,
+  const source_tile_conflicts &conflicts)
 {
 
      map.visit_tiles([&conflicts](auto &&tiles) {
-          std::vector<ff_8::source_tile_conflicts::location> empty_locations =
-            conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
+          std::vector<ff_8::source_tile_conflicts::location> empty_locations
+            = conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
           auto range_of_conflicts         = conflicts.range_of_conflicts();
           // auto filtered_tiles             = tiles | std::views::filter(not_invalid);
           using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
@@ -128,8 +130,16 @@ void compact_map_order(map_group::Map &map)
      });
 }
 static constexpr auto default_filter_lambda = [](auto &&) { return true; };
-template<typename tilesT, typename key_lambdaT, typename value_lambdaT, typename filterT = decltype(default_filter_lambda)>
-static auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT &&value_lambda, filterT &&filter = {})
+template<
+  typename tilesT,
+  typename key_lambdaT,
+  typename value_lambdaT,
+  typename filterT = decltype(default_filter_lambda)>
+static auto generate_map(
+  tilesT        &&tiles,
+  key_lambdaT   &&key_lambda,
+  value_lambdaT &&value_lambda,
+  filterT       &&filter = {})
 {
      using tile_t  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
      using key_t   = decltype(key_lambda(tile_t{}));
@@ -155,8 +165,14 @@ static auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT
      return map;
 }
 
-template<typename key_lambdaT, typename weight_lambdaT>
-[[maybe_unused]] static void compact_generic(map_group::Map &map, key_lambdaT &&key_lambda, weight_lambdaT &&weight_lambda, int passes = 2)
+template<
+  typename key_lambdaT,
+  typename weight_lambdaT>
+[[maybe_unused]] static void compact_generic(
+  map_group::Map  &map,
+  key_lambdaT    &&key_lambda,
+  weight_lambdaT &&weight_lambda,
+  int              passes = 2)
 {
      map.visit_tiles([&key_lambda, &weight_lambda, &passes](auto &&tiles) {
           for (int pass = passes; pass != 0; --pass)// at least 2 passes needed as things might get shifted to
@@ -270,7 +286,10 @@ QuadStrip get_triangle_strip(
               .uv_max   = ((aligned_source + glm::vec2(1)) * source_tile_size) / source_texture_size,
               .draw_pos = (destination_position / tile_size) * destination_tile_size };
 }
-bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::WeakField &weak_field, const map_group::MimType &type)
+bool test_if_map_same(
+  const std::filesystem::path &saved_path,
+  const map_group::WeakField  &weak_field,
+  const map_group::MimType    &type)
 {
      bool       return_value = false;
      const auto field        = weak_field.lock();

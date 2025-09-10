@@ -4,15 +4,19 @@
 #include "tool_tip.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
-#include <glm/gtc/type_ptr.hpp>// for glm::value_ptr
+#include <glm/gtc/type_ptr.hpp>        // for glm::value_ptr
 #include <IconsFontAwesome6.h>
 #include <ImGuizmo.h>
-static ImVec2 operator+(const ImVec2 &a, const ImVec2 &b)
+static ImVec2 operator+(
+  const ImVec2 &a,
+  const ImVec2 &b)
 {
      return ImVec2(a.x + b.x, a.y + b.y);
 }
 
-static ImVec2 operator-(const ImVec2 &a, const ImVec2 &b)
+static ImVec2 operator-(
+  const ImVec2 &a,
+  const ImVec2 &b)
 {
      return ImVec2(a.x - b.x, a.y - b.y);
 }
@@ -58,61 +62,61 @@ void fme::draw_window::render() const
           return;
      }
 
-     static constexpr ImGuiWindowFlags window_flags =
-       ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+     static constexpr ImGuiWindowFlags window_flags
+       = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      const auto        is_valid_float  = [](const float f) -> bool { return !std::isnan(f) && !std::isinf(f); };
      const auto        is_valid_ImVec2 = [&is_valid_float](const ImVec2 v) -> bool { return is_valid_float(v.x) && is_valid_float(v.y); };
-     static const auto DrawCheckerboardBackground =
-       [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
-            if (
-              window_size.x < 1.f || window_size.y < 1.f || !is_valid_ImVec2(window_pos) || !is_valid_ImVec2(window_size)
-              || !is_valid_float(tile_size))
-            {
-                 return;
-            }
-            const auto fbb  = m_checkerboard_framebuffer.backup();
-            const auto fbrb = m_checkerboard_batchrenderer.backup();
-            if (
-              m_checkerboard_framebuffer.width() != static_cast<int>(window_size.x)
-              || m_checkerboard_framebuffer.height() != static_cast<int>(window_size.y))
-            {
-                 glengine::FrameBufferSpecification spec = { .width  = static_cast<int>(window_size.x),
-                                                             .height = static_cast<int>(window_size.y) };
-                 m_checkerboard_framebuffer              = glengine::FrameBuffer{ spec };
-            }
+     static const auto DrawCheckerboardBackground
+       = [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
+              if (
+                window_size.x < 1.f || window_size.y < 1.f || !is_valid_ImVec2(window_pos) || !is_valid_ImVec2(window_size)
+                || !is_valid_float(tile_size))
+              {
+                   return;
+              }
+              const auto fbb  = m_checkerboard_framebuffer.backup();
+              const auto fbrb = m_checkerboard_batchrenderer.backup();
+              if (
+                m_checkerboard_framebuffer.width() != static_cast<int>(window_size.x)
+                || m_checkerboard_framebuffer.height() != static_cast<int>(window_size.y))
+              {
+                   glengine::FrameBufferSpecification spec
+                     = { .width = static_cast<int>(window_size.x), .height = static_cast<int>(window_size.y) };
+                   m_checkerboard_framebuffer = glengine::FrameBuffer{ spec };
+              }
 
-            m_checkerboard_framebuffer.bind();
-            glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
-            glengine::Renderer::Clear();
-            m_checkerboard_batchrenderer.bind();
-            m_fixed_render_camera.set_projection(
-              0.f, static_cast<float>(m_checkerboard_framebuffer.width()), 0.f, static_cast<float>(m_checkerboard_framebuffer.height()));
+              m_checkerboard_framebuffer.bind();
+              glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
+              glengine::Renderer::Clear();
+              m_checkerboard_batchrenderer.bind();
+              m_fixed_render_camera.set_projection(
+                0.f, static_cast<float>(m_checkerboard_framebuffer.width()), 0.f, static_cast<float>(m_checkerboard_framebuffer.height()));
 
-            m_checkerboard_batchrenderer.shader().set_uniform("tile_size", tile_size);
-            //   m_checkerboard_batchrenderer.shader().set_uniform(
-            //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
-            m_checkerboard_batchrenderer.shader().set_uniform("color1", glm::vec4{ color1 });
-            m_checkerboard_batchrenderer.shader().set_uniform("color2", glm::vec4{ color2 });
-            m_checkerboard_batchrenderer.shader().set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
-            m_checkerboard_batchrenderer.clear();
-            m_checkerboard_batchrenderer.draw_quad(
-              glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
-            m_checkerboard_batchrenderer.draw();
-            m_checkerboard_framebuffer.bind_color_attachment();
-            if (!ImGuizmo::IsOver())
-            {
-                 ImGui::InvisibleButton("##DrawWindowViewport", window_size, ImGuiButtonFlags_None);
-            }
-            else
-            {
-                 ImGui::Dummy(window_size);// Doesn't generate a hoverable item
-            }
-            ImGui::GetWindowDrawList()->AddImage(
-              glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()),
-              window_pos,
-              ImVec2{ window_pos.x + window_size.x, window_pos.y + window_size.y });
-            ImGui::SetCursorScreenPos(window_pos);
-       };
+              m_checkerboard_batchrenderer.shader().set_uniform("tile_size", tile_size);
+              //   m_checkerboard_batchrenderer.shader().set_uniform(
+              //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+              m_checkerboard_batchrenderer.shader().set_uniform("color1", glm::vec4{ color1 });
+              m_checkerboard_batchrenderer.shader().set_uniform("color2", glm::vec4{ color2 });
+              m_checkerboard_batchrenderer.shader().set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+              m_checkerboard_batchrenderer.clear();
+              m_checkerboard_batchrenderer.draw_quad(
+                glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+              m_checkerboard_batchrenderer.draw();
+              m_checkerboard_framebuffer.bind_color_attachment();
+              if (!ImGuizmo::IsOver())
+              {
+                   ImGui::InvisibleButton("##DrawWindowViewport", window_size, ImGuiButtonFlags_None);
+              }
+              else
+              {
+                   ImGui::Dummy(window_size);// Doesn't generate a hoverable item
+              }
+              ImGui::GetWindowDrawList()->AddImage(
+                glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()),
+                window_pos,
+                ImVec2{ window_pos.x + window_size.x, window_pos.y + window_size.y });
+              ImGui::SetCursorScreenPos(window_pos);
+         };
 
      bool      &visible     = selections->get<ConfigKey::DisplayDrawWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
@@ -271,7 +275,9 @@ void fme::draw_window::remove_clicked_index(std::size_t in_index) const
      m_clicked_tile_indices.erase(remove_result.begin(), remove_result.end());
 }
 
-void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale) const
+void fme::draw_window::update_hover_and_mouse_button_status_for_map(
+  const ImVec2 &img_start,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -317,8 +323,8 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
           if (m_mouse_positions.mouse_moved)
           {
                t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                    m_hovered_tiles_indices =
-                      t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                    m_hovered_tiles_indices
+                      = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
                });
           }
 
@@ -332,8 +338,8 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
                else
                {
                     t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                         m_clicked_tile_indices =
-                           t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                         m_clicked_tile_indices
+                           = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
                     });
 
                     m_mouse_positions.down_pixel = m_mouse_positions.pixel;
@@ -351,7 +357,10 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
           m_mouse_positions.left = false;
      }
 }
-void fme::draw_window::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const
+void fme::draw_window::draw_map_grid_lines_for_tiles(
+  const ImVec2 &screen_pos,
+  const ImVec2 &scaled_size,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -390,7 +399,9 @@ void fme::draw_window::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, c
           ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
      }
 }
-void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale) const
+void fme::draw_window::draw_map_grid_for_conflict_tiles(
+  const ImVec2 &screen_pos,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -553,7 +564,10 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
           }
      });
 }
-void fme::draw_window::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const
+void fme::draw_window::draw_map_grid_lines_for_texture_page(
+  const ImVec2 &screen_pos,
+  const ImVec2 &scaled_size,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -586,7 +600,10 @@ void fme::draw_window::draw_map_grid_lines_for_texture_page(const ImVec2 &screen
           ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
      }
 }
-void fme::draw_window::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const
+void fme::draw_window::draw_mim_grid_lines_for_tiles(
+  const ImVec2 &screen_pos,
+  const ImVec2 &scaled_size,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -625,7 +642,10 @@ void fme::draw_window::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, c
           ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
      }
 }
-void fme::draw_window::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const
+void fme::draw_window::draw_mim_grid_lines_for_texture_page(
+  const ImVec2 &screen_pos,
+  const ImVec2 &scaled_size,
+  const float   scale) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -674,7 +694,9 @@ void fme::draw_window::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen
           ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
      }
 }
-void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_unused]] const ImVec2 &screen_pos) const
+void fme::draw_window::UseImGuizmo(
+  [[maybe_unused]] const float   scale,
+  [[maybe_unused]] const ImVec2 &screen_pos) const
 {
      if (std::ranges::empty(m_clicked_tile_indices))
      {
@@ -693,15 +715,15 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           return;
      }
      const auto    &framebuffer      = t_map_sprite->get_framebuffer();
-     const float    edge_threshold   = 30.0f;// Distance from edge
+     const float    edge_threshold   = 30.0f;  // Distance from edge
      const float    scroll_speed_pps = 2000.0f;// Scroll speed in pixels per second
      const ImGuiIO &io               = ImGui::GetIO();
      const float    dt               = io.DeltaTime;
      const ImVec2   mouse            = ImGui::GetMousePos();
 
      // detecting edges for scrolling
-     const ImVec2   scroll_edge_min =
-       ImGui::GetCursorScreenPos() + ImVec2{ edge_threshold, edge_threshold } + ImVec2{ ImGui::GetScrollX(), ImGui::GetScrollY() };
+     const ImVec2   scroll_edge_min
+       = ImGui::GetCursorScreenPos() + ImVec2{ edge_threshold, edge_threshold } + ImVec2{ ImGui::GetScrollX(), ImGui::GetScrollY() };
      const ImVec2 scroll_edge_max = ImGui::GetCursorScreenPos() + ImGui::GetContentRegionAvail() - ImVec2{ edge_threshold, edge_threshold }
                                     + ImVec2{ ImGui::GetScrollX(), ImGui::GetScrollY() };
 
@@ -829,8 +851,8 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
                t_map_sprite->begin_multi_frame_working(fmt::format("ImGuizmo {}, {}", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ICON_FA_SPINNER));
 
                t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-                    m_hovered_tiles_indices =
-                      t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                    m_hovered_tiles_indices
+                      = t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
                });
 
                t_map_sprite->update_position(m_mouse_positions.pixel, m_mouse_positions.down_pixel, m_clicked_tile_indices);

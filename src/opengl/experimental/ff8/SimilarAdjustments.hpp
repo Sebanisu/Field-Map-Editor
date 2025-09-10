@@ -35,22 +35,11 @@ struct SimilarAdjustments
           return [=, this](const TileT &other_tile) -> bool {
                const auto compare = [&](bool toggle, auto &&op) -> bool { return !toggle || op(tile) == op(other_tile); };
                return std::ranges::all_of(
-                 std::array{ compare(x, X{}),
-                             compare(y, Y{}),
-                             compare(xy, xy_f),
-                             compare(z, z_f),
-                             compare(xyz, [](const TileT &t) { return std::make_pair(xy_f(t), z_f(t)); }),
-                             compare(source_x, SourceX{}),
-                             compare(source_y, SourceY{}),
-                             compare(source_xy, SourceXY{}),
-                             compare(texture_id, TextureId{}),
-                             compare(blend_mode, BlendMode{}),
-                             compare(blend, Blend{}),
-                             compare(draw, Draw{}),
-                             compare(depth, Depth{}),
-                             compare(layer_id, LayerId{}),
-                             compare(palette_id, PaletteId{}),
-                             compare(animation_id, AnimationId{}),
+                 std::array{ compare(x, X{}), compare(y, Y{}), compare(xy, xy_f), compare(z, z_f),
+                             compare(xyz, [](const TileT &t) { return std::make_pair(xy_f(t), z_f(t)); }), compare(source_x, SourceX{}),
+                             compare(source_y, SourceY{}), compare(source_xy, SourceXY{}), compare(texture_id, TextureId{}),
+                             compare(blend_mode, BlendMode{}), compare(blend, Blend{}), compare(draw, Draw{}), compare(depth, Depth{}),
+                             compare(layer_id, LayerId{}), compare(palette_id, PaletteId{}), compare(animation_id, AnimationId{}),
                              compare(animation_state, AnimationState{}) },
                  std::identity{});
           };

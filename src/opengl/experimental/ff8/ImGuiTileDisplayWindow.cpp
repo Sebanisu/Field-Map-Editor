@@ -14,7 +14,9 @@ void ff_8::ImGuiTileDisplayWindow::on_render() const
 }
 void ff_8::ImGuiTileDisplayWindow::on_im_gui_update() const {}
 void ff_8::ImGuiTileDisplayWindow::on_event(const glengine::event::Item &) const {}
-void ff_8::ImGuiTileDisplayWindow::take_control(const bool has_hover, const glengine::Counter id)
+void ff_8::ImGuiTileDisplayWindow::take_control(
+  const bool              has_hover,
+  const glengine::Counter id)
 {
      if (CurrentWindow && has_hover)
      {

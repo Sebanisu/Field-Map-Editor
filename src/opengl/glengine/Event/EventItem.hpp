@@ -17,14 +17,22 @@ namespace event
 
         public:
           Item() = default;
-          template<event::is T, typename... argsT>
-          Item(std::in_place_type_t<T> type, argsT &&...args) noexcept
-            : m_impl(std::move(type), std::forward<argsT>(args)...)
+          template<
+            event::is T,
+            typename... argsT>
+          Item(
+            std::in_place_type_t<T> type,
+            argsT &&...args) noexcept
+            : m_impl(
+                std::move(type),
+                std::forward<argsT>(args)...)
           {
           }
           template<event::is T>
           Item(T t)
-            : Item(std::in_place_type_t<T>{}, std::move(t))
+            : Item(
+                std::in_place_type_t<T>{},
+                std::move(t))
           {
           }
 

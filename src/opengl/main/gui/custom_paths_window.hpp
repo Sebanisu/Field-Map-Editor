@@ -60,7 +60,9 @@ struct custom_paths_window
       *       vector is not modified in a way that invalidates references/pointers
       *       (e.g., reallocation).
       */
-     [[nodiscard]] static std::string             *get_current_string_value_from_index(std::vector<std::string> &strings, const int index);
+     [[nodiscard]] static std::string                   *get_current_string_value_from_index(
+                         std::vector<std::string> &strings,
+                         const int                 index);
 
      /**
       * @brief Retrieves the currently selected string (mutable).

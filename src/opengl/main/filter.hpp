@@ -32,23 +32,31 @@ enum class FilterSettings : std::uint8_t
      Default        = Config_Enabled,
 };
 
-[[nodiscard]] inline FilterSettings operator|(FilterSettings lhs, FilterSettings rhs)
+[[nodiscard]] inline FilterSettings operator|(
+  FilterSettings lhs,
+  FilterSettings rhs)
 {
      return static_cast<FilterSettings>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
 }
 
-[[nodiscard]] inline FilterSettings operator&(FilterSettings lhs, FilterSettings rhs)
+[[nodiscard]] inline FilterSettings operator&(
+  FilterSettings lhs,
+  FilterSettings rhs)
 {
      return static_cast<FilterSettings>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
 }
 
-inline FilterSettings &operator|=(FilterSettings &lhs, FilterSettings rhs)
+inline FilterSettings &operator|=(
+  FilterSettings &lhs,
+  FilterSettings  rhs)
 {
      lhs = lhs | rhs;
      return lhs;
 }
 
-inline FilterSettings &operator&=(FilterSettings &lhs, FilterSettings rhs)
+inline FilterSettings &operator&=(
+  FilterSettings &lhs,
+  FilterSettings  rhs)
 {
      lhs = lhs & rhs;
      return lhs;
@@ -59,12 +67,17 @@ inline FilterSettings &operator&=(FilterSettings &lhs, FilterSettings rhs)
      return static_cast<FilterSettings>(~static_cast<std::uint8_t>(val));
 }
 
-[[nodiscard]] inline bool HasFlag(FilterSettings settings, FilterSettings flag)
+[[nodiscard]] inline bool HasFlag(
+  FilterSettings settings,
+  FilterSettings flag)
 {
      return (settings & flag) != FilterSettings::All_Disabled;
 }
 
-inline void SetFlag(FilterSettings &settings, FilterSettings flag, bool enabled)
+inline void SetFlag(
+  FilterSettings &settings,
+  FilterSettings  flag,
+  bool            enabled)
 {
      if (enabled)
           settings |= flag;
@@ -72,7 +85,10 @@ inline void SetFlag(FilterSettings &settings, FilterSettings flag, bool enabled)
           settings &= ~flag;
 }
 
-[[nodiscard]] inline FilterSettings WithFlag(const FilterSettings settings, FilterSettings flag, bool enabled)
+[[nodiscard]] inline FilterSettings WithFlag(
+  const FilterSettings settings,
+  FilterSettings       flag,
+  bool                 enabled)
 {
      if (enabled)
           return settings | flag;
@@ -181,8 +197,8 @@ struct ConfigKeys<FilterTag::DrawBit>
      {
           return in ? draw_bitT::enabled : draw_bitT::disabled;
      }
-     using operation_type =
-       decltype([](auto &&...args) { return to_draw_bitT(ff_8::tile_operations::Draw{}(std::forward<decltype(args)>(args)...)); });
+     using operation_type
+       = decltype([](auto &&...args) { return to_draw_bitT(ff_8::tile_operations::Draw{}(std::forward<decltype(args)>(args)...)); });
      static constexpr std::string_view key_name         = "filter_draw";
      static constexpr std::string_view enabled_key_name = "filter_draw_enabled";
 };
@@ -391,11 +407,16 @@ struct ConfigKeys<FilterTag::Flatten>
 template<std::default_initializable ValueT>
 struct FilterLoadStrategy
 {
-     static ValueT load_value(const toml::table &config, std::string_view id)
+     static ValueT load_value(
+       const toml::table &config,
+       std::string_view   id)
      {
           return load_value(true, config, id);
      }
-     static ValueT load_value(bool load_config, const toml::table &config, std::string_view id)
+     static ValueT load_value(
+       bool               load_config,
+       const toml::table &config,
+       std::string_view   id)
      {
           ValueT value = {};
           if (!config.contains(id) || !load_config)
@@ -446,12 +467,17 @@ struct FilterLoadStrategy
           return value;
      }
 
-     static constexpr FilterSettings load_settings(const toml::table &config, std::string_view enabled_key_name)
+     static constexpr FilterSettings load_settings(
+       const toml::table &config,
+       std::string_view   enabled_key_name)
      {
           return load_settings(true, config, enabled_key_name);
      }
 
-     static constexpr FilterSettings load_settings(bool load_config, const toml::table &config, std::string_view enabled_key_name)
+     static constexpr FilterSettings load_settings(
+       bool               load_config,
+       const toml::table &config,
+       std::string_view   enabled_key_name)
      {
           if (load_config)
           {
@@ -465,7 +491,10 @@ template<typename ValueT>
 struct FilterUpdateStrategy
 {
 
-     static void update_value(toml::table &config, std::string_view id, const ValueT &value)
+     static void update_value(
+       toml::table     &config,
+       std::string_view id,
+       const ValueT    &value)
      {
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
@@ -518,7 +547,10 @@ struct FilterUpdateStrategy
           }
      }
 
-     static void update_settings(toml::table &config, std::string_view enabled_key_name, FilterSettings settings)
+     static void update_settings(
+       toml::table     &config,
+       std::string_view enabled_key_name,
+       FilterSettings   settings)
      {
           // Check if the Toggle_Enabled flag is set, write it to config
           const bool enabled = HasFlag(settings, FilterSettings::Toggle_Enabled);
@@ -539,19 +571,33 @@ struct filter_old
      FilterSettings m_settings = {};
 
    public:
-     filter_old(value_type value, FilterSettings settings)// FilterSettings::Default
+     filter_old(
+       value_type     value,
+       FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter_old(bool load_config, const fme::Configuration &config)
+     filter_old(
+       bool                      load_config,
+       const fme::Configuration &config)
        : filter_old(
-           FilterLoadStrategy<value_type>::load_value(load_config, config, ConfigKeys<Tag>::key_name),
-           FilterLoadStrategy<value_type>::load_settings(load_config, config, ConfigKeys<Tag>::enabled_key_name))
+           FilterLoadStrategy<value_type>::load_value(
+             load_config,
+             config,
+             ConfigKeys<Tag>::key_name),
+           FilterLoadStrategy<value_type>::load_settings(
+             load_config,
+             config,
+             ConfigKeys<Tag>::enabled_key_name))
      {
      }
      filter_old(FilterSettings settings)
-       : filter_old(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
+       : filter_old(
+           HasFlag(
+             settings,
+             FilterSettings::Config_Enabled),
+           fme::Configuration{})
      {
      }
 
@@ -603,7 +649,9 @@ struct filter_old
 
      template<typename U>
      const filter_old &update([[maybe_unused]] U &&value) const
-          requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
+          requires(std::same_as<
+                   std::remove_cvref_t<U>,
+                   toml::table>)
      {
           if (enabled())
           {
@@ -619,7 +667,9 @@ struct filter_old
      }
 
      template<typename U>
-          requires std::same_as<std::remove_cvref_t<U>, toml::table>
+          requires std::same_as<
+            std::remove_cvref_t<U>,
+            toml::table>
      filter_old &update(U &&value)
      {
           if (enabled())
@@ -637,9 +687,13 @@ struct filter_old
 
      template<typename U>
           requires(
-            !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
-            && std::ranges::range<value_type>
-            && std::indirectly_movable<std::ranges::iterator_t<std::remove_cvref_t<U>>, std::back_insert_iterator<value_type>>)
+            !std::same_as<
+              std::remove_cvref_t<U>,
+              value_type>
+            && std::ranges::range<std::remove_cvref_t<U>> && std::ranges::range<value_type>
+            && std::indirectly_movable<
+              std::ranges::iterator_t<std::remove_cvref_t<U>>,
+              std::back_insert_iterator<value_type>>)
      filter_old &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
@@ -660,7 +714,13 @@ struct filter_old
      }
 
      template<typename U>
-          requires(std::equality_comparable_with<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
+          requires(
+            std::equality_comparable_with<
+              std::remove_cvref_t<U>,
+              value_type>
+            && std::assignable_from<
+              value_type &,
+              U>)
 
      filter_old &update(U &&value)
      {
@@ -774,19 +834,33 @@ struct filter
      static const inline operation_type s_operation = {};
 
    public:
-     filter(value_type value, FilterSettings settings)// FilterSettings::Default
+     filter(
+       value_type     value,
+       FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter(bool load_config, const fme::Configuration &config)
+     filter(
+       bool                      load_config,
+       const fme::Configuration &config)
        : filter(
-           FilterLoadStrategy<value_type>::load_value(load_config, config, ConfigKeys<Tag>::key_name),
-           FilterLoadStrategy<value_type>::load_settings(load_config, config, ConfigKeys<Tag>::enabled_key_name))
+           FilterLoadStrategy<value_type>::load_value(
+             load_config,
+             config,
+             ConfigKeys<Tag>::key_name),
+           FilterLoadStrategy<value_type>::load_settings(
+             load_config,
+             config,
+             ConfigKeys<Tag>::enabled_key_name))
      {
      }
      filter(FilterSettings settings)
-       : filter(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
+       : filter(
+           HasFlag(
+             settings,
+             FilterSettings::Config_Enabled),
+           fme::Configuration{})
      {
      }
 
@@ -837,7 +911,9 @@ struct filter
      }
      template<typename U>
      const filter &update([[maybe_unused]] U &&value) const
-          requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
+          requires(std::same_as<
+                   std::remove_cvref_t<U>,
+                   toml::table>)
      {
           if (enabled())
           {
@@ -859,7 +935,9 @@ struct filter
      }
 
      template<typename U>
-          requires std::same_as<std::remove_cvref_t<U>, toml::table>
+          requires std::same_as<
+            std::remove_cvref_t<U>,
+            toml::table>
      filter &update(U &&value)
      {
           if (enabled())
@@ -877,9 +955,13 @@ struct filter
 
      template<typename U>
           requires(
-            !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
-            && std::ranges::range<value_type>
-            && std::indirectly_movable<std::ranges::iterator_t<std::remove_cvref_t<U>>, std::back_insert_iterator<value_type>>)
+            !std::same_as<
+              std::remove_cvref_t<U>,
+              value_type>
+            && std::ranges::range<std::remove_cvref_t<U>> && std::ranges::range<value_type>
+            && std::indirectly_movable<
+              std::ranges::iterator_t<std::remove_cvref_t<U>>,
+              std::back_insert_iterator<value_type>>)
      filter &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
@@ -900,7 +982,13 @@ struct filter
      }
 
      template<typename U>
-          requires(std::equality_comparable_with<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
+          requires(
+            std::equality_comparable_with<
+              std::remove_cvref_t<U>,
+              value_type>
+            && std::assignable_from<
+              value_type &,
+              U>)
 
      filter &update(U &&value)
      {
@@ -1055,33 +1143,86 @@ struct filters
      filter<FilterTag::Bpp>                   bpp;
      filter<FilterTag::MultiBpp>              multi_bpp;
 
-     filters(bool load_config, fme::Configuration const config = {})
-       : pupu(load_config, config)
-       , multi_pupu(load_config, config)
-       , swizzle(load_config, config)
-       , deswizzle(load_config, config)
-       , swizzle_as_one_image(load_config, config)
-       , full_filename(load_config, config)
-       , map(load_config, config)
-       , draw_bit(load_config, config)
-       , z(load_config, config)
-       , multi_z(load_config, config)
-       , palette(load_config, config)
-       , multi_palette(load_config, config)
-       , animation_id(load_config, config)
-       , multi_animation_id(load_config, config)
-       , animation_state(load_config, config)
-       , multi_animation_state(load_config, config)
-       , layer_id(load_config, config)
-       , multi_layer_id(load_config, config)
-       , texture_page_id(load_config, config)
-       , multi_texture_page_id(load_config, config)
-       , blend_mode(load_config, config)
-       , multi_blend_mode(load_config, config)
-       , blend_other(load_config, config)
-       , multi_blend_other(load_config, config)
-       , bpp(load_config, config)
-       , multi_bpp(load_config, config)
+     filters(
+       bool                     load_config,
+       fme::Configuration const config = {})
+       : pupu(
+           load_config,
+           config)
+       , multi_pupu(
+           load_config,
+           config)
+       , swizzle(
+           load_config,
+           config)
+       , deswizzle(
+           load_config,
+           config)
+       , swizzle_as_one_image(
+           load_config,
+           config)
+       , full_filename(
+           load_config,
+           config)
+       , map(
+           load_config,
+           config)
+       , draw_bit(
+           load_config,
+           config)
+       , z(load_config,
+           config)
+       , multi_z(
+           load_config,
+           config)
+       , palette(
+           load_config,
+           config)
+       , multi_palette(
+           load_config,
+           config)
+       , animation_id(
+           load_config,
+           config)
+       , multi_animation_id(
+           load_config,
+           config)
+       , animation_state(
+           load_config,
+           config)
+       , multi_animation_state(
+           load_config,
+           config)
+       , layer_id(
+           load_config,
+           config)
+       , multi_layer_id(
+           load_config,
+           config)
+       , texture_page_id(
+           load_config,
+           config)
+       , multi_texture_page_id(
+           load_config,
+           config)
+       , blend_mode(
+           load_config,
+           config)
+       , multi_blend_mode(
+           load_config,
+           config)
+       , blend_other(
+           load_config,
+           config)
+       , multi_blend_other(
+           load_config,
+           config)
+       , bpp(
+           load_config,
+           config)
+       , multi_bpp(
+           load_config,
+           config)
      {
      }
 
@@ -1215,7 +1356,9 @@ struct filters
 namespace tile_operations
 {
      template<open_viii::graphics::background::is_tile tileT>
-     bool fail_any_filters(const ff_8::filters &filters, const tileT &tile)
+     bool fail_any_filters(
+       const ff_8::filters &filters,
+       const tileT         &tile)
      {
           return !std::invoke(filters, tile);
      }

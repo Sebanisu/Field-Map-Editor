@@ -39,11 +39,21 @@ glengine::SubTexture glengine::SubTexture::create_from_coords(
               { ((coords.x + sprite_size.x) * cell_size.x * scale) / static_cast<float>(texture.width()),
                 ((coords.y + sprite_size.y) * cell_size.y * scale) / static_cast<float>(texture.height()) } };
 }
-glengine::SubTexture::SubTexture(const Texture &texture, const glm::vec2 &min, const glm::vec2 &max)
+glengine::SubTexture::SubTexture(
+  const Texture   &texture,
+  const glm::vec2 &min,
+  const glm::vec2 &max)
   : m_render_id(texture.id())
   , m_width(texture.width())
   , m_height(texture.height())
-  , m_uv{ (glm::vec2{ min.x, min.y }), (glm::vec2{ max.x, min.y }), (glm::vec2{ max.x, max.y }), (glm::vec2{ min.x, max.y }) }
+  , m_uv{ (glm::vec2{ min.x,
+                      min.y }),
+          (glm::vec2{ max.x,
+                      min.y }),
+          (glm::vec2{ max.x,
+                      max.y }),
+          (glm::vec2{ min.x,
+                      max.y }) }
 {
 }
 
@@ -88,7 +98,10 @@ glm::ivec2 glengine::SubTexture::get_size() const noexcept
      return { width(), height() };
 }
 
-std::pair<glm::vec2, glm::vec2> glengine::SubTexture::minmax_uv() const noexcept
+std::pair<
+  glm::vec2,
+  glm::vec2>
+  glengine::SubTexture::minmax_uv() const noexcept
 {
      glm::vec2 min_uv = m_uv[0];
      glm::vec2 max_uv = m_uv[0];

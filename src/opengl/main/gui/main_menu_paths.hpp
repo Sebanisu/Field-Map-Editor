@@ -34,14 +34,20 @@ struct main_menu_paths
 
 
    public:
-     main_menu_paths(main_filter_t &main_filter, std::tuple<other_filter_t &...> other_filter, main_menu_paths_settings settings)
+     main_menu_paths(
+       main_filter_t                  &main_filter,
+       std::tuple<other_filter_t &...> other_filter,
+       main_menu_paths_settings        settings)
        : m_main_filter(main_filter)
        , m_other_filter(other_filter)
        , m_settings(settings)
      {
      }
 
-     void render(const std::invocable auto &generate, const std::invocable auto &refresh, const std::invocable auto &open_browser) const
+     void render(
+       const std::invocable auto &generate,
+       const std::invocable auto &refresh,
+       const std::invocable auto &open_browser) const
      {
           if (!ImGui::BeginMenu(m_settings.main_label.data()))
           {
@@ -239,8 +245,9 @@ struct main_menu_paths
           }();
      }
 
-     std::optional<std::filesystem::path>
-       handle_path_deletion(std::vector<std::filesystem::path> &ff8_directory_paths, std::ptrdiff_t offset) const
+     std::optional<std::filesystem::path> handle_path_deletion(
+       std::vector<std::filesystem::path> &ff8_directory_paths,
+       std::ptrdiff_t                      offset) const
      {
           if (std::cmp_less(offset, 0))
           {
@@ -257,8 +264,9 @@ struct main_menu_paths
           return std::nullopt;
      }
 
-     std::filesystem::path
-       find_replacement_path_value(const std::vector<std::filesystem::path> &paths, const std::vector<bool> &paths_enabled) const
+     std::filesystem::path find_replacement_path_value(
+       const std::vector<std::filesystem::path> &paths,
+       const std::vector<bool>                  &paths_enabled) const
      {
           if (std::ranges::empty(paths))
           {
@@ -278,7 +286,9 @@ struct main_menu_paths
           return {};
      }
 
-     std::ptrdiff_t add_delete_button(const std::ptrdiff_t index, const std::ptrdiff_t delete_me) const
+     std::ptrdiff_t add_delete_button(
+       const std::ptrdiff_t index,
+       const std::ptrdiff_t delete_me) const
      {
           const auto  pop_id      = PushPopID();
           const float button_size = ImGui::GetFrameHeight();

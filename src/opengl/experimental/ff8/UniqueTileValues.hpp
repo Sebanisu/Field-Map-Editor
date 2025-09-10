@@ -19,7 +19,9 @@ struct UniqueTileValues
      {
           return tiles | std::views::filter(tile_operations::NotInvalidTile{});
      };
-     static auto visit(const MapT &map, auto &&transform)
+     static auto visit(
+       const MapT &map,
+       auto      &&transform)
      {
           return map.front().visit_tiles([&](const auto &f_tiles) {
                return map.back().visit_tiles([&](const auto &b_tiles) {
@@ -85,7 +87,10 @@ struct UniqueTileValues
      {
           return UniqueValues<open_viii::graphics::BPPT>(visit(map, tile_operations::Depth{}), bpp_to_string);
      }
-     static void refresh(const MapT &map, auto &old, auto &&func)
+     static void refresh(
+       const MapT &map,
+       auto       &old,
+       auto      &&func)
      {
           std::remove_cvref_t<decltype(old)> new_value = func(map);
           new_value.update(old);
@@ -212,19 +217,16 @@ struct UniqueTileValues
 };
 struct TilePossibleValues
 {
-     UniqueValues<open_viii::graphics::BPPT>                   bpp        = { std::array{ open_viii::graphics::BPPT::BPP4_CONST(),
-                                                                 open_viii::graphics::BPPT::BPP8_CONST(),
-                                                                 open_viii::graphics::BPPT::BPP16_CONST(),
-                                                                 open_viii::graphics::BPPT::BPP24_CONST() },
-                                                                              UniqueTileValues::bpp_to_string };
-     UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode = { std::array{
-                                                                                open_viii::graphics::background::BlendModeT::none,
-                                                                                open_viii::graphics::background::BlendModeT::add,
-                                                                                open_viii::graphics::background::BlendModeT::half_add,
-                                                                                open_viii::graphics::background::BlendModeT::quarter_add,
-                                                                                open_viii::graphics::background::BlendModeT::subtract },
-                                                                              UniqueTileValues::blendmode_to_string };
-     UniqueValues<std::uint8_t>                                palette_id = { std::views::iota(std::uint8_t{ 0 }, std::uint8_t{ 16 }) };
+     UniqueValues<open_viii::graphics::BPPT> bpp
+       = { std::array{ open_viii::graphics::BPPT::BPP4_CONST(), open_viii::graphics::BPPT::BPP8_CONST(),
+                       open_viii::graphics::BPPT::BPP16_CONST(), open_viii::graphics::BPPT::BPP24_CONST() },
+           UniqueTileValues::bpp_to_string };
+     UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode
+       = { std::array{ open_viii::graphics::background::BlendModeT::none, open_viii::graphics::background::BlendModeT::add,
+                       open_viii::graphics::background::BlendModeT::half_add, open_viii::graphics::background::BlendModeT::quarter_add,
+                       open_viii::graphics::background::BlendModeT::subtract },
+           UniqueTileValues::blendmode_to_string };
+     UniqueValues<std::uint8_t> palette_id = { std::views::iota(std::uint8_t{ 0 }, std::uint8_t{ 16 }) };
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP

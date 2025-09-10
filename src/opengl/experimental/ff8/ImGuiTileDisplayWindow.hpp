@@ -28,7 +28,9 @@ class ImGuiTileDisplayWindow
      void        on_im_gui_update() const;
      void        on_event(const glengine::event::Item &) const;
      void        on_render() const;
-     static void take_control(const bool has_hover, const glengine::Counter id);
+     static void take_control(
+       const bool              has_hover,
+       const glengine::Counter id);
      static bool on_render_forward(auto &&...params)
      {
           if (get_window())
@@ -37,7 +39,9 @@ class ImGuiTileDisplayWindow
           }
           return false;
      }
-     bool on_render(const glengine::Counter id, std::invocable auto &&function) const
+     bool on_render(
+       const glengine::Counter id,
+       std::invocable auto   &&function) const
      {
           if (m_drawn || m_current_id != id)
                return false;

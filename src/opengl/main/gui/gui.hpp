@@ -185,8 +185,9 @@ struct gui
      //                std::string_view                         base_name);
      // void popup_batch_embed();
      template<bool Nested = false>
-     std::vector<std::filesystem::path>
-          replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const;
+     std::vector<std::filesystem::path> replace_entries(
+       const open_viii::archive::FIFLFS<Nested> &field,
+       const std::vector<std::filesystem::path> &paths) const;
 
      //     template<typename T, typename... argsT>
      //     void launch_async(T &&task, argsT &&...args)
@@ -194,7 +195,7 @@ struct gui
      //          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
      //     }
      //     void                      batch_ops_ask_menu() const;
-     void open_locate_ff8_filebrowser();
+     void                                                    open_locate_ff8_filebrowser();
      variant_tile_t                                         &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                                      browse_for_image_display_preview();
      [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_sort_paths();
@@ -203,49 +204,57 @@ struct gui
      void                                                    reset_imported_image();
      void                                                    control_panel_window();
      std::uint32_t                                           image_height() const;
-     static std::vector<std::filesystem::path>               find_maps_in_directory(const std::filesystem::path &src, size_t reserve = {});
-     float                                                   scaled_menubar_gap() const;
-     void                                                    render_dockspace();
-     void                                                    background_color_picker();
-     void                                                    compact_flatten_buttons();
-     void                                                    frame_rate();
-     void                                                    control_panel_window_map();
-     void                                                    control_panel_window_mim();
-     std::filesystem::path                                   path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
-     void                                                    filter_empty_import_tiles();
-     void                                                    collapsing_header_generated_tiles() const;
-     void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
-     void find_selected_tile_for_import(variant_tile_t &current_tile) const;
+     static std::vector<std::filesystem::path>               find_maps_in_directory(
+                     const std::filesystem::path &src,
+                     size_t                       reserve = {});
+     float                 scaled_menubar_gap() const;
+     void                  render_dockspace();
+     void                  background_color_picker();
+     void                  compact_flatten_buttons();
+     void                  frame_rate();
+     void                  control_panel_window_map();
+     void                  control_panel_window_mim();
+     std::filesystem::path path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
+     void                  filter_empty_import_tiles();
+     void                  collapsing_header_generated_tiles() const;
+     void                  adjust_source_xy_texture_page_for_import_map(
+                        uint8_t       next_source_y,
+                        const uint8_t next_texture_page);
+     void                                            find_selected_tile_for_import(variant_tile_t &current_tile) const;
      // todo fix events.
-     void bind_shortcuts();
+     void                                            bind_shortcuts();
      // void event_type_key_pressed(const sf::Event::KeyEvent &key);
      // void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
      // void event_type_mouse_button_released(const sf::Mouse::Button &button);
-     void file_menu();
-     void edit_menu();
-     void windows_menu();
-     void help_menu();
-     void refresh_map_swizzle();
-     void refresh_map_disable_blending();
-     void refresh_draw_mode();
-     void refresh_mim_palette_texture();
-     void refresh_path();
-     void browse_buttons();
-     void menu_swizzle_paths();
-     void menu_swizzle_as_one_image_paths();
-     void menu_deswizzle_paths();
-     void menu_full_filename_paths();
-     void menu_map_paths();
-     void refresh_field();
-     void refresh_bpp(open_viii::graphics::BPPT in_bpp);
-     void refresh_palette(std::uint8_t palette);
-     void refresh_render_texture(bool reload_textures = false);
-     void refresh_coo();
-     [[nodiscard]] static std::optional<std::string>
-       handle_path_deletion(std::vector<std::string> &ff8_directory_paths, std::ptrdiff_t offset);
-     [[nodiscard]] static std::string
-       find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled);
-     [[nodiscard]] static std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths);
+     void                                            file_menu();
+     void                                            edit_menu();
+     void                                            windows_menu();
+     void                                            help_menu();
+     void                                            refresh_map_swizzle();
+     void                                            refresh_map_disable_blending();
+     void                                            refresh_draw_mode();
+     void                                            refresh_mim_palette_texture();
+     void                                            refresh_path();
+     void                                            browse_buttons();
+     void                                            menu_swizzle_paths();
+     void                                            menu_swizzle_as_one_image_paths();
+     void                                            menu_deswizzle_paths();
+     void                                            menu_full_filename_paths();
+     void                                            menu_map_paths();
+     void                                            refresh_field();
+     void                                            refresh_bpp(open_viii::graphics::BPPT in_bpp);
+     void                                            refresh_palette(std::uint8_t palette);
+     void                                            refresh_render_texture(bool reload_textures = false);
+     void                                            refresh_coo();
+     [[nodiscard]] static std::optional<std::string> handle_path_deletion(
+       std::vector<std::string> &ff8_directory_paths,
+       std::ptrdiff_t            offset);
+     [[nodiscard]] static std::string find_replacement_path_value(
+       const std::vector<std::string> &paths,
+       const std::vector<bool>        &paths_enabled);
+     [[nodiscard]] static std::ptrdiff_t add_delete_button(
+       const std::string              &path,
+       const std::vector<std::string> &paths);
 
      [[nodiscard]] static std::ptrdiff_t add_delete_button(const std::ptrdiff_t index);
 

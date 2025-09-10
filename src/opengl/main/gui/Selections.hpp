@@ -858,8 +858,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithFullFileName>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{full_filename}"s,
-                   "{selected_path}/{field_name}/{full_filename}"s,
+          return { "{selected_path}/{full_filename}"s, "{selected_path}/{field_name}/{full_filename}"s,
                    "{selected_path}/{field_prefix}/{field_name}/{full_filename}"s };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
@@ -1144,7 +1143,10 @@ struct SelectionUseFFNXConfig<ConfigKey::FFNXDirectPath> : std::true_type
 template<typename ValueT>
 struct SelectionLoadStrategy
 {
-     static bool load(const Configuration &config, std::string_view id, ValueT &value)
+     static bool load(
+       const Configuration &config,
+       std::string_view     id,
+       ValueT              &value)
      {
           if (!config->contains(id))
           {
@@ -1212,7 +1214,10 @@ struct SelectionLoadStrategy<ff_8::filter_old<Tag>>
 template<typename ValueT>
 struct SelectionUpdateStrategy
 {
-     static void update(Configuration &config, std::string_view id, const ValueT &value)
+     static void update(
+       Configuration   &config,
+       std::string_view id,
+       const ValueT    &value)
      {
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
@@ -1277,7 +1282,9 @@ struct Selection : SelectionBase
      using value_type = typename SelectionInfo<Key>::value_type;
 
      value_type value;
-     Selection([[maybe_unused]] const Configuration &config, [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
+     Selection(
+       [[maybe_unused]] const Configuration                &config,
+       [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
        : value([&]() {
             if constexpr (SelectionUseFFNXConfig<Key>::value)
             {
@@ -1349,8 +1356,8 @@ struct Selection : SelectionBase
           }
           else if constexpr (requires { SelectionInfo<Key>::default_value_copy; })
           {
-               std::ignore =
-                 SelectionLoadStrategy<value_type>::load(config, SelectionInfo<SelectionInfo<Key>::default_value_copy>::id, value);
+               std::ignore
+                 = SelectionLoadStrategy<value_type>::load(config, SelectionInfo<SelectionInfo<Key>::default_value_copy>::id, value);
           }
           else
           {

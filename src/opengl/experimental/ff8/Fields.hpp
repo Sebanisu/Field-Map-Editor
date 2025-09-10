@@ -39,8 +39,11 @@ class Fields
 };
 static_assert(glengine::Renderable<Fields>);
 
-[[nodiscard]] open_viii::graphics::background::Mim
-  LoadMim(open_viii::archive::FIFLFS<false> in_field, std::string_view coo, std::string &out_path, bool &coo_was_used);
+[[nodiscard]] open_viii::graphics::background::Mim LoadMim(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  std::string                      &out_path,
+  bool                             &coo_was_used);
 struct MimData
 {
      MimData() = default;
@@ -64,13 +67,24 @@ struct MimData
           return mim;
      }
 };
-[[nodiscard]] open_viii::graphics::background::Map
-  LoadMap(open_viii::archive::FIFLFS<false> in_field, std::string_view coo, const MimData &mim, std::string &out_path, bool &coo_was_used);
+[[nodiscard]] open_viii::graphics::background::Map LoadMap(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  const MimData                    &mim,
+  std::string                      &out_path,
+  bool                             &coo_was_used);
 struct MapHistoryData
 {
      MapHistoryData() = default;
-     MapHistoryData(const Fields &fields, const MimData &mim)
-       : map(LoadMap(fields, fields.coo(), mim, path, coo_chosen))
+     MapHistoryData(
+       const Fields  &fields,
+       const MimData &mim)
+       : map(LoadMap(
+           fields,
+           fields.coo(),
+           mim,
+           path,
+           coo_chosen))
        , filters(map)
      {
      }

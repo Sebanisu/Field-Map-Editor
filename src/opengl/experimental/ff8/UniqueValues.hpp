@@ -12,7 +12,9 @@ class UniqueValues
    public:
      UniqueValues() = default;
      template<typename transform_to_stringT = decltype(default_transform_function)>
-     UniqueValues(std::vector<T> values, transform_to_stringT &&transform_to_string = {})
+     UniqueValues(
+       std::vector<T>         values,
+       transform_to_stringT &&transform_to_string = {})
        : m_values(std::move(values))
        , m_strings([&]() {
             auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
@@ -25,14 +27,23 @@ class UniqueValues
           //      spdlog::debug("\t{}\r", string);
           //    }
      }
-     template<std::ranges::range rangeT, typename transform_to_stringT = decltype(default_transform_function)>
-     UniqueValues(rangeT &&values, transform_to_stringT &&transform_to_string = {})
+     template<
+       std::ranges::range rangeT,
+       typename transform_to_stringT = decltype(default_transform_function)>
+     UniqueValues(
+       rangeT               &&values,
+       transform_to_stringT &&transform_to_string = {})
        : UniqueValues(
-           std::vector<T>(std::ranges::cbegin(values), std::ranges::cend(values)),
+           std::vector<T>(
+             std::ranges::cbegin(values),
+             std::ranges::cend(values)),
            std::forward<transform_to_stringT>(transform_to_string))
      {
      }
-     std::pair<const T &, const std::string_view> operator[](std::size_t i) const noexcept
+     std::pair<
+       const T &,
+       const std::string_view>
+       operator[](std::size_t i) const noexcept
      {
           assert(std::ranges::size(m_values) == std::ranges::size(m_strings));
           assert(i < std::ranges::size(m_strings));
@@ -78,6 +89,10 @@ class UniqueValues
 };
 template<std::ranges::range rangeT>
 UniqueValues(rangeT &&a) -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
-template<std::ranges::range rangeT, typename funcT>
-UniqueValues(rangeT &&a, funcT &&) -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
+template<
+  std::ranges::range rangeT,
+  typename funcT>
+UniqueValues(
+  rangeT &&a,
+  funcT &&) -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
 #endif// FIELD_MAP_EDITOR_UNIQUEVALUES_HPP

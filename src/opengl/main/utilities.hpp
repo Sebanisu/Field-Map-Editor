@@ -71,7 +71,9 @@ constexpr inline bool remove_empty_values(R &...ranges)
 #include <filesystem>
 
 template<erasable_range... R>
-inline bool remove_nonexistent_paths(const bool remove_on_error, R &...ranges)
+inline bool remove_nonexistent_paths(
+  const bool remove_on_error,
+  R &...ranges)
 {
      auto       zip_view = std::ranges::views::zip(ranges...);
      auto       it       = std::ranges::remove_if(zip_view, [remove_on_error](const auto &group) {
@@ -109,7 +111,9 @@ bool has_balanced_braces([[maybe_unused]] const std::u8string_view s);
 
 // using the template here is to avoid implicit conversions. converting the path to u8string to pass to the u8string_view overload.
 template<typename T>
-     requires(std::same_as<std::remove_cvref_t<T>, std::filesystem::path>)
+     requires(std::same_as<
+              std::remove_cvref_t<T>,
+              std::filesystem::path>)
 static inline bool has_balanced_braces([[maybe_unused]] const T &s)
 {
      return has_balanced_braces(s.u8string());
@@ -117,10 +121,18 @@ static inline bool has_balanced_braces([[maybe_unused]] const T &s)
 
 template<std::ranges::range R>
      requires(
-       (std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
-        || std::convertible_to<std::ranges::range_value_t<R>, std::u8string_view>
-        || std::same_as<std::remove_cvref_t<std::ranges::range_value_t<R>>, std::filesystem::path>)
-       && !std::same_as<std::remove_cvref_t<R>, std::filesystem::path>)
+       (std::convertible_to<
+          std::ranges::range_value_t<R>,
+          std::string_view>
+        || std::convertible_to<
+          std::ranges::range_value_t<R>,
+          std::u8string_view>
+        || std::same_as<
+          std::remove_cvref_t<std::ranges::range_value_t<R>>,
+          std::filesystem::path>)
+       && !std::same_as<
+          std::remove_cvref_t<R>,
+          std::filesystem::path>)
 static inline bool has_balanced_braces([[maybe_unused]] const R &r)
 {
      for (const auto &s : r)

@@ -4,14 +4,16 @@ namespace glengine
 {
 
 Quad CreateQuad(
-  const glm::vec3                 offset,
-  const glm::vec4                 color,
-  const int                       texture_id,
-  const float                     tiling_factor,
-  const std::array<glm::vec2, 4U> uv,
-  const glm::vec2                 size,
-  const int                       id,
-  const std::uint32_t             pupu_id)
+  const glm::vec3 offset,
+  const glm::vec4 color,
+  const int       texture_id,
+  const float     tiling_factor,
+  const std::array<
+    glm::vec2,
+    4U>               uv,
+  const glm::vec2     size,
+  const int           id,
+  const std::uint32_t pupu_id)
 {
      const auto f_texture_id = static_cast<float>(texture_id);
      return {
@@ -60,25 +62,33 @@ std::vector<std::uint32_t> QuadIndices(std::size_t count)
      return indices;
 }
 
-std::vector<Vertex> &operator+=(std::vector<Vertex> &vertices, const Quad &quad)
+std::vector<Vertex> &operator+=(
+  std::vector<Vertex> &vertices,
+  const Quad          &quad)
 {
      std::ranges::copy(quad, std::back_inserter(vertices));
      return vertices;
 }
 
-std::vector<Vertex> &operator+=(std::vector<Vertex> &vertices_left, const std::vector<Vertex> &vertices_right)
+std::vector<Vertex> &operator+=(
+  std::vector<Vertex>       &vertices_left,
+  const std::vector<Vertex> &vertices_right)
 {
      std::ranges::copy(vertices_right, std::back_inserter(vertices_left));
      return vertices_left;
 }
 
-std::vector<Vertex> operator+(std::vector<Vertex> vertices, const Quad &quad)
+std::vector<Vertex> operator+(
+  std::vector<Vertex> vertices,
+  const Quad         &quad)
 {
      vertices += quad;
      return vertices;
 }
 
-std::vector<Vertex> operator+(const Quad &quad_left, const Quad &quad_right)
+std::vector<Vertex> operator+(
+  const Quad &quad_left,
+  const Quad &quad_right)
 {
      std::vector<Vertex> vertices{};
      vertices.reserve(std::size(quad_left) + std::size(quad_right));
@@ -87,7 +97,9 @@ std::vector<Vertex> operator+(const Quad &quad_left, const Quad &quad_right)
      return vertices;
 }
 
-std::vector<Vertex> operator+(std::vector<Vertex> vertices_left, const std::vector<Vertex> &vertices_right)
+std::vector<Vertex> operator+(
+  std::vector<Vertex>        vertices_left,
+  const std::vector<Vertex> &vertices_right)
 {
      vertices_left += vertices_right;
      return vertices_left;

@@ -22,7 +22,9 @@ struct PupuID
      static constexpr std::uint32_t animation_offset       = 12U;
      static constexpr std::uint32_t animation_state_offset = 4U;
      // leaves 3 bits for offset markers and 3 bits for offset increment
-     constexpr PupuID(const open_viii::graphics::background::is_tile auto &tile, std::uint8_t offset = 0U)
+     constexpr PupuID(
+       const open_viii::graphics::background::is_tile auto &tile,
+       std::uint8_t                                         offset = 0U)
        : PupuID(
            std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & 0x7FU) << layer_offset)
                           | ((static_cast<std::uint32_t>(tile.blend_mode()) & 0x07U) << blend_offset)
@@ -111,7 +113,9 @@ struct fmt::formatter<PupuID> : fmt::formatter<std::string>
 {
      // Formats value using the parsed format specification stored in this
      // formatter and writes the output to ctx.out().
-     auto format(const PupuID &value, format_context &ctx) const -> format_context::iterator
+     auto format(
+       const PupuID   &value,
+       format_context &ctx) const -> format_context::iterator
      {
           return fmt::format_to(ctx.out(), "{:08X}", value.raw());
      }

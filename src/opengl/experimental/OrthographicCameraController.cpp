@@ -203,7 +203,10 @@ void OrthographicCameraController::disable_bounds() const
 //   RefreshAspectRatio(GetFrameBufferAspectRatio());
 // }
 template<class T>
-static bool AlmostEqual(T x, T y, int ulp = 5)
+static bool AlmostEqual(
+  T   x,
+  T   y,
+  int ulp = 5)
 {
      // the machine epsilon has to be scaled to the magnitude of the values used
      // and multiplied by the desired precision in ULPs (units in the last place)

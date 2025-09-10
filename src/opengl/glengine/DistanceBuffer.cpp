@@ -3,7 +3,9 @@ namespace glengine
 {
 DistanceBuffer::DistanceBuffer(size_t count)
   : m_count(count)
-  , m_buffer_id(Glid{ create(m_count), destroy })
+  , m_buffer_id(
+      Glid{ create(m_count),
+            destroy })
 {
 }
 

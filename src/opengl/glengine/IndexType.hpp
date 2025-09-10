@@ -22,7 +22,9 @@ inline constexpr GLenum operator+(IndexType it)
 {
      return static_cast<GLenum>(it);
 }
-inline constexpr IndexType operator+(IndexType l, IndexType r)
+inline constexpr IndexType operator+(
+  IndexType l,
+  IndexType r)
 {
      auto value = static_cast<IndexType>((+l) + (+r));
      assert(

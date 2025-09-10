@@ -13,7 +13,9 @@ class UniqueValue
 {
    public:
      constexpr UniqueValue() = default;
-     constexpr UniqueValue(T t, void (*f)(T))
+     constexpr UniqueValue(
+       T t,
+       void (*f)(T))
        : m_value(std::move(t))
        , m_function(std::move(f))
      {
@@ -39,7 +41,9 @@ class UniqueValue
           swap(*this, other);
           return *this;
      }
-     friend constexpr void swap(UniqueValue &left, UniqueValue &right) noexcept
+     friend constexpr void swap(
+       UniqueValue &left,
+       UniqueValue &right) noexcept
      {
           using std::swap;
           swap(left.m_value, right.m_value);
@@ -61,7 +65,11 @@ class UniqueValue
 };
 using Glid = UniqueValue<std::uint32_t>;
 static_assert(std::movable<Glid> && !std::copyable<Glid>);
-static_assert(Glid(1, [](std::uint32_t) {}) == std::uint32_t{ 1 });
+static_assert(
+  Glid(
+    1,
+    [](std::uint32_t) {})
+  == std::uint32_t{ 1 });
 
 template<typename T, std::size_t sizeT>
 class UniqueValueArray
@@ -72,14 +80,20 @@ class UniqueValueArray
      using ConstParameterT = const ValueT &;
      UniqueValueArray()    = default;
      template<decay_same_as<T>... Us>
-     constexpr UniqueValueArray(void (*destroy)(ParameterT), Us... ts)
+     constexpr UniqueValueArray(
+       void (*destroy)(ParameterT),
+       Us... ts)
        : m_value{ std::forward<Us>(ts)... }
        , m_function(std::move(destroy))
      {
      }
      template<std::invocable createT>
-          requires decay_same_as<ValueT, std::invoke_result_t<createT>>
-     constexpr UniqueValueArray(void (*destroy)(ParameterT), createT &&create)
+          requires decay_same_as<
+                     ValueT,
+                     std::invoke_result_t<createT>>
+     constexpr UniqueValueArray(
+       void (*destroy)(ParameterT),
+       createT &&create)
        : m_value(std::invoke(create))
        , m_function(std::move(destroy))
      {
@@ -103,7 +117,9 @@ class UniqueValueArray
           swap(*this, other);
           return *this;
      }
-     constexpr friend void swap(UniqueValueArray &left, UniqueValueArray &right) noexcept
+     constexpr friend void swap(
+       UniqueValueArray &left,
+       UniqueValueArray &right) noexcept
      {
           using std::swap;
           swap(left.m_value, right.m_value);
@@ -151,36 +167,67 @@ class UniqueValueArray
      ValueT m_value                 = {};
      void (*m_function)(ParameterT) = nullptr;
 };
-template<typename T, decay_same_as<T>... Ts>
-UniqueValueArray(void (*)(std::array<T, sizeof...(Ts) + 1U> &), T, Ts...) -> UniqueValueArray<T, sizeof...(Ts) + 1U>;
+template<
+  typename T,
+  decay_same_as<T>... Ts>
+UniqueValueArray(
+  void (*)(std::array<
+           T,
+           sizeof...(Ts) + 1U> &),
+  T,
+  Ts...)
+  -> UniqueValueArray<
+    T,
+    sizeof...(Ts) + 1U>;
 
 template<std::invocable CreatorT>
-UniqueValueArray(void (*)(std::invoke_result_t<CreatorT> &), CreatorT)
-  -> UniqueValueArray<typename std::invoke_result_t<CreatorT>::value_type, std::ranges::size(typename std::invoke_result_t<CreatorT>{})>;
+UniqueValueArray(
+  void (*)(std::invoke_result_t<CreatorT> &),
+  CreatorT)
+  -> UniqueValueArray<
+    typename std::invoke_result_t<CreatorT>::value_type,
+    std::ranges::size(typename std::invoke_result_t<CreatorT>{})>;
 template<std::size_t sizeT>
 using GlidArray = UniqueValueArray<std::uint32_t, sizeT>;
 static_assert(std::movable<GlidArray<1>> && !std::copyable<GlidArray<1>>);
-static_assert(static_cast<std::array<std::uint32_t, 1>>(GlidArray<1>([](GlidArray<1>::ParameterT) {}, 1U)) == std::array{ 1U });
 static_assert(
-  static_cast<std::array<std::uint32_t, 1>>(GlidArray<1>(
-    [](GlidArray<1>::ParameterT) {},
-    []() {
-         GlidArray<1>::ValueT out{};
-         out[0] = 1U;
-         return out;
-    }))
+  static_cast<std::array<
+    std::uint32_t,
+    1>>(
+    GlidArray<1>(
+      [](GlidArray<1>::ParameterT) {},
+      1U))
   == std::array{ 1U });
 static_assert(
-  static_cast<std::array<std::uint32_t, 1>>(UniqueValueArray(
-    [](GlidArray<1>::ParameterT) {},
-    []() {
-         GlidArray<1>::ValueT out{};
-         out[0] = 1U;
-         return out;
-    }))
+  static_cast<std::array<
+    std::uint32_t,
+    1>>(
+    GlidArray<1>(
+      [](GlidArray<1>::ParameterT) {},
+      []() {
+           GlidArray<1>::ValueT out{};
+           out[0] = 1U;
+           return out;
+      }))
   == std::array{ 1U });
-template<typename T, std::invocable<T> F>
-UniqueValue(T t, F f) -> UniqueValue<T>;
+static_assert(
+  static_cast<std::array<
+    std::uint32_t,
+    1>>(
+    UniqueValueArray(
+      [](GlidArray<1>::ParameterT) {},
+      []() {
+           GlidArray<1>::ValueT out{};
+           out[0] = 1U;
+           return out;
+      }))
+  == std::array{ 1U });
+template<
+  typename T,
+  std::invocable<T> F>
+UniqueValue(
+  T t,
+  F f) -> UniqueValue<T>;
 template<typename T, typename U, std::size_t Usz>
 concept array_type_and_size_are_same = decay_same_as<std::ranges::range_value_t<T>, U> && std::ranges::size(T{}) == Usz;
 template<typename T>
@@ -192,9 +239,17 @@ class WeakValue
        : m_value(t.m_value)
      {
      }
-     template<typename U, std::size_t Usz>
-          requires array_type_and_size_are_same<T, U, Usz>
-     constexpr WeakValue(const UniqueValueArray<U, Usz> &t)
+     template<
+       typename U,
+       std::size_t Usz>
+          requires array_type_and_size_are_same<
+            T,
+            U,
+            Usz>
+     constexpr WeakValue(
+       const UniqueValueArray<
+         U,
+         Usz> &t)
        : m_value(t.m_value)
      {
      }
@@ -212,10 +267,21 @@ class WeakValue
 };
 using GlidCopy = WeakValue<std::uint32_t>;
 static_assert(std::movable<GlidCopy> && std::copyable<GlidCopy>);
-static_assert(GlidCopy{ Glid(1, [](std::uint32_t) {}) } == std::uint32_t{ 1 });
 static_assert(
-  static_cast<std::array<std::uint32_t, 1U>>(WeakValue<std::array<std::uint32_t, 1U>>{
-    GlidArray<1U>([](typename GlidArray<1U>::ParameterT) {}, 1U) })
+  GlidCopy{ Glid(
+    1,
+    [](std::uint32_t) {}) }
+  == std::uint32_t{ 1 });
+static_assert(
+  static_cast<std::array<
+    std::uint32_t,
+    1U>>(
+    WeakValue<std::array<
+      std::uint32_t,
+      1U>>{
+      GlidArray<1U>(
+        [](typename GlidArray<1U>::ParameterT) {},
+        1U) })
   == std::array{ 1U });
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_UNIQUEVALUE_HPP

@@ -192,7 +192,9 @@ void MapHistory::clear_redo() const
  * Deletes the most recent back or front
  * @return
  */
-[[nodiscard]] bool MapHistory::undo(bool skip_redo, std::source_location source_location) const
+[[nodiscard]] bool MapHistory::undo(
+  bool                 skip_redo,
+  std::source_location source_location) const
 {
      const auto count = debug_count_print(source_location);
      if (!undo_enabled())

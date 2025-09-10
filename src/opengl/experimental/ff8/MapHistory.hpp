@@ -65,8 +65,13 @@ class [[nodiscard]] MapHistory
           });
      }
 
-     template<typename TileT, std::integral PosT, typename LambdaT>
-     [[nodiscard]] auto original_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       std::integral PosT,
+       typename LambdaT>
+     [[nodiscard]] auto original_get_tile_at_offset(
+       const PosT pos,
+       LambdaT  &&lambda) const
      {
           return front().visit_tiles([&](auto &tiles) {
                if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
@@ -93,8 +98,13 @@ class [[nodiscard]] MapHistory
           });
      }
 
-     template<open_viii::graphics::background::is_tile TileT, std::integral PosT, typename LambdaT>
-     [[nodiscard]] auto working_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       std::integral                            PosT,
+       typename LambdaT>
+     [[nodiscard]] auto working_get_tile_at_offset(
+       const PosT pos,
+       LambdaT  &&lambda) const
      {
           return back().visit_tiles([&](auto &tiles) {
                if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
@@ -152,16 +162,24 @@ class [[nodiscard]] MapHistory
      [[nodiscard]] const map_t &front() const;
      [[nodiscard]] map_t       &back() const;
 
-     template<typename TileT, typename LambdaT>
-     auto copy_working_and_get_new_tile(const TileT &tile, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       typename LambdaT>
+     auto copy_working_and_get_new_tile(
+       const TileT &tile,
+       LambdaT    &&lambda) const
      {
           const auto pos = get_offset_from_working(tile);
           (void)copy_working();
           return working_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
      }
 
-     template<typename TileT, typename LambdaT>
-     void copy_working_perform_operation(const std::vector<std::intmax_t> &indexes, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       typename LambdaT>
+     void copy_working_perform_operation(
+       const std::vector<std::intmax_t> &indexes,
+       LambdaT                         &&lambda) const
      {
           (void)copy_working();
           for (const auto i : indexes)
@@ -170,9 +188,17 @@ class [[nodiscard]] MapHistory
           }
      }
 
-     template<typename TileT, typename FilterLambdaT, typename LambdaT>
-          requires(std::is_invocable_r_v<bool, FilterLambdaT, const TileT &>)
-     void copy_working_perform_operation(FilterLambdaT &&filter, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       typename FilterLambdaT,
+       typename LambdaT>
+          requires(std::is_invocable_r_v<
+                   bool,
+                   FilterLambdaT,
+                   const TileT &>)
+     void copy_working_perform_operation(
+       FilterLambdaT &&filter,
+       LambdaT       &&lambda) const
      {
           (void)copy_working();
           back().visit_tiles([&](auto &tiles) {
@@ -187,8 +213,13 @@ class [[nodiscard]] MapHistory
           });
      }
 
-     template<typename TileT, typename LambdaT>
-     void copy_working_perform_operation(const TileT &tile, const SimilarAdjustments &similar, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       typename LambdaT>
+     void copy_working_perform_operation(
+       const TileT              &tile,
+       const SimilarAdjustments &similar,
+       LambdaT                 &&lambda) const
      {
           if (similar)
           {
@@ -200,8 +231,12 @@ class [[nodiscard]] MapHistory
           }
      }
 
-     template<typename TileT, typename LambdaT>
-     auto get_original_version_of_working_tile(const TileT &tile, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       typename LambdaT>
+     auto get_original_version_of_working_tile(
+       const TileT &tile,
+       LambdaT    &&lambda) const
      {
           return original_get_tile_at_offset<TileT>(get_offset_from_working(tile), std::forward<LambdaT>(lambda));
      }
@@ -236,12 +271,14 @@ class [[nodiscard]] MapHistory
       * Deletes the most recent back or front
       * @return
       */
-     [[nodiscard]] bool   undo(bool skip_redo = false, std::source_location source_location = std::source_location::current()) const;
+     [[nodiscard]] bool   undo(
+         bool                 skip_redo       = false,
+         std::source_location source_location = std::source_location::current()) const;
 
-     void                 undo_all(std::source_location source_location = std::source_location::current()) const;
-     void                 redo_all(std::source_location source_location = std::source_location::current()) const;
-     [[nodiscard]] bool   redo_enabled() const;
-     [[nodiscard]] bool   undo_enabled() const;
+     void               undo_all(std::source_location source_location = std::source_location::current()) const;
+     void               redo_all(std::source_location source_location = std::source_location::current()) const;
+     [[nodiscard]] bool redo_enabled() const;
+     [[nodiscard]] bool undo_enabled() const;
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPHISTORY_HPP

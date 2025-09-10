@@ -43,7 +43,7 @@ namespace fme
      static ImFontConfig config{};
      config.MergeMode = true;
      std::strncpy(config.Name, FONT_ICON_FILE_NAME_FAS, sizeof(config.Name) - 1);
-     config.Name[sizeof(config.Name) - 1]   = '\0';// Ensure null-termination
+     config.Name[sizeof(config.Name) - 1]   = '\0'; // Ensure null-termination
      config.GlyphMinAdvanceX                = 13.0f;// Use if you want to make the icon monospaced
      static const ImWchar     icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
      static const std::string str_path      = font_path.string();

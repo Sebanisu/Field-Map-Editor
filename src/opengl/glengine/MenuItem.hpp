@@ -77,15 +77,21 @@ class MenuItem
        : m_impl(nullptr)
      {
      }
-     template<typename T, typename... argsT>
-     MenuItem(std::in_place_type_t<T>, argsT &&...args) noexcept
+     template<
+       typename T,
+       typename... argsT>
+     MenuItem(
+       std::in_place_type_t<T>,
+       argsT &&...args) noexcept
        : m_impl(std::make_unique<MenuItemModel<std::remove_cvref_t<T>>>(std::forward<argsT>(args)...))
      {
           static_assert(Renderable<T>);
      }
      template<typename T>
      [[maybe_unused]] MenuItem(T t)
-       : MenuItem(std::in_place_type_t<T>{}, std::move(t))
+       : MenuItem(
+           std::in_place_type_t<T>{},
+           std::move(t))
      {
      }
      MenuItem(const MenuItem &other)                = delete;

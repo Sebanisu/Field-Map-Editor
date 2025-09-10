@@ -14,13 +14,20 @@ class OrthographicCameraController
    public:
      constexpr OrthographicCameraController() = default;
      OrthographicCameraController(float aspect_ratio)
-       : OrthographicCameraController(aspect_ratio, 1.F)
+       : OrthographicCameraController(
+           aspect_ratio,
+           1.F)
      {
      }
-     OrthographicCameraController(float aspect_ratio, float zoom)
+     OrthographicCameraController(
+       float aspect_ratio,
+       float zoom)
        : m_viewport_aspect_ratio(aspect_ratio)
        , m_zoom_level(zoom)
-       , m_camera{ -m_viewport_aspect_ratio * m_zoom_level, m_viewport_aspect_ratio * m_zoom_level, -m_zoom_level, m_zoom_level }
+       , m_camera{ -m_viewport_aspect_ratio * m_zoom_level,
+                   m_viewport_aspect_ratio * m_zoom_level,
+                   -m_zoom_level,
+                   m_zoom_level }
      {
      }
 
@@ -82,8 +89,8 @@ class OrthographicCameraController
      }
      [[nodiscard]] glm::vec2 top_right_screen_space() const
      {
-          auto clip_space_pos =
-            m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
+          auto clip_space_pos
+            = m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
           glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
           ndc_space_pos /= clip_space_pos.w;
           return ndc_space_pos;
@@ -92,8 +99,8 @@ class OrthographicCameraController
      }
      glm::vec2 bottom_left_screen_space() const
      {
-          auto clip_space_pos =
-            m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
+          auto clip_space_pos
+            = m_camera.projection_matrix() * (m_camera.view_matrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
           glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
           ndc_space_pos /= clip_space_pos.w;
           return ndc_space_pos;

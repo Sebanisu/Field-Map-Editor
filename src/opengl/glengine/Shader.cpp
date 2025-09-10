@@ -77,7 +77,9 @@ Shader::ShaderProgramSource Shader::parse_shader(const std::filesystem::path &pa
      return { ss[0].str(), ss[1].str() };
 }
 
-std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string_view source)
+std::uint32_t Shader::compile_shader(
+  const std::uint32_t    type,
+  const std::string_view source)
 {
      using namespace std::string_view_literals;
      const std::uint32_t id  = GlCall{}(glCreateShader, type);
@@ -106,7 +108,9 @@ std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string
 
      return id;
 }
-std::uint32_t Shader::create_shader(const std::string_view vertex_shader, const std::string_view fragment_shader)
+std::uint32_t Shader::create_shader(
+  const std::string_view vertex_shader,
+  const std::string_view fragment_shader)
 {
      const std::uint32_t vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
      const std::uint32_t fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
@@ -137,23 +141,33 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
 
      return location;
 }
-void Shader::set_uniform(std::string_view name, glm::vec1 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec1        v) const
 {
      set_uniform(name, v.x);
 }
-void Shader::set_uniform(std::string_view name, glm::vec2 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec2        v) const
 {
      set_uniform(name, v.x, v.y);
 }
-void Shader::set_uniform(std::string_view name, glm::vec3 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec3        v) const
 {
      set_uniform(name, v.x, v.y, v.z);
 }
-void Shader::set_uniform(std::string_view name, glm::vec4 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec4        v) const
 {
      set_uniform(name, v.r, v.g, v.b, v.a);
 }
-void Shader::set_uniform(std::string_view name, const glm::mat4 &matrix) const
+void Shader::set_uniform(
+  std::string_view name,
+  const glm::mat4 &matrix) const
 {
      const int32_t location = get_uniform_location(name);
      if (location == -1)

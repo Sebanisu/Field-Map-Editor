@@ -124,7 +124,9 @@ map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
      };
 }
 
-map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
+map_sprite map_sprite::with_field(
+  map_sprite::WeakField  field,
+  const open_viii::LangT coo) const
 {
      return {
           ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections, m_render_framebuffer
@@ -141,14 +143,18 @@ bool map_sprite::empty() const
      return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
 }
 
-map_sprite::colors_type
-  map_sprite::get_colors(const open_viii::graphics::background::Mim &mim, open_viii::graphics::BPPT bpp, std::uint8_t palette)
+map_sprite::colors_type map_sprite::get_colors(
+  const open_viii::graphics::background::Mim &mim,
+  open_viii::graphics::BPPT                   bpp,
+  std::uint8_t                                palette)
 {
      return mim.get_colors<open_viii::graphics::Color32RGBA>(bpp, palette, false);
 }
 
-std::size_t
-  map_sprite::get_texture_pos(const open_viii::graphics::BPPT bpp, const std::uint8_t palette, const std::uint8_t texture_page) const
+std::size_t map_sprite::get_texture_pos(
+  const open_viii::graphics::BPPT bpp,
+  const std::uint8_t              palette,
+  const std::uint8_t              texture_page) const
 {
      if (!m_filters.swizzle_as_one_image.enabled())
      {
@@ -180,8 +186,10 @@ std::size_t
      return j;
 }
 
-const glengine::Texture *
-  map_sprite::get_texture(const open_viii::graphics::BPPT bpp, const std::uint8_t palette, const std::uint8_t texture_page) const
+const glengine::Texture *map_sprite::get_texture(
+  const open_viii::graphics::BPPT bpp,
+  const std::uint8_t              palette,
+  const std::uint8_t              texture_page) const
 {
      const size_t index = get_texture_pos(bpp, palette, texture_page);
      const size_t size  = m_texture->size();
@@ -387,7 +395,9 @@ bool map_sprite::fallback_textures() const
      return false;
 }
 
-std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
+std::future<std::future<void>> map_sprite::load_mim_textures(
+  open_viii::graphics::BPPT bpp,
+  std::uint8_t              palette) const
 {
      if (!m_map_group.mim)
      {
@@ -407,13 +417,15 @@ std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics
                spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
                return { std::async(
                  std::launch::deferred,
-                 future_operations::LoadColorsIntoTexture{
-                   texture, get_colors(mim, bpp, palette), glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
+                 future_operations::LoadColorsIntoTexture{ texture, get_colors(mim, bpp, palette),
+                                                           glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
           }) };
      }
 }
 
-std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const
+std::future<std::future<void>> map_sprite::load_deswizzle_textures(
+  const ff_8::PupuID pupu,
+  const size_t       pos) const
 {
      if (pos >= MAX_TEXTURES)
      {
@@ -446,7 +458,9 @@ std::future<std::future<void>> map_sprite::load_full_filename_textures(const std
          &(m_full_filename_textures[filename]), fme::generate_full_filename_paths(std::move(selections), *this, filename) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const
+std::future<std::future<void>> map_sprite::load_swizzle_textures(
+  std::uint8_t texture_page,
+  std::uint8_t palette) const
 {
      const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
      if (pos >= MAX_TEXTURES)
@@ -562,8 +576,8 @@ void map_sprite::update_position(
                if (m_draw_swizzle)
                {
                     const std::int32_t texture_page_width = 256;
-                    const std::int32_t x_offset =
-                      (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(working_tile.source_x());
+                    const std::int32_t x_offset
+                      = (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(working_tile.source_x());
                     const std::int32_t y_offset     = down_pixel_pos.y - static_cast<std::int32_t>(working_tile.source_y());
                     const std::uint8_t x            = static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset)));
                     const std::uint8_t y            = static_cast<std::uint8_t>(((pixel_pos.y - y_offset)));
@@ -605,8 +619,9 @@ void map_sprite::update_position(
      update_render_texture();
 }
 
-[[nodiscard]] bool
-  map_sprite::local_draw(const glengine::FrameBuffer &target_framebuffer, const glengine::BatchRenderer &target_renderer) const
+[[nodiscard]] bool map_sprite::local_draw(
+  const glengine::FrameBuffer   &target_framebuffer,
+  const glengine::BatchRenderer &target_renderer) const
 {
      const auto &shader             = target_renderer.shader();
      const auto  reset_blend_at_end = glengine::ScopeGuard([] { glengine::BlendModeSettings::default_blend(); });
@@ -709,12 +724,12 @@ void map_sprite::update_position(
                     }
                }
 
-               const auto destination_tile_size =
-                 glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
+               const auto destination_tile_size
+                 = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
                const auto            source_tile_size    = get_tile_texture_size(texture);
                const auto            source_texture_size = glm::uvec2{ texture->width(), texture->height() };
-               const ff_8::QuadStrip quad =
-                 get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
+               const ff_8::QuadStrip quad
+                 = get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
 
                //  Extract draw position (x, y) from quad[0] (top-left vertex)
                glm::vec3            draw_position = glm::vec3(quad.draw_pos, 0.F);
@@ -949,14 +964,14 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          opt_map_sprite->consume_now();// force load textures now.
                          // calculate scale using one of the existing textures
                          const auto canvas = opt_map_sprite->get_canvas();
-                         const auto [min_it, max_it] =
-                           std::ranges::minmax_element(m_full_filename_textures, [](const auto &apair, const auto &bpair) {
-                                const auto &a  = std::get<1>(apair);
-                                const auto &b  = std::get<1>(bpair);
-                                const auto  sa = a.get_size();
-                                const auto  sb = b.get_size();
-                                return (sa.x * sa.y) < (sb.x * sb.y);
-                           });
+                         const auto [min_it, max_it]
+                           = std::ranges::minmax_element(m_full_filename_textures, [](const auto &apair, const auto &bpair) {
+                                  const auto &a  = std::get<1>(apair);
+                                  const auto &b  = std::get<1>(bpair);
+                                  const auto  sa = a.get_size();
+                                  const auto  sb = b.get_size();
+                                  return (sa.x * sa.y) < (sb.x * sb.y);
+                             });
 
                          const auto max_size = std::get<1>(*max_it).get_size();
                          assert(std::get<1>(*min_it).get_size() == max_size);
@@ -1173,7 +1188,9 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      }
 }
 
-void map_sprite::set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const
+void map_sprite::set_uniforms(
+  const glengine::FrameBuffer &fbo,
+  const glengine::Shader      &shader) const
 {
      m_fixed_render_camera.set_projection(0.f, static_cast<float>(fbo.width()), 0.f, static_cast<float>(fbo.height()));
      // if (m_offscreen_drawing || m_saving)
@@ -1318,8 +1335,8 @@ void map_sprite::resize_render_texture() const
      };
      if (filtered_textures.begin() != filtered_textures.end())
      {
-          const auto max_height =
-            (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
+          const auto max_height
+            = (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
           static constexpr std::int16_t mim_texture_height = 256U;
 
           if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled()) [[unlikely]]
@@ -1393,7 +1410,9 @@ ff_8::filters &map_sprite::filter()
 {
      return m_filters;
 }
-map_sprite map_sprite::update(ff_8::map_group map_group, bool draw_swizzle) const
+map_sprite map_sprite::update(
+  ff_8::map_group map_group,
+  bool            draw_swizzle) const
 {
      return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false, m_selections };
 }
@@ -1423,7 +1442,10 @@ const std::vector<ff_8::PupuID> &map_sprite::working_unique_pupu() const
      return m_map_group.maps.working_unique_pupu();
 }
 
-std::vector<std::tuple<glm::vec4, ff_8::PupuID>> map_sprite::working_unique_color_pupu() const
+std::vector<std::tuple<
+  glm::vec4,
+  ff_8::PupuID>>
+  map_sprite::working_unique_color_pupu() const
 {
      // side effect. we wait till pupu is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
@@ -1555,8 +1577,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>> map_sprite::save_swizzle_textures(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1594,8 +1617,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     const auto specification =
-       glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer->scale() };
+     const auto specification
+       = glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer->scale() };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
@@ -1654,13 +1677,13 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           {
 
                // Determine output path based on COO presence.
-               const key_value_data  cpm      = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                              m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .texture_page = texture_page };
+               const key_value_data cpm
+                 = { .field_name    = get_base_name(),
+                     .ext           = ".png",
+                     .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                        ? m_map_group.opt_coo
+                                        : std::nullopt,
+                     .texture_page  = texture_page };
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
@@ -1684,8 +1707,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_swizzle_as_one_image_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>> map_sprite::save_swizzle_as_one_image_textures(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1722,7 +1746,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Prepare for gathering palette conflicts.
      const auto conflicting_palettes_map     = get_conflicting_palettes();
      auto       conflicting_palettes_flatten = conflicting_palettes_map | std::ranges::views::values// Get the vectors (values of the map)
-                                         | std::ranges::views::join// Flatten the vectors into a single range
+                                         | std::ranges::views::join       // Flatten the vectors into a single range
                                          | std::ranges::to<std::vector>();// merge to vector;
      sort_and_remove_duplicates(conflicting_palettes_flatten);
 
@@ -1732,8 +1756,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     const auto specification =
-       glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer->scale() };
+     const auto specification
+       = glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer->scale() };
 
 
      // Loop over all unique texture pages.
@@ -1763,13 +1787,13 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     {
 
                          // Determine output path based on COO presence.
-                         const key_value_data  cpm      = { .field_name    = get_base_name(),
-                                                            .ext           = ".png",
-                                                            .language_code = m_map_group.opt_coo.has_value()
-                                                                           && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                                               ? m_map_group.opt_coo
-                                                                               : std::nullopt,
-                                                            .palette       = palette };
+                         const key_value_data cpm
+                           = { .field_name    = get_base_name(),
+                               .ext           = ".png",
+                               .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                  ? m_map_group.opt_coo
+                                                  : std::nullopt,
+                               .palette       = palette };
                          std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                          // Start async save and store the future.
                          future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
@@ -1786,12 +1810,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      if (generate_texture(out_framebuffer))
      {
           // Determine output path based on COO presence.
-          const key_value_data  cpm      = { .field_name = get_base_name(),
-                                             .ext        = ".png",
-                                             .language_code =
-                                         m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                 ? m_map_group.opt_coo
-                                                 : std::nullopt };
+          const key_value_data cpm
+            = { .field_name    = get_base_name(),
+                .ext           = ".png",
+                .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                   ? m_map_group.opt_coo
+                                   : std::nullopt };
           std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
           // Start async save and store the future.
@@ -1804,8 +1828,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // consume_futures(future_of_futures); // Optionally wait here.
 }
 
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_csv(const std::string &keyed_string, const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>> map_sprite::save_csv(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1814,12 +1839,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return {};
      }
 
-     const key_value_data           cpm               = { .field_name = get_base_name(),
-                                                          .ext        = ".csv",
-                                                          .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                              ? m_map_group.opt_coo
-                                                              : std::nullopt };
+     const key_value_data cpm
+       = { .field_name    = get_base_name(),
+           .ext           = ".csv",
+           .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                              ? m_map_group.opt_coo
+                              : std::nullopt };
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures = {};
@@ -1861,8 +1886,9 @@ std::string map_sprite::get_base_name() const
  * @return A vector of futures, each wrapping a future task that will save one texture.
  *         Caller should consume or wait on these to ensure saving completes.
  */
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>> map_sprite::save_deswizzle_textures(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1884,14 +1910,14 @@ std::string map_sprite::get_base_name() const
 
      const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
-     const unsigned int               max_number_of_texture_pages = 13U;// Reserve space for futures
+     const unsigned int               max_number_of_texture_pages = 13U;                  // Reserve space for futures
      std::vector<std::future<void>>   future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
      iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     const auto       specification
+       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
 
      // Loop through each Pupu ID and generate/save textures
@@ -1901,13 +1927,13 @@ std::string map_sprite::get_base_name() const
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data  cpm      = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                              m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .pupu_id = pupu.raw() };
+               const key_value_data cpm
+                 = { .field_name    = get_base_name(),
+                     .ext           = ".png",
+                     .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                        ? m_map_group.opt_coo
+                                        : std::nullopt,
+                     .pupu_id       = pupu.raw() };
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
@@ -1916,7 +1942,9 @@ std::string map_sprite::get_base_name() const
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
-void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
+void map_sprite::save_deswizzle_generate_toml(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      consume_now();
      const auto selections = m_selections.lock();
@@ -1957,10 +1985,10 @@ void map_sprite::save_deswizzle_generate_toml(
      const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
      // Setup an off-screen render texture
      iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto                       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     const auto coo =
-       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     const auto                       specification
+       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     const auto coo
+       = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
      if (coo.has_value())
      {
           spdlog::info("coo: {} ", *coo);
@@ -1990,9 +2018,8 @@ void map_sprite::save_deswizzle_generate_toml(
           if (generate_texture(out_framebuffer))// todo make a if would pass filter with out generating textures.
           {
                toml::table          file;
-               const key_value_data cpm = {
-                    .field_name = field_name, .ext = ".png", .language_code = coo, .pupu_id = static_cast<std::uint32_t>(pupu)
-               };
+               const key_value_data cpm
+                 = { .field_name = field_name, .ext = ".png", .language_code = coo, .pupu_id = static_cast<std::uint32_t>(pupu) };
 
                std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
@@ -2018,8 +2045,8 @@ void map_sprite::save_deswizzle_generate_toml(
      }
 
      const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
-     const auto        coo =
-       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     const auto        coo
+       = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
      const key_value_data     cpm     = { .field_name = field_name, .ext = ".png", .language_code = coo };
      static const std::string pattern = "{field_name}{_{2_letter_lang}}";
 
@@ -2038,14 +2065,15 @@ void map_sprite::save_deswizzle_generate_toml(
      settings.filters.value().full_filename        = settings.filters.backup().full_filename;
      settings.filters.value().map                  = settings.filters.backup().map;
      settings.draw_swizzle                         = draw_swizzle;// No swizzling when saving
-     settings.disable_texture_page_shift           = true;// Disable texture page shifts
-     settings.disable_blends                       = true;// Disable blending
+     settings.disable_texture_page_shift           = true;        // Disable texture page shifts
+     settings.disable_blends                       = true;        // Disable blending
 
      return settings;
 }
 
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_deswizzle_full_filename_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+[[nodiscard]] std::vector<std::future<void>> map_sprite::save_deswizzle_full_filename_textures(
+  const std::string           &keyed_string,
+  const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2070,8 +2098,8 @@ void map_sprite::save_deswizzle_generate_toml(
 
      // Setup an off-screen render texture
      iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto                     specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     const auto                     specification
+       = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
      open_viii::LangT   coo       = {};
      const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, fme::FailOverLevels::All);
 
@@ -2099,8 +2127,8 @@ void map_sprite::save_deswizzle_generate_toml(
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
                {
-                    std::filesystem::path mask_path =
-                      out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
+                    std::filesystem::path mask_path
+                      = out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
                     spdlog::debug("Queued image save: mask='{}'", mask_path.string());
                     const auto colors_to_pupu = [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>> {
                          if (selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>())
@@ -2120,19 +2148,28 @@ void map_sprite::save_deswizzle_generate_toml(
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 
-[[nodiscard]] const std::map<std::string, std::string> &map_sprite::get_deswizzle_combined_textures_tooltips()
+[[nodiscard]] const std::map<
+  std::string,
+  std::string> &
+  map_sprite::get_deswizzle_combined_textures_tooltips()
 {
      return m_cache_framebuffer_tooltips;
 }
 
 
-[[nodiscard]] const std::map<std::string, std::vector<ff_8::PupuID>> &map_sprite::get_deswizzle_combined_textures_pupuids()
+[[nodiscard]] const std::map<
+  std::string,
+  std::vector<ff_8::PupuID>> &
+  map_sprite::get_deswizzle_combined_textures_pupuids()
 {
      return m_cache_framebuffer_pupuids;
 }
 
 
-[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures(const int in_scale)
+[[nodiscard]] std::map<
+  std::string,
+  std::optional<glengine::FrameBuffer>> &
+  map_sprite::get_deswizzle_combined_textures(const int in_scale)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2195,8 +2232,8 @@ void map_sprite::save_deswizzle_generate_toml(
                }();
                // Setup an off-screen render texture
                iRectangle const canvas = m_map_group.maps.const_working().canvas() * scale;
-               const auto       specification =
-                 glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
+               const auto       specification
+                 = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
                // Backup current settings and adjust for saving Pupu textures
                auto  settings = get_backup_settings(false);
                auto &filters  = settings.filters.value();
@@ -2221,7 +2258,9 @@ void map_sprite::save_deswizzle_generate_toml(
      return m_cache_framebuffer;
 }
 
-void map_sprite::cache_pupuids(const std::string &file_name_str, const ff_8::filters &filters) const
+void map_sprite::cache_pupuids(
+  const std::string   &file_name_str,
+  const ff_8::filters &filters) const
 {
      if (filters.multi_pupu.enabled() && filters.pupu.enabled())
      {
@@ -2298,14 +2337,8 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
                                              : field->get_lang_from_fl_paths();
 
      const auto        failover_sequence = std::to_array(
-       { coo_opt.value_or(open_viii::LangT::generic),
-                open_viii::LangT::generic,
-                open_viii::LangT::en,
-                open_viii::LangT::fr,
-                open_viii::LangT::de,
-                open_viii::LangT::it,
-                open_viii::LangT::es,
-                open_viii::LangT::jp });
+       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic, open_viii::LangT::en, open_viii::LangT::fr,
+                open_viii::LangT::de, open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
 
      const key_value_data        config_path_values{ .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
@@ -2346,8 +2379,9 @@ open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover
      return coo_opt.value_or(open_viii::LangT::generic);
 }
 
-toml::table *
-  map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *const out_used_coo, const fme::FailOverLevels max_failover) const
+toml::table *map_sprite::get_deswizzle_combined_coo_table(
+  open_viii::LangT *const   out_used_coo,
+  const fme::FailOverLevels max_failover) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2398,14 +2432,8 @@ toml::table *
           return nullptr;
      }
      const auto failover_sequence = std::to_array(
-       { coo_opt.value_or(open_viii::LangT::generic),
-         open_viii::LangT::generic,
-         open_viii::LangT::en,
-         open_viii::LangT::fr,
-         open_viii::LangT::de,
-         open_viii::LangT::it,
-         open_viii::LangT::es,
-         open_viii::LangT::jp });
+       { coo_opt.value_or(open_viii::LangT::generic), open_viii::LangT::generic, open_viii::LangT::en, open_viii::LangT::fr,
+         open_viii::LangT::de, open_viii::LangT::it, open_viii::LangT::es, open_viii::LangT::jp });
      const auto get_key_str = [&](const open_viii::LangT lang) {
           if (lang != open_viii::LangT::generic)
           {
@@ -2498,8 +2526,9 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      return nullptr;
 }
 
-[[nodiscard]] toml::table *
-  map_sprite::rename_deswizzle_combined_toml_table(const std::string &old_file_name, const std::string &new_file_name)
+[[nodiscard]] toml::table *map_sprite::rename_deswizzle_combined_toml_table(
+  const std::string &old_file_name,
+  const std::string &new_file_name)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2680,8 +2709,9 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
 }
 
 
-toml::table *
-  map_sprite::add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &file_names, const std::string &new_file_name)
+toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
+  const std::vector<std::string> &file_names,
+  const std::string              &new_file_name)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2782,59 +2812,76 @@ uint32_t map_sprite::get_max_texture_height() const
      return tex_height;
 }
 std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
-  const std::filesystem::path                                    &path,
-  const std::string_view                                         &field_name,
-  const uint8_t                                                   texture_page,
-  const open_viii::LangT                                          coo)
+  fmt::format_string<
+    std::string_view,
+    std::string_view,
+    uint8_t>                   pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  const uint8_t                texture_page,
+  const open_viii::LangT       coo)
 {
      return path
             / fmt::vformat(
               fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page));
 }
 std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t> pattern,
-  const std::filesystem::path                                             &path,
-  const std::string_view                                                  &field_name,
-  const uint8_t                                                            texture_page,
-  const uint8_t                                                            palette,
-  const open_viii::LangT                                                   coo)
+  fmt::format_string<
+    std::string_view,
+    std::string_view,
+    uint8_t,
+    uint8_t>                   pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  const uint8_t                texture_page,
+  const uint8_t                palette,
+  const open_viii::LangT       coo)
 {
      return path
             / fmt::vformat(
               fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<std::string_view, std::string_view, ff_8::PupuID> pattern,
-  const std::filesystem::path                                         &path,
-  const std::string_view                                              &field_name,
-  const ff_8::PupuID                                                   pupu,
-  const open_viii::LangT                                               coo)
+  fmt::format_string<
+    std::string_view,
+    std::string_view,
+    ff_8::PupuID>              pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  const ff_8::PupuID           pupu,
+  const open_viii::LangT       coo)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), pupu));
 }
 std::filesystem::path map_sprite::save_path(
-  fmt::format_string<std::string_view, std::uint8_t> pattern,
-  const std::filesystem::path                       &path,
-  const std::string_view                            &field_name,
-  const std::uint8_t                                 texture_page)
+  fmt::format_string<
+    std::string_view,
+    std::uint8_t>              pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  const std::uint8_t           texture_page)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, texture_page));
 }
 std::filesystem::path map_sprite::save_path(
-  fmt::format_string<std::string_view, std::uint8_t, std::uint8_t> pattern,
-  const std::filesystem::path                                     &path,
-  const std::string_view                                          &field_name,
-  std::uint8_t                                                     texture_page,
-  std::uint8_t                                                     palette)
+  fmt::format_string<
+    std::string_view,
+    std::uint8_t,
+    std::uint8_t>              pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  std::uint8_t                 texture_page,
+  std::uint8_t                 palette)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path(
-  fmt::format_string<std::string_view, ff_8::PupuID> pattern,
-  const std::filesystem::path                       &path,
-  const std::string_view                            &field_name,
-  ff_8::PupuID                                       pupu)
+  fmt::format_string<
+    std::string_view,
+    ff_8::PupuID>              pattern,
+  const std::filesystem::path &path,
+  const std::string_view      &field_name,
+  ff_8::PupuID                 pupu)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
@@ -2868,28 +2915,28 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
             (void)m_map_group.maps.copy_working(fmt::format("{}: {}", gui_labels::load_map, src_path));
             m_map_group.maps.original().visit_tiles([this, &os](const auto &const_tiles) {
                  using tile_t = std::remove_cvref_t<decltype(const_tiles.front())>;
-                 m_map_group.maps.working() =
-                   open_viii::graphics::background::Map([&os]() -> open_viii::graphics::background::Map::variant_tile {
-                        tile_t     tile{};
-                        const auto append = [&os](auto &t) -> bool {
-                             // load tile
-                             std::array<char, sizeof(t)> data = {};
-                             if (!os.read(data.data(), data.size()))
-                             {
-                                  return false;
-                             }
-                             t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
+                 m_map_group.maps.working()
+                   = open_viii::graphics::background::Map([&os]() -> open_viii::graphics::background::Map::variant_tile {
+                          tile_t     tile{};
+                          const auto append = [&os](auto &t) -> bool {
+                               // load tile
+                               std::array<char, sizeof(t)> data = {};
+                               if (!os.read(data.data(), data.size()))
+                               {
+                                    return false;
+                               }
+                               t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
 
-                             return true;
-                        };
+                               return true;
+                          };
 
-                        if (append(tile))
-                        {
-                             // write from tiles.
-                             return tile;
-                        }
-                        return std::monostate{};
-                   });
+                          if (append(tile))
+                          {
+                               // write from tiles.
+                               return tile;
+                          }
+                          return std::monostate{};
+                     });
             });
             //   shift to origin
             m_map_group.maps.working().shift_to_origin();
@@ -3070,9 +3117,12 @@ bool map_sprite::redo_enabled() const
 {
      return m_map_group.maps.redo_enabled();
 }
-std::vector<std::size_t>
-  map_sprite::find_intersecting(const Map &map, const glm::ivec2 &pixel_pos, const uint8_t &texture_page, bool skip_filters, bool find_all)
-    const
+std::vector<std::size_t> map_sprite::find_intersecting(
+  const Map        &map,
+  const glm::ivec2 &pixel_pos,
+  const uint8_t    &texture_page,
+  bool              skip_filters,
+  bool              find_all) const
 {
      if (m_draw_swizzle)
      {
@@ -3094,8 +3144,10 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
 }
 
 
-std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_swizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, std::uint8_t texture_page)
+std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  std::uint8_t                      texture_page)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
@@ -3152,8 +3204,10 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
      };
 }
 
-std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_deswizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, const ff_8::PupuID pupu_id)
+std::move_only_function<std::vector<std::filesystem::path>()> generate_deswizzle_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  const ff_8::PupuID                pupu_id)
 {
      assert(in_selections && "generate_deswizzle_paths: in_selections is null");
      // assert(in_map_sprite && "generate_deswizzle_paths: in_map_sprite is null");
@@ -3185,16 +3239,17 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_full_file
 }
 
 
-std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
+std::move_only_function<std::vector<std::filesystem::path>()> generate_map_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
-                                     .filters_map_value_string =
-                                       in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path> {
+                                     .filters_map_value_string
+                                     = in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating map paths for field: '{}'", ps.field_name);
           return ps.generate_map_paths(".map");
      };

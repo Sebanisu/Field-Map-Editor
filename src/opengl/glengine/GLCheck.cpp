@@ -7,7 +7,9 @@
 #include <iostream>
 namespace glengine
 {
-bool GlCheckError(std::string_view prefix, const std::source_location location)
+bool GlCheckError(
+  std::string_view           prefix,
+  const std::source_location location)
 {
      if (GLenum error = glGetError(); error != GL_NO_ERROR)
      {
@@ -105,8 +107,8 @@ void BeginErrorCallBack()
             const auto src = error_source_map.at(source);
             const auto tp  = error_type_map.at(type);
             const auto sv  = severity_map.at(severity);
-            const auto error_message =
-              fmt::format("GL CALLBACK: {0:s} type = {1:s}, severity = {2:s}, message = {3:s}", src, tp, sv, message);
+            const auto error_message
+              = fmt::format("GL CALLBACK: {0:s} type = {1:s}, severity = {2:s}, message = {3:s}", src, tp, sv, message);
             switch (severity)
             {
                  case GL_DEBUG_SEVERITY_NOTIFICATION: {

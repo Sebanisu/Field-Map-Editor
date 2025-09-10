@@ -4,7 +4,9 @@ namespace glengine
 {
 HistogramBuffer::HistogramBuffer(size_t count)
   : m_count(count)
-  , m_buffer_id(Glid{ create(m_count), destroy })
+  , m_buffer_id(
+      Glid{ create(m_count),
+            destroy })
 {
 }
 
@@ -33,8 +35,8 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
      // GlCall {} (glFinish);
      GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, m_buffer_id);
      // GlCall {} (glGetBufferSubData,GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), data.data());
-     void *ptr =
-       GlCall{}(glMapBufferRange, GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(m_count * sizeof(GLuint)), GL_MAP_READ_BIT);
+     void *ptr
+       = GlCall{}(glMapBufferRange, GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(m_count * sizeof(GLuint)), GL_MAP_READ_BIT);
      if (ptr)
      {
           std::memcpy(data.data(), ptr, m_count * sizeof(GLuint));

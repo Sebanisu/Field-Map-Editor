@@ -42,11 +42,19 @@ struct unique_values_and_strings
        sortT       &&sort        = {},
        filterT     &&filter      = {},
        secondT     &&second_pass = {})
-       : m_values(second_pass(tiles, get_values(tiles, lambda, sort, filter)))
+       : m_values(second_pass(
+           tiles,
+           get_values(
+             tiles,
+             lambda,
+             sort,
+             filter)))
        , m_strings(get_strings(m_values))
      {
      }
-     explicit unique_values_and_strings(std::vector<value_type> in_values, std::vector<std::string> in_strings)
+     explicit unique_values_and_strings(
+       std::vector<value_type>  in_values,
+       std::vector<std::string> in_strings)
        : m_values(std::move(in_values))
        , m_strings(std::move(in_strings))
      {
@@ -78,8 +86,16 @@ struct unique_values_and_strings
           std::ranges::transform(data, std::back_inserter(vector), [](const T &t_value) { return fmt::format("{}", t_value); });
           return vector;
      }
-     template<typename tilesT, typename lambdaT, typename sortT, typename filterT>
-     [[nodiscard]] std::vector<T> get_values(const tilesT &tiles, lambdaT &&lambda, sortT &&sort, filterT &&filter) const
+     template<
+       typename tilesT,
+       typename lambdaT,
+       typename sortT,
+       typename filterT>
+     [[nodiscard]] std::vector<T> get_values(
+       const tilesT &tiles,
+       lambdaT     &&lambda,
+       sortT       &&sort,
+       filterT     &&filter) const
      {
           std::vector<T> ret{};
           if (std::ranges::empty(tiles))
@@ -99,7 +115,7 @@ struct unique_values_and_strings
 // Concept to check for values(), strings(), and zip()
 template<typename T>
 concept HasValuesAndStringsAndZip = requires(T obj) {
-     { obj.values() } -> std::ranges::range;// std::convertible_to<const std::vector<typename std::remove_cvref_t<T>::value_type> &>;
+     { obj.values() } -> std::ranges::range; // std::convertible_to<const std::vector<typename std::remove_cvref_t<T>::value_type> &>;
      { obj.strings() } -> std::ranges::range;// std::convertible_to<const std::vector<std::string> &>;
      { obj.zip() } -> std::ranges::range;
 };
@@ -111,27 +127,50 @@ struct all_unique_values_and_strings
      explicit all_unique_values_and_strings(std::monostate /*unused*/) {}
      template<std::ranges::range tilesT>
      explicit all_unique_values_and_strings(const tilesT &tiles)
-       : m_z(tiles, ff_8::tile_operations::Z{}, std::greater<>{})
-       , m_layer_id(tiles, ff_8::tile_operations::LayerId{})
-       , m_texture_page_id(tiles, ff_8::tile_operations::TextureId{})
-       , m_animation_id(tiles, ff_8::tile_operations::AnimationId{})
-       , m_blend_other(tiles, ff_8::tile_operations::Blend{})
-       , m_blend_mode(tiles, ff_8::tile_operations::BlendMode{})
-       , m_bpp(tiles, ff_8::tile_operations::Depth{})
+       : m_z(
+           tiles,
+           ff_8::tile_operations::Z{},
+           std::greater<>{})
+       , m_layer_id(
+           tiles,
+           ff_8::tile_operations::LayerId{})
+       , m_texture_page_id(
+           tiles,
+           ff_8::tile_operations::TextureId{})
+       , m_animation_id(
+           tiles,
+           ff_8::tile_operations::AnimationId{})
+       , m_blend_other(
+           tiles,
+           ff_8::tile_operations::Blend{})
+       , m_blend_mode(
+           tiles,
+           ff_8::tile_operations::BlendMode{})
+       , m_bpp(
+           tiles,
+           ff_8::tile_operations::Depth{})
        , m_animation_frame(
-           get_map<std::uint8_t, std::uint8_t>(
+           get_map<
+             std::uint8_t,
+             std::uint8_t>(
              tiles,
              m_animation_id,
              ff_8::tile_operations::AnimationState{},
              {},
-             [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
+             [](
+               const auto  key,
+               const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
        , m_palette(
-           get_map<std::uint8_t, open_viii::graphics::BPPT>(
+           get_map<
+             std::uint8_t,
+             open_viii::graphics::BPPT>(
              tiles,
              m_bpp,
              ff_8::tile_operations::PaletteId{},
              {},
-             [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
+             [](
+               const auto  key,
+               const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
      {
      }
      [[nodiscard]] const auto &z() const
@@ -190,8 +229,15 @@ struct all_unique_values_and_strings
        typename lambdaT,
        typename sortT   = std::less<>,
        typename filterT = decltype(default_filter_lambda)>
-     static std::map<keyT, unique_values_and_strings<valT>>
-       get_map(const tilesT &tiles, const unique_values_and_strings<keyT> &keys, lambdaT &&lambda, sortT &&sort = {}, filterT &&filter = {})
+     static std::map<
+       keyT,
+       unique_values_and_strings<valT>>
+       get_map(
+         const tilesT                          &tiles,
+         const unique_values_and_strings<keyT> &keys,
+         lambdaT                              &&lambda,
+         sortT                                &&sort   = {},
+         filterT                              &&filter = {})
      {
           std::map<keyT, unique_values_and_strings<valT>> ret = {};
           for (const auto &key : keys.values())

@@ -13,7 +13,10 @@ class Application
 {
    public:
      Application() = default;
-     Application(std::string, int, int);
+     Application(
+       std::string,
+       int,
+       int);
      void run() const;
      // static const glengine::Window *CurrentWindow();
      void set_current_window() const;

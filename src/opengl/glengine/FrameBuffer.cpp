@@ -6,8 +6,8 @@
 #include <spdlog/spdlog.h>
 namespace glengine
 {
-static constexpr auto attachments =
-  std::array<GLenum, 4>{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+static constexpr auto attachments
+  = std::array<GLenum, 4>{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 
 static std::uint32_t AttachDepthTexture(const FrameBufferSpecification &spec)
 {
@@ -25,7 +25,12 @@ static std::uint32_t AttachDepthTexture(const FrameBufferSpecification &spec)
      return tmp;
 }
 
-static std::uint32_t AttachColorTexture(int width, int height, GLint internal_format, GLenum format, GLenum type = GL_UNSIGNED_BYTE)
+static std::uint32_t AttachColorTexture(
+  int    width,
+  int    height,
+  GLint  internal_format,
+  GLenum format,
+  GLenum type = GL_UNSIGNED_BYTE)
 {
      std::uint32_t tmp{};
      GlCall{}(glGenTextures, 1, &tmp);
@@ -45,8 +50,12 @@ static std::uint32_t AttachColorTexture(int width, int height, GLint internal_fo
      return tmp;
 }
 
-static std::uint32_t
-  GenerateFramebuffer(const std::array<Glid, 4U> &color_attachments, [[maybe_unused]] const Glid &depth_attachment, bool first = false)
+static std::uint32_t GenerateFramebuffer(
+  const std::array<
+    Glid,
+    4U>                       &color_attachments,
+  [[maybe_unused]] const Glid &depth_attachment,
+  bool                         first = false)
 {
 
      std::uint32_t tmp{};
@@ -102,7 +111,7 @@ static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &s
                     return Glid{ AttachColorTexture(
                                    spec.width,
                                    spec.height,
-                                   GL_RGBA8UI,// internal format: 8-bit unsigned int RGBA
+                                   GL_RGBA8UI,     // internal format: 8-bit unsigned int RGBA
                                    GL_RGBA_INTEGER,// format: integer RGBA
                                    GL_UNSIGNED_BYTE// type: unsigned byte per channel
                                    ),
@@ -116,15 +125,15 @@ static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &s
           }
           return Glid{};
      };
-     return std::array<Glid, 4U>{
-          convert(spec.attachments[0]), convert(spec.attachments[1]), convert(spec.attachments[2]), convert(spec.attachments[3])
-     };
+     return std::array<Glid, 4U>{ convert(spec.attachments[0]), convert(spec.attachments[1]), convert(spec.attachments[2]),
+                                  convert(spec.attachments[3]) };
 }
 
 FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
   : m_specification{ std::move(spec) }
   , m_color_attachment{ GenerateColorAttachments(spec) }
-  , m_depth_attachment{ AttachDepthTexture(m_specification), Texture::destroy }
+  , m_depth_attachment{ AttachDepthTexture(m_specification),
+                        Texture::destroy }
 {
      // Sometimes the textures wouldn't be defined before defining m_renderer_id
      // So I moved this code inside here.
@@ -282,7 +291,10 @@ void FrameBuffer::set_scale(int in_scale)
      spdlog::trace("scale updated: {}", m_specification.scale);
 }
 
-FrameBuffer::Pixel FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
+FrameBuffer::Pixel FrameBuffer::read_pixel(
+  uint32_t attachment_index,
+  int      x,
+  int      y) const
 {
      if (attachment_index >= 4 || m_color_attachment[attachment_index] == 0)
           return std::monostate{};// invalid attachment

@@ -49,7 +49,10 @@ class [[nodiscard]] MoveTiles
      glm::ivec3                        m_released = {};
 
    public:
-     MoveTiles(const std::vector<std::intmax_t> &indexes, glm::ivec3 pressed, glm::ivec3 released)
+     MoveTiles(
+       const std::vector<std::intmax_t> &indexes,
+       glm::ivec3                        pressed,
+       glm::ivec3                        released)
        : m_indexes(indexes)
        , m_pressed(pressed)
        , m_released(released)
@@ -105,10 +108,14 @@ class Map
    public:
      Map() = default;
      Map(const Fields &fields)
-       : Map(fields, {})
+       : Map(
+           fields,
+           {})
      {
      }
-     Map(const Fields &, std::filesystem::path swizzle_path)
+     Map(
+       const Fields &,
+       std::filesystem::path swizzle_path)
        : m_swizzle_path(std::move(swizzle_path))
      {
           if (std::empty(GetMim().path) || std::empty(GetMapHistory().path))
@@ -565,8 +572,8 @@ class Map
           const auto &mim     = GetMim();
           const auto  bpp     = tile.depth();
           const auto  palette = tile.palette_id();
-          const auto  texture_page_id =
-            GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
+          const auto  texture_page_id
+            = GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
           const auto [texture_index, texture_page_width] = [&]() {
                if (std::ranges::empty(m_swizzle_path))
                {
@@ -597,8 +604,7 @@ class Map
           return GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) {
                // todo maybe should have a toggle to force back tile.
                return std::optional<glengine::SubTexture>{
-                    std::in_place_t{},
-                    texture,
+                    std::in_place_t{}, texture,
                     glm::vec2{ front_tile.source_x() * tile_scale + static_cast<float>(texture_page_offset),
                                texture_dims.y - (front_tile.source_y() * tile_scale + tile_size) }
                       / texture_dims,
@@ -615,8 +621,7 @@ class Map
           static constexpr typename TileFunctions::TexturePage texture_page{};
           return { (static_cast<float>(x(tile) + texture_page(tile) * map_dims_statics::TexturePageWidth) - m_map_dims.offset.x)
                      * m_map_dims.tile_scale,
-                   (m_map_dims.offset.y - static_cast<float>(y(tile))) * m_map_dims.tile_scale,
-                   0.F };
+                   (m_map_dims.offset.y - static_cast<float>(y(tile))) * m_map_dims.tile_scale, 0.F };
      }
      auto visit_tiles(auto &&lambda) const
      {
@@ -740,7 +745,9 @@ class Map
           std::int16_t texture_page_width = { map_dims_statics::TexturePageWidth };
      };
 
-     [[nodiscard]] static auto index_and_page_width(open_viii::graphics::BPPT bpp, std::uint8_t palette)
+     [[nodiscard]] static auto index_and_page_width(
+       open_viii::graphics::BPPT bpp,
+       std::uint8_t              palette)
      {
           IndexAndPageWidthReturn r = { .texture_index = palette };
           if (bpp.bpp8())
@@ -755,7 +762,9 @@ class Map
           }
           return r;
      }
-     [[maybe_unused]] [[nodiscard]] auto index_and_page_width(std::uint8_t palette, std::uint8_t texture_page) const
+     [[maybe_unused]] [[nodiscard]] auto index_and_page_width(
+       std::uint8_t palette,
+       std::uint8_t texture_page) const
      {
           IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(texture_page + 13U * (palette + 1U)) };
           if (!m_swizzle_delayed_textures.textures->at(r.texture_index))
@@ -841,7 +850,9 @@ class Map
                return static_cast<std::size_t>(std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
           });
      }
-     bool visit_unsorted_unfiltered_tiles(auto &&lambda, auto &&filter) const
+     bool visit_unsorted_unfiltered_tiles(
+       auto &&lambda,
+       auto &&filter) const
      {
           return GetMapHistory()->back().visit_tiles([&](auto &&tiles) -> bool {
                auto       f_tiles     = tiles | std::views::filter(tile_operations::NotInvalidTile{}) | std::views::filter(filter);
@@ -874,49 +885,48 @@ class Map
           const glm::vec2 size = m_map_dims.scaled_size();
           m_imgui_viewport_window.set_image_bounds(size);
           m_fixed_render_camera.set_projection(size);
-          m_frame_buffer =
-            glengine::FrameBuffer(m_frame_buffer.specification().resize(static_cast<int>(abs(size.x)), static_cast<int>(abs(size.y))));
+          m_frame_buffer
+            = glengine::FrameBuffer(m_frame_buffer.specification().resize(static_cast<int>(abs(size.x)), static_cast<int>(abs(size.y))));
      }
-     mutable glengine::OrthographicCamera m_fixed_render_camera        = {};
-     inline constinit static auto         s_fit_height                 = bool{ true };
-     inline constinit static auto         s_fit_width                  = bool{ true };
-     inline constinit static auto         s_draw_grid                  = bool{ false };
-     inline constinit static auto         s_blending                   = bool{ true };
+     mutable glengine::OrthographicCamera m_fixed_render_camera      = {};
+     inline constinit static auto         s_fit_height               = bool{ true };
+     inline constinit static auto         s_fit_width                = bool{ true };
+     inline constinit static auto         s_draw_grid                = bool{ false };
+     inline constinit static auto         s_blending                 = bool{ true };
 
-     static constexpr auto                s_default_color              = glm::vec4{ 1.F };
-     static constexpr auto                s_half_color                 = s_default_color / 2.F;
-     static constexpr auto                s_quarter_color              = s_half_color / 2.F;
-     mutable glm::vec4                    m_uniform_color              = s_default_color;
+     static constexpr auto                s_default_color            = glm::vec4{ 1.F };
+     static constexpr auto                s_half_color               = s_default_color / 2.F;
+     static constexpr auto                s_quarter_color            = s_half_color / 2.F;
+     mutable glm::vec4                    m_uniform_color            = s_default_color;
 
-     std::filesystem::path                m_swizzle_path               = {};
+     std::filesystem::path                m_swizzle_path             = {};
      // dimensions of map
-     MapDims<TileFunctions>               m_map_dims                   = { GetMapHistory()->back() };
+     MapDims<TileFunctions>               m_map_dims                 = { GetMapHistory()->back() };
      // loads the textures overtime instead of forcing them to load at start.
-     glengine::DelayedTextures<17U * 13U> m_swizzle_delayed_textures   = {};// 20 is detected max 16(+1)*13 is
+     glengine::DelayedTextures<17U * 13U> m_swizzle_delayed_textures = {};// 20 is detected max 16(+1)*13 is
                                                                           // possible max. 0 being no palette and
                                                                           // 1-17 being with palettes
      // takes quads and draws them to the frame buffer or screen.
-     glengine::BatchRenderer              m_batch_renderer             = { 1000 };
-     glengine::BatchRenderer              m_batch_renderer_red_integer = { 1,
-                                                                           { std::filesystem::current_path() / "res" / "shader"
-                                                                             / "red_integer.shader" } };
+     glengine::BatchRenderer              m_batch_renderer           = { 1000 };
+     glengine::BatchRenderer              m_batch_renderer_red_integer
+       = { 1, { std::filesystem::current_path() / "res" / "shader" / "red_integer.shader" } };
      // holds rendered image at 1:1 scale to prevent gaps when scaling.
-     mutable glengine::FrameBuffer        m_frame_buffer               = {};
-     mutable bool                         m_offscreen_drawing          = { false };
-     mutable bool                         m_saving                     = { false };
-     mutable bool                         m_preview                    = { false };
-     inline constinit static MapBlends    s_blends                     = {};
-     Changed                              m_changed                    = {};
-     glengine::Counter                    m_id                         = {};
-     mutable std::vector<bool>            m_tile_button_state          = {};
-     mutable std::vector<bool>            m_tile_button_state_hover    = {};
-     mutable std::vector<bool>            m_tile_button_state_pressed  = {};
-     mutable std::vector<std::intmax_t>   m_clicked_indexes            = {};
-     glengine::ImGuiViewPortWindow        m_imgui_viewport_window      = { TileFunctions::label };
-     mutable bool                         m_has_hover                  = { false };
-     mutable bool                         m_dragging                   = { false };
-     mutable SimilarAdjustments           m_similar                    = {};
-     static inline const auto             m_filters                    = [](const auto &tile) -> bool {
+     mutable glengine::FrameBuffer      m_frame_buffer              = {};
+     mutable bool                       m_offscreen_drawing         = { false };
+     mutable bool                       m_saving                    = { false };
+     mutable bool                       m_preview                   = { false };
+     inline constinit static MapBlends  s_blends                    = {};
+     Changed                            m_changed                   = {};
+     glengine::Counter                  m_id                        = {};
+     mutable std::vector<bool>          m_tile_button_state         = {};
+     mutable std::vector<bool>          m_tile_button_state_hover   = {};
+     mutable std::vector<bool>          m_tile_button_state_pressed = {};
+     mutable std::vector<std::intmax_t> m_clicked_indexes           = {};
+     glengine::ImGuiViewPortWindow      m_imgui_viewport_window     = { TileFunctions::label };
+     mutable bool                       m_has_hover                 = { false };
+     mutable bool                       m_dragging                  = { false };
+     mutable SimilarAdjustments         m_similar                   = {};
+     static inline const auto           m_filters                   = [](const auto &tile) -> bool {
           return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_working(tile));
      };
 };

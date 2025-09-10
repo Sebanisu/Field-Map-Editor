@@ -69,7 +69,10 @@ class safedir
      {
           return std::filesystem::is_directory(m_status);
      }
-     void debug(std::error_code &ec, std::string_view file, int line) const
+     void debug(
+       std::error_code &ec,
+       std::string_view file,
+       int              line) const
      {
           if (ec == std::errc::no_such_file_or_directory)
           {

@@ -99,7 +99,9 @@ namespace tile_operations
      template<typename ValueT>                                                                                               \
      struct TranslateWith##STRING                                                                                            \
      {                                                                                                                       \
-          constexpr TranslateWith##STRING(ValueT to, ValueT from)                                                            \
+          constexpr TranslateWith##STRING(                                                                                   \
+            ValueT to,                                                                                                       \
+            ValueT from)                                                                                                     \
             : m_to(std::move(to))                                                                                            \
             , m_from(std::move(from))                                                                                        \
           {                                                                                                                  \
@@ -168,22 +170,54 @@ namespace tile_operations
           using match_with                = STRING##Match<value_type>;                                                       \
      }
 
-     TILE_OPERATION(X, x);
-     TILE_OPERATION(Y, y);
-     TILE_OPERATION(XY, xy);
-     TILE_OPERATION(Z, z);
-     TILE_OPERATION(SourceX, source_x);
-     TILE_OPERATION(SourceY, source_y);
-     TILE_OPERATION(SourceXY, source_xy);
-     TILE_OPERATION(TextureId, texture_id);
-     TILE_OPERATION(BlendMode, blend_mode);
-     TILE_OPERATION(Blend, blend);
-     TILE_OPERATION(Draw, draw);
-     TILE_OPERATION(Depth, depth);
-     TILE_OPERATION(LayerId, layer_id);
-     TILE_OPERATION(PaletteId, palette_id);
-     TILE_OPERATION(AnimationId, animation_id);
-     TILE_OPERATION(AnimationState, animation_state);
+     TILE_OPERATION(
+       X,
+       x);
+     TILE_OPERATION(
+       Y,
+       y);
+     TILE_OPERATION(
+       XY,
+       xy);
+     TILE_OPERATION(
+       Z,
+       z);
+     TILE_OPERATION(
+       SourceX,
+       source_x);
+     TILE_OPERATION(
+       SourceY,
+       source_y);
+     TILE_OPERATION(
+       SourceXY,
+       source_xy);
+     TILE_OPERATION(
+       TextureId,
+       texture_id);
+     TILE_OPERATION(
+       BlendMode,
+       blend_mode);
+     TILE_OPERATION(
+       Blend,
+       blend);
+     TILE_OPERATION(
+       Draw,
+       draw);
+     TILE_OPERATION(
+       Depth,
+       depth);
+     TILE_OPERATION(
+       LayerId,
+       layer_id);
+     TILE_OPERATION(
+       PaletteId,
+       palette_id);
+     TILE_OPERATION(
+       AnimationId,
+       animation_id);
+     TILE_OPERATION(
+       AnimationState,
+       animation_state);
 #undef TILE_OPERATION
      struct NotInvalidTile
      {

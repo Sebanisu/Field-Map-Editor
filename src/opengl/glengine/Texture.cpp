@@ -1,8 +1,12 @@
 #include "Texture.hpp"
 namespace glengine
 {
-Texture::Texture(std::filesystem::path path, bool in_flip)
-  : Texture(Image{ std::move(path), in_flip })
+Texture::Texture(
+  std::filesystem::path path,
+  bool                  in_flip)
+  : Texture(
+      Image{ std::move(path),
+             in_flip })
 {
 }
 Texture::Texture(Image image)

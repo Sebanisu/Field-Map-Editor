@@ -9,12 +9,16 @@
 namespace glengine
 {
 
-[[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(ImGuiStyleVar style, float val) noexcept
+[[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(
+  ImGuiStyleVar style,
+  float         val) noexcept
 {
      ImGui::PushStyleVar(style, val);
      return ScopeGuard{ []() { ImGui::PopStyleVar(); } };
 }
-[[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(ImGuiStyleVar style, const ImVec2 &val) noexcept
+[[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(
+  ImGuiStyleVar style,
+  const ImVec2 &val) noexcept
 {
      ImGui::PushStyleVar(style, val);
      return ScopeGuard{ []() { ImGui::PopStyleVar(); } };

@@ -127,14 +127,18 @@ inline namespace impl
           float                 view_port_aspect_ratio() const;
           void                  disable_debug_text();
           [[maybe_unused]] void enable_debug_text();
-          void                  fit(const bool width, const bool height) const;
-          glm::vec2             offset_mouse_pos() const;
+          void                  fit(
+                             const bool width,
+                             const bool height) const;
+          glm::vec2 offset_mouse_pos() const;
 
           friend ImGuiViewPortPreview;
 
         private:
-          static void                set_preview_aspect_ratio(float) noexcept;
-          glm::vec4                  adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
+          static void set_preview_aspect_ratio(float) noexcept;
+          glm::vec4   adjust_mouse_pos(
+              glm::vec2 topright,
+              glm::vec2 bottomleft) const;
           [[maybe_unused]] glm::vec2 view_port_dims() const;
           glm::vec4                  view_port_mouse_pos() const;
           void                       fit_both() const;

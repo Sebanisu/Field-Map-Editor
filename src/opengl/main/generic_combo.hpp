@@ -143,7 +143,9 @@ class GenericComboWithFilter
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
           return std::ranges::next(std::ranges::begin(range), idx);
      }
@@ -314,7 +316,11 @@ struct GenericMenuWithFilter
      invocableT                 &&m_lambda;
 
    public:
-     GenericMenuWithFilter(std::string_view label, HasValuesAndStringsAndZipT &&pair, IsFilterOldT &filter, invocableT &&lambda)
+     GenericMenuWithFilter(
+       std::string_view             label,
+       HasValuesAndStringsAndZipT &&pair,
+       IsFilterOldT                &filter,
+       invocableT                 &&lambda)
        : m_label(label)
        , m_pair(std::forward<HasValuesAndStringsAndZipT>(pair))
        , m_filter(filter)
@@ -392,7 +398,11 @@ struct GenericMenuWithMultiFilter
      invocableT                      &&m_lambda;
 
    public:
-     GenericMenuWithMultiFilter(std::string_view label, const HasValuesAndStringsAndZipT &pair, IsFilterOldT &filter, invocableT &&lambda)
+     GenericMenuWithMultiFilter(
+       std::string_view                  label,
+       const HasValuesAndStringsAndZipT &pair,
+       IsFilterOldT                     &filter,
+       invocableT                      &&lambda)
        : m_label(label)
        , m_pair(pair)
        , m_filter(filter)
@@ -502,7 +512,9 @@ class GenericComboWithMultiFilter
        , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
        , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
        , settings_(settings)
-       , current_idx_(std::ranges::size(values_), false)
+       , current_idx_(
+           std::ranges::size(values_),
+           false)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
      {
@@ -818,7 +830,9 @@ class GenericComboWithFilterAndFixedToggles
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
           assert(std::cmp_less(idx, std::ranges::size(range)) && "Index out of range!");
           return std::ranges::next(std::ranges::begin(range), idx);
@@ -1018,7 +1032,7 @@ class GenericComboWithFilterAndFixedToggles
 
           // Move back to same position
           ImVec2 cursorBackup = ImGui::GetCursorScreenPos();// Save cursor position
-          ImGui::SetItemAllowOverlap();// Allow us to draw on top
+          ImGui::SetItemAllowOverlap();                     // Allow us to draw on top
           ImGui::SetCursorScreenPos(ImGui::GetItemRectMin());
 
           // Make invisible button the same size as the text
@@ -1131,7 +1145,9 @@ class GenericCombo
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
           return std::ranges::next(std::ranges::begin(range), static_cast<std::ranges::range_difference_t<Range>>(idx));
      }

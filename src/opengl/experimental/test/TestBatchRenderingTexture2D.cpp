@@ -15,8 +15,8 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
      m_textures.emplace_back(std::filesystem::current_path() / "res" / "textures" / "mitchell-luo-q9ZiOzsMAhE-unsplash.png");
      m_textures.emplace_back(std::filesystem::current_path() / "res" / "textures" / "logo.png");
      m_textures.emplace_back(std::filesystem::current_path() / "res" / "textures" / "math-yDq60_c-g2E-unsplash.png");
-     constexpr auto colors =
-       std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
+     constexpr auto colors
+       = std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
 
 
      std::vector<glengine::Vertex> vertices{};

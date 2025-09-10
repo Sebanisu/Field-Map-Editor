@@ -67,7 +67,11 @@ class Window final
           const auto *current_mode = glfwGetVideoMode(monitor);
           full_screen_mode(monitor, current_mode->width, current_mode->height, current_mode->refreshRate);
      }
-     void full_screen_mode(GLFWmonitor *monitor, int width, int height, int refresh_rate = GLFW_DONT_CARE) const
+     void full_screen_mode(
+       GLFWmonitor *monitor,
+       int          width,
+       int          height,
+       int          refresh_rate = GLFW_DONT_CARE) const
      {
           glfwSetWindowMonitor(m_window.get(), monitor, 0, 0, width, height, refresh_rate);
 

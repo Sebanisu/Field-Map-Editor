@@ -24,8 +24,8 @@ test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
 }
 void test::TestBatchRenderingTexture2DDynamic::on_update(float ts) const
 {
-     constexpr auto colors =
-       std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
+     constexpr auto colors
+       = std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
      std::vector<glengine::Vertex> vertices{};
      vertices.reserve(12U);
      const auto offset = glm::vec3{ -0.5F, -0.5F, 0.F };

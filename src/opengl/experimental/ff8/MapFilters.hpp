@@ -12,7 +12,9 @@ namespace ff_8
 {
 class MapFilters
 {
-     static auto visit(const MapHistory &map, auto &&lambda)
+     static auto visit(
+       const MapHistory &map,
+       auto            &&lambda)
      {
           return map.front().visit_tiles(
             [&](const auto &f_tiles) { return map.back().visit_tiles([&](const auto &b_tiles) { return lambda(f_tiles, b_tiles); }); });
@@ -24,7 +26,11 @@ class MapFilters
      MapFilters(const MapHistory &map)
        :// map_history(&map)
        m_unique_tile_values(map)
-       , m_disabled(visit(map, [](auto &&f_tiles, auto &&b_tiles) { return std::ranges::empty(f_tiles) || std::ranges::empty(b_tiles); }))
+       , m_disabled(visit(
+           map,
+           [](
+             auto &&f_tiles,
+             auto &&b_tiles) { return std::ranges::empty(f_tiles) || std::ranges::empty(b_tiles); }))
      {
      }
      [[nodiscard]] bool on_im_gui_update() const
@@ -205,8 +211,13 @@ class MapFilters
      }
 
    private:
-     bool filter(auto &&value, std::ranges::range auto &&bool_range, std::ranges::range auto &&value_range) const noexcept
-          requires std::equality_comparable_with<decltype(value), std::ranges::range_value_t<decltype(value_range)>>
+     bool filter(
+       auto                    &&value,
+       std::ranges::range auto &&bool_range,
+       std::ranges::range auto &&value_range) const noexcept
+          requires std::equality_comparable_with<
+            decltype(value),
+            std::ranges::range_value_t<decltype(value_range)>>
      {
           assert(std::ranges::size(bool_range) == std::ranges::size(value_range));
           assert(std::ranges::size(bool_range) != 0);

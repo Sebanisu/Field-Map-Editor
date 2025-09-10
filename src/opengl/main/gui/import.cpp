@@ -148,8 +148,9 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      static std::string current_item_str = {};
      const auto         save_config      = [&]() {
           selections->update<ConfigKey::ImportSelectedTile>();
-          current_item_str =
-            std::holds_alternative<std::monostate>(current_tile) ? "" : fmt::format("{}", selections->get<ConfigKey::ImportSelectedTile>());
+          current_item_str = std::holds_alternative<std::monostate>(current_tile)
+                                            ? ""
+                                            : fmt::format("{}", selections->get<ConfigKey::ImportSelectedTile>());
      };
      const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
 
@@ -186,9 +187,9 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                     const auto next_col_pop = glengine::ScopeGuard([]() { ImGui::NextColumn(); });
                     const auto the_end_id_1 = PushPopID();
                     const auto iterate      = glengine::ScopeGuard([&tile_id]() { ++tile_id; });
-                    bool       is_selected =
-                      (selections->get<ConfigKey::ImportSelectedTile>() == tile_id);// You can store your selection however you
-                                                                                    // want, outside or inside your objects
+                    bool       is_selected
+                      = (selections->get<ConfigKey::ImportSelectedTile>() == tile_id);// You can store your selection however you
+                                                                                      // want, outside or inside your objects
                     if (std::ranges::any_of(
                           std::array{ [&]() -> bool {
                                           bool const selected = ImGui::Selectable("", is_selected);
@@ -239,9 +240,9 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                // Left
                const auto pop_id_left = PushPopID();
                ImGui::SameLine(0, spacing);
-               const bool disabled =
-                 std::cmp_less_equal(selections->get<ConfigKey::ImportSelectedTile>(), 0)
-                 || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() - 1, std::ranges::size(tiles));
+               const bool disabled
+                 = std::cmp_less_equal(selections->get<ConfigKey::ImportSelectedTile>(), 0)
+                   || std::cmp_greater_equal(selections->get<ConfigKey::ImportSelectedTile>() - 1, std::ranges::size(tiles));
                ImGui::BeginDisabled(disabled);
                if (ImGui::ArrowButton("##l", ImGuiDir_Left))
                {
@@ -398,8 +399,8 @@ bool import::combo_tile_size() const
      }
 
 
-     static constexpr auto values =
-       std::array{ tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size };
+     static constexpr auto values
+       = std::array{ tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size };
      const auto gcc = GenericCombo(
        gui_labels::tile_size,
        []() -> decltype(auto) { return values; },
@@ -412,7 +413,9 @@ bool import::combo_tile_size() const
      selections->update<ConfigKey::TileSizeValue>();
      return true;
 }
-void import::generate_map_for_imported_image(const open_viii::graphics::background::Map::variant_tile &current_tile, bool changed) const
+void import::generate_map_for_imported_image(
+  const open_viii::graphics::background::Map::variant_tile &current_tile,
+  bool                                                      changed) const
 {//   * I'd probably store the new tiles in their own map.
      using namespace open_viii::graphics::background;
      using namespace open_viii::graphics;
@@ -432,42 +435,44 @@ void import::generate_map_for_imported_image(const open_viii::graphics::backgrou
      format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.get_size() != glm::ivec2{})
      {
-          m_import_image_map = open_viii::graphics::background::Map{
-               [&current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}, &tiles_high, &tiles_wide]() mutable
-                 -> open_viii::graphics::background::Map::variant_tile {
-                    return std::visit(
-                      [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
-                           if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
-                           {
-                                if (x_tile == tiles_wide)
-                                {
-                                     x_tile = 0;
-                                     ++y_tile;
-                                }
-                                if (y_tile == tiles_high)
-                                {
-                                     return std::monostate{};
-                                }
-                                //   * Set new tiles to 4 bit to get max amount of tiles.
-                                tile =
-                                  tile.with_depth(BPPT::BPP4_CONST())
-                                    .with_source_xy(
-                                      { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
-                                        static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
-                                    .with_xy({ static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
+          m_import_image_map
+            = open_viii::graphics::background::Map{ [&current_tile,
+                                                     x_tile = uint8_t{},
+                                                     y_tile = uint8_t{},
+                                                     &tiles_high,
+                                                     &tiles_wide]() mutable -> open_viii::graphics::background::Map::variant_tile {
+                   return std::visit(
+                     [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
+                          if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
+                          {
+                               if (x_tile == tiles_wide)
+                               {
+                                    x_tile = 0;
+                                    ++y_tile;
+                               }
+                               if (y_tile == tiles_high)
+                               {
+                                    return std::monostate{};
+                               }
+                               //   * Set new tiles to 4 bit to get max amount of tiles.
+                               tile
+                                 = tile.with_depth(BPPT::BPP4_CONST())
+                                     .with_source_xy(
+                                       { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
+                                         static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
+                                     .with_xy({ static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
 
-                                // iterate
-                                ++x_tile;
-                                return tile;
-                           }
-                           else
-                           {
-                                return std::monostate{};
-                           }
-                      },
-                      current_tile);
-               }
-          };
+                               // iterate
+                               ++x_tile;
+                               return tile;
+                          }
+                          else
+                          {
+                               return std::monostate{};
+                          }
+                     },
+                     current_tile);
+              } };
           filter_empty_import_tiles();
      }
 }
@@ -582,7 +587,9 @@ void import::update_imported_render_texture() const
      }
 }
 
-void import::adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page) const
+void import::adjust_source_xy_texture_page_for_import_map(
+  uint8_t       next_source_y,
+  const uint8_t next_texture_page) const
 {
      m_import_image_map.visit_tiles([&](auto &&import_tiles) {
           auto       tile_i   = import_tiles.begin();

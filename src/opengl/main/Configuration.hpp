@@ -68,7 +68,9 @@ class Configuration
       */
      toml::node_view<const toml::node> operator[](std::string_view i) const;
 
-     toml::node_view<const toml::node> operator()(std::string_view root, std::string_view child) const;
+     toml::node_view<const toml::node> operator()(
+       std::string_view root,
+       std::string_view child) const;
 
      /**
       * @brief Saves the current state of the configuration back to the file.
@@ -79,7 +81,7 @@ class Configuration
       *        the in-memory cache after saving. This can be useful if you want to
       *        force a reload the next time the configuration is accessed.
       */
-     void                              save(const bool remove_from_cache = false) const;
+     void save(const bool remove_from_cache = false) const;
 
      /**
       * @brief Loads an array from a TOML configuration table into a vector.
@@ -103,9 +105,14 @@ class Configuration
       * @note For all other types (including `std::string`), values are parsed as `InputT` and optionally cast to `OutputT`.
       * @note This function requires that `InputT` is statically castable to `OutputT`.
       */
-     template<typename OutputT, typename InputT = OutputT>
+     template<
+       typename OutputT,
+       typename InputT = OutputT>
           requires requires { static_cast<OutputT>(std::declval<InputT>()); }
-     static bool load_array(const toml::table &table, const std::string_view key, std::vector<OutputT> &output)
+     static bool load_array(
+       const toml::table     &table,
+       const std::string_view key,
+       std::vector<OutputT>  &output)
      {
           if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, bool>)
           {
@@ -207,13 +214,18 @@ class Configuration
       * @note For `std::filesystem::path`, paths are stored as forward-slashed UTF-8 strings.
       * @note For other types, values are either directly inserted or cast to `OutputT`.
       */
-     template<typename InputT, typename OutputT = InputT>
-     static void update_array(toml::table &table, const std::string_view key, const std::vector<InputT> &input)
+     template<
+       typename InputT,
+       typename OutputT = InputT>
+     static void update_array(
+       toml::table               &table,
+       const std::string_view     key,
+       const std::vector<InputT> &input)
      {
           if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, bool>)
           {
-               std::string encoded =
-                 input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
+               std::string encoded
+                 = input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
                table.insert_or_assign(key, std::move(encoded));
           }
           else if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::filesystem::path>)

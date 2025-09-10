@@ -27,7 +27,10 @@ static bool OnWindowResize(const glengine::event::WindowResize &e)
      return true;
 }
 
-Application::Application(std::string title, int width, int height)
+Application::Application(
+  std::string title,
+  int         width,
+  int         height)
   : window(
       glengine::Window::create(
         glengine::Window::WindowData{ .title          = std::move(title),

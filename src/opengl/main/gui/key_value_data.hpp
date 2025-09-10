@@ -70,87 +70,61 @@ struct key_value_data
 
      struct keys
      {
-          static constexpr std::string_view selected_path                 = { "selected_path" };
-          static constexpr std::string_view ff8_path                      = { "ff8_path" };
-          static constexpr std::string_view current_path                  = { "current_path" };
-          static constexpr std::string_view current_toml_path             = { "current_toml_path" };
-          static constexpr std::string_view ffnx_mod_path                 = { "ffnx_mod_path" };
-          static constexpr std::string_view ffnx_direct_mode_path         = { "ffnx_direct_mode_path" };
-          static constexpr std::string_view ffnx_override_path            = { "ffnx_override_path" };
-          static constexpr std::string_view batch_input_path              = { "batch_input_path" };
-          static constexpr std::string_view batch_output_path             = { "batch_output_path" };
-          static constexpr std::string_view field_name                    = { "field_name" };
-          static constexpr std::string_view full_filename                 = { "full_filename" };
-          static constexpr std::string_view ext                           = { "ext" };
-          static constexpr std::string_view field_prefix                  = { "field_prefix" };
-          static constexpr std::string_view letter_2_lang                 = { "2_letter_lang" };
-          static constexpr std::string_view letter_3_lang                 = { "3_letter_lang" };
-          static constexpr std::string_view palette                       = { "palette" };
-          static constexpr std::string_view texture_page                  = { "texture_page" };
-          static constexpr std::string_view pupu_id                       = { "pupu_id" };
-          static constexpr std::string_view demaster_mod_path             = { "demaster_mod_path" };
-          static constexpr std::string_view ffnx_map                      = { "ffnx_map" };
-          static constexpr std::string_view ffnx_multi_texture            = { "ffnx_multi_texture" };
-          static constexpr std::string_view ffnx_single_texture           = { "ffnx_single_texture" };
-          static constexpr std::string_view demaster                      = { "demaster" };
-          static constexpr std::string_view ffnx_multi_texture_full       = { "ffnx_multi_texture_full" };
-          static constexpr std::string_view ffnx_single_texture_full      = { "ffnx_single_texture_full" };
-          static constexpr std::string_view demaster_full                 = { "demaster_full" };
-          static constexpr std::string_view field_main                    = { "field_main" };
-          static constexpr std::string_view field_lang                    = { "field_lang" };
-          static constexpr std::string_view chara_main                    = { "chara_main" };
-          static constexpr std::string_view chara_lang                    = { "chara_lang" };
-          static constexpr std::string_view field_3lang_main              = { "field_3lang_main" };
-          static constexpr std::string_view chara_3lang_main              = { "chara_3lang_main" };
-          static constexpr std::string_view eng                           = { "eng" };// open_viii::LangCommon::ENG
-          static constexpr std::string_view fre                           = { "fre" };
-          static constexpr std::string_view ger                           = { "ger" };
-          static constexpr std::string_view ita                           = { "ita" };
-          static constexpr std::string_view spa                           = { "spa" };
-          static constexpr std::string_view jp                            = { "jp" };
-          static constexpr std::string_view x                             = { "x" };
+          static constexpr std::string_view selected_path            = { "selected_path" };
+          static constexpr std::string_view ff8_path                 = { "ff8_path" };
+          static constexpr std::string_view current_path             = { "current_path" };
+          static constexpr std::string_view current_toml_path        = { "current_toml_path" };
+          static constexpr std::string_view ffnx_mod_path            = { "ffnx_mod_path" };
+          static constexpr std::string_view ffnx_direct_mode_path    = { "ffnx_direct_mode_path" };
+          static constexpr std::string_view ffnx_override_path       = { "ffnx_override_path" };
+          static constexpr std::string_view batch_input_path         = { "batch_input_path" };
+          static constexpr std::string_view batch_output_path        = { "batch_output_path" };
+          static constexpr std::string_view field_name               = { "field_name" };
+          static constexpr std::string_view full_filename            = { "full_filename" };
+          static constexpr std::string_view ext                      = { "ext" };
+          static constexpr std::string_view field_prefix             = { "field_prefix" };
+          static constexpr std::string_view letter_2_lang            = { "2_letter_lang" };
+          static constexpr std::string_view letter_3_lang            = { "3_letter_lang" };
+          static constexpr std::string_view palette                  = { "palette" };
+          static constexpr std::string_view texture_page             = { "texture_page" };
+          static constexpr std::string_view pupu_id                  = { "pupu_id" };
+          static constexpr std::string_view demaster_mod_path        = { "demaster_mod_path" };
+          static constexpr std::string_view ffnx_map                 = { "ffnx_map" };
+          static constexpr std::string_view ffnx_multi_texture       = { "ffnx_multi_texture" };
+          static constexpr std::string_view ffnx_single_texture      = { "ffnx_single_texture" };
+          static constexpr std::string_view demaster                 = { "demaster" };
+          static constexpr std::string_view ffnx_multi_texture_full  = { "ffnx_multi_texture_full" };
+          static constexpr std::string_view ffnx_single_texture_full = { "ffnx_single_texture_full" };
+          static constexpr std::string_view demaster_full            = { "demaster_full" };
+          static constexpr std::string_view field_main               = { "field_main" };
+          static constexpr std::string_view field_lang               = { "field_lang" };
+          static constexpr std::string_view chara_main               = { "chara_main" };
+          static constexpr std::string_view chara_lang               = { "chara_lang" };
+          static constexpr std::string_view field_3lang_main         = { "field_3lang_main" };
+          static constexpr std::string_view chara_3lang_main         = { "chara_3lang_main" };
+          static constexpr std::string_view eng                      = { "eng" };// open_viii::LangCommon::ENG
+          static constexpr std::string_view fre                      = { "fre" };
+          static constexpr std::string_view ger                      = { "ger" };
+          static constexpr std::string_view ita                      = { "ita" };
+          static constexpr std::string_view spa                      = { "spa" };
+          static constexpr std::string_view jp                       = { "jp" };
+          static constexpr std::string_view x                        = { "x" };
 
-          static constexpr auto             all_keys                      = std::to_array<std::string_view>({ selected_path,
-                                                                                                              ff8_path,
-                                                                                                              current_path,
-                                                                                                              current_toml_path,
-                                                                                                              ffnx_mod_path,
-                                                                                                              ffnx_direct_mode_path,
-                                                                                                              ffnx_override_path,
-                                                                                                              // batch_input_path,
-                                                                                                              // batch_output_path,
-                                                                                                              field_name,
-                                                                                                              ext,
-                                                                                                              full_filename,
-                                                                                                              field_prefix,
-                                                                                                              letter_2_lang,
-                                                                                                              letter_3_lang,
-                                                                                                              palette,
-                                                                                                              texture_page,
-                                                                                                              pupu_id,
-                                                                                                              demaster_mod_path,
-                                                                                                              ffnx_map,
-                                                                                                              ffnx_multi_texture,
-                                                                                                              ffnx_single_texture,
-                                                                                                              demaster,
-                                                                                                              ffnx_multi_texture_full,
-                                                                                                              ffnx_single_texture_full,
-                                                                                                              demaster_full,
-                                                                                                              field_main,
-                                                                                                              field_lang,
-                                                                                                              chara_main,
-                                                                                                              chara_lang,
-                                                                                                              field_3lang_main,
-                                                                                                              chara_3lang_main });
+          static constexpr auto             all_keys                 = std::to_array<std::string_view>(
+            { selected_path, ff8_path, current_path, current_toml_path, ffnx_mod_path, ffnx_direct_mode_path, ffnx_override_path,
+                                          // batch_input_path,
+                                          // batch_output_path,
+                                          field_name, ext, full_filename, field_prefix, letter_2_lang, letter_3_lang, palette, texture_page, pupu_id, demaster_mod_path,
+                                          ffnx_map, ffnx_multi_texture, ffnx_single_texture, demaster, ffnx_multi_texture_full, ffnx_single_texture_full, demaster_full,
+                                          field_main, field_lang, chara_main, chara_lang, field_3lang_main, chara_3lang_main });
 
-          static constexpr std::string_view selected_path_tooltip         = { "The user chooses a path to output or read data from." };
-          static constexpr std::string_view ff8_path_tooltip              = { "The root directory where Final Fantasy VIII is installed." };
-          static constexpr std::string_view current_path_tooltip          = { "The current working directory." };
-          static constexpr std::string_view current_toml_path_tooltip     = { "The current selected toml path." };
-          static constexpr std::string_view ffnx_mod_path_tooltip         = { "The base directory for FFNx mod files." };
-          static constexpr std::string_view ffnx_direct_mode_path_tooltip = {
-               "The directory for FFNx direct mode files, allowing file overrides. `.map` files would go here."
-          };
+          static constexpr std::string_view selected_path_tooltip     = { "The user chooses a path to output or read data from." };
+          static constexpr std::string_view ff8_path_tooltip          = { "The root directory where Final Fantasy VIII is installed." };
+          static constexpr std::string_view current_path_tooltip      = { "The current working directory." };
+          static constexpr std::string_view current_toml_path_tooltip = { "The current selected toml path." };
+          static constexpr std::string_view ffnx_mod_path_tooltip     = { "The base directory for FFNx mod files." };
+          static constexpr std::string_view ffnx_direct_mode_path_tooltip
+            = { "The directory for FFNx direct mode files, allowing file overrides. `.map` files would go here." };
           static constexpr std::string_view ffnx_override_path_tooltip = { "The FFNx override path for replacing game assets." };
           static constexpr std::string_view batch_input_path_tooltip   = { "The folder containing files for batch processing." };
           static constexpr std::string_view batch_output_path_tooltip  = { "The destination folder for processed batch output." };
@@ -165,93 +139,58 @@ struct key_value_data
           static constexpr std::string_view pupu_id_tooltip       = { "The 32-bit hex number used for Pupu ID. This is for deswizzles." };
           static constexpr std::string_view demaster_mod_path_tooltip = { "The mod directory for Demaster, an FF8 modding tool." };
 
-          static constexpr std::string_view ffnx_map_tooltip          = {
-               "Path layout for FFNx map data in direct mode:\n"
-                        "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
-          };
-          static constexpr std::string_view ffnx_multi_texture_tooltip = {
-               "Path layout for FFNx multi-texture field assets:\n"
-               "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"
-          };
-          static constexpr std::string_view ffnx_single_texture_tooltip = {
-               "Path layout for FFNx single-texture field assets:\n"
-               "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
-          };
-          static constexpr std::string_view demaster_tooltip = {
-               "Path layout for field background textures in Demaster:\n"
-               "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
-               "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}"
-          };
-          static constexpr std::string_view ffnx_multi_texture_full_tooltip = {
-               "Path layout for FFNx multi-texture field assets:\n"
-               "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{full_filename}"
-          };
-          static constexpr std::string_view ffnx_single_texture_full_tooltip = {
-               "Path layout for FFNx single-texture field assets:\n"
-               "{ffnx_mod_path}/field/mapdata/{field_name}/{full_filename}"
-          };
-          static constexpr std::string_view demaster_full_tooltip = {
-               "Path layout for field background textures in Demaster:\n"
-               "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/{full_filename}"
-          };
-          static constexpr std::string_view field_main_tooltip = {
-               "Standard path for field assets:\n"
-               "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}"
-          };
-          static constexpr std::string_view field_lang_tooltip = {
-               "Path for language-specific field assets:\n"
-               "field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
-          };
-          static constexpr std::string_view chara_main_tooltip = {
-               "Path for main character assets:\n"
-               "field/mapdata/{field_prefix}/{field_name}/chara.one"
-          };
-          static constexpr std::string_view chara_lang_tooltip = {
-               "Path for language-specific character assets:\n"
-               "field/mapdata/{field_prefix}/{field_name}/chara{_{2_letter_lang}}.one"
-          };
-          static constexpr std::string_view field_3lang_main_tooltip = {
-               "Path for three-letter language-specific field assets:\n"
-               "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/{field_name}{ext}"
-          };
-          static constexpr std::string_view chara_3lang_main_tooltip = {
-               "Path for three-letter language-specific character assets:\n"
-               "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/chara.one"
-          };
+          static constexpr std::string_view ffnx_map_tooltip
+            = { "Path layout for FFNx map data in direct mode:\n"
+                "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}" };
+          static constexpr std::string_view ffnx_multi_texture_tooltip
+            = { "Path layout for FFNx multi-texture field assets:\n"
+                "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}" };
+          static constexpr std::string_view ffnx_single_texture_tooltip
+            = { "Path layout for FFNx single-texture field assets:\n"
+                "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}" };
+          static constexpr std::string_view demaster_tooltip
+            = { "Path layout for field background textures in Demaster:\n"
+                "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
+                "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}" };
+          static constexpr std::string_view ffnx_multi_texture_full_tooltip
+            = { "Path layout for FFNx multi-texture field assets:\n"
+                "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{full_filename}" };
+          static constexpr std::string_view ffnx_single_texture_full_tooltip
+            = { "Path layout for FFNx single-texture field assets:\n"
+                "{ffnx_mod_path}/field/mapdata/{field_name}/{full_filename}" };
+          static constexpr std::string_view demaster_full_tooltip
+            = { "Path layout for field background textures in Demaster:\n"
+                "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/{full_filename}" };
+          static constexpr std::string_view field_main_tooltip
+            = { "Standard path for field assets:\n"
+                "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}" };
+          static constexpr std::string_view field_lang_tooltip
+            = { "Path for language-specific field assets:\n"
+                "field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}" };
+          static constexpr std::string_view chara_main_tooltip
+            = { "Path for main character assets:\n"
+                "field/mapdata/{field_prefix}/{field_name}/chara.one" };
+          static constexpr std::string_view chara_lang_tooltip
+            = { "Path for language-specific character assets:\n"
+                "field/mapdata/{field_prefix}/{field_name}/chara{_{2_letter_lang}}.one" };
+          static constexpr std::string_view field_3lang_main_tooltip
+            = { "Path for three-letter language-specific field assets:\n"
+                "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/{field_name}{ext}" };
+          static constexpr std::string_view chara_3lang_main_tooltip
+            = { "Path for three-letter language-specific character assets:\n"
+                "{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/chara.one" };
 
 
-          static constexpr auto all_tooltips = std::to_array<std::string_view>({ selected_path_tooltip,
-                                                                                 ff8_path_tooltip,
-                                                                                 current_path_tooltip,
-                                                                                 current_toml_path_tooltip,
-                                                                                 ffnx_mod_path_tooltip,
-                                                                                 ffnx_direct_mode_path_tooltip,
-                                                                                 ffnx_override_path_tooltip,
-                                                                                 // batch_input_path_tooltip,
-                                                                                 // batch_output_path_tooltip,
-                                                                                 field_name_tooltip,
-                                                                                 ext_tooltip,
-                                                                                 full_filename_tooltip,
-                                                                                 field_prefix_tooltip,
-                                                                                 letter_2_lang_tooltip,
-                                                                                 letter_3_lang_tooltip,
-                                                                                 palette_tooltip,
-                                                                                 texture_page_tooltip,
-                                                                                 pupu_id_tooltip,
-                                                                                 demaster_mod_path_tooltip,
-                                                                                 ffnx_map_tooltip,
-                                                                                 ffnx_multi_texture_tooltip,
-                                                                                 ffnx_single_texture_tooltip,
-                                                                                 demaster_tooltip,
-                                                                                 ffnx_multi_texture_full_tooltip,
-                                                                                 ffnx_single_texture_full_tooltip,
-                                                                                 demaster_full_tooltip,
-                                                                                 field_main_tooltip,
-                                                                                 field_lang_tooltip,
-                                                                                 chara_main_tooltip,
-                                                                                 chara_lang_tooltip,
-                                                                                 field_3lang_main_tooltip,
-                                                                                 chara_3lang_main_tooltip });
+          static constexpr auto all_tooltips = std::to_array<std::string_view>(
+            { selected_path_tooltip, ff8_path_tooltip, current_path_tooltip, current_toml_path_tooltip, ffnx_mod_path_tooltip,
+              ffnx_direct_mode_path_tooltip, ffnx_override_path_tooltip,
+              // batch_input_path_tooltip,
+              // batch_output_path_tooltip,
+              field_name_tooltip, ext_tooltip, full_filename_tooltip, field_prefix_tooltip, letter_2_lang_tooltip, letter_3_lang_tooltip,
+              palette_tooltip, texture_page_tooltip, pupu_id_tooltip, demaster_mod_path_tooltip, ffnx_map_tooltip,
+              ffnx_multi_texture_tooltip, ffnx_single_texture_tooltip, demaster_tooltip, ffnx_multi_texture_full_tooltip,
+              ffnx_single_texture_full_tooltip, demaster_full_tooltip, field_main_tooltip, field_lang_tooltip, chara_main_tooltip,
+              chara_lang_tooltip, field_3lang_main_tooltip, chara_3lang_main_tooltip });
      };
 
      /**
@@ -290,8 +229,9 @@ struct key_value_data
       * @param selections    Context for resolving dynamic tags like `ff8_path`, etc.
       * @return A string with all known tags replaced and slashes normalized.
       */
-     [[nodiscard]] static std::string
-       static_replace_tags(std::string keyed_string, const std::shared_ptr<const fme::Selections> &selections);
+     [[nodiscard]] static std::string static_replace_tags(
+       std::string                                   keyed_string,
+       const std::shared_ptr<const fme::Selections> &selections);
 
      /**
       * @brief Resolves a key using the Selections object.
@@ -300,7 +240,9 @@ struct key_value_data
       * @param selections  Context to resolve selection-dependent keys.
       * @return Resolved value or empty string if unknown.
       */
-     [[nodiscard]] static std::string static_replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections);
+     [[nodiscard]] static std::string static_replace_tag(
+       std::string_view                              key,
+       const std::shared_ptr<const fme::Selections> &selections);
 
      /**
       * @brief Resolves static keys that do not require a selections context.
@@ -317,7 +259,9 @@ struct key_value_data
       * @param selections  Optional selections object to provide context.
       * @return Resolved string or empty.
       */
-     [[nodiscard]] std::string        replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const;
+     [[nodiscard]] std::string        replace_tag(
+              std::string_view                              key,
+              const std::shared_ptr<const fme::Selections> &selections) const;
 
      /**
       * @brief Attempts to resolve a tag from instance data or static fallbacks.
@@ -325,7 +269,7 @@ struct key_value_data
       * @param key The key/tag to resolve.
       * @return The resolved value or empty string.
       */
-     [[nodiscard]] std::string        replace_tag(std::string_view key) const;
+     [[nodiscard]] std::string replace_tag(std::string_view key) const;
 
      /**
       * @brief Replaces a tag in the given key using the provided selections.
@@ -338,7 +282,9 @@ struct key_value_data
       * @param selections A shared pointer to a Selections object used for tag resolution.
       * @return A new string with the tag(s) replaced using the given selections.
       */
-     [[nodiscard]] std::string        operator()(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const;
+     [[nodiscard]] std::string operator()(
+       std::string_view                              key,
+       const std::shared_ptr<const fme::Selections> &selections) const;
 
      /**
       * @brief Replaces a tag in the given key without using external selections.
@@ -349,7 +295,7 @@ struct key_value_data
       * @param key The input string containing a tag to replace.
       * @return A new string with the tag(s) replaced using default or internal rules.
       */
-     [[nodiscard]] std::string        operator()(std::string_view key) const;
+     [[nodiscard]] std::string operator()(std::string_view key) const;
 
    private:
      /**

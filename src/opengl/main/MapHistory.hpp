@@ -211,8 +211,13 @@ class [[nodiscard]] MapHistory
       * @return The result of invoking the lambda function on the tile.
       * @throws std::exception If the position is out of bounds.
       */
-     template<typename TileT, std::integral PosT, typename LambdaT>
-     [[nodiscard]] auto original_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
+     template<
+       typename TileT,
+       std::integral PosT,
+       typename LambdaT>
+     [[nodiscard]] auto original_get_tile_at_offset(
+       const PosT pos,
+       LambdaT  &&lambda) const
      {
           return original().visit_tiles([&](auto &tiles) {
                if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
@@ -250,8 +255,13 @@ class [[nodiscard]] MapHistory
       * @param lambda The lambda function to invoke on the tile.
       * @return The result of invoking the lambda function on the tile.
       */
-     template<open_viii::graphics::background::is_tile TileT, std::integral PosT, typename LambdaT>
-     [[nodiscard]] auto working_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       std::integral                            PosT,
+       typename LambdaT>
+     [[nodiscard]] auto working_get_tile_at_offset(
+       const PosT pos,
+       LambdaT  &&lambda) const
      {
           return working().visit_tiles([&](auto &tiles) {
                if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
@@ -700,8 +710,13 @@ class [[nodiscard]] MapHistory
       * @param lambda Lambda function to apply.
       * @return The new tile after the operation.
       */
-     template<open_viii::graphics::background::is_tile TileT, typename LambdaT>
-     auto copy_working_and_get_new_tile(const TileT &tile, std::string description, LambdaT &&lambda)
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       typename LambdaT>
+     auto copy_working_and_get_new_tile(
+       const TileT &tile,
+       std::string  description,
+       LambdaT    &&lambda)
      {
           const auto pos = get_offset_from_working(tile);
           (void)copy_working(std::move(description));
@@ -718,8 +733,13 @@ class [[nodiscard]] MapHistory
       *                    This description is logged and stored for use in the undo history UI.
       * @param lambda Lambda function to apply.
       */
-     template<open_viii::graphics::background::is_tile TileT, typename LambdaT>
-     void copy_working_perform_operation(const std::vector<std::intmax_t> &indexes, std::string description, LambdaT &&lambda)
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       typename LambdaT>
+     void copy_working_perform_operation(
+       const std::vector<std::intmax_t> &indexes,
+       std::string                       description,
+       LambdaT                         &&lambda)
      {
           (void)copy_working(std::move(description));
           for (const auto i : indexes)
@@ -739,9 +759,18 @@ class [[nodiscard]] MapHistory
       * @param filter Lambda function for filtering tiles.
       * @param lambda Lambda function to apply to filtered tiles.
       */
-     template<open_viii::graphics::background::is_tile TileT, typename FilterLambdaT, typename LambdaT>
-          requires(std::is_invocable_r_v<bool, FilterLambdaT, const TileT &>)
-     void copy_working_perform_operation(std::string description, FilterLambdaT &&filter, LambdaT &&lambda)
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       typename FilterLambdaT,
+       typename LambdaT>
+          requires(std::is_invocable_r_v<
+                   bool,
+                   FilterLambdaT,
+                   const TileT &>)
+     void copy_working_perform_operation(
+       std::string     description,
+       FilterLambdaT &&filter,
+       LambdaT       &&lambda)
      {
           (void)copy_working(std::move(description));
           working().visit_tiles([&](auto &tiles) {
@@ -764,8 +793,12 @@ class [[nodiscard]] MapHistory
       * @param lambda Lambda function to apply.
       * @return The corresponding original tile after the operation.
       */
-     template<open_viii::graphics::background::is_tile TileT, typename LambdaT>
-     auto get_original_version_of_working_tile(const TileT &tile, LambdaT &&lambda) const
+     template<
+       open_viii::graphics::background::is_tile TileT,
+       typename LambdaT>
+     auto get_original_version_of_working_tile(
+       const TileT &tile,
+       LambdaT    &&lambda) const
      {
           return original_get_tile_at_offset<TileT>(get_offset_from_working(tile), std::forward<LambdaT>(lambda));
      }
@@ -837,7 +870,9 @@ struct fmt::formatter<ff_8::MapHistory::pushed> : fmt::formatter<std::string_vie
      // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
      //  parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(ff_8::MapHistory::pushed pushed, FormatContext &ctx) const
+     constexpr auto format(
+       ff_8::MapHistory::pushed pushed,
+       FormatContext           &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;

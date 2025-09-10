@@ -15,8 +15,11 @@
 [[nodiscard]] std::future<void> save_image_pbo(
   std::filesystem::path,
   glengine::FrameBuffer,
-  const GLenum attachment                          = GL_COLOR_ATTACHMENT0,
-  std::vector<std::tuple<glm::vec4, ff_8::PupuID>> = {});
+  const GLenum attachment = GL_COLOR_ATTACHMENT0,
+  std::vector<std::tuple<
+    glm::vec4,
+    ff_8::PupuID>>
+  = {});
 // [[nodiscard]] std::future<void>
 //   save_rgba8ui_attachment_as_png(std::filesystem::path, glengine::FrameBuffer, const GLenum attachment = GL_COLOR_ATTACHMENT1);
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP

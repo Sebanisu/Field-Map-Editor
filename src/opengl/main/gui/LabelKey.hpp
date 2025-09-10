@@ -11,7 +11,9 @@ struct LabelKey
      constexpr LabelKey() = default;
      template<size_t N>
      constexpr LabelKey(const char (&lit)[N])
-       : key(lit, N)
+       : key(
+           lit,
+           N)
      {
      }
      constexpr bool has_value() const

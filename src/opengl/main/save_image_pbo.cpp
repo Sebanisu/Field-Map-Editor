@@ -13,7 +13,9 @@
 #include <version>
 struct Vec4Less
 {
-     bool operator()(const glm::vec4 &a, const glm::vec4 &b) const noexcept
+     bool operator()(
+       const glm::vec4 &a,
+       const glm::vec4 &b) const noexcept
      {
           if (a.x != b.x)
                return a.x < b.x;
@@ -35,10 +37,12 @@ struct Vec4Less
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
 std::future<void> save_image_pbo(
-  std::filesystem::path                            in_path,
-  glengine::FrameBuffer                            in_fbo,
-  const GLenum                                     attachment,
-  std::vector<std::tuple<glm::vec4, ff_8::PupuID>> in_color_ids)
+  std::filesystem::path in_path,
+  glengine::FrameBuffer in_fbo,
+  const GLenum          attachment,
+  std::vector<std::tuple<
+    glm::vec4,
+    ff_8::PupuID>>      in_color_ids)
 {
      // Backup currently bound framebuffer (restored by your helper)
      const auto backup_fbo = in_fbo.backup();

@@ -25,8 +25,12 @@ class VertexArray
           GlCall{}(glGetIntegerv, GL_VERTEX_ARRAY_BINDING, &vao_binding);
           return ScopeGuard{ [=]() { GlCall{}(glBindVertexArray, vao_binding); } };
      }
-     template<Bindable bindableT, size_t ElementCount>
-     VertexArray(const bindableT &vertex_buffer, const VertexBufferLayout<ElementCount> &layout)
+     template<
+       Bindable bindableT,
+       size_t   ElementCount>
+     VertexArray(
+       const bindableT                        &vertex_buffer,
+       const VertexBufferLayout<ElementCount> &layout)
      {
           const auto pop_backup = backup();
           m_renderer_id         = init_id();
@@ -34,8 +38,12 @@ class VertexArray
      }
      void        bind() const;
      static void unbind();
-     template<Bindable bindableT, size_t ElementCount>
-     void push_back(const bindableT &vertex_buffer, const VertexBufferLayout<ElementCount> &layout)
+     template<
+       Bindable bindableT,
+       size_t   ElementCount>
+     void push_back(
+       const bindableT                        &vertex_buffer,
+       const VertexBufferLayout<ElementCount> &layout)
      {// todo tag vertex_buffers so we can exclude other types.
           bind();
           vertex_buffer.bind();

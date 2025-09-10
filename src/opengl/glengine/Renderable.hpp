@@ -51,7 +51,9 @@ inline auto OnImGuiUpdate(const T &t)
      return t.on_im_gui_update();
 }
 template<Renderable T>
-inline auto OnUpdate(const T &t, const float ts)
+inline auto OnUpdate(
+  const T    &t,
+  const float ts)
 {
      return t.on_update(ts);
 }
@@ -61,7 +63,9 @@ inline auto OnRender(const T &t)
      return t.on_render();
 }
 template<Renderable T>
-inline auto OnEvent(const T &t, const event::Item &e)
+inline auto OnEvent(
+  const T           &t,
+  const event::Item &e)
 {
      return t.on_event(e);
 }

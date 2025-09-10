@@ -39,8 +39,8 @@ class IndexBufferDynamic
            [&buffer]() -> std::uint32_t {
                 const auto           pop_backup = backup();
                 std::uint32_t        tmp{};
-                const std::ptrdiff_t size_in_bytes =
-                  static_cast<std::ptrdiff_t>(std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<R>));
+                const std::ptrdiff_t size_in_bytes
+                  = static_cast<std::ptrdiff_t>(std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<R>));
                 const void *data = std::ranges::data(buffer);
                 GlCall{}(glGenBuffers, 1, &tmp);
                 GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, tmp);

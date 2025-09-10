@@ -16,25 +16,33 @@ enum class tile_sizes : std::uint16_t
 };
 
 template<typename T>
-inline static auto operator*(const T &num, tile_sizes tile_size)
+inline static auto operator*(
+  const T   &num,
+  tile_sizes tile_size)
 {
      return num * static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
 }
 
 template<typename T>
-inline static auto operator*(tile_sizes tile_size, const T &num)
+inline static auto operator*(
+  tile_sizes tile_size,
+  const T   &num)
 {
      return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) * num;
 }
 
 template<typename T>
-inline static auto operator+(const T &num, tile_sizes tile_size)
+inline static auto operator+(
+  const T   &num,
+  tile_sizes tile_size)
 {
      return num + static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
 }
 
 template<typename T>
-inline static auto operator+(tile_sizes tile_size, const T &num)
+inline static auto operator+(
+  tile_sizes tile_size,
+  const T   &num)
 {
      return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) + num;
 }

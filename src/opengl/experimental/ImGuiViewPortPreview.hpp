@@ -30,7 +30,9 @@ inline namespace impl
           }
           // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or
           // OrthographicCameraController and draw a preview window.
-          void on_render(const ImGuiViewPortWindow &window, std::invocable auto &&callable) const
+          void on_render(
+            const ImGuiViewPortWindow &window,
+            std::invocable auto      &&callable) const
           {
                if (!m_drawn && window.has_hover())
                {

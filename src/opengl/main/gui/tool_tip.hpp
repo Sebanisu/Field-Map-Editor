@@ -18,7 +18,9 @@ namespace fme
  */
 template<typename T>
      requires(!std::invocable<T>)
-void tool_tip(T &&str, bool override = false)
+void tool_tip(
+  T  &&str,
+  bool override = false)
 {
      if (!ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && !override)
      {
@@ -46,7 +48,9 @@ void tool_tip(T &&str, bool override = false)
  * @param override If true, forces the tooltip to display even if the item is not hovered.  Default is false.
  */
 template<std::invocable lambdaT>
-static inline void tool_tip(lambdaT &&lambda, bool override = false)
+static inline void tool_tip(
+  lambdaT &&lambda,
+  bool      override = false)
 {
      if (!ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && !override)
      {

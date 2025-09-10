@@ -13,7 +13,9 @@ struct fmt::formatter<std::stacktrace>
      }
 
      template<typename FormatContext>
-     auto format(const std::stacktrace &st, FormatContext &ctx) const
+     auto format(
+       const std::stacktrace &st,
+       FormatContext         &ctx) const
      {
           auto out = ctx.out();
           fmt::format_to(out, "Stacktrace ({} frames):\n", st.size());

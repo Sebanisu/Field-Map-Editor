@@ -60,8 +60,8 @@ void open_file_explorer(const std::filesystem::path &path)
      ShellExecuteW(nullptr, L"open", L"explorer.exe", explorer_args.c_str(), nullptr, SW_SHOWNORMAL);
 #elif defined(__APPLE__)
      FSRef    file_ref;
-     CFURLRef url =
-       CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)path.string().c_str(), path.string().size(), false);
+     CFURLRef url
+       = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)path.string().c_str(), path.string().size(), false);
      CFURLGetFSRef(url, &file_ref);
      LSOpenCFURLRef(&url, nullptr);
 #elif defined(__linux__)

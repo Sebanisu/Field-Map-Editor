@@ -36,7 +36,10 @@ static constexpr auto QuadIndicesInit = std::array<std::uint32_t, 6U>{ 0, 1, 2, 
 
 
 template<std::size_t count>
-constexpr inline std::array<std::uint32_t, count * std::size(QuadIndicesInit)> QuadIndices()
+constexpr inline std::array<
+  std::uint32_t,
+  count * std::size(QuadIndicesInit)>
+  QuadIndices()
 {
      using std::ranges::size;
      std::array<std::uint32_t, count * size(QuadIndicesInit)> indices{};
@@ -55,21 +58,42 @@ constexpr inline std::array<std::uint32_t, count * std::size(QuadIndicesInit)> Q
 }
 
 Quad CreateQuad(
-  const glm::vec3                 offset,
-  const glm::vec4                 color,
-  const int                       texture_id    = {},
-  const float                     tiling_factor = 1.F,
-  const std::array<glm::vec2, 4U> uv      = { glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } },
-  const glm::vec2                 size    = { 1.F, 1.F },
-  const int                       id      = -1,
-  const std::uint32_t             pupu_id = 0);
+  const glm::vec3 offset,
+  const glm::vec4 color,
+  const int       texture_id    = {},
+  const float     tiling_factor = 1.F,
+  const std::array<
+    glm::vec2,
+    4U> uv
+  = { glm::vec2{ 0.F,
+                 0.F },
+      glm::vec2{ 1.F,
+                 0.F },
+      glm::vec2{ 1.F,
+                 1.F },
+      glm::vec2{ 0.F,
+                 1.F } },
+  const glm::vec2     size    = { 1.F,
+                                  1.F },
+  const int           id      = -1,
+  const std::uint32_t pupu_id = 0);
 
 [[nodiscard]] std::vector<std::uint32_t> QuadIndices(std::size_t count);
-std::vector<Vertex>                     &operator+=(std::vector<Vertex> &vertices, const Quad &quad);
-std::vector<Vertex>                     &operator+=(std::vector<Vertex> &vertices_left, const std::vector<Vertex> &vertices_right);
-[[nodiscard]] std::vector<Vertex>        operator+(std::vector<Vertex> vertices, const Quad &quad);
-[[nodiscard]] std::vector<Vertex>        operator+(const Quad &quad_left, const Quad &quad_right);
-[[nodiscard]] std::vector<Vertex>        operator+(std::vector<Vertex> vertices_left, const std::vector<Vertex> &vertices_right);
+std::vector<Vertex>                     &operator+=(
+  std::vector<Vertex> &vertices,
+  const Quad          &quad);
+std::vector<Vertex> &operator+=(
+  std::vector<Vertex>       &vertices_left,
+  const std::vector<Vertex> &vertices_right);
+[[nodiscard]] std::vector<Vertex> operator+(
+  std::vector<Vertex> vertices,
+  const Quad         &quad);
+[[nodiscard]] std::vector<Vertex> operator+(
+  const Quad &quad_left,
+  const Quad &quad_right);
+[[nodiscard]] std::vector<Vertex> operator+(
+  std::vector<Vertex>        vertices_left,
+  const std::vector<Vertex> &vertices_right);
 
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_VERTEX_HPP

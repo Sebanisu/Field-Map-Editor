@@ -14,7 +14,9 @@ struct field_file_window
      using WeakField      = std::weak_ptr<Field>;
      using WeakSelections = std::weak_ptr<Selections>;
 
-     field_file_window(WeakField in_field, WeakSelections in_selections)
+     field_file_window(
+       WeakField      in_field,
+       WeakSelections in_selections)
        : m_field{ in_field }
        , m_selections{ in_selections }
      {

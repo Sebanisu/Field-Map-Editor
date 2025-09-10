@@ -19,8 +19,8 @@ class VertexBuffer
        : m_renderer_id(
            [&]() -> std::uint32_t {
                 std::uint32_t        tmp = {};
-                const std::ptrdiff_t size_in_bytes =
-                  static_cast<std::ptrdiff_t>(std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<decltype(buffer)>));
+                const std::ptrdiff_t size_in_bytes
+                  = static_cast<std::ptrdiff_t>(std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<decltype(buffer)>));
                 const void *data = std::ranges::data(buffer);
                 GlCall{}(glGenBuffers, 1, &tmp);
                 GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);

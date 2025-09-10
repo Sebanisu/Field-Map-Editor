@@ -170,19 +170,19 @@ static const auto m_tests = std::to_array<fme::key_value_data>(
       .ext           = ".inf",
       .full_filename = "ecmall1_it.inf",
       .language_code = open_viii::LangT::it,
-      .pupu_id       = 456789U },// Italian match
+      .pupu_id       = 456789U },                                                                        // Italian match
     { .field_name = "ecmall1", .ext = ".sfx", .full_filename = "ecmall1.sfx", .pupu_id = 678901U },// No language, unique ext
     { .field_name    = "ecmall1",
       .ext           = ".tdw",
       .full_filename = "ecmall1_es.tdw",
       .language_code = open_viii::LangT::es,
-      .pupu_id       = 321098U },// Spanish case
+      .pupu_id       = 321098U },                                                    // Spanish case
     { .field_name = "cwwood2", .ext = ".one", .full_filename = "cwwood2.one" },// `chara.one` match
     { .field_name    = "cwwood2",
       .ext           = ".one",
       .full_filename = "cwwood2_jp.one",
       .language_code = open_viii::LangT::jp,
-      .pupu_id       = 765432U },// `chara_{2_letter_lang}.one` match
+      .pupu_id       = 765432U },                                                                          // `chara_{2_letter_lang}.one` match
     { .field_name = "cdfield1", .ext = ".pmd", .full_filename = "cdfield1.pmd", .pupu_id = 210987U },// Another general field match
     { .field_name    = "cdfield2",
       .ext           = ".pvp",
@@ -334,7 +334,9 @@ const std::vector<std::string> *fme::custom_paths_window::get_current_string_vec
      return get_current_string_vector_mutable();
 }
 
-std::string *fme::custom_paths_window::get_current_string_value_from_index(std::vector<std::string> &strings, const int index)
+std::string *fme::custom_paths_window::get_current_string_value_from_index(
+  std::vector<std::string> &strings,
+  const int                 index)
 {
      if (strings.empty())
      {
@@ -413,11 +415,8 @@ bool fme::custom_paths_window::combo_selected_pattern() const
      static const auto  values = load_pattern_selector_array();
 
 
-     const GenericCombo gcc    = { ""sv,
-                                   []() { return values; },
-                                []() { return values | std::views::transform(AsString{}); },
-                                selections->get<ConfigKey::CurrentPattern>(),
-                                generic_combo_settings{ .num_columns = 1 } };
+     const GenericCombo gcc    = { ""sv, []() { return values; }, []() { return values | std::views::transform(AsString{}); },
+                                selections->get<ConfigKey::CurrentPattern>(), generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {
           selections->get<ConfigKey::CurrentPatternIndex>() = -1;
@@ -518,7 +517,7 @@ bool fme::custom_paths_window::vector_pattern() const
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
 
      // Setup columns
-     ImGui::TableSetupColumn("Pattern", ImGuiTableColumnFlags_WidthStretch);// First column stretches to content
+     ImGui::TableSetupColumn("Pattern", ImGuiTableColumnFlags_WidthStretch);      // First column stretches to content
      ImGui::TableSetupColumn("Actions", ImGuiTableColumnFlags_WidthFixed, 120.0f);// Second column fixed width for buttons
      // ImGui::TableHeadersRow();
 

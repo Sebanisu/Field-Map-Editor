@@ -10,7 +10,9 @@ struct PaletteBuffer
 {
    public:
      PaletteBuffer()
-       : m_buffer_id(Glid{ create(), destroy })
+       : m_buffer_id(
+           Glid{ create(),
+                 destroy })
        , m_size(0)
      {
      }

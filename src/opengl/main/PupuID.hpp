@@ -50,7 +50,9 @@ struct PupuID
        : m_raw(raw)
      {
      }
-     constexpr explicit PupuID(const open_viii::graphics::background::is_tile auto &tile, std::uint8_t offset = 0U) noexcept
+     constexpr explicit PupuID(
+       const open_viii::graphics::background::is_tile auto &tile,
+       std::uint8_t                                         offset = 0U) noexcept
        : PupuID(
            std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask) << layer_offset)
                           | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
@@ -152,8 +154,8 @@ struct PupuID
 
      [[nodiscard]] bool constexpr same_animation_base(PupuID right) const noexcept
      {
-          constexpr std::uint32_t mask =
-            ~((animation_mask << animation_offset) | (animation_state_mask << animation_state_offset) | offset_mask);
+          constexpr std::uint32_t mask
+            = ~((animation_mask << animation_offset) | (animation_state_mask << animation_state_offset) | offset_mask);
           static_assert(mask == 0xFFF00000u, "same_animation_base mask mismatch");
           return (m_raw & mask) == (right.raw() & mask);
      }
@@ -185,7 +187,9 @@ struct fmt::formatter<ff_8::PupuID> : fmt::formatter<std::string>
 {
      // Formats value using the parsed format specification stored in this
      // formatter and writes the output to ctx.out().
-     auto format(const ff_8::PupuID &value, format_context &ctx) const -> format_context::iterator
+     auto format(
+       const ff_8::PupuID &value,
+       format_context     &ctx) const -> format_context::iterator
      {
           return fmt::format_to(ctx.out(), "{:08X}", value.raw());
      }

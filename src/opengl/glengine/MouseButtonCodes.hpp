@@ -23,7 +23,9 @@ enum class Mouse : int
      Release      = 0,
      Press        = 1
 };
-static constexpr auto operator+(Mouse e) noexcept -> std::enable_if_t<std::is_enum<Mouse>::value, std::underlying_type_t<Mouse>>
+static constexpr auto operator+(Mouse e) noexcept -> std::enable_if_t<
+  std::is_enum<Mouse>::value,
+  std::underlying_type_t<Mouse>>
 {
      return static_cast<std::underlying_type_t<Mouse>>(e);
 }

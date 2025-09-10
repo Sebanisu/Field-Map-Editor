@@ -50,7 +50,10 @@ GlidCopy CompShader::id() const
      return m_program_id;
 }
 
-void CompShader::execute(GLuint width, GLuint height, GLbitfield bf) const
+void CompShader::execute(
+  GLuint     width,
+  GLuint     height,
+  GLbitfield bf) const
 {
      // Dispatch compute shader
      // glDispatchCompute((width + 15) / 16, (height + 15) / 16, 1);
@@ -80,23 +83,33 @@ std::int32_t CompShader::get_uniform_location(std::string_view name) const
 
      return location;
 }
-void CompShader::set_uniform(std::string_view name, glm::vec1 v) const
+void CompShader::set_uniform(
+  std::string_view name,
+  glm::vec1        v) const
 {
      set_uniform(name, v.x);
 }
-void CompShader::set_uniform(std::string_view name, glm::vec2 v) const
+void CompShader::set_uniform(
+  std::string_view name,
+  glm::vec2        v) const
 {
      set_uniform(name, v.x, v.y);
 }
-void CompShader::set_uniform(std::string_view name, glm::vec3 v) const
+void CompShader::set_uniform(
+  std::string_view name,
+  glm::vec3        v) const
 {
      set_uniform(name, v.x, v.y, v.z);
 }
-void CompShader::set_uniform(std::string_view name, glm::vec4 v) const
+void CompShader::set_uniform(
+  std::string_view name,
+  glm::vec4        v) const
 {
      set_uniform(name, v.r, v.g, v.b, v.a);
 }
-void CompShader::set_uniform(std::string_view name, const glm::mat4 &matrix) const
+void CompShader::set_uniform(
+  std::string_view name,
+  const glm::mat4 &matrix) const
 {
      const int32_t location = get_uniform_location(name);
      if (location == -1)

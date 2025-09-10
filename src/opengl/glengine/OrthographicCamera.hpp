@@ -16,12 +16,22 @@ class OrthographicCamera
 
    public:
      OrthographicCamera() = default;
-     OrthographicCamera(float zoom, float aspect)
-       : OrthographicCamera(-(zoom * aspect) / half, (zoom * aspect) / half, -zoom / half, zoom / half)
+     OrthographicCamera(
+       float zoom,
+       float aspect)
+       : OrthographicCamera(
+           -(zoom * aspect) / half,
+           (zoom * aspect) / half,
+           -zoom / half,
+           zoom / half)
      {
      }
      OrthographicCamera(glm::vec2 size)
-       : OrthographicCamera(-size.x / half, size.x / half, -size.y / half, size.y / half)
+       : OrthographicCamera(
+           -size.x / half,
+           size.x / half,
+           -size.y / half,
+           size.y / half)
      {
      }
      //  OrthographicCamera(glm::vec3 position, glm::vec2 size)
@@ -33,21 +43,42 @@ class OrthographicCamera
      //  {
      //    SetPosition(position);
      //  }
-     OrthographicCamera(float left, float right, float bottom, float top)
-       : m_projection_matrix(glm::ortho(left, right, bottom, top, near, far))
-       , m_bounds(left, right, bottom, top)
+     OrthographicCamera(
+       float left,
+       float right,
+       float bottom,
+       float top)
+       : m_projection_matrix(
+           glm::ortho(
+             left,
+             right,
+             bottom,
+             top,
+             near,
+             far))
+       , m_bounds(
+           left,
+           right,
+           bottom,
+           top)
      {
           recalculate_mvp();
      }
 
-     void set_projection(float left, float right, float bottom, float top)
+     void set_projection(
+       float left,
+       float right,
+       float bottom,
+       float top)
      {
           m_projection_matrix = glm::ortho(left, right, bottom, top, near, far);
           m_bounds            = glm::vec4(left, right, bottom, top);
           recalculate_mvp();
      }
 
-     void set_projection(float zoom, float aspect)
+     void set_projection(
+       float zoom,
+       float aspect)
      {
           set_projection(-(zoom * aspect) / half, (zoom * aspect) / half, -zoom / half, zoom / half);
      }

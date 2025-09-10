@@ -40,21 +40,34 @@ class Texture
      }
      constexpr Texture() = default;
 
-     Texture(Glid &&new_id, std::int32_t new_width, std::int32_t new_height)
-       : m_renderer_id(std::exchange(new_id, {}))
+     Texture(
+       Glid       &&new_id,
+       std::int32_t new_width,
+       std::int32_t new_height)
+       : m_renderer_id(
+           std::exchange(
+             new_id,
+             {}))
        , m_width(new_width)
        , m_height(new_height)
      {
      }
-     Texture(std::int32_t new_width, std::int32_t new_height)
+     Texture(
+       std::int32_t new_width,
+       std::int32_t new_height)
        : m_width{ new_width }
        , m_height{ new_height }
      {
           init_texture(nullptr);// allocate uninitialized texture
      }
      Texture(Image image);
-     Texture(std::filesystem::path path, bool in_flip = false);
-     Texture(std::array<std::uint8_t, 4U> color)
+     Texture(
+       std::filesystem::path path,
+       bool                  in_flip = false);
+     Texture(
+       std::array<
+         std::uint8_t,
+         4U> color)
        : Texture(std::bit_cast<std::uint32_t>(color))
      {
      }
@@ -66,7 +79,11 @@ class Texture
           init_texture(&color);
      }
      template<std::ranges::contiguous_range R>
-     Texture(R r, std::int32_t in_width, std::int32_t in_height, bool in_flip = false)
+     Texture(
+       R            r,
+       std::int32_t in_width,
+       std::int32_t in_height,
+       bool         in_flip = false)
        : m_width{ in_width }
        , m_height{ in_height }
      {
@@ -116,7 +133,9 @@ class Texture
      }
      template<std::ranges::random_access_range R>
           requires std::permutable<std::ranges::iterator_t<R>>
-     static constexpr void flip_slow(R &range, const std::ranges::range_difference_t<R> stride)
+     static constexpr void flip_slow(
+       R                                       &range,
+       const std::ranges::range_difference_t<R> stride)
      {
           using std::ranges::begin;
           using std::ranges::end;
@@ -132,7 +151,11 @@ class Texture
           }
      }
 
-     static void save(std::span<uint8_t> data, std::filesystem::path path, int width, int height)
+     static void save(
+       std::span<uint8_t>    data,
+       std::filesystem::path path,
+       int                   width,
+       int                   height)
      {
           spdlog::debug(
             "{}\t{} bytes\twidth {}\theight {}", std::filesystem::absolute(path).string().c_str(), std::ranges::size(data), width, height);
@@ -152,7 +175,9 @@ class Texture
 
      template<std::ranges::contiguous_range R>
           requires std::permutable<std::ranges::iterator_t<R>>
-     static void flip(R &range, const std::ranges::range_difference_t<R> stride)
+     static void flip(
+       R                                       &range,
+       const std::ranges::range_difference_t<R> stride)
      {
           if (std::ranges::empty(range))
           {
@@ -166,12 +191,12 @@ class Texture
           static constexpr auto sizeof_value    = sizeof(std::ranges::range_value_t<R>);
           const auto            stride_in_bytes = static_cast<std::size_t>(stride) * sizeof_value;
           auto                  buffer          = std::make_unique<char[]>(stride_in_bytes);
-          const auto            swap_memory     = [tmp = buffer.get(),
-                                    stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right) {
-               std::memcpy(tmp, &left, stride_in_bytes);
-               std::memcpy(&left, &right, stride_in_bytes);
-               std::memcpy(&right, tmp, stride_in_bytes);
-          };
+          const auto            swap_memory
+            = [tmp = buffer.get(), stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right) {
+                   std::memcpy(tmp, &left, stride_in_bytes);
+                   std::memcpy(&left, &right, stride_in_bytes);
+                   std::memcpy(&right, tmp, stride_in_bytes);
+              };
           auto b = std::ranges::begin(range);
           auto m = std::ranges::end(range);
           while (b < m)

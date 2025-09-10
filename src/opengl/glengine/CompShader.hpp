@@ -26,12 +26,17 @@ struct CompShader
      CompShader() = default;
      CompShader(std::filesystem::path in_path)
        : m_path(std::move(in_path))
-       , m_program_id(Glid{ create(m_path), destroy })
+       , m_program_id(
+           Glid{ create(m_path),
+                 destroy })
      {
      }
-     void                      bind() const;
-     GlidCopy                  id() const;
-     void                      execute(GLuint, GLuint, GLbitfield) const;
+     void     bind() const;
+     GlidCopy id() const;
+     void     execute(
+       GLuint,
+       GLuint,
+       GLbitfield) const;
 
      [[nodiscard]] static auto backup()
      {
@@ -44,22 +49,33 @@ struct CompShader
 
      // Set Uniforms
      [[nodiscard]] std::int32_t get_uniform_location(std::string_view name) const;
-     void                       set_uniform(std::string_view name, glm::vec1 v) const;
-     void                       set_uniform(std::string_view name, glm::vec2 v) const;
-     void                       set_uniform(std::string_view name, glm::vec3 v) const;
-     void                       set_uniform(std::string_view name, glm::vec4 v) const;
-     void                       set_uniform(std::string_view name, const glm::mat4 &matrix) const;
+     void                       set_uniform(
+                             std::string_view name,
+                             glm::vec1        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec2        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec3        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec4        v) const;
+     void set_uniform(
+       std::string_view name,
+       const glm::mat4 &matrix) const;
      template<typename... T>
           requires((sizeof...(T) >= 1U) && (sizeof...(T) <= 4U))
                   && ((std::floating_point<T> && ...) || (std::unsigned_integral<T> && ...) || (std::signed_integral<T> && ...))
-     void set_uniform(std::string_view name, T... v) const
+     void set_uniform(
+       std::string_view name,
+       T... v) const
      {
           const int32_t location = get_uniform_location(name);
           if (location == -1)
                return;
-          const auto perform = [&]<typename NT>(auto &&fun) {
-               GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...);
-          };
+          const auto perform
+            = [&]<typename NT>(auto &&fun) { GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...); };
           if constexpr ((std::floating_point<T> && ...))
           {
                if constexpr (sizeof...(T) == 1U)
@@ -121,9 +137,18 @@ struct CompShader
 
      template<std::ranges::contiguous_range T>
           requires(
-            (decay_same_as<std::ranges::range_value_t<T>, float>) || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
-            || (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>))
-     void set_uniform(std::string_view name, T v) const
+            (decay_same_as<
+              std::ranges::range_value_t<T>,
+              float>)
+            || (decay_same_as<
+                std::ranges::range_value_t<T>,
+                std::uint32_t>)
+            || (decay_same_as<
+                std::ranges::range_value_t<T>,
+                std::int32_t>))
+     void set_uniform(
+       std::string_view name,
+       T                v) const
      {
           const int32_t location = get_uniform_location(name);
           if (location == -1)

@@ -10,7 +10,9 @@
 #ifdef _WIN32
 #include <windows.h>
 
-int        main(int argc, char **argv);// your existing main
+int main(
+  int    argc,
+  char **argv);// your existing main
 
 int WINAPI WinMain(
   [[maybe_unused]] HINSTANCE hInstance,
@@ -59,10 +61,10 @@ static GLFWwindow *create_glfw_window()
 {
      using namespace fme;
      const Configuration config = {};
-     const int           window_height =
-       config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(SelectionInfo<ConfigKey::WindowHeight>::default_value());
-     const int window_width =
-       config[SelectionInfo<ConfigKey::WindowWidth>::id].value_or(SelectionInfo<ConfigKey::WindowWidth>::default_value());
+     const int           window_height
+       = config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(SelectionInfo<ConfigKey::WindowHeight>::default_value());
+     const int window_width
+       = config[SelectionInfo<ConfigKey::WindowWidth>::id].value_or(SelectionInfo<ConfigKey::WindowWidth>::default_value());
 
      if (!glfwInit())
      {
@@ -90,7 +92,9 @@ static GLFWwindow *create_glfw_window()
      glfwSwapInterval(1);// Enable vsync
      return window;
 }
-int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+int main(
+  [[maybe_unused]] int    argc,
+  [[maybe_unused]] char **argv)
 {
      try
      {

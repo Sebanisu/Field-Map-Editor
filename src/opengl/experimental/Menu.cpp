@@ -69,7 +69,9 @@ void Menu::on_update(float delta_time) const
      }
 }
 
-void Menu::push_back(std::string name, std::function<MenuItem()> funt) const
+void Menu::push_back(
+  std::string               name,
+  std::function<MenuItem()> funt) const
 {
      m_list.emplace_back(std::move(name), std::move(funt));
      m_current.push_back({});

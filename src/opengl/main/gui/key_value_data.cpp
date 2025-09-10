@@ -93,8 +93,9 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string
-  fme::key_value_data::static_replace_tags(std::string keyed_string, const std::shared_ptr<const fme::Selections> &selections)
+[[nodiscard]] std::string fme::key_value_data::static_replace_tags(
+  std::string                                   keyed_string,
+  const std::shared_ptr<const fme::Selections> &selections)
 {
      using namespace std::string_view_literals;
      std::string copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
@@ -165,8 +166,9 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string
-  fme::key_value_data::static_replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections)
+[[nodiscard]] std::string fme::key_value_data::static_replace_tag(
+  std::string_view                              key,
+  const std::shared_ptr<const fme::Selections> &selections)
 {
      if (selections)
      {
@@ -257,8 +259,9 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string
-  fme::key_value_data::replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const
+[[nodiscard]] std::string fme::key_value_data::replace_tag(
+  std::string_view                              key,
+  const std::shared_ptr<const fme::Selections> &selections) const
 {
      auto value = static_replace_tag(key, selections);
      if (value.empty())
@@ -335,8 +338,9 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 }
 
 
-[[nodiscard]] std::string
-  fme::key_value_data::operator()(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const
+[[nodiscard]] std::string fme::key_value_data::operator()(
+  std::string_view                              key,
+  const std::shared_ptr<const fme::Selections> &selections) const
 {
      return replace_tag(key, selections);
 }

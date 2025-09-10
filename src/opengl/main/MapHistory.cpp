@@ -130,8 +130,12 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * @note This function relies on `std::ranges::advance` to retrieve the tile at each index, ensuring that the
  *       correct tile is processed for each index in the given range.
  */
-[[nodiscard]] static std::map<normalized_source_tile, std::uint8_t>
-  populate_similar_tile_count(const map_t &map, std::ranges::range auto &&range_of_tile_indices)
+[[nodiscard]] static std::map<
+  normalized_source_tile,
+  std::uint8_t>
+  populate_similar_tile_count(
+    const map_t              &map,
+    std::ranges::range auto &&range_of_tile_indices)
 {
 
      return map.visit_tiles([&](const auto &tiles) {
@@ -171,8 +175,12 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * @note This function ensures that tile indices are within bounds using an `assert` statement.
  *       It leverages `std::ranges` to transform the range of indices into tiles and count their occurrences.
  */
-[[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
-  populate_animation_tile_count(const map_t &map, std::ranges::range auto &&range_of_tile_indices)
+[[nodiscard]] static std::map<
+  normalized_source_animated_tile,
+  std::uint8_t>
+  populate_animation_tile_count(
+    const map_t              &map,
+    std::ranges::range auto &&range_of_tile_indices)
 {
 
      return map.visit_tiles([&](const auto &tiles) {
@@ -233,8 +241,9 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * @note This function uses an `assert` to ensure that the size of `working_similar_counts` is greater than or
  *       equal to the size of `working_animation_counts`.
  */
-static void
-  disambiguate_normalized_tiles(ff_8::MapHistory::nst_map &working_similar_counts, ff_8::MapHistory::nsat_map &working_animation_counts)
+static void disambiguate_normalized_tiles(
+  ff_8::MapHistory::nst_map  &working_similar_counts,
+  ff_8::MapHistory::nsat_map &working_animation_counts)
 {
      assert(std::cmp_greater_equal(std::ranges::size(working_similar_counts), std::ranges::size(working_animation_counts)));
      std::ranges::for_each(working_similar_counts, [&](auto &similar) {
@@ -278,8 +287,12 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working_unique_pupu_color(m_original_unique_pupu_color)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
-  , m_working_similar_counts(populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
-  , m_working_animation_counts(populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
+  , m_working_similar_counts(populate_similar_tile_count(
+      m_working,
+      m_working_conflicts.range_of_conflicts_flattened()))
+  , m_working_animation_counts(populate_animation_tile_count(
+      m_working,
+      m_working_conflicts.range_of_conflicts_flattened()))
 {
      disambiguate_normalized_tiles(m_working_similar_counts, m_working_animation_counts);
 }

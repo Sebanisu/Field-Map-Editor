@@ -14,7 +14,9 @@ bool ff_8::Archive::on_im_gui_update() const
 }
 
 ff_8::Archive::Archive()
-  : m_archives(m_paths, m_coos)
+  : m_archives(
+      m_paths,
+      m_coos)
 {
 }
 

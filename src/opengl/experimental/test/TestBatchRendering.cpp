@@ -58,13 +58,13 @@ void test::TestBatchRendering::render_frame_buffer() const
 test::TestBatchRendering::TestBatchRendering()
   : m_shader(std::filesystem::current_path() / "res" / "shader" / "basic2.shader")
 {
-     constexpr auto colors =
-       std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
+     constexpr auto colors
+       = std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F }, glm::vec4{ 0.F, 1.F, 0.F, 1.F }, glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
      constexpr auto vertices_init = std::array{
           glengine::Vertex{ { -0.5F, -0.5F, 0.F }, colors[0] },// 0
-          glengine::Vertex{ { 0.5F, -0.5F, 0.F }, colors[0] },// 1
-          glengine::Vertex{ { 0.5F, 0.5F, 0.F }, colors[0] },// 2
-          glengine::Vertex{ { -0.5F, 0.5F, 0.F }, colors[0] },// 3
+          glengine::Vertex{ { 0.5F, -0.5F, 0.F }, colors[0] }, // 1
+          glengine::Vertex{ { 0.5F, 0.5F, 0.F }, colors[0] },  // 2
+          glengine::Vertex{ { -0.5F, 0.5F, 0.F }, colors[0] }, // 3
      };
      [[maybe_unused]] constexpr auto indices_init = std::array{
           // clang-format off
@@ -89,9 +89,8 @@ test::TestBatchRendering::TestBatchRendering()
      const auto quad_count = std::size(vertices) / std::size(vertices_init);
      for (std::size_t i = 1U; i != quad_count; ++i)
           std::ranges::transform(
-            indices_init.cbegin(), indices_init.cend(), std::back_inserter(indices), [&vertices_init, &i](std::uint32_t index) {
-                 return static_cast<std::uint32_t>(index + (std::size(vertices_init) * i));
-            });
+            indices_init.cbegin(), indices_init.cend(), std::back_inserter(indices),
+            [&vertices_init, &i](std::uint32_t index) { return static_cast<std::uint32_t>(index + (std::size(vertices_init) * i)); });
      m_index_buffer = glengine::IndexBuffer{ indices };
 
 

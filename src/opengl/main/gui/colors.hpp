@@ -23,9 +23,9 @@ namespace fme
  */
 struct [[nodiscard]] color
 {
-     std::uint8_t r                          = {};//!< Red component (0-255)
-     std::uint8_t g                          = {};//!< Green component (0-255)
-     std::uint8_t b                          = {};//!< Blue component (0-255)
+     std::uint8_t r                          = {};                                            //!< Red component (0-255)
+     std::uint8_t g                          = {};                                            //!< Green component (0-255)
+     std::uint8_t b                          = {};                                            //!< Blue component (0-255)
      std::uint8_t a                          = { (std::numeric_limits<std::uint8_t>::max)() };//!< Alpha (opacity) component (0-255)
 
      /**
@@ -86,26 +86,65 @@ struct [[nodiscard]] color
       * @param c The ImVec4 object containing RGBA components.
       */
      explicit constexpr color(const ImVec4 c) noexcept
-       : color(c.x, c.y, c.z, c.w)
+       : color(
+           c.x,
+           c.y,
+           c.z,
+           c.w)
      {
      }
 
 
      /// Construct from glm::vec3 (assumes 0.0–1.0 range, opaque alpha)
      explicit color(const glm::vec3 &v)
-       : r(static_cast<std::uint8_t>(glm::clamp(v.r, 0.0f, 1.0f) * max_f<float>))
-       , g(static_cast<std::uint8_t>(glm::clamp(v.g, 0.0f, 1.0f) * max_f<float>))
-       , b(static_cast<std::uint8_t>(glm::clamp(v.b, 0.0f, 1.0f) * max_f<float>))
+       : r(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.r,
+             0.0f,
+             1.0f)
+           * max_f<float>))
+       , g(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.g,
+             0.0f,
+             1.0f)
+           * max_f<float>))
+       , b(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.b,
+             0.0f,
+             1.0f)
+           * max_f<float>))
        , a((std::numeric_limits<std::uint8_t>::max)())
      {
      }
 
      /// Construct from glm::vec4 (assumes 0.0–1.0 range including alpha)
      explicit color(const glm::vec4 &v)
-       : r(static_cast<std::uint8_t>(glm::clamp(v.r, 0.0f, 1.0f) * max_f<float>))
-       , g(static_cast<std::uint8_t>(glm::clamp(v.g, 0.0f, 1.0f) * max_f<float>))
-       , b(static_cast<std::uint8_t>(glm::clamp(v.b, 0.0f, 1.0f) * max_f<float>))
-       , a(static_cast<std::uint8_t>(glm::clamp(v.a, 0.0f, 1.0f) * max_f<float>))
+       : r(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.r,
+             0.0f,
+             1.0f)
+           * max_f<float>))
+       , g(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.g,
+             0.0f,
+             1.0f)
+           * max_f<float>))
+       , b(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.b,
+             0.0f,
+             1.0f)
+           * max_f<float>))
+       , a(static_cast<std::uint8_t>(
+           glm::clamp(
+             v.a,
+             0.0f,
+             1.0f)
+           * max_f<float>))
      {
      }
 
@@ -139,7 +178,11 @@ struct [[nodiscard]] color
       * @param in_a Alpha (opacity) component.
       */
      template<std::integral int_t>
-     constexpr color(int_t in_r, int_t in_g, int_t in_b, int_t in_a) noexcept
+     constexpr color(
+       int_t in_r,
+       int_t in_g,
+       int_t in_b,
+       int_t in_a) noexcept
      {
 #if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202311L
           r = std::saturate_cast<std::uint8_t>(in_r);
@@ -163,8 +206,15 @@ struct [[nodiscard]] color
       * @param in_b Blue component.
       */
      template<std::integral int_t>
-     constexpr color(int_t in_r, int_t in_g, int_t in_b) noexcept
-       : color(in_r, in_g, in_b, max_i<int_t>)
+     constexpr color(
+       int_t in_r,
+       int_t in_g,
+       int_t in_b) noexcept
+       : color(
+           in_r,
+           in_g,
+           in_b,
+           max_i<int_t>)
      {
      }
 
@@ -178,7 +228,11 @@ struct [[nodiscard]] color
       * @param in_a Alpha (opacity) component (0.0-1.0).
       */
      template<std::floating_point float_t>
-     constexpr color(float_t in_r, float_t in_g, float_t in_b, float_t in_a) noexcept
+     constexpr color(
+       float_t in_r,
+       float_t in_g,
+       float_t in_b,
+       float_t in_a) noexcept
      {
 #if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202311L
           r = std::saturate_cast<std::uint8_t>(in_r * max_f<float_t>);
@@ -202,8 +256,15 @@ struct [[nodiscard]] color
       * @param in_b Blue component (0.0-1.0).
       */
      template<std::floating_point float_t>
-     constexpr color(float_t in_r, float_t in_g, float_t in_b) noexcept
-       : color(in_r, in_g, in_b, float_t{ 1 })
+     constexpr color(
+       float_t in_r,
+       float_t in_g,
+       float_t in_b) noexcept
+       : color(
+           in_r,
+           in_g,
+           in_b,
+           float_t{ 1 })
      {
      }
 
@@ -234,9 +295,7 @@ struct [[nodiscard]] color
       */
      [[nodiscard]] constexpr operator ImVec4() const noexcept
      {
-          return { static_cast<float>(r) / max_f<float>,
-                   static_cast<float>(g) / max_f<float>,
-                   static_cast<float>(b) / max_f<float>,
+          return { static_cast<float>(r) / max_f<float>, static_cast<float>(g) / max_f<float>, static_cast<float>(b) / max_f<float>,
                    static_cast<float>(a) / max_f<float> };
      }
 
@@ -248,9 +307,7 @@ struct [[nodiscard]] color
       */
      [[nodiscard]] constexpr operator glm::vec4() const noexcept
      {
-          return { static_cast<float>(r) / max_f<float>,
-                   static_cast<float>(g) / max_f<float>,
-                   static_cast<float>(b) / max_f<float>,
+          return { static_cast<float>(r) / max_f<float>, static_cast<float>(g) / max_f<float>, static_cast<float>(b) / max_f<float>,
                    static_cast<float>(a) / max_f<float> };
      }
 
@@ -286,8 +343,7 @@ struct [[nodiscard]] color
           const float factor = 1.0f + fadeValue;// The factor by which the color channels will be adjusted
           return { static_cast<std::uint8_t>(std::clamp(r * factor, min_f<float>, max_f<float>)),
                    static_cast<std::uint8_t>(std::clamp(g * factor, min_f<float>, max_f<float>)),
-                   static_cast<std::uint8_t>(std::clamp(b * factor, min_f<float>, max_f<float>)),
-                   a };
+                   static_cast<std::uint8_t>(std::clamp(b * factor, min_f<float>, max_f<float>)), a };
      }
 
      /**
@@ -313,40 +369,163 @@ struct [[nodiscard]] color
 struct colors
 {
      // Static asserts to verify invariants and assumptions
-     static_assert(std::is_trivially_copyable_v<color>, "color must be trivially copyable.");
-     static_assert(std::is_standard_layout_v<color>, "color must have a standard layout.");
-     static_assert(sizeof(color) == 4, "color must occupy exactly 4 bytes.");
-     static_assert(std::is_nothrow_default_constructible_v<color>, "color must be nothrow default constructible.");
-     static_assert(std::is_nothrow_copy_constructible_v<color>, "color must be nothrow copy constructible.");
-     static_assert(std::is_nothrow_move_constructible_v<color>, "color must be nothrow move constructible.");
-     static_assert(std::is_nothrow_copy_assignable_v<color>, "color must be nothrow copy assignable.");
-     static_assert(std::is_nothrow_move_assignable_v<color>, "color must be nothrow move assignable.");
+     static_assert(
+       std::is_trivially_copyable_v<color>,
+       "color must be trivially copyable.");
+     static_assert(
+       std::is_standard_layout_v<color>,
+       "color must have a standard layout.");
+     static_assert(
+       sizeof(color) == 4,
+       "color must occupy exactly 4 bytes.");
+     static_assert(
+       std::is_nothrow_default_constructible_v<color>,
+       "color must be nothrow default constructible.");
+     static_assert(
+       std::is_nothrow_copy_constructible_v<color>,
+       "color must be nothrow copy constructible.");
+     static_assert(
+       std::is_nothrow_move_constructible_v<color>,
+       "color must be nothrow move constructible.");
+     static_assert(
+       std::is_nothrow_copy_assignable_v<color>,
+       "color must be nothrow copy assignable.");
+     static_assert(
+       std::is_nothrow_move_assignable_v<color>,
+       "color must be nothrow move assignable.");
 
      // Static checks for default RGBA values
-     static_assert(color{}.r == 0, "Default red component of color must be 0.");
-     static_assert(color{}.g == 0, "Default green component of color must be 0.");
-     static_assert(color{}.b == 0, "Default blue component of color must be 0.");
-     static_assert(color{}.a == std::numeric_limits<std::uint8_t>::max(), "Default alpha component of color must be fully opaque.");
-
-     static_assert(color{}.r == 0 && color{}.g == 0 && color{}.b == 0 && color{}.a == 255, "Default constructor failed!");
+     static_assert(
+       color{}.r == 0,
+       "Default red component of color must be 0.");
+     static_assert(
+       color{}.g == 0,
+       "Default green component of color must be 0.");
+     static_assert(
+       color{}.b == 0,
+       "Default blue component of color must be 0.");
+     static_assert(
+       color{}.a == std::numeric_limits<std::uint8_t>::max(),
+       "Default alpha component of color must be fully opaque.");
 
      static_assert(
-       color(255, 128, 64, 32).r == 255 && color(255, 128, 64, 32).g == 128 && color(255, 128, 64, 32).b == 64
-         && color(255, 128, 64, 32).a == 32,
+       color{}.r == 0 && color{}.g == 0 && color{}.b == 0 && color{}.a == 255,
+       "Default constructor failed!");
+
+     static_assert(
+       color(
+         255,
+         128,
+         64,
+         32)
+             .r
+           == 255
+         && color(
+              255,
+              128,
+              64,
+              32)
+                .g
+              == 128
+         && color(
+              255,
+              128,
+              64,
+              32)
+                .b
+              == 64
+         && color(
+              255,
+              128,
+              64,
+              32)
+                .a
+              == 32,
        "Integral constructor failed!");
 
      static_assert(
-       color(255, 128, 64).r == 255 && color(255, 128, 64).g == 128 && color(255, 128, 64).b == 64 && color(255, 128, 64).a == 255,
+       color(
+         255,
+         128,
+         64)
+             .r
+           == 255
+         && color(
+              255,
+              128,
+              64)
+                .g
+              == 128
+         && color(
+              255,
+              128,
+              64)
+                .b
+              == 64
+         && color(
+              255,
+              128,
+              64)
+                .a
+              == 255,
        "Integral constructor with default alpha failed!");
 
      static_assert(
-       color(1.0f, 0.5f, 0.25f, 0.125f).r == 255 && color(1.0f, 0.5f, 0.25f, 0.125f).g == 127 && color(1.0f, 0.5f, 0.25f, 0.125f).b == 63
-         && color(1.0f, 0.5f, 0.25f, 0.125f).a == 31,
+       color(
+         1.0f,
+         0.5f,
+         0.25f,
+         0.125f)
+             .r
+           == 255
+         && color(
+              1.0f,
+              0.5f,
+              0.25f,
+              0.125f)
+                .g
+              == 127
+         && color(
+              1.0f,
+              0.5f,
+              0.25f,
+              0.125f)
+                .b
+              == 63
+         && color(
+              1.0f,
+              0.5f,
+              0.25f,
+              0.125f)
+                .a
+              == 31,
        "Floating-point constructor failed!");
 
      static_assert(
-       color(1.0f, 0.5f, 0.25f).r == 255 && color(1.0f, 0.5f, 0.25f).g == 127 && color(1.0f, 0.5f, 0.25f).b == 63
-         && color(1.0f, 0.5f, 0.25f).a == 255,
+       color(
+         1.0f,
+         0.5f,
+         0.25f)
+             .r
+           == 255
+         && color(
+              1.0f,
+              0.5f,
+              0.25f)
+                .g
+              == 127
+         && color(
+              1.0f,
+              0.5f,
+              0.25f)
+                .b
+              == 63
+         && color(
+              1.0f,
+              0.5f,
+              0.25f)
+                .a
+              == 255,
        "Floating-point constructor with default alpha failed!");
 
      static inline const ImGuiStyle DarkStyle = []() {
@@ -355,31 +534,31 @@ struct colors
           return s;
      }();
 
-     static constexpr color Red         = { 255, 0, 0 };//!< Fully red.
-     static constexpr color Green       = { 0, 255, 0 };//!< Fully green.
-     static constexpr color Blue        = { 0, 0, 255 };//!< Fully blue.
+     static constexpr color Red         = { 255, 0, 0 };    //!< Fully red.
+     static constexpr color Green       = { 0, 255, 0 };    //!< Fully green.
+     static constexpr color Blue        = { 0, 0, 255 };    //!< Fully blue.
      static constexpr color White       = { 255, 255, 255 };//!< Fully white.
-     static constexpr color Black       = { 0, 0, 0 };//!< Fully black.
-     static constexpr color Transparent = { 0, 0, 0, 0 };//!< Fully transparent.
-     static constexpr color Yellow      = { 255, 255, 0 };//!< Fully yellow.
-     static constexpr color Cyan        = { 0, 255, 255 };//!< Fully cyan.
-     static constexpr color Magenta     = { 255, 0, 255 };//!< Fully magenta.
+     static constexpr color Black       = { 0, 0, 0 };      //!< Fully black.
+     static constexpr color Transparent = { 0, 0, 0, 0 };   //!< Fully transparent.
+     static constexpr color Yellow      = { 255, 255, 0 };  //!< Fully yellow.
+     static constexpr color Cyan        = { 0, 255, 255 };  //!< Fully cyan.
+     static constexpr color Magenta     = { 255, 0, 255 };  //!< Fully magenta.
      static constexpr color Gray        = { 128, 128, 128 };//!< Neutral gray.
      static constexpr color LightGray   = { 192, 192, 192 };//!< Light gray.
-     static constexpr color DarkGray    = { 64, 64, 64 };//!< Dark gray.
-     static constexpr color Orange      = { 255, 165, 0 };//!< Orange color.
+     static constexpr color DarkGray    = { 64, 64, 64 };   //!< Dark gray.
+     static constexpr color Orange      = { 255, 165, 0 };  //!< Orange color.
      static constexpr color Peach       = { 255, 153, 102 };//!< Gentle, warm orange variant
-     static constexpr color Purple      = { 128, 0, 128 };//!< Purple color.
+     static constexpr color Purple      = { 128, 0, 128 };  //!< Purple color.
      static constexpr color Pink        = { 255, 192, 203 };//!< Pink color.
-     static constexpr color Brown       = { 78, 39, 5 };//!< Brown color.
+     static constexpr color Brown       = { 78, 39, 5 };    //!< Brown color.
 
      static constexpr auto  ColorValues = std::array{ Red,  Green,     Blue,     White,  Black, Transparent, Yellow, Cyan, Magenta,
                                                      Gray, LightGray, DarkGray, Orange, Peach, Purple,      Pink,   Brown };
 
-     static constexpr auto  ColorNames =
-       std::array<std::string_view, std::ranges::size(ColorValues)>{ "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
-                                                                     "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
-                                                                     "Orange", "Peach", "Purple",  "Pink",  "Brown" };
+     static constexpr auto  ColorNames
+       = std::array<std::string_view, std::ranges::size(ColorValues)>{ "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
+                                                                       "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
+                                                                       "Orange", "Peach", "Purple",  "Pink",  "Brown" };
 
      // darkstyle imgui color blue tint
      static inline const color             Button                 = color{ DarkStyle.Colors[ImGuiCol_Button] };
@@ -499,17 +678,23 @@ enum class BackgroundSettings : uint8_t
 
 
 // Bitwise operators
-inline constexpr BackgroundSettings operator|(BackgroundSettings lhs, BackgroundSettings rhs)
+inline constexpr BackgroundSettings operator|(
+  BackgroundSettings lhs,
+  BackgroundSettings rhs)
 {
      return static_cast<BackgroundSettings>(std::to_underlying(lhs) | std::to_underlying(rhs));
 }
 
-inline constexpr BackgroundSettings operator&(BackgroundSettings lhs, BackgroundSettings rhs)
+inline constexpr BackgroundSettings operator&(
+  BackgroundSettings lhs,
+  BackgroundSettings rhs)
 {
      return static_cast<BackgroundSettings>(std::to_underlying(lhs) & std::to_underlying(rhs));
 }
 
-inline constexpr BackgroundSettings &operator|=(BackgroundSettings &lhs, BackgroundSettings rhs)
+inline constexpr BackgroundSettings &operator|=(
+  BackgroundSettings &lhs,
+  BackgroundSettings  rhs)
 {
      lhs = lhs | rhs;
      return lhs;
@@ -542,7 +727,9 @@ inline constexpr bool ValidateBackgroundSettings(BackgroundSettings setting)
      return true;
 }
 
-inline constexpr bool HasFlag(BackgroundSettings value, BackgroundSettings flag)
+inline constexpr bool HasFlag(
+  BackgroundSettings value,
+  BackgroundSettings flag)
 {
      if (flag == BackgroundSettings::Default)
           return value == BackgroundSettings::Default;
@@ -556,21 +743,68 @@ static_assert(!ValidateBackgroundSettings(BackgroundSettings::TwoColors | Backgr
 
 // Static asserts to validate HasFlag logic
 
-static_assert(HasFlag(BackgroundSettings::Default, BackgroundSettings::Default), "Default has Default");
-static_assert(HasFlag(BackgroundSettings::Default, BackgroundSettings::OneColor), "Default has OneColor (alias of Default)");
-static_assert(!HasFlag(BackgroundSettings::Default, BackgroundSettings::TwoColors), "Default does not have TwoColors");
-static_assert(HasFlag(BackgroundSettings::TwoColors, BackgroundSettings::TwoColors), "TwoColors has TwoColors");
-static_assert(!HasFlag(BackgroundSettings::TwoColors, BackgroundSettings::Default), "TwoColors does not have Default");
-static_assert(!HasFlag(BackgroundSettings::TwoColors, BackgroundSettings::OneColor), "TwoColors does not have OneColor (Default)");
-static_assert(!HasFlag(BackgroundSettings::OneColor, BackgroundSettings::TwoColors), "OneColor (Default) does not have TwoColors");
+static_assert(
+  HasFlag(
+    BackgroundSettings::Default,
+    BackgroundSettings::Default),
+  "Default has Default");
+static_assert(
+  HasFlag(
+    BackgroundSettings::Default,
+    BackgroundSettings::OneColor),
+  "Default has OneColor (alias of Default)");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::Default,
+    BackgroundSettings::TwoColors),
+  "Default does not have TwoColors");
+static_assert(
+  HasFlag(
+    BackgroundSettings::TwoColors,
+    BackgroundSettings::TwoColors),
+  "TwoColors has TwoColors");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::TwoColors,
+    BackgroundSettings::Default),
+  "TwoColors does not have Default");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::TwoColors,
+    BackgroundSettings::OneColor),
+  "TwoColors does not have OneColor (Default)");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::OneColor,
+    BackgroundSettings::TwoColors),
+  "OneColor (Default) does not have TwoColors");
 
 // Also test pattern bits
-static_assert(HasFlag(BackgroundSettings::Default, BackgroundSettings::Checkerboard), "Default has Checkerboard");
-static_assert(!HasFlag(BackgroundSettings::Default, BackgroundSettings::Solid), "Default does not have Solid");
-static_assert(HasFlag(BackgroundSettings::Solid, BackgroundSettings::Solid), "Solid has Solid");
-static_assert(!HasFlag(BackgroundSettings::Solid, BackgroundSettings::Checkerboard), "Solid does not have Checkerboard");
+static_assert(
+  HasFlag(
+    BackgroundSettings::Default,
+    BackgroundSettings::Checkerboard),
+  "Default has Checkerboard");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::Default,
+    BackgroundSettings::Solid),
+  "Default does not have Solid");
+static_assert(
+  HasFlag(
+    BackgroundSettings::Solid,
+    BackgroundSettings::Solid),
+  "Solid has Solid");
+static_assert(
+  !HasFlag(
+    BackgroundSettings::Solid,
+    BackgroundSettings::Checkerboard),
+  "Solid does not have Checkerboard");
 
-constexpr void SetFlag(BackgroundSettings &current, BackgroundSettings flag, bool enabled)
+constexpr void SetFlag(
+  BackgroundSettings &current,
+  BackgroundSettings  flag,
+  bool                enabled)
 {
      if (flag == BackgroundSettings::Default)
      {
@@ -595,32 +829,59 @@ constexpr void SetFlag(BackgroundSettings &current, BackgroundSettings flag, boo
      return;
 }
 
-[[nodiscard]] constexpr BackgroundSettings SetFlag(BackgroundSettings &&initial, BackgroundSettings flag, bool enabled)
+[[nodiscard]] constexpr BackgroundSettings SetFlag(
+  BackgroundSettings &&initial,
+  BackgroundSettings   flag,
+  bool                 enabled)
 {
      SetFlag(initial, flag, enabled);
      return initial;
 }
 
 static_assert(
-  SetFlag(BackgroundSettings::OneColor, BackgroundSettings::TwoColors, true) == BackgroundSettings::TwoColors,
+  SetFlag(
+    BackgroundSettings::OneColor,
+    BackgroundSettings::TwoColors,
+    true)
+    == BackgroundSettings::TwoColors,
   "Enable TwoColors failed");
 static_assert(
-  SetFlag(BackgroundSettings::TwoColors, BackgroundSettings::TwoColors, false) == BackgroundSettings::OneColor,
+  SetFlag(
+    BackgroundSettings::TwoColors,
+    BackgroundSettings::TwoColors,
+    false)
+    == BackgroundSettings::OneColor,
   "Disable TwoColors failed");
 
 static_assert(
-  SetFlag(BackgroundSettings::Checkerboard, BackgroundSettings::Solid, true) == BackgroundSettings::Solid,
+  SetFlag(
+    BackgroundSettings::Checkerboard,
+    BackgroundSettings::Solid,
+    true)
+    == BackgroundSettings::Solid,
   "Enable Solid failed");
 static_assert(
-  SetFlag(BackgroundSettings::Solid, BackgroundSettings::Solid, false) == BackgroundSettings::Checkerboard,
+  SetFlag(
+    BackgroundSettings::Solid,
+    BackgroundSettings::Solid,
+    false)
+    == BackgroundSettings::Checkerboard,
   "Disable Solid failed");
 
 // Test no-op when flag == Default
 static_assert(
-  SetFlag(BackgroundSettings::Solid, BackgroundSettings::Default, true) == BackgroundSettings::Solid,
+  SetFlag(
+    BackgroundSettings::Solid,
+    BackgroundSettings::Default,
+    true)
+    == BackgroundSettings::Solid,
   "No-op with Default flag failed");
 static_assert(
-  SetFlag(BackgroundSettings::TwoColors, BackgroundSettings::Default, false) == BackgroundSettings::TwoColors,
+  SetFlag(
+    BackgroundSettings::TwoColors,
+    BackgroundSettings::Default,
+    false)
+    == BackgroundSettings::TwoColors,
   "No-op with Default flag failed");
 
 

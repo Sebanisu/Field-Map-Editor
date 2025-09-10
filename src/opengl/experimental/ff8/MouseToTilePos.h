@@ -25,7 +25,9 @@ class MouseToTilePos
      {
      }
      template<typename TileFunctions>
-     MouseToTilePos(const glm::vec2 offset_mouse_pos, const MapDims<TileFunctions> &m_map_dims)
+     MouseToTilePos(
+       const glm::vec2               offset_mouse_pos,
+       const MapDims<TileFunctions> &m_map_dims)
      {
           static constexpr bool has_texture_page = std::is_same_v<typename TileFunctions::TexturePage, tile_operations::TextureId>;
           texture_page                           = [&]() -> std::uint8_t {
@@ -62,7 +64,9 @@ template<typename TileFunctions, typename FiltersT>
 class MouseTileOverlap
 {
    private:
-     static constexpr bool cmp_overlap(const std::integral auto tilepos, const std::integral auto otherpos) noexcept
+     static constexpr bool cmp_overlap(
+       const std::integral auto tilepos,
+       const std::integral auto otherpos) noexcept
      {
           auto const size = static_cast<decltype(tilepos)>(map_dims_statics::TileSize);
           return std::cmp_greater_equal(otherpos, tilepos) && std::cmp_less(otherpos, tilepos + size);
@@ -71,7 +75,9 @@ class MouseTileOverlap
      FiltersT      &m_filters;
 
    public:
-     MouseTileOverlap(MouseToTilePos compare_value, FiltersT &filters)
+     MouseTileOverlap(
+       MouseToTilePos compare_value,
+       FiltersT      &filters)
        : m_compare_value(std::move(compare_value))
        , m_filters(filters)
      {

@@ -70,8 +70,8 @@ struct mim_bpp
  * @return true If any index from `hovered_tiles_indices` is found in `conflicts_range`.
  * @return false Otherwise.
  */
-static constexpr auto are_indices_in_both_ranges =
-  [](std::ranges::range auto &&hovered_tiles_indices, std::ranges::range auto &&conflicts_range) -> bool {
+static constexpr auto are_indices_in_both_ranges
+  = [](std::ranges::range auto &&hovered_tiles_indices, std::ranges::range auto &&conflicts_range) -> bool {
      return std::ranges::any_of(
        std::forward<decltype(hovered_tiles_indices)>(hovered_tiles_indices), [&](const std::integral auto &hovered_tile) -> bool {
             return std::ranges::any_of(
@@ -103,9 +103,9 @@ static constexpr auto are_indices_in_both_ranges =
  * @return std::uint16_t The number of buttons that can fit per row, ensuring it's even and at least 2.
  */
 static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpacing) -> std::uint16_t {
-     const auto count_per_row_in =
-       (std::max)(static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))),
-                  std::uint16_t{ 2 });
+     const auto count_per_row_in
+       = (std::max)(static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))),
+                    std::uint16_t{ 2 });
      return count_per_row_in % 2 != 0 ? static_cast<std::uint16_t>((std::max)(count_per_row_in - 1, 2)) : count_per_row_in;
 };
 
@@ -163,10 +163,21 @@ static void DebugCallback(
  * @param rhs U value
  * @return lhs + rhs
  */
-template<typename T, typename U>
-     requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> && (!std::same_as<std::remove_cvref_t<U>, std::filesystem::path>)
-              && std::convertible_to<std::remove_cvref_t<U>, std::filesystem::path>
-inline std::filesystem::path operator+(const T &lhs, const U &rhs)
+template<
+  typename T,
+  typename U>
+     requires std::same_as<
+                std::remove_cvref_t<T>,
+                std::filesystem::path>
+              && (!std::same_as<
+                  std::remove_cvref_t<U>,
+                  std::filesystem::path>)
+              && std::convertible_to<
+                std::remove_cvref_t<U>,
+                std::filesystem::path>
+inline std::filesystem::path operator+(
+  const T &lhs,
+  const U &rhs)
 {
      auto tmp = lhs;
      tmp += rhs;
@@ -180,9 +191,15 @@ inline std::filesystem::path operator+(const T &lhs, const U &rhs)
  * @return lhs + rhs
  */
 template<typename T>
-     requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path>
-              || std::same_as<std::remove_cvref_t<T>, std::filesystem::directory_entry>
-inline std::filesystem::path operator+(const std::filesystem::path &lhs, const T &rhs)
+     requires std::same_as<
+                std::remove_cvref_t<T>,
+                std::filesystem::path>
+              || std::same_as<
+                std::remove_cvref_t<T>,
+                std::filesystem::directory_entry>
+inline std::filesystem::path operator+(
+  const std::filesystem::path &lhs,
+  const T                     &rhs)
 {
      auto tmp = lhs;
      tmp += rhs;
@@ -274,7 +291,7 @@ void gui::start(GLFWwindow *const window)
 
      } while (!glfwWindowShouldClose(window) && !stop_loop);
      glfwSetWindowTitle(window, "Shutting down... Cleaning up background threads");
-     glfwPollEvents();// Ensure the title update is processed
+     glfwPollEvents();       // Ensure the title update is processed
      glfwSwapBuffers(window);// Optional, may be necessary to flush events depending on context
 }
 void gui::render_dockspace()
@@ -1241,11 +1258,15 @@ void gui::checkbox_mim_palette_texture()
      }
      tool_tip(gui_labels::draw_palette_texture_tooltip);
 }
-static void update_bpp(mim_sprite &sprite, BPPT bpp)
+static void update_bpp(
+  mim_sprite &sprite,
+  BPPT        bpp)
 {
      sprite = sprite.with_bpp(bpp);
 }
-static void update_bpp(map_sprite &sprite, [[maybe_unused]] BPPT bpp)
+static void update_bpp(
+  map_sprite           &sprite,
+  [[maybe_unused]] BPPT bpp)
 {
      sprite.update_render_texture();
 }
@@ -1288,11 +1309,15 @@ std::uint8_t gui::palette() const
 {
      return static_cast<uint8_t>(Mim::palette_selections().at(static_cast<size_t>(m_selections->get<ConfigKey::Palette>())));
 }
-static void update_palette(mim_sprite &sprite, uint8_t palette)
+static void update_palette(
+  mim_sprite &sprite,
+  uint8_t     palette)
 {
      sprite = sprite.with_palette(palette);
 }
-static void update_palette(map_sprite &sprite, [[maybe_unused]] uint8_t palette)
+static void update_palette(
+  map_sprite              &sprite,
+  [[maybe_unused]] uint8_t palette)
 {
      sprite.update_render_texture();
 }
@@ -1461,10 +1486,10 @@ void gui::edit_menu()
           {
                const auto pop_menu = glengine::ScopeGuard(&ImGui::EndMenu);
                {
-                    static const constinit auto iota_draw_mode =
-                      std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-                    static const auto str_draw_mode =
-                      iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+                    static const constinit auto iota_draw_mode
+                      = std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+                    static const auto str_draw_mode
+                      = iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
                     auto zip_modes = std::ranges::views::zip(iota_draw_mode, str_draw_mode);
                     for (auto &&[mode, str] : zip_modes)
                     {
@@ -1488,8 +1513,8 @@ void gui::edit_menu()
 
                     static const constinit std::array<bool, 2>             swizzle_value  = { true, false };
                     static const constinit std::array<std::string_view, 2> swizzle_string = { gui_labels::swizzle, gui_labels::deswizzle };
-                    static const constinit std::array<std::string_view, 2> swizzle_tooltips = { gui_labels::swizzle_tooltip,
-                                                                                                gui_labels::deswizzle_tooltip };
+                    static const constinit std::array<std::string_view, 2> swizzle_tooltips
+                      = { gui_labels::swizzle_tooltip, gui_labels::deswizzle_tooltip };
                     static auto constinit zip_modes = std::ranges::views::zip(swizzle_value, swizzle_string, swizzle_tooltips);
                     for (auto &&[mode, str, tool_tip_str] : zip_modes)
                     {
@@ -2158,7 +2183,9 @@ void gui::file_menu()
 
 
 // Helper function to handle path deletion
-std::optional<std::string> gui::handle_path_deletion(std::vector<std::string> &ff8_directory_paths, std::ptrdiff_t offset)
+std::optional<std::string> gui::handle_path_deletion(
+  std::vector<std::string> &ff8_directory_paths,
+  std::ptrdiff_t            offset)
 {
      if (std::cmp_less(offset, 0))
      {
@@ -2175,7 +2202,9 @@ std::optional<std::string> gui::handle_path_deletion(std::vector<std::string> &f
      return std::nullopt;
 }
 
-std::string gui::find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled)
+std::string gui::find_replacement_path_value(
+  const std::vector<std::string> &paths,
+  const std::vector<bool>        &paths_enabled)
 {
      if (std::ranges::empty(paths))
      {
@@ -2206,11 +2235,10 @@ void gui::menu_swizzle_as_one_image_paths()
                                              .generated_paths_enabled = m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
                                              .main_label              = gui_labels::swizzle_as_one_image_path,
                                              .browse_tooltip = "Browse for a directory containing swizzle as one image textures." };
-     const main_menu_paths          mmp  = {
-          m_map_sprite->filter().swizzle_as_one_image,
-          std::forward_as_tuple(m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle, m_map_sprite->filter().full_filename),
-          mmps
-     };
+     const main_menu_paths          mmp
+       = { m_map_sprite->filter().swizzle_as_one_image,
+           std::forward_as_tuple(m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle, m_map_sprite->filter().full_filename),
+           mmps };
      mmp.render(
        [&]() {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
@@ -2237,12 +2265,11 @@ void gui::menu_swizzle_paths()
                                              .generated_paths_enabled = m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(),
                                              .main_label              = gui_labels::swizzle_path,
                                              .browse_tooltip          = "Browse for a directory containing swizzle textures." };
-     const main_menu_paths          mmp  = {
-          m_map_sprite->filter().swizzle,
-          std::forward_as_tuple(
-            m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle),
-          mmps
-     };
+     const main_menu_paths          mmp
+       = { m_map_sprite->filter().swizzle,
+           std::forward_as_tuple(
+             m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle),
+           mmps };
      mmp.render(
        [&]() {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
@@ -2269,12 +2296,11 @@ void gui::menu_deswizzle_paths()
                                              .generated_paths_enabled = m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(),
                                              .main_label              = gui_labels::deswizzle_path,
                                              .browse_tooltip          = "Browse for a directory containing deswizzle textures." };
-     const main_menu_paths          mmp  = {
-          m_map_sprite->filter().deswizzle,
-          std::forward_as_tuple(
-            m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle),
-          mmps
-     };
+     const main_menu_paths          mmp
+       = { m_map_sprite->filter().deswizzle,
+           std::forward_as_tuple(
+             m_map_sprite->filter().full_filename, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle),
+           mmps };
      mmp.render(
        [&]() {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
@@ -2302,12 +2328,11 @@ void gui::menu_full_filename_paths()
                                              .generated_paths_enabled = m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>(),
                                              .main_label              = gui_labels::full_filename_path,
                                              .browse_tooltip = "Browse for a directory containing full filename textures. (.toml)" };
-     const main_menu_paths          mmp  = {
-          m_map_sprite->filter().full_filename,
-          std::forward_as_tuple(
-            m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle),
-          mmps
-     };
+     const main_menu_paths          mmp
+       = { m_map_sprite->filter().full_filename,
+           std::forward_as_tuple(
+             m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle),
+           mmps };
      mmp.render(
        [&]() {
             m_selections->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
@@ -2384,7 +2409,9 @@ std::ptrdiff_t gui::add_delete_button(const std::ptrdiff_t index)
      return -1;
 }
 
-std::ptrdiff_t gui::add_delete_button(const std::string &path, const std::vector<std::string> &paths)
+std::ptrdiff_t gui::add_delete_button(
+  const std::string              &path,
+  const std::vector<std::string> &paths)
 {
      auto       transformed_paths = paths | std::ranges::views::enumerate;
      const auto it = std::ranges::find_if(transformed_paths, [&path](const auto &pair) { return path.starts_with(std::get<1>(pair)); });
@@ -2529,8 +2556,8 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzlePath>();
                ensure_directory(selected_path);
-               m_future_consumer +=
-                 m_map_sprite->save_swizzle_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path);
+               m_future_consumer
+                 += m_map_sprite->save_swizzle_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path);
                save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForSwizzle>();
                open_directory(selected_path);
           }
@@ -2551,8 +2578,8 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
                m_selections->update<ConfigKey::DeswizzlePath>();
                ensure_directory(selected_path);
-               m_future_consumer +=
-                 m_map_sprite->save_deswizzle_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());
+               m_future_consumer
+                 += m_map_sprite->save_deswizzle_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());
                save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForDeswizzle>();
                open_directory(selected_path);
           }
@@ -2955,10 +2982,10 @@ void gui::refresh_draw_mode()
 }
 void gui::combo_draw()
 {
-     static const constinit auto iota_draw_mode =
-       std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-     static const auto str_draw_mode =
-       iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+     static const constinit auto iota_draw_mode
+       = std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+     static const auto str_draw_mode
+       = iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
 
      const auto gcc = GenericCombo(
        gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections->get<ConfigKey::DrawMode>());
@@ -3284,7 +3311,7 @@ gui::gui(GLFWwindow *const window)
      // 5. Load Fonts
      (void)icons_font();
      ImGui_ImplOpenGL3_DestroyFontsTexture();// safely clears existing texture
-     ImGui_ImplOpenGL3_CreateFontsTexture();// creates new one from ImGuiIO::Fonts
+     ImGui_ImplOpenGL3_CreateFontsTexture(); // creates new one from ImGuiIO::Fonts
 
      // 6. MISC
      m_archives_group = std::make_shared<archives_group>(get_archives_group());
@@ -3560,10 +3587,8 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_texture_pa
 {
      return std::async(std::launch::async, [ps = static_cast<ff_8::path_search>(*m_map_sprite)]() -> std::future<PathsAndEnabled> {
           gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheTextureAndMapPaths,
-                                      .enabled_key = { ConfigKey::CacheSwizzlePathsEnabled,
-                                                       ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-                                                       ConfigKey::CacheDeswizzlePathsEnabled,
-                                                       ConfigKey::CacheFullFileNamePathsEnabled } };
+                                      .enabled_key = { ConfigKey::CacheSwizzlePathsEnabled, ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+                                                       ConfigKey::CacheDeswizzlePathsEnabled, ConfigKey::CacheFullFileNamePathsEnabled } };
 
           const auto           get_map_paths_joined = [&](const auto &container) {
                return container | std::views::transform([&](const std::filesystem::path &path) {
@@ -3619,8 +3644,8 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
 {
      return std::async(
        std::launch::async,
-       [ps =
-          ff_8::path_search{ .selections                   = m_selections,
+       [ps
+        = ff_8::path_search{ .selections                   = m_selections,
                              .opt_coo                      = get_coo(),
                              .field_name                   = m_map_sprite->get_base_name(),
                              .filters_swizzle_value_string = m_map_sprite->filter().swizzle.value().string(),
@@ -3755,7 +3780,9 @@ bool gui::combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const
 }
 
 
-std::vector<std::filesystem::path> gui::find_maps_in_directory(const std::filesystem::path &src, size_t reserve)
+std::vector<std::filesystem::path> gui::find_maps_in_directory(
+  const std::filesystem::path &src,
+  size_t                       reserve)
 {
      std::vector<std::filesystem::path> paths{};
      paths.reserve(reserve);
@@ -3771,8 +3798,9 @@ std::vector<std::filesystem::path> gui::find_maps_in_directory(const std::filesy
      return paths;
 }
 template<bool Nested>
-std::vector<std::filesystem::path>
-  gui::replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const
+std::vector<std::filesystem::path> gui::replace_entries(
+  const open_viii::archive::FIFLFS<Nested> &field,
+  const std::vector<std::filesystem::path> &paths) const
 {
      auto tmp = open_viii::archive::replace_files<Nested>(field, paths);
      return tmp;

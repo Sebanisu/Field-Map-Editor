@@ -8,7 +8,9 @@
 #include "Menu.hpp"
 #include <fmt/format.h>
 #include <ranges>
-static inline void MenuSaveToggles(const glengine::Menu &menu, Configuration &config)
+static inline void MenuSaveToggles(
+  const glengine::Menu &menu,
+  Configuration        &config)
 {
      const auto  string = fmt::format("{}_menu", menu.title());
      toml::array array{};
@@ -26,7 +28,9 @@ static inline void MenuSaveToggles(const glengine::Menu &menu)
      Configuration config{};
      MenuSaveToggles(menu, config);
 }
-static inline void MenuLoadToggles(glengine::Menu &menu, Configuration &config)
+static inline void MenuLoadToggles(
+  glengine::Menu &menu,
+  Configuration  &config)
 {
      const auto string = fmt::format("{}_menu", menu.title());
      if (config->contains(string))

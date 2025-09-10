@@ -86,7 +86,9 @@ toml::node_view<const toml::node> fme::Configuration::operator[](std::string_vie
      return std::as_const(*m_table)[i];
 }
 
-toml::node_view<const toml::node> fme::Configuration::operator()(std::string_view root, std::string_view child) const
+toml::node_view<const toml::node> fme::Configuration::operator()(
+  std::string_view root,
+  std::string_view child) const
 {
      auto root_node = std::as_const(*m_table)[root];
      if (!root_node)

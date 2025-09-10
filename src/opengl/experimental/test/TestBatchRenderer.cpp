@@ -12,8 +12,8 @@ void                  test::TestBatchRenderer::generate_quads() const
      m_batch_renderer.clear();
      auto x_rng = std::views::iota(int32_t{}, m_count[0]);
      auto y_rng = std::views::iota(int32_t{}, m_count[1]);
-     auto text_index_rng =
-       std::views::iota(uint32_t{}) | std::views::transform([this](const auto i) { return i % std::ranges::size(m_textures); });
+     auto text_index_rng
+       = std::views::iota(uint32_t{}) | std::views::transform([this](const auto i) { return i % std::ranges::size(m_textures); });
      auto text_index = text_index_rng.begin();
      for (const auto x : x_rng)
      {
@@ -24,8 +24,7 @@ void                  test::TestBatchRenderer::generate_quads() const
 
                m_batch_renderer.draw_quad(
                  { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F,
-                   static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F,
-                   0.F },
+                   static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F, 0.F },
                  { r, g, 1.F, 1.F },
                  m_textures.at(*text_index),
                  static_cast<float>(1U << (*text_index)),

@@ -60,35 +60,51 @@ class EmptyStringIterator
           return empty_string;
      }
 
-     friend constexpr difference_type operator-(const EmptyStringIterator & /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr difference_type operator-(
+       const EmptyStringIterator & /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return 0;
      }
-     friend constexpr EmptyStringIterator operator+(const EmptyStringIterator & /*unused*/, difference_type /*unused*/) noexcept
+     friend constexpr EmptyStringIterator operator+(
+       const EmptyStringIterator & /*unused*/,
+       difference_type /*unused*/) noexcept
      {
           return EmptyStringIterator{};
      }
-     friend constexpr EmptyStringIterator operator+(difference_type /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr EmptyStringIterator operator+(
+       difference_type /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return EmptyStringIterator{};
      }
-     friend constexpr EmptyStringIterator operator-(const EmptyStringIterator & /*unused*/, difference_type /*unused*/) noexcept
+     friend constexpr EmptyStringIterator operator-(
+       const EmptyStringIterator & /*unused*/,
+       difference_type /*unused*/) noexcept
      {
           return EmptyStringIterator{};
      }
-     friend constexpr bool operator<(const EmptyStringIterator & /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr bool operator<(
+       const EmptyStringIterator & /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return false;
      }
-     friend constexpr bool operator>(const EmptyStringIterator & /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr bool operator>(
+       const EmptyStringIterator & /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return false;
      }
-     friend constexpr bool operator<=(const EmptyStringIterator & /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr bool operator<=(
+       const EmptyStringIterator & /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return true;
      }
-     friend constexpr bool operator>=(const EmptyStringIterator & /*unused*/, const EmptyStringIterator & /*unused*/) noexcept
+     friend constexpr bool operator>=(
+       const EmptyStringIterator & /*unused*/,
+       const EmptyStringIterator & /*unused*/) noexcept
      {
           return true;
      }

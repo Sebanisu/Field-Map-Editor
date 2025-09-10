@@ -27,15 +27,21 @@ struct [[nodiscard]] Shader
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
      [[nodiscard]] static ShaderProgramSource                   parse_shader(const std::filesystem::path &path);
-     [[nodiscard]] static std::uint32_t                         compile_shader(const std::uint32_t type, const std::string_view source);
-     [[nodiscard]] static std::uint32_t                         create_shader(const std::string_view, const std::string_view);
-     [[nodiscard]] std::int32_t                                 get_uniform_location(std::string_view name) const;
+     [[nodiscard]] static std::uint32_t                         compile_shader(
+                               const std::uint32_t    type,
+                               const std::string_view source);
+     [[nodiscard]] static std::uint32_t create_shader(
+       const std::string_view,
+       const std::string_view);
+     [[nodiscard]] std::int32_t get_uniform_location(std::string_view name) const;
 
    public:
      Shader() = default;
      Shader(std::filesystem::path file_path)
        : m_file_path(std::move(file_path))
-       , m_renderer_id(Glid{ create(m_file_path), destroy })
+       , m_renderer_id(
+           Glid{ create(m_file_path),
+                 destroy })
      {
      }
 
@@ -54,22 +60,33 @@ struct [[nodiscard]] Shader
      }
 
      // Set Uniforms
-     void set_uniform(std::string_view name, glm::vec1 v) const;
-     void set_uniform(std::string_view name, glm::vec2 v) const;
-     void set_uniform(std::string_view name, glm::vec3 v) const;
-     void set_uniform(std::string_view name, glm::vec4 v) const;
-     void set_uniform(std::string_view name, const glm::mat4 &matrix) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec1        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec2        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec3        v) const;
+     void set_uniform(
+       std::string_view name,
+       glm::vec4        v) const;
+     void set_uniform(
+       std::string_view name,
+       const glm::mat4 &matrix) const;
      template<typename... T>
           requires((sizeof...(T) >= 1U) && (sizeof...(T) <= 4U))
                   && ((std::floating_point<T> && ...) || (std::unsigned_integral<T> && ...) || (std::signed_integral<T> && ...))
-     void set_uniform(std::string_view name, T... v) const
+     void set_uniform(
+       std::string_view name,
+       T... v) const
      {
           const int32_t location = get_uniform_location(name);
           if (location == -1)
                return;
-          const auto perform = [&]<typename NT>(auto &&fun) {
-               GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...);
-          };
+          const auto perform
+            = [&]<typename NT>(auto &&fun) { GlCall{}(std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...); };
           if constexpr ((std::floating_point<T> && ...))
           {
                if constexpr (sizeof...(T) == 1U)
@@ -131,9 +148,18 @@ struct [[nodiscard]] Shader
 
      template<std::ranges::contiguous_range T>
           requires(
-            (decay_same_as<std::ranges::range_value_t<T>, float>) || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
-            || (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>))
-     void set_uniform(std::string_view name, T v) const
+            (decay_same_as<
+              std::ranges::range_value_t<T>,
+              float>)
+            || (decay_same_as<
+                std::ranges::range_value_t<T>,
+                std::uint32_t>)
+            || (decay_same_as<
+                std::ranges::range_value_t<T>,
+                std::int32_t>))
+     void set_uniform(
+       std::string_view name,
+       T                v) const
      {
           const int32_t location = get_uniform_location(name);
           if (location == -1)

@@ -75,10 +75,6 @@ void fme::Selections::sort_paths()
      process.template operator()<ConfigKey::TomlPaths>();
 
      process.template operator()<
-       ConfigKey::CacheTextureAndMapPaths,
-       ConfigKey::CacheSwizzlePathsEnabled,
-       ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-       ConfigKey::CacheDeswizzlePathsEnabled,
-       ConfigKey::CacheFullFileNamePathsEnabled,
-       ConfigKey::CacheMapPathsEnabled>();
+       ConfigKey::CacheTextureAndMapPaths, ConfigKey::CacheSwizzlePathsEnabled, ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+       ConfigKey::CacheDeswizzlePathsEnabled, ConfigKey::CacheFullFileNamePathsEnabled, ConfigKey::CacheMapPathsEnabled>();
 }

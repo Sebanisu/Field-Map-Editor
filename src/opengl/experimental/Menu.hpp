@@ -24,7 +24,9 @@ class Menu
      {
      }
      template<is_MenuElementType... T>
-     Menu(const char *const title, T &&...t)
+     Menu(
+       const char *const title,
+       T &&...t)
        : Menu(title)
      {
           ((void)push_back<typename std::remove_cvref_t<T>::ValueType>(std::move(t.name)), ...);
@@ -50,7 +52,9 @@ class Menu
      {
           push_back(std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
      }
-     void        push_back(std::string name, std::function<MenuItem()> function) const;
+     void push_back(
+       std::string               name,
+       std::function<MenuItem()> function) const;
      void        reload() const;
      std::size_t size() const noexcept
      {

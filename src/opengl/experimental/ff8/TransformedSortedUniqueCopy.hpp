@@ -11,7 +11,13 @@ template<
   typename unique_compareT = std::ranges::equal_to,
   typename projectionT     = std::identity,
   std::ranges::range... rangeT>
-     requires(std::indirect_equivalence_relation<unique_compareT, std::projected<std::ranges::iterator_t<rangeT>, transformT>>, ...)
+     requires(
+       std::indirect_equivalence_relation<
+         unique_compareT,
+         std::projected<
+           std::ranges::iterator_t<rangeT>,
+           transformT>>,
+       ...)
 static inline auto TransformedSortedUniqueCopy(
   transformT      transform    = {},
   sort_compareT   sort_compare = {},

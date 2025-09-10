@@ -7,7 +7,9 @@
 namespace glengine
 {
 template<typename T>
-static constexpr auto operator+(T e) noexcept -> std::enable_if_t<std::is_enum<T>::value, std::underlying_type_t<T>>
+static constexpr auto operator+(T e) noexcept -> std::enable_if_t<
+  std::is_enum<T>::value,
+  std::underlying_type_t<T>>
 {
      return static_cast<std::underlying_type_t<T>>(e);
 }
@@ -25,7 +27,10 @@ bool Input::is_mouse_button_pressed(Mouse button)
      const int state = glfwGetMouseButton(m_window, +button);
      return state == +Mouse::Press;
 }
-std::optional<const std::array<float, 2U>> Input::get_mouse_position()
+std::optional<const std::array<
+  float,
+  2U>>
+  Input::get_mouse_position()
 {
      if (!m_window)
           return std::nullopt;

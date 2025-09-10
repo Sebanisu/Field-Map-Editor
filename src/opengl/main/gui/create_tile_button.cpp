@@ -1,8 +1,10 @@
 #include "create_tile_button.hpp"
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
-[[nodiscard]] bool
-  fme::create_tile_button(std::weak_ptr<const fme::map_sprite> map_ptr, const tileT &tile, const tile_button_options &options)
+[[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite> map_ptr,
+  const tileT                         &tile,
+  const tile_button_options           &options)
 {
      const auto map = map_ptr.lock();
      if (!map)
@@ -47,10 +49,10 @@ template<is_tile tileT>
        static_cast<int>(tile_texture_size.x),
        static_cast<int>(tile_texture_size.y));
 
-     const ImVec2 texSize       = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
+     const ImVec2 texSize = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
 
-     const ImVec2 uv0           = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
-                                    static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
+     const ImVec2 uv0
+       = { static_cast<float>(rect.x) / static_cast<float>(texSize.x), static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
 
      const ImVec2 uv1           = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
                                     static_cast<float>(rect.y + rect.w) / static_cast<float>(texSize.y) };
@@ -99,12 +101,21 @@ template<is_tile tileT>
 
 
 // Explicit instantiation for Tiles
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, const tile_button_options &);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, const tile_button_options &);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile1 &,
+  const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile2 &,
+  const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile3 &,
+  const tile_button_options &);
 
 
-[[nodiscard]] bool          fme::create_color_button::operator()() const
+[[nodiscard]] bool fme::create_color_button::operator()() const
 {
      // needs to be in a std::shared_ptr to be returned from a lambda. it has no move or copy operations. Also it won't just use copy
      // elision.

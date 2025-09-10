@@ -94,9 +94,8 @@ struct gui_labels
      static constexpr std::string_view save_mim_unmodified               = { "Save Mim File (unmodified)" };
      static constexpr std::string_view save_displayed_texture            = { "Save Displayed Texture Image" };
      static constexpr std::string_view locate_a_custom_swizzle_directory = { "Locate a Custom Swizzle Directory" };
-     static constexpr std::string_view locate_a_custom_swizzle_as_one_image_directory = {
-          "Locate a Custom Swizzle as One Image Directory"
-     };
+     static constexpr std::string_view locate_a_custom_swizzle_as_one_image_directory
+       = { "Locate a Custom Swizzle as One Image Directory" };
      static constexpr std::string_view locate_a_custom_deswizzle_directory    = { "Locate a Custom Deswizzle Directory" };
      static constexpr std::string_view locate_a_ff8_install                   = { "Locate a FF8 Install Directory" };
      static constexpr std::string_view choose_a_ff8_install                   = { "Choose a FF8 Install Directory..." };
@@ -176,125 +175,102 @@ struct gui_labels
      static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
      static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
 
-     static constexpr std::string_view save_map_files_tooltip                 = {
-          "Save `.map` files when outputting textures for each field."
-                          "This is optional unless you use an option that modifies your maps."
-     };
-     static constexpr std::string_view load_map_files_tooltip = {
-          "Scan the selected input path for `.map` files for each field"
-          "and load them before processing the selected batch operations."
-     };
-     static constexpr std::string_view BatchGenerateColorfulMaskToolTip = {
-          "Produces per-texture colorful masks, where each unique color maps to a PupuID. "
-          "These are mainly used to split the image into separate textures. "
-          "A compute shader counts pixel coverage and assigns each texture to the PupuID "
-          "with the highest pixel count (default behavior)."
-     };
+     static constexpr std::string_view save_map_files_tooltip
+       = { "Save `.map` files when outputting textures for each field."
+           "This is optional unless you use an option that modifies your maps." };
+     static constexpr std::string_view load_map_files_tooltip
+       = { "Scan the selected input path for `.map` files for each field"
+           "and load them before processing the selected batch operations." };
+     static constexpr std::string_view BatchGenerateColorfulMaskToolTip
+       = { "Produces per-texture colorful masks, where each unique color maps to a PupuID. "
+           "These are mainly used to split the image into separate textures. "
+           "A compute shader counts pixel coverage and assigns each texture to the PupuID "
+           "with the highest pixel count (default behavior)." };
 
-     static constexpr std::string_view BatchGenerateWhiteOnBlackMaskToolTip = {
-          "Produces white-on-black masks for each texture - useful for importing into Photoshop "
-          "or other editors. Each mask highlights one texture in white while the rest of the image "
-          "is black.\n"
-          "Note: this can generate many files, which makes importing slow. For now, they are mainly "
-          "for external editing rather than our pipeline, though we may optimize and integrate them later."
-     };
-     static constexpr std::string_view TooltipBatchGenerateWhiteOnBlackMaskDisabled = {
-          "White-on-black masks require colorful masks to be enabled. "
-          "Enable 'Generate Colorful Masks' first to use this option."
-     };
+     static constexpr std::string_view BatchGenerateWhiteOnBlackMaskToolTip
+       = { "Produces white-on-black masks for each texture - useful for importing into Photoshop "
+           "or other editors. Each mask highlights one texture in white while the rest of the image "
+           "is black.\n"
+           "Note: this can generate many files, which makes importing slow. For now, they are mainly "
+           "for external editing rather than our pipeline, though we may optimize and integrate them later." };
+     static constexpr std::string_view TooltipBatchGenerateWhiteOnBlackMaskDisabled
+       = { "White-on-black masks require colorful masks to be enabled. "
+           "Enable 'Generate Colorful Masks' first to use this option." };
 
-     static constexpr std::string_view move_conflicts_only_tooltip = {
-          "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "
-          "detected as empty. It also changes the depth to 4bpp. "
-     };
+     static constexpr std::string_view move_conflicts_only_tooltip
+       = { "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "
+           "detected as empty. It also changes the depth to 4bpp. " };
 
-     static constexpr std::string_view explore_tooltip = {
-          "Opens the file explorer window in the currently assigned directory. On Windows, this opens File Explorer; on Linux, it should "
-          "open a similar file browser."
-     };
+     static constexpr std::string_view explore_tooltip
+       = { "Opens the file explorer window in the currently assigned directory. On Windows, this opens File Explorer; on Linux, it should "
+           "open a similar file browser." };
 
-     static constexpr std::string_view input_mim_tooltip = {
-          "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
-     };
+     static constexpr std::string_view input_mim_tooltip
+       = { "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures." };
 
-     static constexpr std::string_view input_deswizzle_tooltip = {
-          "Load a directory of deswizzled textures. Including `.map` files if found."
-     };
+     static constexpr std::string_view input_deswizzle_tooltip
+       = { "Load a directory of deswizzled textures. Including `.map` files if found." };
 
-     static constexpr std::string_view input_swizzle_tooltip = {
-          "Load a directory of swizzled textures. Including `.map` files if found."
-     };
+     static constexpr std::string_view input_swizzle_tooltip
+       = { "Load a directory of swizzled textures. Including `.map` files if found." };
 
-     static constexpr std::string_view input_swizzle_as_one_image_tooltip = {
-          "Load a directory of swizzled as one image textures. Including `.map` files if found."
-     };
+     static constexpr std::string_view input_swizzle_as_one_image_tooltip
+       = { "Load a directory of swizzled as one image textures. Including `.map` files if found." };
 
-     static constexpr std::string_view input_full_filename_image_tooltip = {
-          "Load a directory of full filename textures. Including `.map` files if found. (.toml)"
-     };
+     static constexpr std::string_view input_full_filename_image_tooltip
+       = { "Load a directory of full filename textures. Including `.map` files if found. (.toml)" };
 
-     static constexpr std::string_view compact_flatten_warning = {
-          "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load "
-          "the updated `.map` file into the field's (.fi.fl.fs) files."
-     };
+     static constexpr std::string_view compact_flatten_warning
+       = { "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load "
+           "the updated `.map` file into the field's (.fi.fl.fs) files." };
 
-     static constexpr std::string_view compact_tooltip = {
-          "Reorder tiles to reduce overlapping. The game often reuses tiles with different palettes."
-     };
+     static constexpr std::string_view compact_tooltip
+       = { "Reorder tiles to reduce overlapping. The game often reuses tiles with different palettes." };
 
-     static constexpr std::string_view flatten_tooltip = {
-          "Simplify `.map` files by reducing the number of different bits per pixel (bpp) and/or palettes. Upscales generally don't "
-          "require these."
-     };
+     static constexpr std::string_view flatten_tooltip
+       = { "Simplify `.map` files by reducing the number of different bits per pixel (bpp) and/or palettes. Upscales generally don't "
+           "require these." };
 
      static constexpr std::string_view compact_rows_tooltip = {
           "Rows: Sort tiles from 8-bit to 4-bit and separate conflicting palettes, attempting to apply the sort to each row individually."
      };
 
-     static constexpr std::string_view compact_all_tooltip = {
-          "All: Sort tiles from 8-bit to 4-bit and separate conflicting palettes, applying the sort to all tiles at once."
-     };
+     static constexpr std::string_view compact_all_tooltip
+       = { "All: Sort tiles from 8-bit to 4-bit and separate conflicting palettes, applying the sort to all tiles at once." };
 
-     static constexpr std::string_view compact_map_order_tooltip = {
-          "Map Order: Creates a tile for each map entry with 16 columns and 16 rows per texture page. Tiles are changed to 4bpp, "
-          "allowing 16 tiles per row."
-     };
+     static constexpr std::string_view compact_map_order_tooltip
+       = { "Map Order: Creates a tile for each map entry with 16 columns and 16 rows per texture page. Tiles are changed to 4bpp, "
+           "allowing 16 tiles per row." };
 
-     static constexpr std::string_view compact_map_order_ffnx         = { "Map Order 2" };
-     static constexpr std::string_view compact_map_order_ffnx2        = { "Map Order 2: FFNX" };
-     static constexpr std::string_view compact_map_order_ffnx_tooltip = {
-          "FFNX Map Order: order tiles in rows of (number_of_tiles / 16). Changes all the tiles' deapth to 4bpp."
-     };
+     static constexpr std::string_view compact_map_order_ffnx  = { "Map Order 2" };
+     static constexpr std::string_view compact_map_order_ffnx2 = { "Map Order 2: FFNX" };
+     static constexpr std::string_view compact_map_order_ffnx_tooltip
+       = { "FFNX Map Order: order tiles in rows of (number_of_tiles / 16). Changes all the tiles' deapth to 4bpp." };
 
-     static constexpr std::string_view flatten_bpp_tooltip = {
-          "BPP: Changes all tiles to 4 bits per pixel (bpp) to maximize the number of tiles per texture page. This is applied "
-          "automatically by Map Order compacting."
-     };
+     static constexpr std::string_view flatten_bpp_tooltip
+       = { "BPP: Changes all tiles to 4 bits per pixel (bpp) to maximize the number of tiles per texture page. This is applied "
+           "automatically by Map Order compacting." };
 
-     static constexpr std::string_view flatten_palette_tooltip = {
-          "Palette: Changes all palettes to 0, potentially reducing the need to reload textures."
-     };
+     static constexpr std::string_view flatten_palette_tooltip
+       = { "Palette: Changes all palettes to 0, potentially reducing the need to reload textures." };
 
-     static constexpr std::string_view flatten_both_tooltip       = { "Both: Changes the bpp to 4 and the palette to 0." };
+     static constexpr std::string_view flatten_both_tooltip = { "Both: Changes the bpp to 4 and the palette to 0." };
 
 
-     static constexpr std::string_view language_dropdown_tool_tip = {
-          "This Language dropdown might not change anything unless it's the remaster version of the fields archive because they have all "
-          "the languages in the same file. You could change the path directly to a lang- path. Then this will override this dropdown for "
-          "older versions of FF8."
-     };
-     static constexpr std::string_view language_generic_tool_tip    = { "Generic this is for matching files without lang code in them." };
-     static constexpr std::string_view save_swizzle_import_tool_tip = {
-          "Save swizzled image wtih new `.map`. Including imported texture."
-     };
+     static constexpr std::string_view language_dropdown_tool_tip
+       = { "This Language dropdown might not change anything unless it's the remaster version of the fields archive because they have all "
+           "the languages in the same file. You could change the path directly to a lang- path. Then this will override this dropdown for "
+           "older versions of FF8." };
+     static constexpr std::string_view language_generic_tool_tip = { "Generic this is for matching files without lang code in them." };
+     static constexpr std::string_view save_swizzle_import_tool_tip
+       = { "Save swizzled image wtih new `.map`. Including imported texture." };
 
 
-     static constexpr std::string_view swizzle_tooltip = {
-          "Swizzle mode displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled "
-          "positions "
-          "if "
-          "they have been rearranged."
-     };
+     static constexpr std::string_view swizzle_tooltip
+       = { "Swizzle mode displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled "
+           "positions "
+           "if "
+           "they have been rearranged." };
 
      static constexpr std::string_view deswizzle_tooltip = {
           "Deswizzle mode displays tiles in the positions where they would draw in game. It's a best effort attempt to emulate the way the "
@@ -302,21 +278,18 @@ struct gui_labels
      };
 
 
-     static constexpr std::string_view disable_blending_tooltip = {
-          "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
-          "lights or colored glass."
-     };
-     static constexpr std::string_view force_reloading_of_textures_tooltip = {
-          "Force reloading textures and rendering the map at the start of each frame."
-     };
+     static constexpr std::string_view disable_blending_tooltip
+       = { "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
+           "lights or colored glass." };
+     static constexpr std::string_view force_reloading_of_textures_tooltip
+       = { "Force reloading textures and rendering the map at the start of each frame." };
      static constexpr std::string_view force_rendering_of_map_tooltip = { "Force rendering the map at the start of each frame." };
-     static constexpr std::string_view draw_palette_texture_tooltip   = {
-          "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "
-            "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
-     };
-     static constexpr auto tile_values =
-       std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
-                   blend_other, animation_id, animation_state, draw };
+     static constexpr std::string_view draw_palette_texture_tooltip
+       = { "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "
+           "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid." };
+     static constexpr auto tile_values
+       = std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
+                     blend_other, animation_id, animation_state, draw };
 
 
      static constexpr std::string_view selected_path         = { "{selected_path}" };

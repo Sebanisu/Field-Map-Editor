@@ -11,7 +11,9 @@ BatchRenderer::BatchRenderer()
   : BatchRenderer(100U)
 {
 }
-BatchRenderer::BatchRenderer(std::size_t quad_count, Shader shader)
+BatchRenderer::BatchRenderer(
+  std::size_t quad_count,
+  Shader      shader)
   : m_max_textures(max_texture_image_units())
   , m_quad_count(quad_count)
   , m_shader(std::move(shader))
@@ -82,15 +84,26 @@ std::uint32_t BatchRenderer::max_texture_image_units()
      GlCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
      return static_cast<std::uint32_t>(texture_units);
 }
-void BatchRenderer::draw_quad(const Texture &texture, glm::vec3 offset, glm::vec2 size) const
+void BatchRenderer::draw_quad(
+  const Texture &texture,
+  glm::vec3      offset,
+  glm::vec2      size) const
 {
      draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size) const
+void BatchRenderer::draw_quad(
+  const SubTexture &texture,
+  glm::vec3         offset,
+  glm::vec2         size) const
 {
      draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id, unsigned int pupu_id) const
+void BatchRenderer::draw_quad(
+  const SubTexture &texture,
+  glm::vec3         offset,
+  glm::vec2         size,
+  int               id,
+  unsigned int      pupu_id) const
 {
      draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id, pupu_id);
 }
@@ -120,12 +133,17 @@ void BatchRenderer::draw_quad(
             offset, color, static_cast<int>(std::ranges::size(m_texture_slots) - 1U), tiling_factor, texture.uv(), size, id, pupu_id));
      }
 }
-void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color) const
+void BatchRenderer::draw_quad(
+  glm::vec3 offset,
+  glm::vec4 color) const
 {
      draw(CreateQuad(offset, color, 0));
 }
 
-[[maybe_unused]] void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color, glm::vec2 size) const
+[[maybe_unused]] void BatchRenderer::draw_quad(
+  glm::vec3 offset,
+  glm::vec4 color,
+  glm::vec2 size) const
 {
      draw(CreateQuad(
        offset,
