@@ -7,7 +7,9 @@
 #include <ctre.hpp>
 #include <set>
 
-fme::filter_window::filter_window(std::weak_ptr<Selections> in_selections, std::weak_ptr<map_sprite> in_map_sprite)
+fme::filter_window::filter_window(
+  std::weak_ptr<Selections> in_selections,
+  std::weak_ptr<map_sprite> in_map_sprite)
   : m_selections(std::move(in_selections))
   , m_map_sprite(std::move(in_map_sprite))
 
@@ -294,8 +296,8 @@ void fme::filter_window::handle_regenerate(
      }
      spdlog::debug("{}:{} Regenerate Started", __FILE__, __LINE__);
      m_regenerate_items = false;
-     toml::table *coo_table =
-       lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     toml::table *coo_table
+       = lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return;
@@ -316,8 +318,8 @@ void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_sel
 
      // TODO fill in common values here or else users can't use them. Like Field names and coo
      const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path =
-       config_path_values.replace_tags(lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
+     const std::filesystem::path config_path
+       = config_path_values.replace_tags(lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
      auto config = Configuration(config_path);
      config.save();
 }
@@ -436,45 +438,38 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
-     static constinit bool check_offset            = false;
-     static constinit bool check_layer_id          = false;
-     static constinit bool check_animation         = false;
-     static constinit bool check_animation_id      = false;
-     static constinit bool check_animation_state   = false;
-     static constinit bool check_allow_same_blend  = false;
-     static constinit bool check_animation_fill_in = false;
-     ImGui::BeginDisabled(check_animation);
-     if (check_animation)
+     ImGui::BeginDisabled(m_checkanimation);
+     if (m_checkanimation)
      {
           bool is_true = true;
           (void)ImGui::Checkbox("Offset", &is_true);
      }
      else
      {
-          (void)ImGui::Checkbox("Offset", &check_offset);
+          (void)ImGui::Checkbox("Offset", &m_checkoffset);
      }
      ImGui::EndDisabled();
      tool_tip("mask 0xFFFF'FFF0U vs PupuID and combine all of those elements.");
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Animation", &check_animation))
+     if (ImGui::Checkbox("Animation", &m_checkanimation))
      {
-          if (check_animation)
+          if (m_checkanimation)
           {
-               check_offset = true;
+               m_checkoffset = true;
           }
      }
      tool_tip(
        "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one of the PupuIDs is has Animation ID 0xFF and Animation State "
        "0x00");
      ImGui::NextColumn();
-     if (ImGui::Checkbox("ID", &check_animation_id))
+     if (ImGui::Checkbox("ID", &m_checkanimation_id))
      {
      }
 
      tool_tip("mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join animations ids of not the same state.");
 
      ImGui::NextColumn();
-     if (ImGui::Checkbox("State", &check_animation_state))
+     if (ImGui::Checkbox("State", &m_checkanimation_state))
      {
      }
 
@@ -484,19 +479,19 @@ void fme::filter_window::render_list_view(
        "overlap.");
 
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Fill-in", &check_animation_fill_in))
+     if (ImGui::Checkbox("Fill-in", &m_checkanimation_fill_in))
      {
      }
 
 
      ImGui::NextColumn();
-     if (ImGui::Checkbox("(Allow Blend)", &check_allow_same_blend))
+     if (ImGui::Checkbox("(Allow Blend)", &m_checkallow_same_blend))
      {
      }
 
      tool_tip("Allow combines on the same blend.");
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Layer", &check_layer_id))
+     if (ImGui::Checkbox("Layer", &m_checklayer_id))
      {
      }
      tool_tip("Combine entries with different layer ids.");
@@ -504,98 +499,90 @@ void fme::filter_window::render_list_view(
      combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::Columns(1);
      ImGui::BeginDisabled(
-       !check_offset && !check_animation && !check_animation_id && !check_animation_state && !check_layer_id && !check_animation_fill_in);
+       !m_checkoffset && !m_checkanimation && !m_checkanimation_id && !m_checkanimation_state && !m_checklayer_id
+       && !m_checkanimation_fill_in);
      if (ImGui::Button("Combine (w/attribute)"))
      {
           [&]() {
                const auto  &unique_pupu_ids = lock_map_sprite->working_unique_pupu();
-               toml::table *coo_table =
-                 lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+               toml::table *coo_table
+                 = lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+               if (m_checkoffset)
+                    process_combine(coo_table, unique_pupu_ids)
 
-               if (coo_table && check_offset && !check_animation)
-               {
-                    for (auto &&[key, value] : *coo_table)
+                      if (coo_table && m_checkoffset && !m_checkanimation)
                     {
-                         if (value.is_table())
+                         for (auto &&[key, value] : *coo_table)
                          {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
-                              if (!temp_filter.enabled())
+                              if (value.is_table())
                               {
-                                   continue;
-                              }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
-                                       return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
-                                       {
-                                            return false;
-                                       }
-                                       return pupu_id.offset() > 0;
-                                  }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              // if (std::ranges::all_of(
-                              //       temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                                   toml::table                                 &file_table  = *value.as_table();
+                                   temp_filter.reload(file_table);// loads from table;
+                                   if (!temp_filter.enabled())
                                    {
-                                        if (
-                                          m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             }))
+                                        continue;
+                                   }
+                                   if (
+                                     !m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                          return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
+                                     }))
+                                   {
+                                        continue;
+                                   }
+                                   if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
+                                            if (is_excluded(pupu_id))
+                                            {
+                                                 return false;
+                                            }
+                                            return pupu_id.offset() > 0;
+                                       }))
+                                   {
+                                        // mark for deletion
+                                        m_remove_queue.emplace_back(key);
+                                        continue;
+                                   }
+                                   // if (std::ranges::all_of(
+                                   //       temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
+                                   {
+                                        // append offsets > 0 to these.
+                                        auto copy_values = temp_filter.value();
+                                        bool reload      = false;
+                                        for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                         {
-                                             continue;
-                                        }
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
-                                        {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(u_pupu_id))
                                              {
                                                   continue;
                                              }
-                                             if (u_pupu_id != i_pupu_id && u_pupu_id.same_base(i_pupu_id))
+                                             for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                              {
-                                                  copy_values.push_back(u_pupu_id);
-                                                  reload = true;
+                                                  if (is_excluded(i_pupu_id))
+                                                  {
+                                                       continue;
+                                                  }
+                                                  if (u_pupu_id != i_pupu_id && u_pupu_id.same_base(i_pupu_id))
+                                                  {
+                                                       copy_values.push_back(u_pupu_id);
+                                                       reload = true;
+                                                  }
                                              }
                                         }
+                                        if (reload)
+                                        {
+                                             m_reload_list.emplace_back(key);
+                                             m_reload_thumbnail = true;
+                                        }
+                                        std::ranges::sort(copy_values);
+                                        const auto remove_range = std::ranges::unique(copy_values);
+                                        copy_values.erase(remove_range.begin(), remove_range.end());
+                                        temp_filter.update(std::move(copy_values));
+                                        temp_filter.update(file_table);
                                    }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
                               }
                          }
                     }
-               }
 
-               if (coo_table && check_animation_id)
+               if (coo_table && m_checkanimation_id)
                {
                     for (auto &&[key, value] : *coo_table)
                     {
@@ -608,18 +595,14 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
                                    continue;
                               }
                               if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
+                                       if (is_excluded(pupu_id))
                                        {
                                             return false;
                                        }
@@ -637,21 +620,13 @@ void fme::filter_window::render_list_view(
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
 
-                                        if (
-                                          m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             }))
+                                        if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(i_pupu_id))
                                              {
                                                   continue;
                                              }
@@ -679,7 +654,7 @@ void fme::filter_window::render_list_view(
                     }
                }
 
-               if (coo_table && check_animation_state)
+               if (coo_table && m_checkanimation_state)
                {
                     for (auto &&[key, value] : *coo_table)
                     {
@@ -692,18 +667,14 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
                                    continue;
                               }
                               if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
+                                       if (is_excluded(pupu_id))
                                        {
                                             return false;
                                        }
@@ -721,21 +692,13 @@ void fme::filter_window::render_list_view(
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
 
-                                        if (
-                                          m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             }))
+                                        if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(i_pupu_id))
                                              {
                                                   continue;
                                              }
@@ -771,7 +734,7 @@ void fme::filter_window::render_list_view(
                     }
                }
 
-               if (coo_table && check_animation_fill_in)
+               if (coo_table && m_checkanimation_fill_in)
                {
                     for (auto &&[key, value] : *coo_table)
                     {
@@ -784,18 +747,14 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
                                    continue;
                               }
                               if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
+                                       if (is_excluded(pupu_id))
                                        {
                                             return false;
                                        }
@@ -813,23 +772,22 @@ void fme::filter_window::render_list_view(
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
                                         if (
-                                          u_pupu_id.animation_state() != 0u || std::ranges::any_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                             return u_pupu_id == pupu_id || u_pupu_id.blend_mode() != pupu_id.blend_mode() || u_pupu_id.same_animation_id_base(pupu_id);
-                                        }) || (!check_allow_same_blend && u_pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none) ||  (m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             })))
+                                          u_pupu_id.animation_state() != 0u
+                                          || std::ranges::any_of(
+                                            temp_filter.value(),
+                                            [&](const ff_8::PupuID &pupu_id) {
+                                                 return u_pupu_id == pupu_id || u_pupu_id.blend_mode() != pupu_id.blend_mode()
+                                                        || u_pupu_id.same_animation_id_base(pupu_id);
+                                            })
+                                          || (!m_checkallow_same_blend && u_pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none)
+                                          || is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
 
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(i_pupu_id))
                                              {
                                                   continue;
                                              }
@@ -852,7 +810,7 @@ void fme::filter_window::render_list_view(
                     }
                }
 
-               if (coo_table && check_layer_id)
+               if (coo_table && m_checklayer_id)
                {
                     for (auto &&[key, value] : *coo_table)
                     {
@@ -865,18 +823,14 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
                                    continue;
                               }
                               if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
+                                       if (is_excluded(pupu_id))
                                        {
                                             return false;
                                        }
@@ -894,21 +848,13 @@ void fme::filter_window::render_list_view(
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
 
-                                        if (
-                                          m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             }))
+                                        if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(i_pupu_id))
                                              {
                                                   continue;
                                              }
@@ -938,7 +884,7 @@ void fme::filter_window::render_list_view(
 
                auto cmp = [](std::vector<ff_8::PupuID> const &a, std::vector<ff_8::PupuID> const &b) {
                     if (a.size() != b.size())
-                         return a.size() < b.size();// size first
+                         return a.size() < b.size();                  // size first
                     return std::ranges::lexicographical_compare(a, b);// then lexicographically
                };
                // Assuming value() is hashable/comparable
@@ -962,7 +908,7 @@ void fme::filter_window::render_list_view(
                }
 
 
-               if (coo_table && check_animation)
+               if (coo_table && m_checkanimation)
                {
                     for (auto &&[key, value] : *coo_table)
                     {
@@ -975,18 +921,14 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!m_checkallow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
                                    continue;
                               }
                               if (std::ranges::all_of(temp_filter.value(), [&](const ff_8::PupuID &pupu_id) {
-                                       if (
-                                         m_excluded_animation_id_from_state.enabled()
-                                         && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                 return pupu_id.animation_id() == id;
-                                            }))
+                                       if (is_excluded(pupu_id))
                                        {
                                             return false;
                                        }
@@ -1003,21 +945,13 @@ void fme::filter_window::render_list_view(
                                    bool reload      = false;
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
-                                        if (
-                                          m_excluded_animation_id_from_state.enabled()
-                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                  return u_pupu_id.animation_id() == id;
-                                             }))
+                                        if (is_excluded(u_pupu_id))
                                         {
                                              continue;
                                         }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (
-                                               m_excluded_animation_id_from_state.enabled()
-                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
-                                                       return i_pupu_id.animation_id() == id;
-                                                  }))
+                                             if (is_excluded(i_pupu_id))
                                              {
                                                   continue;
                                              }
@@ -1084,7 +1018,9 @@ int fme::filter_window::calc_column_count(float width) const
 }
 
 
-void fme::filter_window::select_file(const std::string &file_name, const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::select_file(
+  const std::string                 &file_name,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
      {
@@ -1263,8 +1199,8 @@ void fme::filter_window::draw_add_new_button(
      ImTextureID tex_id = m_hovered_file_name == "##add"
                             ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(1))
                             : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
-     m_aspect_ratio =
-       static_cast<float>(lock_map_sprite->get_framebuffer().height()) / static_cast<float>(lock_map_sprite->get_framebuffer().width());
+     m_aspect_ratio
+       = static_cast<float>(lock_map_sprite->get_framebuffer().height()) / static_cast<float>(lock_map_sprite->get_framebuffer().width());
      const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
      if (ImGui::ImageButton("add new item", tex_id, thumb_size))
      {
@@ -1313,7 +1249,9 @@ void fme::filter_window::add_new_entry(
 }
 
 
-std::string fme::filter_window::generate_file_name(const std::shared_ptr<map_sprite> &lock_map_sprite, const std::optional<int> index) const
+std::string fme::filter_window::generate_file_name(
+  const std::shared_ptr<map_sprite> &lock_map_sprite,
+  const std::optional<int>           index) const
 {
      auto now = std::chrono::system_clock::now();
      auto sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
@@ -1612,8 +1550,8 @@ void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprit
           else
           {
                auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
-               auto keys_transform =
-                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+               auto keys_transform
+                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
@@ -1770,8 +1708,8 @@ void fme::filter_window::combo_filtered_animation_states(const std::shared_ptr<m
           else
           {
                auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
-               auto keys_transform =
-                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+               auto keys_transform
+                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
@@ -1823,8 +1761,7 @@ void fme::filter_window::combo_filtered_draw_bit(const std::shared_ptr<map_sprit
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() {
-            return std::array{ gui_labels::draw_bit_all_tooltip,
-                               gui_labels::draw_bit_enabled_tooltip,
+            return std::array{ gui_labels::draw_bit_all_tooltip, gui_labels::draw_bit_enabled_tooltip,
                                gui_labels::draw_bit_disabled_tooltip };
        },
        [&]() -> auto               &{ return lock_map_sprite->filter().draw_bit; });
@@ -1891,8 +1828,8 @@ void fme::filter_window::menu_filtered_palettes(const std::shared_ptr<map_sprite
           else
           {
                auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
-               auto keys_transform =
-                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+               auto keys_transform
+                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
@@ -1976,8 +1913,8 @@ void fme::filter_window::menu_filtered_animation_states(const std::shared_ptr<ma
           else
           {
                auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
-               auto keys_transform =
-                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+               auto keys_transform
+                 = keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
 
                return join_vector(keys_transform);
           }
@@ -2010,8 +1947,7 @@ struct map_draw_bit
 {
    private:
      static constexpr auto m_values   = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-     static constexpr auto m_tooltips = std::array{ fme::gui_labels::draw_bit_all_tooltip,
-                                                    fme::gui_labels::draw_bit_enabled_tooltip,
+     static constexpr auto m_tooltips = std::array{ fme::gui_labels::draw_bit_all_tooltip, fme::gui_labels::draw_bit_enabled_tooltip,
                                                     fme::gui_labels::draw_bit_disabled_tooltip };
 
    public:
@@ -2194,6 +2130,75 @@ void fme::filter_window::draw_thumbnail(
           else
           {
                tool_tip(tooltip_str);
+          }
+     }
+}
+
+bool fme::filter_window::is_excluded(const ff_8::PupuID &pupu_id) const
+{
+     return m_excluded_animation_id_from_state.enabled()
+            && std::ranges::any_of(
+              m_excluded_animation_id_from_state.value(), [&](const auto &id) { return pupu_id.animation_id() == id; });
+}
+
+void fme::filter_window::process_combine(
+  toml::table                           *coo_table,
+  const std::vector<ff_8::PupuID>       &unique_pupu_ids,
+  fme::filter_window::OuterFilter        outer_filter,
+  fme::filter_window::PupuMatchPredicate match_pred)
+{
+     if (!coo_table)
+          return;
+
+     for (auto &&[key, value] : *coo_table)
+     {
+          if (!value.is_table())
+               continue;
+
+          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter{ ff_8::FilterSettings::All_Disabled };
+          toml::table                                 &file_table = *value.as_table();
+          temp_filter.reload(file_table);
+
+          if (!temp_filter.enabled())
+               continue;
+
+          // standard rules (blend restriction, all offsets > 0 → delete, etc.)
+          // ...
+
+          auto copy_values = temp_filter.value();
+          bool reload      = false;
+
+          for (const auto &u : unique_pupu_ids)
+          {
+               if (
+                 (!m_checkallow_same_blend && pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none) || (is_excluded(u))
+                 || (!outer_filter(u, temp_filter.value())))
+               {
+                    continue;
+               }
+
+               for (const auto &i : temp_filter.value())
+               {
+                    if (is_excluded(i) || u == i || u.blend_mode() != i.blend_mode() || !match_pred(u, i))
+                    {
+                         continue;
+                    }
+                    copy_values.push_back(u);
+                    reload = true;
+               }
+          }
+
+          if (reload)
+          {
+               m_reload_list.emplace_back(key);
+               m_reload_thumbnail = true;
+
+               std::ranges::sort(copy_values);
+               const auto remove_range = std::ranges::unique(copy_values);
+               copy_values.erase(remove_range.begin(), remove_range.end());
+
+               temp_filter.update(std::move(copy_values));
+               temp_filter.update(file_table);
           }
      }
 }
