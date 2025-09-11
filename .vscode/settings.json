@@ -106,7 +106,7 @@
         "commands": [
             {
                 "match": ".*\\.(cpp|hpp|h|c|cc|hh)$",
-                "cmd": "powershell -ExecutionPolicy Bypass -File \"${workspaceFolder}\\format.ps1\""
+                "cmd": "powershell -ExecutionPolicy Bypass -File \"${workspaceFolder}\\format.ps1\" \"${file}\""
             }
         ]
     }
