@@ -34992,7 +34992,7 @@ filter_multi_pupu_enabled = true
 004FF003 = 5238787
 
 [gggroen1.x.'gggroen1_00100000.png']
-filter_multi_pupu = [ 1048576 ]
+filter_multi_pupu = [ 1048576, 1052672 ]
 filter_multi_pupu_enabled = true
 
 [gggroen1.x.'gggroen1_00100010.png']
@@ -35009,10 +35009,6 @@ filter_multi_pupu_enabled = true
 
 [gggroen1.x.'gggroen1_00100040.png']
 filter_multi_pupu = [ 1048640 ]
-filter_multi_pupu_enabled = true
-
-[gggroen1.x.'gggroen1_00101000.png']
-filter_multi_pupu = [ 1052672 ]
 filter_multi_pupu_enabled = true
 
 [gggroen1.x.'gggroen1_001FF000.png']
