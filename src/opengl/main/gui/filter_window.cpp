@@ -537,8 +537,8 @@ void fme::filter_window::render_list_view(
      ImGui::NextColumn();
      if (ImGui::Checkbox("State", &m_checkanimation_state))
      {
-          if(m_checkanimation_state)
-          {               
+          if (m_checkanimation_state)
+          {
                m_checkoffset = true;
           }
      }
