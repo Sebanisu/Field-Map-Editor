@@ -579,478 +579,562 @@ void fme::filter_window::render_list_view(
                  = lock_map_sprite->get_deswizzle_combined_coo_table(
                    {},
                    lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+
+               //   if (coo_table && m_checkoffset && !m_checkanimation)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::
+               //                                    none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                // if (std::ranges::all_of(
+               //                //       temp_filter.value(), [](const
+               //                //       ff_8::PupuID &pupu_id) { return
+               //                //       pupu_id.offset() == 0; }))
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+               //                          if (is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+               //                          for (const ff_8::PupuID
+               //                                 &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               if (
+               //                                 u_pupu_id != i_pupu_id
+               //                                 && u_pupu_id.same_base(
+               //                                   i_pupu_id))
+               //                               {
+               //                                    copy_values.push_back(
+               //                                      u_pupu_id);
+               //                                    reload = true;
+               //                               }
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(
+               //                       std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
+
+               // if (coo_table && m_checkanimation_id)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+
+               //                          if (is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+               //                          for (const ff_8::PupuID &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               if (
+               //                                 u_pupu_id != i_pupu_id
+               //                                 &&
+               //                                 (u_pupu_id.same_base(i_pupu_id)
+               //                                 ||
+               //                                 (u_pupu_id.same_animation_id_base(i_pupu_id))))
+               //                               {
+               //                                    copy_values.push_back(
+               //                                      u_pupu_id);
+               //                                    reload = true;
+               //                               }
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
+
+
+               // if (coo_table && m_checkanimation_state)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+
+               //                          if (is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+               //                          for (const ff_8::PupuID &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               if (
+               //                                    u_pupu_id != i_pupu_id &&
+               //                                    (
+               //                                         u_pupu_id.same_base(i_pupu_id)
+               //                                         ||
+               //                                         (
+               //                                              u_pupu_id.same_animation_state_base(i_pupu_id)
+               //                                              &&
+               //                                              i_pupu_id.animation_id()
+               //                                              != 0xFFU &&
+               //                                              u_pupu_id.animation_id()
+               //                                              != 0xFFU
+               //                                         )
+               //                                    )
+               //                               )
+               //                               {
+               //                                    copy_values.push_back(
+               //                                      u_pupu_id);
+               //                                    reload = true;
+               //                               }
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
+
+               // if (coo_table && m_checkanimation_fill_in)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+               //                          if (
+               //                            u_pupu_id.animation_state() != 0u
+               //                            || std::ranges::any_of(
+               //                              temp_filter.value(),
+               //                              [&](const ff_8::PupuID &pupu_id)
+               //                              {
+               //                                   return u_pupu_id == pupu_id
+               //                                   || u_pupu_id.blend_mode() !=
+               //                                   pupu_id.blend_mode()
+               //                                          ||
+               //                                          u_pupu_id.same_animation_id_base(pupu_id);
+               //                              })
+               //                            || (!m_checkallow_same_blend &&
+               //                            u_pupu_id.blend_mode() !=
+               //                            open_viii::graphics::background::BlendModeT::none)
+               //                            || is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+
+               //                          for (const ff_8::PupuID &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               copy_values.push_back(u_pupu_id);
+               //                               reload = true;
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
+
+               // if (coo_table && m_checklayer_id)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+
+               //                          if (is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+               //                          for (const ff_8::PupuID &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               if (
+               //                                 u_pupu_id != i_pupu_id
+               //                                 &&
+               //                                 (u_pupu_id.same_base(i_pupu_id)
+               //                                 || ()))
+               //                               {
+               //                                    copy_values.push_back(
+               //                                      u_pupu_id);
+               //                                    reload = true;
+               //                               }
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
+
+
                if (m_checkoffset)
-                    process_combine(coo_table, unique_pupu_ids)
-
-                      if (coo_table && m_checkoffset && !m_checkanimation)
-                    {
-                         for (auto &&[key, value] : *coo_table)
-                         {
-                              if (value.is_table())
-                              {
-                                   ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                     temp_filter
-                                     = { ff_8::FilterSettings::All_Disabled };
-                                   toml::table &file_table = *value.as_table();
-                                   temp_filter.reload(
-                                     file_table);// loads from table;
-                                   if (!temp_filter.enabled())
-                                   {
-                                        continue;
-                                   }
-                                   if (
-                                     !m_checkallow_same_blend
-                                     && std::ranges::any_of(
-                                       temp_filter.value(),
-                                       [](const ff_8::PupuID &pupu_id)
-                                       {
-                                            return pupu_id.blend_mode()
-                                                   != open_viii::graphics::
-                                                     background::BlendModeT::
-                                                       none;
-                                       }))
-                                   {
-                                        continue;
-                                   }
-                                   if (std::ranges::all_of(
-                                         temp_filter.value(),
-                                         [&](const ff_8::PupuID &pupu_id)
-                                         {
-                                              if (is_excluded(pupu_id))
-                                              {
-                                                   return false;
-                                              }
-                                              return pupu_id.offset() > 0;
-                                         }))
-                                   {
-                                        // mark for deletion
-                                        m_remove_queue.emplace_back(key);
-                                        continue;
-                                   }
-                                   // if (std::ranges::all_of(
-                                   //       temp_filter.value(), [](const
-                                   //       ff_8::PupuID &pupu_id) { return
-                                   //       pupu_id.offset() == 0; }))
-                                   {
-                                        // append offsets > 0 to these.
-                                        auto copy_values = temp_filter.value();
-                                        bool reload      = false;
-                                        for (const ff_8::PupuID &u_pupu_id :
-                                             unique_pupu_ids)
-                                        {
-                                             if (is_excluded(u_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             for (const ff_8::PupuID
-                                                    &i_pupu_id :
-                                                  temp_filter.value())
-                                             {
-                                                  if (is_excluded(i_pupu_id))
-                                                  {
-                                                       continue;
-                                                  }
-                                                  if (
-                                                    u_pupu_id != i_pupu_id
-                                                    && u_pupu_id.same_base(
-                                                      i_pupu_id))
-                                                  {
-                                                       copy_values.push_back(
-                                                         u_pupu_id);
-                                                       reload = true;
-                                                  }
-                                             }
-                                        }
-                                        if (reload)
-                                        {
-                                             m_reload_list.emplace_back(key);
-                                             m_reload_thumbnail = true;
-                                        }
-                                        std::ranges::sort(copy_values);
-                                        const auto remove_range
-                                          = std::ranges::unique(copy_values);
-                                        copy_values.erase(
-                                          remove_range.begin(),
-                                          remove_range.end());
-                                        temp_filter.update(
-                                          std::move(copy_values));
-                                        temp_filter.update(file_table);
-                                   }
-                              }
-                         }
-                    }
-
-               if (coo_table && m_checkanimation_id)
                {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                temp_filter
-                                = { ff_8::FilterSettings::All_Disabled };
-                              toml::table &file_table = *value.as_table();
-                              temp_filter.reload(
-                                file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (
-                                !m_checkallow_same_blend
-                                && std::ranges::any_of(
-                                  temp_filter.value(),
-                                  [](const ff_8::PupuID &pupu_id)
-                                  {
-                                       return pupu_id.blend_mode()
-                                              != open_viii::graphics::
-                                                background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(),
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_base(i_pupu_id); });
+               }
+               if (m_checkanimation_id)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_animation_id_base(i_pupu_id); });
+               }
+               if (m_checkanimation_state)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      {
+                           return u_pupu_id.same_animation_state_base(i_pupu_id)
+                                  && i_pupu_id.animation_id() != 0xFFU
+                                  && u_pupu_id.animation_id() != 0xFFU;
+                      });
+               }
+               if (m_checkanimation_fill_in)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](
+                        const ff_8::PupuID                 &u_pupu_id,
+                        const std::span<const ff_8::PupuID> temp_pupus)
+                      {
+                           return u_pupu_id.animation_state() != 0u
+                                  || std::ranges::any_of(
+                                    temp_pupus,
                                     [&](const ff_8::PupuID &pupu_id)
                                     {
-                                         if (is_excluded(pupu_id))
-                                         {
-                                              return false;
-                                         }
-                                         return pupu_id.offset() > 0;
-                                    }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id :
-                                        unique_pupu_ids)
-                                   {
-
-                                        if (is_excluded(u_pupu_id))
-                                        {
-                                             continue;
-                                        }
-                                        for (const ff_8::PupuID &i_pupu_id :
-                                             temp_filter.value())
-                                        {
-                                             if (is_excluded(i_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             if (
-                                               u_pupu_id != i_pupu_id
-                                               && (u_pupu_id.same_base(i_pupu_id) || (u_pupu_id.same_animation_id_base(i_pupu_id))))
-                                             {
-                                                  copy_values.push_back(
-                                                    u_pupu_id);
-                                                  reload = true;
-                                             }
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range
-                                     = std::ranges::unique(copy_values);
-                                   copy_values.erase(
-                                     remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
+                                         return u_pupu_id
+                                           .same_animation_id_base(pupu_id);
+                                    });
+                      },
+                      [](const ff_8::PupuID &, const ff_8::PupuID &)
+                      { return true; });
                }
-
-               if (coo_table && m_checkanimation_state)
+               if (m_checklayer_id)
                {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                temp_filter
-                                = { ff_8::FilterSettings::All_Disabled };
-                              toml::table &file_table = *value.as_table();
-                              temp_filter.reload(
-                                file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (
-                                !m_checkallow_same_blend
-                                && std::ranges::any_of(
-                                  temp_filter.value(),
-                                  [](const ff_8::PupuID &pupu_id)
-                                  {
-                                       return pupu_id.blend_mode()
-                                              != open_viii::graphics::
-                                                background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(),
-                                    [&](const ff_8::PupuID &pupu_id)
-                                    {
-                                         if (is_excluded(pupu_id))
-                                         {
-                                              return false;
-                                         }
-                                         return pupu_id.offset() > 0;
-                                    }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id :
-                                        unique_pupu_ids)
-                                   {
-
-                                        if (is_excluded(u_pupu_id))
-                                        {
-                                             continue;
-                                        }
-                                        for (const ff_8::PupuID &i_pupu_id :
-                                             temp_filter.value())
-                                        {
-                                             if (is_excluded(i_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             if (
-                                                  u_pupu_id != i_pupu_id &&
-                                                  (
-                                                       u_pupu_id.same_base(i_pupu_id) ||
-                                                       (
-                                                            u_pupu_id.same_animation_state_base(i_pupu_id) &&
-                                                            i_pupu_id.animation_id() != 0xFFU &&
-                                                            u_pupu_id.animation_id() != 0xFFU
-                                                       )
-                                                  )
-                                             )
-                                             {
-                                                  copy_values.push_back(
-                                                    u_pupu_id);
-                                                  reload = true;
-                                             }
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range
-                                     = std::ranges::unique(copy_values);
-                                   copy_values.erase(
-                                     remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_layer_base(i_pupu_id); });
                }
 
-               if (coo_table && m_checkanimation_fill_in)
-               {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                temp_filter
-                                = { ff_8::FilterSettings::All_Disabled };
-                              toml::table &file_table = *value.as_table();
-                              temp_filter.reload(
-                                file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (
-                                !m_checkallow_same_blend
-                                && std::ranges::any_of(
-                                  temp_filter.value(),
-                                  [](const ff_8::PupuID &pupu_id)
-                                  {
-                                       return pupu_id.blend_mode()
-                                              != open_viii::graphics::
-                                                background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(),
-                                    [&](const ff_8::PupuID &pupu_id)
-                                    {
-                                         if (is_excluded(pupu_id))
-                                         {
-                                              return false;
-                                         }
-                                         return pupu_id.offset() > 0;
-                                    }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id :
-                                        unique_pupu_ids)
-                                   {
-                                        if (
-                                          u_pupu_id.animation_state() != 0u
-                                          || std::ranges::any_of(
-                                            temp_filter.value(),
-                                            [&](const ff_8::PupuID &pupu_id)
-                                            {
-                                                 return u_pupu_id == pupu_id || u_pupu_id.blend_mode() != pupu_id.blend_mode()
-                                                        || u_pupu_id.same_animation_id_base(pupu_id);
-                                            })
-                                          || (!m_checkallow_same_blend && u_pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none)
-                                          || is_excluded(u_pupu_id))
-                                        {
-                                             continue;
-                                        }
-
-                                        for (const ff_8::PupuID &i_pupu_id :
-                                             temp_filter.value())
-                                        {
-                                             if (is_excluded(i_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             copy_values.push_back(u_pupu_id);
-                                             reload = true;
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range
-                                     = std::ranges::unique(copy_values);
-                                   copy_values.erase(
-                                     remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
-               }
-
-               if (coo_table && m_checklayer_id)
-               {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                temp_filter
-                                = { ff_8::FilterSettings::All_Disabled };
-                              toml::table &file_table = *value.as_table();
-                              temp_filter.reload(
-                                file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (
-                                !m_checkallow_same_blend
-                                && std::ranges::any_of(
-                                  temp_filter.value(),
-                                  [](const ff_8::PupuID &pupu_id)
-                                  {
-                                       return pupu_id.blend_mode()
-                                              != open_viii::graphics::
-                                                background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(),
-                                    [&](const ff_8::PupuID &pupu_id)
-                                    {
-                                         if (is_excluded(pupu_id))
-                                         {
-                                              return false;
-                                         }
-                                         return pupu_id.offset() > 0;
-                                    }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id :
-                                        unique_pupu_ids)
-                                   {
-
-                                        if (is_excluded(u_pupu_id))
-                                        {
-                                             continue;
-                                        }
-                                        for (const ff_8::PupuID &i_pupu_id :
-                                             temp_filter.value())
-                                        {
-                                             if (is_excluded(i_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             if (
-                                               u_pupu_id != i_pupu_id
-                                               && (u_pupu_id.same_base(i_pupu_id) || (u_pupu_id.same_layer_base(i_pupu_id))))
-                                             {
-                                                  copy_values.push_back(
-                                                    u_pupu_id);
-                                                  reload = true;
-                                             }
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range
-                                     = std::ranges::unique(copy_values);
-                                   copy_values.erase(
-                                     remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
-               }
 
                auto cmp = [](
                             std::vector<ff_8::PupuID> const &a,
@@ -1084,103 +1168,126 @@ void fme::filter_window::render_list_view(
                }
 
 
-               if (coo_table && m_checkanimation)
+               if (m_checkanimation)
                {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                                temp_filter
-                                = { ff_8::FilterSettings::All_Disabled };
-                              toml::table &file_table = *value.as_table();
-                              temp_filter.reload(
-                                file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (
-                                !m_checkallow_same_blend
-                                && std::ranges::any_of(
-                                  temp_filter.value(),
-                                  [](const ff_8::PupuID &pupu_id)
-                                  {
-                                       return pupu_id.blend_mode()
-                                              != open_viii::graphics::
-                                                background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(),
-                                    [&](const ff_8::PupuID &pupu_id)
-                                    {
-                                         if (is_excluded(pupu_id))
-                                         {
-                                              return false;
-                                         }
-                                         return pupu_id.offset() > 0;
-                                    }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id :
-                                        unique_pupu_ids)
-                                   {
-                                        if (is_excluded(u_pupu_id))
-                                        {
-                                             continue;
-                                        }
-                                        for (const ff_8::PupuID &i_pupu_id :
-                                             temp_filter.value())
-                                        {
-                                             if (is_excluded(i_pupu_id))
-                                             {
-                                                  continue;
-                                             }
-                                             if (
-                                                  u_pupu_id != i_pupu_id &&
-                                                  (
-                                                       u_pupu_id.same_base(i_pupu_id) ||
-                                                       (
-                                                            u_pupu_id.same_animation_base(i_pupu_id) &&
-                                                            i_pupu_id.animation_id() != 0xFFU &&
-                                                            u_pupu_id.animation_id() == 0xFFU &&
-                                                            u_pupu_id.animation_state() == 0x00U
-                                                       )
-                                                  )
-                                             )
-                                             {
-                                                  copy_values.push_back(
-                                                    u_pupu_id);
-                                                  reload = true;
-                                             }
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range
-                                     = std::ranges::unique(copy_values);
-                                   copy_values.erase(
-                                     remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      {
+                           return u_pupu_id.same_animation_base(i_pupu_id)
+                                  && i_pupu_id.animation_id() != 0xFFU
+                                  && u_pupu_id.animation_id() == 0xFFU
+                                  && u_pupu_id.animation_state() == 0x00U;
+                      });
                }
+
+
+               // if (coo_table && m_checkanimation)
+               // {
+               //      for (auto &&[key, value] : *coo_table)
+               //      {
+               //           if (value.is_table())
+               //           {
+               //                ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+               //                  temp_filter
+               //                  = { ff_8::FilterSettings::All_Disabled };
+               //                toml::table &file_table = *value.as_table();
+               //                temp_filter.reload(
+               //                  file_table);// loads from table;
+               //                if (!temp_filter.enabled())
+               //                {
+               //                     continue;
+               //                }
+               //                if (
+               //                  !m_checkallow_same_blend
+               //                  && std::ranges::any_of(
+               //                    temp_filter.value(),
+               //                    [](const ff_8::PupuID &pupu_id)
+               //                    {
+               //                         return pupu_id.blend_mode()
+               //                                != open_viii::graphics::
+               //                                  background::BlendModeT::none;
+               //                    }))
+               //                {
+               //                     continue;
+               //                }
+               //                if (std::ranges::all_of(
+               //                      temp_filter.value(),
+               //                      [&](const ff_8::PupuID &pupu_id)
+               //                      {
+               //                           if (is_excluded(pupu_id))
+               //                           {
+               //                                return false;
+               //                           }
+               //                           return pupu_id.offset() > 0;
+               //                      }))
+               //                {
+               //                     // mark for deletion
+               //                     m_remove_queue.emplace_back(key);
+               //                     continue;
+               //                }
+               //                {
+               //                     // append offsets > 0 to these.
+               //                     auto copy_values = temp_filter.value();
+               //                     bool reload      = false;
+               //                     for (const ff_8::PupuID &u_pupu_id :
+               //                          unique_pupu_ids)
+               //                     {
+               //                          if (is_excluded(u_pupu_id))
+               //                          {
+               //                               continue;
+               //                          }
+               //                          for (const ff_8::PupuID &i_pupu_id :
+               //                               temp_filter.value())
+               //                          {
+               //                               if (is_excluded(i_pupu_id))
+               //                               {
+               //                                    continue;
+               //                               }
+               //                               if (
+               //                                    u_pupu_id != i_pupu_id &&
+               //                                    (
+               //                                         u_pupu_id.same_base(i_pupu_id)
+               //                                         ||
+               //                                         (
+               //                                              u_pupu_id.same_animation_base(i_pupu_id)
+               //                                              &&
+               //                                              i_pupu_id.animation_id()
+               //                                              != 0xFFU &&
+               //                                              u_pupu_id.animation_id()
+               //                                              == 0xFFU &&
+               //                                              u_pupu_id.animation_state()
+               //                                              == 0x00U
+               //                                         )
+               //                                    )
+               //                               )
+               //                               {
+               //                                    copy_values.push_back(
+               //                                      u_pupu_id);
+               //                                    reload = true;
+               //                               }
+               //                          }
+               //                     }
+               //                     if (reload)
+               //                     {
+               //                          m_reload_list.emplace_back(key);
+               //                          m_reload_thumbnail = true;
+               //                     }
+               //                     std::ranges::sort(copy_values);
+               //                     const auto remove_range
+               //                       = std::ranges::unique(copy_values);
+               //                     copy_values.erase(
+               //                       remove_range.begin(),
+               //                       remove_range.end());
+               //                     temp_filter.update(std::move(copy_values));
+               //                     temp_filter.update(file_table);
+               //                }
+               //           }
+               //      }
+               // }
                save_config(lock_selections);
           }();
      }
@@ -2689,15 +2796,19 @@ void fme::filter_window::process_combine(
   toml::table                           *coo_table,
   const std::vector<ff_8::PupuID>       &unique_pupu_ids,
   fme::filter_window::OuterFilter        outer_filter,
-  fme::filter_window::PupuMatchPredicate match_pred)
+  fme::filter_window::PupuMatchPredicate match_pred) const
 {
      if (!coo_table)
+     {
           return;
+     }
 
      for (auto &&[key, value] : *coo_table)
      {
           if (!value.is_table())
+          {
                continue;
+          }
 
           ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter{
                ff_8::FilterSettings::All_Disabled
@@ -2706,21 +2817,46 @@ void fme::filter_window::process_combine(
           temp_filter.reload(file_table);
 
           if (!temp_filter.enabled())
+          {
                continue;
+          }
 
-          // standard rules (blend restriction, all offsets > 0 → delete, etc.)
-          // ...
+          if (
+            !m_checkallow_same_blend
+            && std::ranges::any_of(
+              temp_filter.value(),
+              [](const ff_8::PupuID &pupu_id)
+              {
+                   return pupu_id.blend_mode()
+                          != open_viii::graphics::background::BlendModeT::none;
+              }))
+          {
+               continue;
+          }
+
+          // debating on this being here.
+          if (std::ranges::all_of(
+                temp_filter.value(),
+                [&](const ff_8::PupuID &pupu_id)
+                {
+                     if (is_excluded(pupu_id))
+                     {
+                          return false;
+                     }
+                     return pupu_id.offset() > 0;
+                }))
+          {
+               // mark for deletion
+               m_remove_queue.emplace_back(key);
+               continue;
+          }
 
           auto copy_values = temp_filter.value();
           bool reload      = false;
 
           for (const auto &u : unique_pupu_ids)
           {
-               if (
-                 (!m_checkallow_same_blend
-                  && pupu_id.blend_mode()
-                       != open_viii::graphics::background::BlendModeT::none)
-                 || (is_excluded(u)) || (!outer_filter(u, temp_filter.value())))
+               if ((is_excluded(u)) || (!outer_filter(u, temp_filter.value())))
                {
                     continue;
                }

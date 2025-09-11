@@ -27,7 +27,7 @@ struct filter_window
        toml::table *,
        const std::vector<ff_8::PupuID> &,
        OuterFilter,
-       PupuMatchPredicate);
+       PupuMatchPredicate) const;
      [[nodiscard]] bool is_excluded(const ff_8::PupuID &) const;
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
      void               handle_remove_queue(
