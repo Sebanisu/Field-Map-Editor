@@ -23,12 +23,6 @@ struct filter_window
      void               update(std::weak_ptr<map_sprite>);
 
    private:
-     void process_combine(
-       toml::table *,
-       const std::vector<ff_8::PupuID> &,
-       OuterFilter,
-       PupuMatchPredicate) const;
-     [[nodiscard]] bool is_excluded(const ff_8::PupuID &) const;
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
      void               handle_remove_queue(
                      const std::shared_ptr<Selections> &,
@@ -39,6 +33,10 @@ struct filter_window
      void handle_regenerate(
        const std::shared_ptr<Selections> &,
        const std::shared_ptr<map_sprite> &) const;
+     void cleanup_invalid_selections() const;
+     void handle_thumbnail_size_adjustment() const;
+     void
+       reload_thumbnails_if_needed(const std::shared_ptr<map_sprite> &) const;
      void save_config(const std::shared_ptr<Selections> &) const;
      void render_list_view(
        const std::shared_ptr<Selections> &,
@@ -63,6 +61,19 @@ struct filter_window
      void render_detail_view(
        const std::shared_ptr<Selections> &,
        const std::shared_ptr<map_sprite> &) const;
+     void display_stats(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
+     void combo_failover(const std::shared_ptr<Selections> &) const;
+     void render_multi_select_toolbar(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
+     void render_attribute_combine_controls(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
+     void render_thumbnails(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
      void draw_filename_controls(
        const std::shared_ptr<Selections> &,
        const std::shared_ptr<map_sprite> &) const;
@@ -80,7 +91,7 @@ struct filter_window
      void
        combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
      void combo_exclude_animation_id_from_state(
-       const std::shared_ptr<map_sprite> &lock_map_sprite) const;
+       const std::shared_ptr<map_sprite> &) const;
      void
        combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
      void combo_filtered_animation_states(
@@ -103,11 +114,34 @@ struct filter_window
      void menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
 
      void draw_thumbnail(
-       const std::shared_ptr<Selections>          &lock_selections,
-       const std::shared_ptr<map_sprite>          &lock_map_sprite,
-       const std::string                          &file_name,
-       const std::optional<glengine::FrameBuffer> &framebuffer,
-       std::move_only_function<void()>             on_click) const;
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &,
+       const std::string &,
+       const std::optional<glengine::FrameBuffer> &,
+       std::move_only_function<void()>) const;
+
+     const std::string &get_thumbnail_tooltip(
+       const std::shared_ptr<map_sprite> &,
+       const std::string &) const;
+     void render_thumbnail_button(
+       const std::string &,
+       const std::optional<glengine::FrameBuffer> &,
+       const bool,
+       std::move_only_function<void()>) const;
+     void render_thumbnail_popup(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &,
+       const std::string &) const;
+
+     [[nodiscard]] bool is_excluded(const ff_8::PupuID &) const;
+     void               process_combine(
+                     const std::shared_ptr<Selections> &,
+                     const std::shared_ptr<map_sprite> &) const;
+     void process_combine(
+       toml::table *,
+       const std::vector<ff_8::PupuID> &,
+       OuterFilter,
+       PupuMatchPredicate) const;
 
      mutable bool              m_changed                = { false };
      std::weak_ptr<Selections> m_selections             = {};

@@ -149,72 +149,11 @@ void fme::filter_window::render() const
      handle_remove_queue(lock_selections, lock_map_sprite);
      handle_rename_queue(lock_selections, lock_map_sprite);
      handle_regenerate(lock_selections, lock_map_sprite);
-     if (
-       !m_selected_file_name.empty()
-       && !m_textures_map->contains(m_selected_file_name))
-     {
-          m_selected_file_name = {};
-     }
-     if (!m_last_selected.empty() && !m_textures_map->contains(m_last_selected))
-     {
-          m_last_selected = {};
-     }
-     if (!m_multi_select.empty())
-     {
-          std::erase_if(
-            m_multi_select,
-            [&](const std::string &filename)
-            { return !m_textures_map->contains(filename); });
-     }
-
-
-     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
-     bool  ctrl  = ImGui::GetIO().KeyCtrl;
-     float wheel = ImGui::GetIO().MouseWheel;
-
-     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && ctrl)
-     {
-          static const constexpr auto speed = 20.f;
-          if (wheel > 0.0f)
-               m_thumb_size_width
-                 = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
-          else if (wheel < 0.0f)
-               m_thumb_size_width = std::max(
-                 m_thumb_size_width + (wheel * speed),
-                 96.f);// add because wheel is negative
-     }
+     cleanup_invalid_selections();
+     handle_thumbnail_size_adjustment();
 
      m_textures_map = &lock_map_sprite->get_deswizzle_combined_textures();
-
-     if (m_reload_thumbnail)
-     {
-          m_reload_thumbnail = false;
-          if (!m_reload_list.empty())
-          {
-               for (const std::string &current_file_name : m_reload_list)
-               {
-                    m_textures_map->erase(current_file_name);
-               }
-               m_reload_list.clear();
-          }
-          else if (!m_multi_select.empty())
-          {
-               for (const std::string &current_file_name : m_multi_select)
-               {
-                    m_textures_map->erase(current_file_name);
-               }
-          }
-          else if (!m_selected_file_name.empty())
-          {
-               m_textures_map->erase(m_selected_file_name);
-          }
-
-          (void)lock_map_sprite->get_deswizzle_combined_textures();
-          if (!m_selected_file_name.empty())
-          {
-               lock_map_sprite->consume_now();
-          }
-     }
+     reload_thumbnails_if_needed(lock_map_sprite);
 
      if (
        m_selected_file_name.empty()
@@ -347,6 +286,80 @@ void fme::filter_window::handle_regenerate(
      spdlog::debug("{}:{} Regenerate Ended", __FILE__, __LINE__);
 }
 
+void fme::filter_window::cleanup_invalid_selections() const
+{
+     if (
+       !m_selected_file_name.empty()
+       && !m_textures_map->contains(m_selected_file_name))
+     {
+          m_selected_file_name = {};
+     }
+     if (!m_last_selected.empty() && !m_textures_map->contains(m_last_selected))
+     {
+          m_last_selected = {};
+     }
+     if (!m_multi_select.empty())
+     {
+          std::erase_if(
+            m_multi_select,
+            [&](const std::string &filename)
+            { return !m_textures_map->contains(filename); });
+     }
+}
+
+void fme::filter_window::handle_thumbnail_size_adjustment() const
+{
+     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
+     bool  ctrl  = ImGui::GetIO().KeyCtrl;
+     float wheel = ImGui::GetIO().MouseWheel;
+
+     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && ctrl)
+     {
+          static const constexpr auto speed = 20.f;
+          if (wheel > 0.0f)
+               m_thumb_size_width
+                 = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
+          else if (wheel < 0.0f)
+               m_thumb_size_width = std::max(
+                 m_thumb_size_width + (wheel * speed),
+                 96.f);// add because wheel is negative
+     }
+}
+
+void fme::filter_window::reload_thumbnails_if_needed(
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (m_reload_thumbnail)
+     {
+          m_reload_thumbnail = false;
+          if (!m_reload_list.empty())
+          {
+               for (const std::string &current_file_name : m_reload_list)
+               {
+                    m_textures_map->erase(current_file_name);
+               }
+               m_reload_list.clear();
+          }
+          else if (!m_multi_select.empty())
+          {
+               for (const std::string &current_file_name : m_multi_select)
+               {
+                    m_textures_map->erase(current_file_name);
+               }
+          }
+          else if (!m_selected_file_name.empty())
+          {
+               m_textures_map->erase(m_selected_file_name);
+          }
+
+          (void)lock_map_sprite->get_deswizzle_combined_textures();
+          if (!m_selected_file_name.empty())
+          {
+               lock_map_sprite->consume_now();
+          }
+     }
+}
+
 void fme::filter_window::save_config(
   const std::shared_ptr<Selections> &lock_selections) const
 {
@@ -364,12 +377,23 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     display_stats(lock_selections, lock_map_sprite);
+     combo_failover(lock_selections);
 
-     const float button_height
-       = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
-     const ImVec2 button_size = { m_tool_button_size_width, button_height };
-     const auto   unused_ids  = get_unused_ids();
-     const auto   used_coo    = lock_map_sprite->get_used_coo(
+     render_multi_select_toolbar(lock_selections, lock_map_sprite);
+     popup_combo_filtered_pupu(lock_selections, lock_map_sprite);
+     render_attribute_combine_controls(lock_selections, lock_map_sprite);
+
+     render_thumbnails(lock_selections, lock_map_sprite);
+}
+
+
+void fme::filter_window::display_stats(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     const auto unused_ids = get_unused_ids();
+     const auto used_coo   = lock_map_sprite->get_used_coo(
        lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
      format_imgui_text(
        "Unused Pupu IDs: {}\t Used Language Code: {}",
@@ -384,8 +408,11 @@ void fme::filter_window::render_list_view(
           }
           ImGui::EndTooltip();
      }
+}
 
-
+void fme::filter_window::combo_failover(
+  const std::shared_ptr<Selections> &lock_selections) const
+{
      static const constexpr auto FailOverLevelsArray = []()
      {
           constexpr auto first = std::to_underlying(FailOverLevels::Begin);
@@ -414,6 +441,15 @@ void fme::filter_window::render_list_view(
                m_textures_map->clear();
           }
      }
+}
+
+void fme::filter_window::render_multi_select_toolbar(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     const float button_height
+       = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
+     const ImVec2 button_size = { m_tool_button_size_width, button_height };
      ImGui::Columns(
        calc_column_count(m_tool_button_size_width),
        "##get_deswizzle_combined_tool_buttons",
@@ -446,7 +482,8 @@ void fme::filter_window::render_list_view(
           m_multi_select.clear();
      }
      tool_tip(
-       "Combine selected entries into one entry and remove the originals.");
+       "Combine selected entries into one entry and remove the "
+       "originals.");
      ImGui::NextColumn();
      // Copy
      if (ImGui::Button(ICON_FA_COPY " Copy", button_size))
@@ -473,7 +510,6 @@ void fme::filter_window::render_list_view(
           ImGui::OpenPopup("Pupu Filter Popup");
      }
      tool_tip("Bulk enable or disable pupu.");
-     popup_combo_filtered_pupu(lock_selections, lock_map_sprite);
      ImGui::NextColumn();
      if (ImGui::Button(ICON_FA_BROOM " Clear Selection", button_size))
      {
@@ -487,7 +523,8 @@ void fme::filter_window::render_list_view(
           add_new_entry(lock_selections, lock_map_sprite);
      }
      tool_tip(
-       "Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, "
+       "Add a new entry.\nHold Ctrl to add multiple entries.\nWithout "
+       "Ctrl, "
        "the mode will switch to editing the new entry.");
      ImGui::Columns(1);
      if (ImGui::Button(ICON_FA_REPEAT " Regenerate", button_size))
@@ -496,6 +533,13 @@ void fme::filter_window::render_list_view(
      }
      tool_tip("Clear and regenerate the TOML entries from PupuIDs.");
      ImGui::Columns(1);
+}
+
+void fme::filter_window::render_attribute_combine_controls(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(
        calc_column_count(m_tool_button_size_width),
@@ -522,7 +566,8 @@ void fme::filter_window::render_list_view(
           }
      }
      tool_tip(
-       "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one "
+       "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If "
+       "one "
        "of the PupuIDs is has Animation ID 0xFF and Animation State "
        "0x00");
      ImGui::NextColumn();
@@ -531,7 +576,8 @@ void fme::filter_window::render_list_view(
      }
 
      tool_tip(
-       "mask 0xFFFF'F000U vs PupuID and combine all of those elements. Join "
+       "mask 0xFFFF'F000U vs PupuID and combine all of those elements. "
+       "Join "
        "animations ids of not the same state.");
 
      ImGui::NextColumn();
@@ -546,163 +592,32 @@ void fme::filter_window::render_list_view(
 
      tool_tip(
        "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join "
-       "animations of the same state because they usually don't "
-       "overlap.");
+       "animations of the same state because they usually don't overlap.");
 
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Fill-in", &m_checkanimation_fill_in))
-     {
-     }
-
+     (void)ImGui::Checkbox("Fill-in", &m_checkanimation_fill_in);
+     tool_tip("Try to fill in blanks with Animation State 0x00U");
 
      ImGui::NextColumn();
-     if (ImGui::Checkbox("(Allow Blend)", &m_checkallow_same_blend))
-     {
-     }
-
+     (void)ImGui::Checkbox("(Allow Blend)", &m_checkallow_same_blend);
      tool_tip("Allow combines on the same blend.");
+
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Layer", &m_checklayer_id))
-     {
-     }
+     (void)ImGui::Checkbox("Layer", &m_checklayer_id);
      tool_tip("Combine entries with different layer ids.");
+
      ImGui::NextColumn();
      combo_exclude_animation_id_from_state(lock_map_sprite);
+
      ImGui::Columns(1);
-     ImGui::BeginDisabled(
-       !m_checkoffset && !m_checkanimation && !m_checkanimation_id
-       && !m_checkanimation_state && !m_checklayer_id
-       && !m_checkanimation_fill_in);
-     if (ImGui::Button("Combine (w/attribute)"))
-     {
-          [&]()
-          {
-               const auto &unique_pupu_ids
-                 = lock_map_sprite->working_unique_pupu();
-               toml::table *coo_table
-                 = lock_map_sprite->get_deswizzle_combined_coo_table(
-                   {},
-                   lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
-               if (m_checkoffset)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](auto &&...) { return true; },
-                      [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
-                      { return u_pupu_id.same_base(i_pupu_id); });
-               }
-               if (m_checkanimation_id)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](auto &&...) { return true; },
-                      [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
-                      { return u_pupu_id.same_animation_id_base(i_pupu_id); });
-               }
-               if (m_checkanimation_state)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](auto &&...) { return true; },
-                      [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
-                      {
-                           return u_pupu_id.same_animation_state_base(i_pupu_id)
-                                  && i_pupu_id.animation_id() != 0xFFU
-                                  && u_pupu_id.animation_id() != 0xFFU;
-                      });
-               }
-               if (m_checkanimation_fill_in)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](
-                        const ff_8::PupuID                 &u_pupu_id,
-                        const std::span<const ff_8::PupuID> temp_pupus)
-                      {
-                           return u_pupu_id.animation_state() != 0u
-                                  || std::ranges::any_of(
-                                    temp_pupus,
-                                    [&](const ff_8::PupuID &pupu_id)
-                                    {
-                                         return u_pupu_id
-                                           .same_animation_id_base(pupu_id);
-                                    });
-                      },
-                      [](const ff_8::PupuID &, const ff_8::PupuID &)
-                      { return true; });
-               }
-               if (m_checklayer_id)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](auto &&...) { return true; },
-                      [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
-                      { return u_pupu_id.same_layer_base(i_pupu_id); });
-               }
+     process_combine(lock_selections, lock_map_sprite);
+}
 
 
-               auto cmp = [](
-                            std::vector<ff_8::PupuID> const &a,
-                            std::vector<ff_8::PupuID> const &b)
-               {
-                    if (a.size() != b.size())
-                         return a.size() < b.size();// size first
-                    return std::ranges::lexicographical_compare(
-                      a, b);// then lexicographically
-               };
-               // Assuming value() is hashable/comparable
-               std::set<std::vector<ff_8::PupuID>, decltype(cmp)> seen(cmp);
-
-
-               for (auto &&[key, value] : *coo_table)
-               {
-                    if (value.is_table())
-                    {
-                         ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                           temp_filter = { ff_8::FilterSettings::All_Disabled };
-                         toml::table &file_table = *value.as_table();
-                         temp_filter.reload(file_table);
-
-                         if (!seen.insert(temp_filter.value()).second)
-                         {
-                              // Duplicate → queue for removal
-                              m_remove_queue.push_back(
-                                std::string{ key.str() });
-                         }
-                    }
-               }
-
-
-               if (m_checkanimation)
-               {
-                    process_combine(
-                      coo_table, unique_pupu_ids,
-                      [](auto &&...) { return true; },
-                      [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
-                      {
-                           return u_pupu_id.same_animation_base(i_pupu_id)
-                                  && i_pupu_id.animation_id() != 0xFFU
-                                  && u_pupu_id.animation_id() == 0xFFU
-                                  && u_pupu_id.animation_state() == 0x00U;
-                      });
-               }
-               save_config(lock_selections);
-          }();
-     }
-     ImGui::EndDisabled();
-     tool_tip(
-       "Automaticly combine with attributes selected. Replacing entries.");
-     ImGui::Columns(1);
+void fme::filter_window::render_thumbnails(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
      ImGui::BeginChild("##Scrolling");
      ImGui::Columns(
        calc_column_count(m_thumb_size_width),
@@ -726,6 +641,7 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      ImGui::EndChild();
 }
+
 
 int fme::filter_window::calc_column_count(float width) const
 {
@@ -786,8 +702,8 @@ void fme::filter_window::select_file(
                     // Figure out order
                     auto begin_it = last_it;
                     auto end_it   = it;
-                    // Walk forward until we either find end_it or hit the real
-                    // end
+                    // Walk forward until we either find end_it or hit the
+                    // real end
                     for (auto tmp = last_it; tmp != m_textures_map->end();
                          ++tmp)
                     {
@@ -799,8 +715,8 @@ void fme::filter_window::select_file(
                          }
                     }
 
-                    // If we didn’t find it going forward, then last_it must
-                    // come after it
+                    // If we didn’t find it going forward, then last_it
+                    // must come after it
                     begin_it = it;
                     end_it   = last_it;
                     return std::ranges::subrange(
@@ -913,8 +829,8 @@ void fme::filter_window::draw_thumbnail_label(
      ImGui::Text("%s", file_name.c_str());
      ImGui::PopTextWrapPos();
      const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
-     // Position the button at top-right of this block (same Y as the start of
-     // the text)
+     // Position the button at top-right of this block (same Y as the start
+     // of the text)
      ImGui::SetCursorScreenPos(ImVec2(
        text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
        text_start_pos.y));
@@ -956,7 +872,8 @@ void fme::filter_window::draw_add_new_button(
      else
      {
           tool_tip(
-            "Add a new entry.\nHold Ctrl to add multiple entries.\nWithout "
+            "Add a new entry.\nHold Ctrl to add multiple "
+            "entries.\nWithout "
             "Ctrl, the mode will switch to editing the new entry.");
      }
 
@@ -1185,7 +1102,8 @@ void fme::filter_window::draw_filter_controls(
      combo_filtered_pupu(lock_map_sprite);
      ImGui::Separator();
      format_imgui_wrapped_text(
-       "You may use these other filters in the export or testing process but "
+       "You may use these other filters in the export or testing process "
+       "but "
        "we only can import via Pupu IDs. This may change in the "
        "future once we figure out how.");
      ImGui::Separator();
@@ -1966,213 +1884,17 @@ void fme::filter_window::draw_thumbnail(
   const std::optional<glengine::FrameBuffer> &framebuffer,
   std::move_only_function<void()>             on_click) const
 {
-     const std::string &tooltip_str = [&]() -> const std::string &
-     {
-          static const std::string empty_msg = "No filters are enabled...";
-          if (lock_map_sprite->get_deswizzle_combined_textures_tooltips()
-                .contains(file_name))
-          {
-               const std::string &tmp
-                 = lock_map_sprite->get_deswizzle_combined_textures_tooltips()
-                     .at(file_name);
-               return tmp.empty() ? empty_msg : tmp;
-          }
-          return empty_msg;
-     }();
+     const std::string &tooltip_str
+       = get_thumbnail_tooltip(lock_map_sprite, file_name);
+
+     const auto it       = std::ranges::find(m_multi_select, file_name);
+     bool       selected = it != std::ranges::end(m_multi_select);
      if (framebuffer.has_value())
      {
-          ImTextureID tex_id
-            = (m_hovered_file_name == file_name)
-                ? glengine::ConvertGliDtoImTextureId<ImTextureID>(
-                    framebuffer.value().color_attachment_id(1))
-                : glengine::ConvertGliDtoImTextureId<ImTextureID>(
-                    framebuffer.value().color_attachment_id());
-          m_aspect_ratio = static_cast<float>(framebuffer.value().height())
-                           / static_cast<float>(framebuffer.value().width());
-          const ImVec2 thumb_size
-            = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
-
-          const auto it       = std::ranges::find(m_multi_select, file_name);
-          bool       selected = it != std::ranges::end(m_multi_select);
-          const auto pop_style_color
-            = glengine::ScopeGuard{ [selected]()
-                                    {
-                                         if (selected)
-                                         {
-                                              ImGui::PopStyleColor(3);
-                                         }
-                                    } };
-          if (selected)
-          {
-               ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
-               ImGui::PushStyleColor(
-                 ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
-               ImGui::PushStyleColor(
-                 ImGuiCol_ButtonActive, colors::ButtonGreenActive);
-          }
-
-          if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
-          {
-               std::invoke(on_click);
-          }
-          else
-          {
-               tool_tip(tooltip_str);
-          }
-          const auto pop_id = PushPopID();
-          if (ImGui::BeginPopupContextItem(
-                "FilterOptions"))// right-click menu for this button
-          {
-               if (ImGui::MenuItem(
-                     ICON_FA_SQUARE_PLUS " Add to selected",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
-                      = { ff_8::FilterSettings::All_Disabled };
-                    const toml::table *const file_table
-                      = lock_map_sprite->get_deswizzle_combined_toml_table(
-                        file_name);
-                    if (file_table)
-                    {
-                         temp_filter.reload(*file_table);
-                         temp_filter.enable();
-                         for (const std::string &update_file_name :
-                              m_multi_select)
-                         {
-                              lock_map_sprite
-                                ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                                  update_file_name, temp_filter);
-                         }
-                         m_reload_thumbnail = true;
-                         save_config(lock_selections);
-                    }
-               }
-               tool_tip("Add hovered values to selected items.");
-               if (ImGui::MenuItem(
-                     ICON_FA_SQUARE_MINUS " Remove from selected",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
-                      = { ff_8::FilterSettings::All_Disabled };
-                    const toml::table *const file_table
-                      = lock_map_sprite->get_deswizzle_combined_toml_table(
-                        file_name);
-                    if (file_table)
-                    {
-                         temp_filter.reload(*file_table);
-                         temp_filter.disable();
-                         for (const std::string &update_file_name :
-                              m_multi_select)
-                         {
-                              lock_map_sprite
-                                ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                                  update_file_name, temp_filter);
-                         }
-                         m_reload_thumbnail = true;
-                         save_config(lock_selections);
-                    }
-               }
-               tool_tip("Remove hovered values to selected items.");
-               ImGui::Separator();
-               if (ImGui::MenuItem(
-                     ICON_FA_LAYER_GROUP " Combine (New)",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    (void)lock_map_sprite
-                      ->add_combine_deswizzle_combined_toml_table(
-                        m_multi_select, generate_file_name(lock_map_sprite));
-                    save_config(lock_selections);
-               }
-
-               tool_tip(
-                 "Combine selected entries into a new entry without removing "
-                 "the originals.");
-               if (ImGui::MenuItem(
-                     ICON_FA_OBJECT_GROUP " Combine (Replace)",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    std::string temp_name = generate_file_name(lock_map_sprite);
-                    (void)lock_map_sprite
-                      ->add_combine_deswizzle_combined_toml_table(
-                        m_multi_select, temp_name);
-                    std::ranges::sort(m_multi_select);
-                    m_rename_queue.emplace_back(
-                      std::move(temp_name), m_multi_select.front());
-                    std::ranges::move(
-                      m_multi_select, std::back_inserter(m_remove_queue));
-                    m_multi_select.clear();
-               }
-               tool_tip(
-                 "Combine selected entries into one entry and remove the "
-                 "originals.");
-               ImGui::Separator();
-
-               if (ImGui::MenuItem(
-                     ICON_FA_COPY " Copy",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    lock_map_sprite->copy_deswizzle_combined_toml_table(
-                      m_multi_select,
-                      [&, index = int{}]() mutable
-                      { return generate_file_name(lock_map_sprite, index++); });
-                    save_config(lock_selections);
-                    // todo: copy create new entries with generated name
-                    // (prefix_timestamp_index.png).
-               }
-               tool_tip(
-                 "Copy selected entries into new entries with generated "
-                 "names.");
-               if (ImGui::MenuItem(
-                     ICON_FA_TRASH " Remove",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    std::ranges::move(
-                      m_multi_select, std::back_inserter(m_remove_queue));
-                    m_multi_select.clear();
-               }
-               tool_tip("Remove selected entries.");
-
-               if (ImGui::MenuItem(
-                     ICON_FA_FILTER " Pupu Filter",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    ImGui::OpenPopup("Pupu Filter Popup");
-               }
-               tool_tip("Bulk enable or disable pupu.");
-               ImGui::Separator();
-               if (ImGui::MenuItem(
-                     ICON_FA_BROOM " Clear Selection",
-                     nullptr,
-                     nullptr,
-                     !m_multi_select.empty()))
-               {
-                    m_multi_select.clear();
-               }
-               tool_tip("Clear the current selection.");
-               ImGui::EndPopup();
-          }
-          if (ImGui::IsItemHovered())
-          {
-               m_hovered_file_name = file_name;
-          }
-          else if (m_hovered_file_name == file_name)
-          {
-               m_hovered_file_name = {};
-          }
+          render_thumbnail_button(
+            file_name, framebuffer, selected, std::move(on_click));
+          tool_tip(tooltip_str);
+          render_thumbnail_popup(lock_selections, lock_map_sprite, file_name);
      }
      else
      {
@@ -2190,6 +1912,211 @@ void fme::filter_window::draw_thumbnail(
                tool_tip(tooltip_str);
           }
      }
+
+     if (ImGui::IsItemHovered())
+     {
+          m_hovered_file_name = file_name;
+     }
+     else if (m_hovered_file_name == file_name)
+     {
+          m_hovered_file_name = {};
+     }
+}
+
+
+const std::string &fme::filter_window::get_thumbnail_tooltip(
+  const std::shared_ptr<map_sprite> &lock_map_sprite,
+  const std::string                 &file_name) const
+{
+     static const std::string empty_msg = "No filters are enabled...";
+     if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(
+           file_name))
+     {
+          const std::string &tmp
+            = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(
+              file_name);
+          return tmp.empty() ? empty_msg : tmp;
+     }
+     return empty_msg;
+}
+
+void fme::filter_window::render_thumbnail_button(
+  const std::string                          &file_name,
+  const std::optional<glengine::FrameBuffer> &framebuffer,
+  const bool                                  selected,
+  std::move_only_function<void()>             on_click) const
+{
+     ImTextureID tex_id = (m_hovered_file_name == file_name)
+                            ? glengine::ConvertGliDtoImTextureId<ImTextureID>(
+                                framebuffer.value().color_attachment_id(1))
+                            : glengine::ConvertGliDtoImTextureId<ImTextureID>(
+                                framebuffer.value().color_attachment_id());
+     m_aspect_ratio     = static_cast<float>(framebuffer.value().height())
+                      / static_cast<float>(framebuffer.value().width());
+     const ImVec2 thumb_size
+       = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+
+     const auto pop_style_color
+       = glengine::ScopeGuard{ [selected]()
+                               {
+                                    if (selected)
+                                    {
+                                         ImGui::PopStyleColor(3);
+                                    }
+                               } };
+     if (selected)
+     {
+          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+     }
+
+     if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
+     {
+          std::invoke(on_click);
+     }
+}
+
+void fme::filter_window::render_thumbnail_popup(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite,
+  const std::string                 &file_name) const
+{
+     const auto pop_id = PushPopID();
+     if (!ImGui::BeginPopupContextItem(
+           "FilterOptions"))// right-click menu for this button
+     {
+          return;
+     }
+     if (ImGui::MenuItem(
+           ICON_FA_SQUARE_PLUS " Add to selected",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+            = { ff_8::FilterSettings::All_Disabled };
+          const toml::table *const file_table
+            = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+          if (file_table)
+          {
+               temp_filter.reload(*file_table);
+               temp_filter.enable();
+               for (const std::string &update_file_name : m_multi_select)
+               {
+                    lock_map_sprite
+                      ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                        update_file_name, temp_filter);
+               }
+               m_reload_thumbnail = true;
+               save_config(lock_selections);
+          }
+     }
+     tool_tip("Add hovered values to selected items.");
+     if (ImGui::MenuItem(
+           ICON_FA_SQUARE_MINUS " Remove from selected",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+            = { ff_8::FilterSettings::All_Disabled };
+          const toml::table *const file_table
+            = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+          if (file_table)
+          {
+               temp_filter.reload(*file_table);
+               temp_filter.disable();
+               for (const std::string &update_file_name : m_multi_select)
+               {
+                    lock_map_sprite
+                      ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                        update_file_name, temp_filter);
+               }
+               m_reload_thumbnail = true;
+               save_config(lock_selections);
+          }
+     }
+     tool_tip("Remove hovered values to selected items.");
+     ImGui::Separator();
+     if (ImGui::MenuItem(
+           ICON_FA_LAYER_GROUP " Combine (New)",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
+            m_multi_select, generate_file_name(lock_map_sprite));
+          save_config(lock_selections);
+     }
+
+     tool_tip(
+       "Combine selected entries into a new entry without "
+       "removing the originals.");
+     if (ImGui::MenuItem(
+           ICON_FA_OBJECT_GROUP " Combine (Replace)",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          std::string temp_name = generate_file_name(lock_map_sprite);
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
+            m_multi_select, temp_name);
+          std::ranges::sort(m_multi_select);
+          m_rename_queue.emplace_back(
+            std::move(temp_name), m_multi_select.front());
+          std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+          m_multi_select.clear();
+     }
+     tool_tip(
+       "Combine selected entries into one entry and remove the "
+       "originals.");
+     ImGui::Separator();
+
+     if (ImGui::MenuItem(
+           ICON_FA_COPY " Copy", nullptr, nullptr, !m_multi_select.empty()))
+     {
+          lock_map_sprite->copy_deswizzle_combined_toml_table(
+            m_multi_select,
+            [&, index = int{}]() mutable
+            { return generate_file_name(lock_map_sprite, index++); });
+          save_config(lock_selections);
+          // todo: copy create new entries with generated name
+          // (prefix_timestamp_index.png).
+     }
+     tool_tip(
+       "Copy selected entries into new entries with generated "
+       "names.");
+     if (ImGui::MenuItem(
+           ICON_FA_TRASH " Remove", nullptr, nullptr, !m_multi_select.empty()))
+     {
+          std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+          m_multi_select.clear();
+     }
+     tool_tip("Remove selected entries.");
+
+     if (ImGui::MenuItem(
+           ICON_FA_FILTER " Pupu Filter",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          ImGui::OpenPopup("Pupu Filter Popup");
+     }
+     tool_tip("Bulk enable or disable pupu.");
+     ImGui::Separator();
+     if (ImGui::MenuItem(
+           ICON_FA_BROOM " Clear Selection",
+           nullptr,
+           nullptr,
+           !m_multi_select.empty()))
+     {
+          m_multi_select.clear();
+     }
+     tool_tip("Clear the current selection.");
+     ImGui::EndPopup();
 }
 
 bool fme::filter_window::is_excluded(const ff_8::PupuID &pupu_id) const
@@ -2198,6 +2125,146 @@ bool fme::filter_window::is_excluded(const ff_8::PupuID &pupu_id) const
             && std::ranges::any_of(
               m_excluded_animation_id_from_state.value(),
               [&](const auto &id) { return pupu_id.animation_id() == id; });
+}
+
+void fme::filter_window::process_combine(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     ImGui::BeginDisabled(
+       !m_checkoffset && !m_checkanimation && !m_checkanimation_id
+       && !m_checkanimation_state && !m_checklayer_id
+       && !m_checkanimation_fill_in);
+     if (ImGui::Button("Combine (w/attribute)"))
+     {
+          [&]()
+          {
+               const auto &unique_pupu_ids
+                 = lock_map_sprite->working_unique_pupu();
+               toml::table *coo_table
+                 = lock_map_sprite->get_deswizzle_combined_coo_table(
+                   {},
+                   lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+               if (m_checkoffset)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_base(i_pupu_id); });
+               }
+               if (m_checkanimation_id)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_animation_id_base(i_pupu_id); });
+               }
+               if (m_checkanimation_state)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      {
+                           return u_pupu_id.same_animation_state_base(i_pupu_id)
+                                  && i_pupu_id.animation_id() != 0xFFU
+                                  && u_pupu_id.animation_id() != 0xFFU;
+                      });
+               }
+               if (m_checkanimation_fill_in)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](
+                        const ff_8::PupuID                 &u_pupu_id,
+                        const std::span<const ff_8::PupuID> temp_pupus)
+                      {
+                           return u_pupu_id.animation_state() != 0u
+                                  || std::ranges::any_of(
+                                    temp_pupus,
+                                    [&](const ff_8::PupuID &pupu_id)
+                                    {
+                                         return u_pupu_id
+                                           .same_animation_id_base(pupu_id);
+                                    });
+                      },
+                      [](const ff_8::PupuID &, const ff_8::PupuID &)
+                      { return true; });
+               }
+               if (m_checklayer_id)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      { return u_pupu_id.same_layer_base(i_pupu_id); });
+               }
+
+
+               auto cmp = [](
+                            std::vector<ff_8::PupuID> const &a,
+                            std::vector<ff_8::PupuID> const &b)
+               {
+                    if (a.size() != b.size())
+                         return a.size() < b.size();// size first
+                    return std::ranges::lexicographical_compare(
+                      a, b);// then lexicographically
+               };
+               // Assuming value() is hashable/comparable
+               std::set<std::vector<ff_8::PupuID>, decltype(cmp)> seen(cmp);
+
+
+               for (auto &&[key, value] : *coo_table)
+               {
+                    if (value.is_table())
+                    {
+                         ff_8::filter_old<ff_8::FilterTag::MultiPupu>
+                           temp_filter = { ff_8::FilterSettings::All_Disabled };
+                         toml::table &file_table = *value.as_table();
+                         temp_filter.reload(file_table);
+
+                         if (!seen.insert(temp_filter.value()).second)
+                         {
+                              // Duplicate → queue for removal
+                              m_remove_queue.push_back(
+                                std::string{ key.str() });
+                         }
+                    }
+               }
+
+
+               if (m_checkanimation)
+               {
+                    process_combine(
+                      coo_table, unique_pupu_ids,
+                      [](auto &&...) { return true; },
+                      [](
+                        const ff_8::PupuID &u_pupu_id,
+                        const ff_8::PupuID &i_pupu_id)
+                      {
+                           return u_pupu_id.same_animation_base(i_pupu_id)
+                                  && i_pupu_id.animation_id() != 0xFFU
+                                  && u_pupu_id.animation_id() == 0xFFU
+                                  && u_pupu_id.animation_state() == 0x00U;
+                      });
+               }
+               save_config(lock_selections);
+          }();
+     }
+     ImGui::EndDisabled();
+     tool_tip(
+       "Automaticly combine with attributes selected. Replacing entries.");
+     ImGui::Columns(1);
 }
 
 void fme::filter_window::process_combine(
