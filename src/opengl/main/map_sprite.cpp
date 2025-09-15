@@ -1233,8 +1233,7 @@ void map_sprite::process_full_filename_textures() const
      }
 
 
-     const auto opt_textures_map
-       = [this]() -> std::map<std::string, std::optional<glengine::FrameBuffer>>
+     if (!m_child_map_sprite && m_child_textures_map.empty())
      {
           // Task 2: Check if all masks exist (sync, quick)
           const bool all_masks_exist = std::ranges::all_of(
@@ -1251,14 +1250,10 @@ void map_sprite::process_full_filename_textures() const
                  return m_full_filename_textures.contains(maskname);
             });
 
-          // Task 3: Preparation (mask generation if needed + init
-          // shaders/buffers) This is the outer task, returning a future for the
-          // follow-up (processing). Queue it as m_future_of_future_consumer for
-          // deferred execution.
+          // Task 3.1: Load child map_sprite with only the mim textures.
 
           if (!all_masks_exist)
-          {// this generates framebuffers containing the masks on
-           // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
+          {
                m_child_map_sprite = std::make_unique<map_sprite>(
                  m_map_group,
                  false,
@@ -1266,35 +1261,50 @@ void map_sprite::process_full_filename_textures() const
                  true,
                  false,
                  m_selections);
-               m_child_map_sprite->consume_now();// force load textures now.
-               // calculate scale using one of the existing textures
-               const auto canvas           = m_child_map_sprite->get_canvas();
-               const auto [min_it, max_it] = std::ranges::minmax_element(
-                 m_full_filename_textures,
-                 [](const auto &apair, const auto &bpair)
-                 {
-                      const auto &a  = std::get<1>(apair);
-                      const auto &b  = std::get<1>(bpair);
-                      const auto  sa = a.get_size();
-                      const auto  sb = b.get_size();
-                      return (sa.x * sa.y) < (sb.x * sb.y);
-                 });
-
-               const auto max_size = std::get<1>(*max_it).get_size();
-               assert(std::get<1>(*min_it).get_size() == max_size);
-               const auto scale
-                 = glm::ivec2(canvas.width(), canvas.height()) / max_size;
-               assert(scale.x == scale.y);
-               assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
-               auto &tmp// reference to combined textures map
-                 = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
-               m_child_map_sprite
-                 ->consume_now();// force gen of combined textures to happen.
-               return std::move(tmp);// move the textures map out of map_sprite
-                                     // and let map_sprite go poof.
+               return;// return early here as the texture loading is placed in
+                      // the queue.
           }
-          return {};
-     }();
+     }
+
+     if (m_child_map_sprite && m_child_textures_map.empty())
+     {
+          // Task 3.2: Preparation (mask generation if needed + init
+          // shaders/buffers) This is the outer task, returning a future for the
+          // follow-up (processing). Queue it as m_future_of_future_consumer for
+          // deferred execution.
+          // this generates framebuffers containing the masks on
+          // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
+
+          // calculate scale using one of the existing textures
+          const auto canvas           = m_child_map_sprite->get_canvas();
+          const auto [min_it, max_it] = std::ranges::minmax_element(
+            m_full_filename_textures,
+            [](const auto &apair, const auto &bpair)
+            {
+                 const auto &a  = std::get<1>(apair);
+                 const auto &b  = std::get<1>(bpair);
+                 const auto  sa = a.get_size();
+                 const auto  sb = b.get_size();
+                 return (sa.x * sa.y) < (sb.x * sb.y);
+            });
+
+          const auto max_size = std::get<1>(*max_it).get_size();
+          assert(std::get<1>(*min_it).get_size() == max_size);
+          const auto scale
+            = glm::ivec2(canvas.width(), canvas.height()) / max_size;
+          assert(scale.x == scale.y);
+          assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
+          m_future_consumer += std::async(
+            std::launch::deferred,
+            [this,
+             tmp
+             = &m_child_map_sprite->get_deswizzle_combined_textures(scale.x)]
+            { //get_deswizzle_combined_textures queues up texture generation. so we're queueing up the post operation that should run afterwards here.
+                 m_child_textures_map = std::move(*tmp);
+                 m_child_map_sprite.reset();
+            });
+          return;
+     }
 
 
      // Task 4: Follow-up processing task (main loop + post-op + cleanup)
@@ -1353,13 +1363,13 @@ void map_sprite::process_full_filename_textures() const
                          return it->second;
                     }
 
-                    if (opt_textures_map.empty())
+                    if (m_child_textures_map.empty())
                     {
                          return std::unexpected("opt_textures_map is empty");
                     }
 
-                    auto map_it = opt_textures_map.find(filename);
-                    if (map_it == opt_textures_map.end())
+                    auto map_it = m_child_textures_map.find(filename);
+                    if (map_it == m_child_textures_map.end())
                     {
                          return std::unexpected(
                            "Filename not found: " + filename);

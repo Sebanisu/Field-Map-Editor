@@ -80,9 +80,11 @@ struct [[nodiscard]] map_sprite// final
      ff_8::map_group                     m_map_group                 = {};
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
-     bool                                m_draw_swizzle     = { false };
-     bool                  m_disable_texture_page_shift     = { false };
-     bool                  m_disable_blends                 = { false };
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
+                           m_child_textures_map         = {};
+     bool                  m_draw_swizzle               = { false };
+     bool                  m_disable_texture_page_shift = { false };
+     bool                  m_disable_blends             = { false };
      mutable ff_8::filters m_filters
        = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>           m_selections             = {};
