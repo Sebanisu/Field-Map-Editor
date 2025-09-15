@@ -1166,29 +1166,28 @@ void map_sprite::update_render_texture(const bool reload_textures) const
 
      process_full_filename_textures();
 
-     if (
-       m_future_of_future_consumer.done() && m_future_consumer.done()
-       && !fallback_textures())
+     if (!all_futures_done() || fallback_textures())
      {
-          // don't resize render texture till we have something to draw?
-          // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) {
-          // return texture.width() > 0 && texture.height() > 0; })) all tasks
-          // completed.
-
-          // see if no textures are loaded and fall
-          // back to .mim if not.
-
-          resize_render_texture();
-          assert(m_render_framebuffer && "m_render_framebuffer is nullptr");
-          (void)generate_texture(*m_render_framebuffer);
+          return;
      }
+
+     // don't resize render texture till we have something to draw?
+     // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) {
+     // return texture.width() > 0 && texture.height() > 0; })) all tasks
+     // completed.
+
+     // see if no textures are loaded and fall
+     // back to .mim if not.
+
+     resize_render_texture();
+     assert(m_render_framebuffer && "m_render_framebuffer is nullptr");
+     (void)generate_texture(*m_render_framebuffer);
 }
 
 void map_sprite::process_full_filename_textures() const
 {
      if (
-       !m_future_of_future_consumer.done() || !m_future_consumer.done()
-       || !m_filters.full_filename.enabled()
+       !all_futures_done() || !m_filters.full_filename.enabled()
        || m_full_filename_textures.empty())
      {
           return;
@@ -1355,9 +1354,8 @@ void map_sprite::process_full_filename_textures() const
                          return std::unexpected("opt_textures_map is empty");
                     }
 
-                    auto map_it
-                      = tmp_map_sprite.opt_textures_map->find(filename);
-                    if (map_it == tmp_map_sprite.opt_textures_map->end())
+                    auto map_it = opt_textures_map.find(filename);
+                    if (map_it == opt_textures_map.end())
                     {
                          return std::unexpected(
                            "Filename not found: " + filename);
@@ -1874,7 +1872,7 @@ const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_original_all();
-     if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     if (all_futures_done())
      {
           return m_map_group.maps.original_conflicts();
      }
@@ -1886,7 +1884,7 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
-     if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     if (all_futures_done())
      {
           return m_map_group.maps.working_conflicts();
      }
@@ -1897,7 +1895,7 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
 const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const
 {
      m_map_group.maps.refresh_working_all();
-     if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     if (all_futures_done())
      {
           return m_map_group.maps.working_similar_counts();
      }
@@ -1908,7 +1906,7 @@ const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const
 const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 {
      m_map_group.maps.refresh_working_all();
-     if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     if (all_futures_done())
      {
           return m_map_group.maps.working_animation_counts();
      }
@@ -3773,6 +3771,11 @@ void fme::map_sprite::consume_now(const bool update) const
      {
           update_render_texture();
      }
+}
+
+bool fme::map_sprite::all_futures_done() const
+{
+     return m_future_of_future_consumer.done() && m_future_consumer.done();
 }
 
 bool fme::map_sprite::consume_one_future() const

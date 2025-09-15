@@ -406,6 +406,7 @@ struct [[nodiscard]] map_sprite// final
        const std::vector<std::size_t> &saved_indices);
      bool                         consume_one_future() const;
      void                         consume_now(const bool update = true) const;
+     bool                         all_futures_done() const;
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<
