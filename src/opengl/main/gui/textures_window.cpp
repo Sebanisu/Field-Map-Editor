@@ -20,6 +20,27 @@ void fme::textures_window::render() const
             __LINE__);
           return;
      }
+     if (!selections->get<ConfigKey::DisplayTexturesWindow>())
+     {
+          return;
+     }
+
+     bool      &visible = selections->get<ConfigKey::DisplayTexturesWindow>();
+     const auto pop_visible = glengine::ScopeGuard{
+          [&selections, &visible, was_visable = visible]
+          {
+               if (was_visable != visible)
+               {
+                    selections->update<ConfigKey::DisplayTexturesWindow>();
+               }
+          }
+     };
+     const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
+
+     if (!ImGui::Begin("Textures", &visible))
+     {
+          return;
+     }
 }
 
 void fme::textures_window::update(
