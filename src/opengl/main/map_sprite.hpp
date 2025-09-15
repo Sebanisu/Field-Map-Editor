@@ -54,11 +54,9 @@ struct [[nodiscard]] map_sprite// final
      using Mim         = open_viii::graphics::background::Mim;
      using color_type  = open_viii::graphics::Color32RGBA;
      using colors_type = std::vector<color_type>;
-     using SharedTextures
-       = std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>>;
-     using BlendModeT = open_viii::graphics::background::BlendModeT;
-     using Rectangle  = open_viii::graphics::Rectangle<std::uint32_t>;
-     using iRectangle = open_viii::graphics::Rectangle<std::int32_t>;
+     using BlendModeT  = open_viii::graphics::background::BlendModeT;
+     using Rectangle   = open_viii::graphics::Rectangle<std::uint32_t>;
+     using iRectangle  = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
      mutable std::map<std::string, glengine::Texture> m_full_filename_textures
@@ -69,7 +67,7 @@ struct [[nodiscard]] map_sprite// final
        m_future_of_future_consumer = {};
      mutable FutureConsumer<std::vector<std::future<void>>> m_future_consumer
        = {};
-     SharedTextures m_texture
+     std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> m_texture
        = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
                                                 m_cache_framebuffer = {};
@@ -189,6 +187,10 @@ struct [[nodiscard]] map_sprite// final
           assert(m_render_framebuffer && "frame buffer is null ptr");
           return *m_render_framebuffer;
      }
+     [[nodiscard]] const std::array<
+       glengine::Texture,
+       MAX_TEXTURES>                                      &
+       get_textures() const;
      [[nodiscard]] const glengine::Texture *get_texture(
        BPPT         bpp,
        std::uint8_t palette,

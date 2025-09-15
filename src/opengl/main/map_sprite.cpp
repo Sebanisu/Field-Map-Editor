@@ -208,6 +208,15 @@ std::size_t map_sprite::get_texture_pos(
      return j;
 }
 
+
+[[nodiscard]] const map_sprite::std::array<
+  glengine::Texture,
+  map_sprite::MAX_TEXTURES> &
+  get_textures() const
+{
+     return *m_texture;
+}
+
 const glengine::Texture *map_sprite::get_texture(
   const open_viii::graphics::BPPT bpp,
   const std::uint8_t              palette,
