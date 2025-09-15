@@ -1256,15 +1256,19 @@ void map_sprite::process_full_filename_textures() const
           // follow-up (processing). Queue it as m_future_of_future_consumer for
           // deferred execution.
 
-          std::optional<map_sprite> opt_map_sprite{};
           if (!all_masks_exist)
           {// this generates framebuffers containing the masks on
            // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
-               opt_map_sprite
-                 = { m_map_group, false, { false }, true, false, m_selections };
-               opt_map_sprite->consume_now();// force load textures now.
+               m_child_map_sprite = std::make_unique<map_sprite>(
+                 m_map_group,
+                 false,
+                 ff_8::filters{ false },
+                 true,
+                 false,
+                 m_selections);
+               m_child_map_sprite->consume_now();// force load textures now.
                // calculate scale using one of the existing textures
-               const auto canvas           = opt_map_sprite->get_canvas();
+               const auto canvas           = m_child_map_sprite->get_canvas();
                const auto [min_it, max_it] = std::ranges::minmax_element(
                  m_full_filename_textures,
                  [](const auto &apair, const auto &bpair)
@@ -1283,8 +1287,8 @@ void map_sprite::process_full_filename_textures() const
                assert(scale.x == scale.y);
                assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
                auto &tmp// reference to combined textures map
-                 = opt_map_sprite->get_deswizzle_combined_textures(scale.x);
-               opt_map_sprite
+                 = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+               m_child_map_sprite
                  ->consume_now();// force gen of combined textures to happen.
                return std::move(tmp);// move the textures map out of map_sprite
                                      // and let map_sprite go poof.

@@ -76,14 +76,13 @@ struct [[nodiscard]] map_sprite// final
      mutable std::map<std::string, std::string> m_cache_framebuffer_tooltips
        = {};
      mutable std::map<std::string, std::vector<ff_8::PupuID>>
-                           m_cache_framebuffer_pupuids  = {};
-     ff_8::map_group       m_map_group                  = {};
-     // TODO do I need square?
-     //  square                                        m_square    = {
-     //  glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                  m_draw_swizzle               = { false };
-     bool                  m_disable_texture_page_shift = { false };
-     bool                  m_disable_blends             = { false };
+                                         m_cache_framebuffer_pupuids = {};
+     ff_8::map_group                     m_map_group                 = {};
+
+     mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
+     bool                                m_draw_swizzle     = { false };
+     bool                  m_disable_texture_page_shift     = { false };
+     bool                  m_disable_blends                 = { false };
      mutable ff_8::filters m_filters
        = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>           m_selections             = {};
