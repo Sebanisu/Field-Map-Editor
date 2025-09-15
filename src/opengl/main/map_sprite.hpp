@@ -207,7 +207,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] static std::future<std::future<void>> async_save(
        const glengine::Texture     &out_texture,
        const std::filesystem::path &out_path);
-
+     void                             process_full_filename_textures() const;
      [[nodiscard]] bool               using_coo() const;
      [[nodiscard]] static std::string str_to_lower(std::string input);
      template<typename T>
