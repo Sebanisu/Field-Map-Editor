@@ -240,6 +240,12 @@ class [[nodiscard]] FutureConsumer
           return *this;
      }
 
+     FutureConsumer<range_t> &operator+=(range_value_t &&new_value)
+     {
+          m_ranges.emplace_back(std::move(new_value));
+          return *this;
+     }
+
      FutureConsumer<range_t> &operator+=(range_t &&new_value)
      {
           m_ranges.emplace_back(std::move(new_value));
