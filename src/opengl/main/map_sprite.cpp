@@ -1299,7 +1299,10 @@ void map_sprite::process_full_filename_textures() const
             [this,
              tmp
              = &m_child_map_sprite->get_deswizzle_combined_textures(scale.x)]
-            { //get_deswizzle_combined_textures queues up texture generation. so we're queueing up the post operation that should run afterwards here.
+            {
+                 // get_deswizzle_combined_textures queues up texture
+                 // generation. so we're queueing up the post operation that
+                 // should run afterwards here.
                  m_child_textures_map = std::move(*tmp);
                  m_child_map_sprite.reset();
             });
