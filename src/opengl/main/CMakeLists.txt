@@ -37,6 +37,7 @@ set(MAIN_SOURCES
     gui/mouse_positions.cpp
     gui/push_pop_id.cpp
     gui/Selections.cpp
+    gui/textures_window.cpp
     gui/tool_tip.cpp
     archives_group.cpp
     Configuration.cpp
