@@ -20,6 +20,7 @@
 #include "unique_values.hpp"
 #include <algorithm>
 #include <BatchRenderer.hpp>
+#include <CompShader.hpp>
 #include <cstdint>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
@@ -92,13 +93,61 @@ struct [[nodiscard]] map_sprite// final
      Map                                 m_imported_tile_map      = {};
      Map                                 m_imported_tile_map_front       = {};
      ff_8::all_unique_values_and_strings m_all_unique_values_and_strings = {};
-     open_viii::graphics::Rectangle<std::uint32_t>  m_canvas             = {};
+     open_viii::graphics::Rectangle<std::uint32_t> m_canvas              = {};
 
-     glengine::BatchRenderer                        m_batch_renderer = { 1000 };
+     glengine::BatchRenderer                       m_batch_renderer = { 1000 };
      // glengine::BatchRenderer m_batch_renderer_red_integer    = { 1,
      //                                                                                    { std::filesystem::current_path() / "res" /
      //                                                                                    "shader"
      //                                                                                      / "red_integer.shader" } };
+     std::expected<
+       glengine::CompShader,
+       std::string>
+       m_mask_comp_shader = [&]() -> std::expected<
+                                    glengine::CompShader,
+                                    std::string>
+     {
+          try
+          {
+               return glengine::CompShader(
+                 std::filesystem::current_path() / "res" / "shader"
+                 / "mask.comp");
+          }
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               return std::unexpected(
+                 std::string("Filesystem error: ") + e.what());
+          }
+          catch (const std::exception &e)
+          {
+               return std::unexpected(std::string("Error: ") + e.what());
+          }
+     }();
+
+     std::expected<
+       glengine::CompShader,
+       std::string>
+       m_mask_count_comp_shader = [&]() -> std::expected<
+                                          glengine::CompShader,
+                                          std::string>
+     {
+          try
+          {
+               return glengine::CompShader(
+                 std::filesystem::current_path() / "res" / "shader"
+                 / "mask_count.comp");
+          }
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               return std::unexpected(
+                 std::string("Filesystem error: ") + e.what());
+          }
+          catch (const std::exception &e)
+          {
+               return std::unexpected(std::string("Error: ") + e.what());
+          }
+     }();
+
 
      mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer = {};
 
