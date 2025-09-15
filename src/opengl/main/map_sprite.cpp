@@ -3769,8 +3769,13 @@ std::string map_sprite::str_to_lower(std::string input)
 
 void fme::map_sprite::consume_now(const bool update) const
 {
+     if (m_child_map_sprite)
+     {
+          m_child_map_sprite->consume_now();
+     }
      m_future_of_future_consumer.consume_now();
      m_future_consumer.consume_now();
+
      if (update)
      {
           update_render_texture();
@@ -3779,11 +3784,16 @@ void fme::map_sprite::consume_now(const bool update) const
 
 bool fme::map_sprite::all_futures_done() const
 {
-     return m_future_of_future_consumer.done() && m_future_consumer.done();
+     return m_future_of_future_consumer.done() && m_future_consumer.done()
+            && (!m_child_map_sprite || m_child_map_sprite->all_futures_done());
 }
 
 bool fme::map_sprite::consume_one_future() const
 {
+     if (m_child_map_sprite && !m_child_map_sprite->all_futures_done())
+     {
+          return m_child_map_sprite->consume_one_future();
+     }
      // If the outer future is still processing, advance it
      if (!m_future_of_future_consumer.done())
      {
