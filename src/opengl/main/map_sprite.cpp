@@ -9,7 +9,6 @@
 #include "utilities.hpp"
 #include <bit>
 #include <BlendModeSettings.hpp>
-#include <CompShader.hpp>
 #include <DistanceBuffer.hpp>
 #include <expected>
 #include <fmt/format.h>
@@ -1195,49 +1194,69 @@ void map_sprite::process_full_filename_textures() const
           return;
      }
 
+     if (!m_mask_comp_shader)
+     {
+          spdlog::critical(
+            "CompShader m_mask_comp_shader {}", m_mask_comp_shader.error());
+          m_full_filename_textures.clear();
+          return;
+     }
+     if (!m_mask_count_comp_shader)
+     {
+          spdlog::critical(
+            "CompShader m_mask_count_comp_shader {}",
+            m_mask_count_comp_shader.error());
+          m_full_filename_textures.clear();
+          return;
+     }
+
      // Task 1: Purge empty textures (sync, quick)
-     std::erase_if(
-       m_full_filename_textures,
-       [](auto &pair)
-       {
-            const auto &texture = pair.second;
-            const auto  size    = texture.get_size();
-            return size.x == 0 || size.y == 0;
-       });
-     spdlog::info(
-       "{}:{}, Loaded and purged empty textures, "
-       "m_full_filename_textures.size() = {}",
-       __FILE__,
-       __LINE__,
-       std::ranges::size(m_full_filename_textures));
+     [this]()
+     {
+          std::erase_if(
+            m_full_filename_textures,
+            [](auto &pair)
+            {
+                 const auto &texture = pair.second;
+                 const auto  size    = texture.get_size();
+                 return size.x == 0 || size.y == 0;
+            });
+          spdlog::info(
+            "{}:{}, Loaded and purged empty textures, "
+            "m_full_filename_textures.size() = {}",
+            __FILE__,
+            __LINE__,
+            std::ranges::size(m_full_filename_textures));
+     }();
      if (m_full_filename_textures.empty())
      {
           return;
      }
 
-     // Task 2: Check if all masks exist (sync, quick)
-     const bool all_masks_exist = std::ranges::all_of(
-       m_full_filename_to_mask_name,
-       [&](const auto &pair)
-       {
-            const auto &[filename, maskname] = pair;
-            if (!m_full_filename_textures.contains(filename))
-            {
-                 // we don't care if the mask name doesn't exist if
-                 // filename does not.
-                 return true;
-            }
-            return m_full_filename_textures.contains(maskname);
-       });
 
-     // Task 3: Preparation (mask generation if needed + init shaders/buffers)
-     // This is the outer task, returning a future for the follow-up
-     // (processing). Queue it as m_future_of_future_consumer for deferred
-     // execution.
-     std::map<std::string, std::optional<glengine::FrameBuffer>>
-       *opt_textures_map = {};
-     [&]()
+     const auto opt_textures_map
+       = [this]() -> std::map<std::string, std::optional<glengine::FrameBuffer>>
      {
+          // Task 2: Check if all masks exist (sync, quick)
+          const bool all_masks_exist = std::ranges::all_of(
+            m_full_filename_to_mask_name,
+            [&](const auto &pair)
+            {
+                 const auto &[filename, maskname] = pair;
+                 if (!m_full_filename_textures.contains(filename))
+                 {
+                      // we don't care if the mask name doesn't exist if
+                      // filename does not.
+                      return true;
+                 }
+                 return m_full_filename_textures.contains(maskname);
+            });
+
+          // Task 3: Preparation (mask generation if needed + init
+          // shaders/buffers) This is the outer task, returning a future for the
+          // follow-up (processing). Queue it as m_future_of_future_consumer for
+          // deferred execution.
+
           std::optional<map_sprite> opt_map_sprite{};
           if (!all_masks_exist)
           {// this generates framebuffers containing the masks on
@@ -1264,42 +1283,16 @@ void map_sprite::process_full_filename_textures() const
                  = glm::ivec2(canvas.width(), canvas.height()) / max_size;
                assert(scale.x == scale.y);
                assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
-               opt_textures_map
-                 = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);
-               opt_map_sprite->consume_now();// force load textures now.
+               auto &tmp// reference to combined textures map
+                 = opt_map_sprite->get_deswizzle_combined_textures(scale.x);
+               opt_map_sprite
+                 ->consume_now();// force gen of combined textures to happen.
+               return std::move(tmp);// move the textures map out of map_sprite
+                                     // and let map_sprite go poof.
           }
+          return {};
      }();
 
-     // Init shaders
-     glengine::CompShader shader(
-       std::filesystem::current_path() / "res" / "shader" / "mask.comp");
-     glengine::CompShader shader_count(
-       std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
-
-
-     // Get palette data
-     const auto &unique_pupu = working_unique_pupu();
-     const auto &palette     = m_map_group.maps.working_unique_pupu_color();
-
-     glengine::PaletteBuffer pb{};
-     pb.initialize(palette);
-     if (!pb.id())
-     {
-          spdlog::critical("PaletteBuffer initialization failed, aborting");
-          return;
-     }
-     glengine::HistogramBuffer hb{ std::ranges::size(palette) };
-     if (!hb.id())
-     {
-          spdlog::critical("HistogramBuffer initialization failed, aborting");
-          return;
-     }
-     glengine::DistanceBuffer db{ std::ranges::size(palette) };
-     if (!db.id())
-     {
-          spdlog::critical("DistanceBuffer initialization failed, aborting");
-          return;
-     }
 
      // Task 4: Follow-up processing task (main loop + post-op + cleanup)
      // This is the inner task, chained after preparation.
@@ -1314,6 +1307,31 @@ void map_sprite::process_full_filename_textures() const
               glengine::SubTexture>>>
                                    multi_pupu_post_op = {};
           std::vector<std::string> remove_queue       = {};
+
+          const auto              &unique_pupu        = working_unique_pupu();
+          const auto &palette = m_map_group.maps.working_unique_pupu_color();
+          glengine::PaletteBuffer pb{};
+          pb.initialize(palette);
+          if (!pb.id())
+          {
+               spdlog::critical(
+                 "PaletteBuffer initialization failed, aborting");
+               return;
+          }
+          glengine::HistogramBuffer hb{ std::ranges::size(palette) };
+          if (!hb.id())
+          {
+               spdlog::critical(
+                 "HistogramBuffer initialization failed, aborting");
+               return;
+          }
+          glengine::DistanceBuffer db{ std::ranges::size(palette) };
+          if (!db.id())
+          {
+               spdlog::critical(
+                 "DistanceBuffer initialization failed, aborting");
+               return;
+          }
 
           // Main loop over pairs
           for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
@@ -1332,13 +1350,14 @@ void map_sprite::process_full_filename_textures() const
                          return it->second;
                     }
 
-                    if (!opt_textures_map)
+                    if (opt_textures_map.empty())
                     {
-                         return std::unexpected("opt_textures_map is null");
+                         return std::unexpected("opt_textures_map is empty");
                     }
 
-                    auto map_it = opt_textures_map->find(filename);
-                    if (map_it == opt_textures_map->end())
+                    auto map_it
+                      = tmp_map_sprite.opt_textures_map->find(filename);
+                    if (map_it == tmp_map_sprite.opt_textures_map->end())
                     {
                          return std::unexpected(
                            "Filename not found: " + filename);
@@ -1396,11 +1415,11 @@ void map_sprite::process_full_filename_textures() const
                     target_texture->bind_write_only(2);
 
                     // Load and execute compute shader
-                    const auto pop_shader = shader.backup();
-                    shader.bind();
-                    shader.set_uniform(
+                    const auto pop_shader = m_mask_comp_shader->backup();
+                    m_mask_comp_shader->bind();
+                    m_mask_comp_shader->set_uniform(
                       "chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-                    shader.execute(
+                    m_mask_comp_shader->execute(
                       static_cast<GLuint>(size.x),
                       static_cast<GLuint>(size.y),
                       GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -1409,17 +1428,18 @@ void map_sprite::process_full_filename_textures() const
                }
                else// more than one.
                {
+
                     db.bind(3);
                     pb.bind(2);
                     hb.bind(1);
                     mask_texture->bind_read_only(0);
                     const auto size       = main_texture.get_size();
-                    const auto pop_shader = shader_count.backup();
-                    shader_count.bind();
-                    shader_count.set_uniform(
+                    const auto pop_shader = m_mask_count_comp_shader->backup();
+                    m_mask_count_comp_shader->bind();
+                    m_mask_count_comp_shader->set_uniform(
                       "numColors",
                       static_cast<GLint>(std::ranges::size(palette)));
-                    shader_count.execute(
+                    m_mask_count_comp_shader->execute(
                       static_cast<GLuint>(size.x),
                       static_cast<GLuint>(size.y),
                       GL_SHADER_STORAGE_BARRIER_BIT);
@@ -1509,14 +1529,14 @@ void map_sprite::process_full_filename_textures() const
                target_texture->bind_write_only(2);
 
                // Load and execute compute shader
-               const auto pop_shader = shader.backup();
-               shader.bind();
-               shader.set_uniform(
+               const auto pop_shader = m_mask_comp_shader->backup();
+               m_mask_comp_shader->bind();
+               m_mask_comp_shader->set_uniform(
                  "chosenColor", color);// Set target color (e.g., red)
                // todo might need to adjust the distance it's slightly off.
                // like round up or something.
-               shader.set_uniform("threshold", distance);
-               shader.execute(
+               m_mask_comp_shader->set_uniform("threshold", distance);
+               m_mask_comp_shader->execute(
                  static_cast<GLuint>(size.x),
                  static_cast<GLuint>(size.y),
                  GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
