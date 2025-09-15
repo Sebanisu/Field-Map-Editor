@@ -209,10 +209,10 @@ std::size_t map_sprite::get_texture_pos(
 }
 
 
-[[nodiscard]] const map_sprite::std::array<
+[[nodiscard]] const std::array<
   glengine::Texture,
   map_sprite::MAX_TEXTURES> &
-  get_textures() const
+  map_sprite::get_textures() const
 {
      return *m_texture;
 }
