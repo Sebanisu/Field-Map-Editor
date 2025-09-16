@@ -44,7 +44,7 @@ void fme::filter_window::collapsing_header_filters() const
 }
 bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
 {
-     if (!m_was_focused)
+     if (!m_was_focused || !m_textures_map)
      {
           return false;
      }
@@ -152,7 +152,19 @@ void fme::filter_window::render() const
      cleanup_invalid_selections();
      handle_thumbnail_size_adjustment();
 
-     m_textures_map = &lock_map_sprite->get_deswizzle_combined_textures();
+     if (const auto temp = lock_map_sprite->get_deswizzle_combined_textures();
+         temp.has_value())
+          m_textures_map = temp.value();
+     else
+     {
+          m_textures_map = nullptr;
+          spdlog::trace(
+            "{}:{} m_textures_map is nullptr: {}",
+            __FILE__,
+            __LINE__,
+            temp.error());
+          return;
+     }
      reload_thumbnails_if_needed(lock_map_sprite);
 
      if (
@@ -288,6 +300,13 @@ void fme::filter_window::handle_regenerate(
 
 void fme::filter_window::cleanup_invalid_selections() const
 {
+     if (!m_textures_map)
+     {
+          m_selected_file_name.clear();
+          m_last_selected.clear();
+          m_multi_select.clear();
+          return;
+     }
      if (
        !m_selected_file_name.empty()
        && !m_textures_map->contains(m_selected_file_name))
@@ -309,7 +328,7 @@ void fme::filter_window::cleanup_invalid_selections() const
 
 void fme::filter_window::handle_thumbnail_size_adjustment() const
 {
-     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
+     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 3072.f);
      bool  ctrl  = ImGui::GetIO().KeyCtrl;
      float wheel = ImGui::GetIO().MouseWheel;
 
@@ -318,7 +337,7 @@ void fme::filter_window::handle_thumbnail_size_adjustment() const
           static const constexpr auto speed = 20.f;
           if (wheel > 0.0f)
                m_thumb_size_width
-                 = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
+                 = std::min(m_thumb_size_width + (wheel * speed), 3072.f);
           else if (wheel < 0.0f)
                m_thumb_size_width = std::max(
                  m_thumb_size_width + (wheel * speed),
@@ -332,6 +351,11 @@ void fme::filter_window::reload_thumbnails_if_needed(
      if (m_reload_thumbnail)
      {
           m_reload_thumbnail = false;
+          if (!m_textures_map)
+          {
+               m_reload_list.clear();
+               return;
+          }
           if (!m_reload_list.empty())
           {
                for (const std::string &current_file_name : m_reload_list)
@@ -618,22 +642,29 @@ void fme::filter_window::render_thumbnails(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     ImGui::BeginChild("##Scrolling");
+     ImGui::BeginChild(
+       "##Scrolling",
+       ImVec2(0, 0),// full remaining size
+       false,       // no border
+       ImGuiWindowFlags_HorizontalScrollbar);
      ImGui::Columns(
        calc_column_count(m_thumb_size_width),
        "##get_deswizzle_combined_textures",
        false);
 
-     for (const auto &[file_name, framebuffer] : *m_textures_map)
+     if (m_textures_map)
      {
-          draw_thumbnail(
-            lock_selections,
-            lock_map_sprite,
-            file_name,
-            framebuffer,
-            [&]() { select_file(file_name, lock_map_sprite); });
-          draw_thumbnail_label(file_name);
-          ImGui::NextColumn();
+          for (const auto &[file_name, framebuffer] : *m_textures_map)
+          {
+               draw_thumbnail(
+                 lock_selections,
+                 lock_map_sprite,
+                 file_name,
+                 framebuffer,
+                 [&]() { select_file(file_name, lock_map_sprite); });
+               draw_thumbnail_label(file_name);
+               ImGui::NextColumn();
+          }
      }
 
      draw_add_new_button(lock_selections, lock_map_sprite);
@@ -657,6 +688,10 @@ void fme::filter_window::select_file(
   const std::string                 &file_name,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     if (!m_textures_map)
+     {
+          return;
+     }
      if (auto *ptr
          = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
          ptr)
@@ -776,6 +811,10 @@ void fme::filter_window::select_file(
 
 std::optional<std::string> fme::filter_window::prev_key() const
 {
+     if (!m_textures_map)
+     {
+          return std::nullopt;
+     }
      if (std::ranges::empty(*m_textures_map))
      {
           return std::nullopt;
@@ -797,6 +836,10 @@ std::optional<std::string> fme::filter_window::prev_key() const
 
 std::optional<std::string> fme::filter_window::next_key() const
 {
+     if (!m_textures_map)
+     {
+          return std::nullopt;
+     }
      if (std::ranges::empty(*m_textures_map))
      {
           return std::nullopt;
@@ -948,6 +991,10 @@ void fme::filter_window::render_detail_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     if (!m_textures_map)
+     {
+          return;
+     }
      const auto &framebuffer = m_textures_map->at(m_selected_file_name);
      draw_thumbnail(
        lock_selections,
@@ -1121,6 +1168,10 @@ void fme::filter_window::draw_filter_controls(
 
 std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
 {
+     if (!m_textures_map)
+     {
+          return {};
+     }
      auto lock_map_sprite = m_map_sprite.lock();
      if (!lock_map_sprite)
      {

@@ -217,6 +217,14 @@ std::size_t map_sprite::get_texture_pos(
      return *m_texture;
 }
 
+[[nodiscard]] const std::map<
+  std::string,
+  glengine::Texture> &
+  map_sprite::get_full_filename_textures()
+{
+     return m_full_filename_textures;
+}
+
 const glengine::Texture *map_sprite::get_texture(
   const open_viii::graphics::BPPT bpp,
   const std::uint8_t              palette,
@@ -293,7 +301,7 @@ void map_sprite::queue_texture_loading() const
                                     // immediately to kick off the work
 
                                     m_future_of_future_consumer
-                                      = std::move(future_of_futures);
+                                      += std::move(future_of_futures);
                                } };
 
      // Check if the deswizzle filter is enabled
@@ -1175,18 +1183,22 @@ void map_sprite::update_render_texture(const bool reload_textures) const
 
      process_full_filename_textures();
 
-     if (!all_futures_done() || fallback_textures())
+     if (!all_futures_done())
      {
           return;
      }
-
+     if (fallback_textures())
+     {
+          // see if no textures are loaded and fall
+          // back to .mim if not.
+          spdlog::debug("Loading Fallback Textures (.mim)");
+          return;
+     }
      // don't resize render texture till we have something to draw?
      // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) {
      // return texture.width() > 0 && texture.height() > 0; })) all tasks
      // completed.
 
-     // see if no textures are loaded and fall
-     // back to .mim if not.
 
      resize_render_texture();
      assert(m_render_framebuffer && "m_render_framebuffer is nullptr");
@@ -1218,7 +1230,8 @@ void map_sprite::process_full_filename_textures() const
           return;
      }
 
-     // Task 1: Purge empty textures (sync, quick)
+
+     spdlog::debug("Task 1: Purge empty textures (sync, quick)");
      [this]()
      {
           std::erase_if(
@@ -1244,7 +1257,7 @@ void map_sprite::process_full_filename_textures() const
 
      if (!m_child_map_sprite && m_child_textures_map.empty())
      {
-          // Task 2: Check if all masks exist (sync, quick)
+          spdlog::debug("Task 2: Check if all masks exist (sync, quick)");
           const bool all_masks_exist = std::ranges::all_of(
             m_full_filename_to_mask_name,
             [&](const auto &pair)
@@ -1259,7 +1272,9 @@ void map_sprite::process_full_filename_textures() const
                  return m_full_filename_textures.contains(maskname);
             });
 
-          // Task 3.1: Load child map_sprite with only the mim textures.
+
+          spdlog::debug(
+            "Task 3.1: Load child map_sprite with only the mim textures.");
 
           if (!all_masks_exist)
           {
@@ -1270,6 +1285,7 @@ void map_sprite::process_full_filename_textures() const
                  true,
                  false,
                  m_selections);
+               m_child_map_sprite->consume_now();
                return;// return early here as the texture loading is placed in
                       // the queue.
           }
@@ -1277,6 +1293,10 @@ void map_sprite::process_full_filename_textures() const
 
      if (m_child_map_sprite && m_child_textures_map.empty())
      {
+
+          spdlog::debug(
+            "Task 3.2: Trigger child map_sprite call to "
+            "get_deswizzle_combined_textures.");
           // Task 3.2: Preparation (mask generation if needed + init
           // shaders/buffers) This is the outer task, returning a future for the
           // follow-up (processing). Queue it as m_future_of_future_consumer for
@@ -1303,33 +1323,70 @@ void map_sprite::process_full_filename_textures() const
             = glm::ivec2(canvas.width(), canvas.height()) / max_size;
           assert(scale.x == scale.y);
           assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
+          const auto temp
+            = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+          if (!temp.has_value())
+          {
+               m_child_textures_map.clear();
+               spdlog::error(
+                 "{}:{} m_textures_map is nullptr: {}",
+                 __FILE__,
+                 __LINE__,
+                 temp.error());
+               // lets try again next frame.
+               m_child_map_sprite->update_render_texture(true);
+               m_future_consumer += std::async(
+                 std::launch::deferred, [this] { update_render_texture(); });
+               return;
+          }
           m_future_consumer += std::async(
             std::launch::deferred,
-            [this,
-             tmp
-             = &m_child_map_sprite->get_deswizzle_combined_textures(scale.x)]
+            [this, scale]
             {
+                 if (!m_child_map_sprite)
+                 {
+                      return;
+                 }
+                 const auto temp
+                   = m_child_map_sprite->get_deswizzle_combined_textures(
+                     scale.x);
+                 if (!temp.has_value())
+                 {
+                      m_child_textures_map.clear();
+                      spdlog::error(
+                        "{}:{} m_textures_map is nullptr: {}",
+                        __FILE__,
+                        __LINE__,
+                        temp.error());
+                      return;
+                 }
+                 else
+                 {
+                      m_child_textures_map = std::move(*temp.value());
+                 }
+                 spdlog::debug(
+                   "Move child combined textures into m_child_textures_map: "
+                   "{}, futures_done: {}",
+                   m_child_textures_map.size(),
+                   m_child_map_sprite->all_futures_done());
                  // get_deswizzle_combined_textures queues up texture
                  // generation. so we're queueing up the post operation that
                  // should run afterwards here.
-                 m_child_textures_map = std::move(*tmp);
                  m_child_map_sprite.reset();
             });
           return;
      }
 
 
-     // Task 4: Follow-up processing task (main loop + post-op + cleanup)
+     spdlog::debug(
+       "Task 4: Follow-up processing task (main loop + post-op + cleanup)");
      // This is the inner task, chained after preparation.
      [&]()
      {
           std::map<
-            std::size_t,
-            std::vector<std::tuple<
-              std::uint32_t,
-              float,
-              glengine::SubTexture,
-              glengine::SubTexture>>>
+            std::size_t, std::vector<std::tuple<
+                           std::uint32_t, float, glengine::SubTexture,
+                           glengine::SubTexture>>>
                                    multi_pupu_post_op = {};
           std::vector<std::string> remove_queue       = {};
 
@@ -2755,20 +2812,22 @@ void map_sprite::save_deswizzle_generate_toml(
 }
 
 
-[[nodiscard]] std::map<
-  std::string,
-  std::optional<glengine::FrameBuffer>> &
+[[nodiscard]] std::expected<
+  std::map<
+    std::string,
+    std::optional<glengine::FrameBuffer>> *,
+  std::string>
   map_sprite::get_deswizzle_combined_textures(const int in_scale)
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return m_cache_framebuffer;
+          return std::unexpected(
+            "Failed to lock m_selections: shared_ptr is expired.");
      }
-     if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
+     if (!all_futures_done())
      {
-          return m_cache_framebuffer;
+          return std::unexpected("Not all futures are done!");
      }
      if (std::ranges::all_of(
            *m_texture.get(),
@@ -2779,16 +2838,15 @@ void map_sprite::save_deswizzle_generate_toml(
                 return size.x == 0 || size.y == 0;
            }))
      {
-          return m_cache_framebuffer;
+          return std::unexpected("Textures are not loaded yet!");
      }
 
      // Acquire the field associated with this map group
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error(
+          return std::unexpected(
             "Failed to lock m_map_group.field: shared_ptr is expired.");
-          return m_cache_framebuffer;// Field no longer exists, nothing to save
      }
 
      const std::string field_name
@@ -2799,7 +2857,7 @@ void map_sprite::save_deswizzle_generate_toml(
        {}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
-          return m_cache_framebuffer;
+          return std::unexpected("Failed to load coo_table.");
      }
      for (auto &&[file_name, file_node] : *coo_table)
      {
@@ -2868,7 +2926,11 @@ void map_sprite::save_deswizzle_generate_toml(
               }));
      }
      m_future_consumer += std::move(futures);
-     return m_cache_framebuffer;
+     spdlog::debug(
+       "{}:{} Framebuffer generation queued up. Currently framebuffer "
+       "placeholders empty.",
+       __FILE__, __LINE__);
+     return &m_cache_framebuffer;
 }
 
 void map_sprite::cache_pupuids(
@@ -3814,7 +3876,12 @@ bool fme::map_sprite::consume_one_future() const
 {
      if (m_child_map_sprite && !m_child_map_sprite->all_futures_done())
      {
-          return m_child_map_sprite->consume_one_future();
+          if (m_child_map_sprite->consume_one_future())
+          {
+               update_render_texture();
+               return true;
+          }
+          return false;
      }
      // If the outer future is still processing, advance it
      if (!m_future_of_future_consumer.done())
@@ -4008,8 +4075,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 = in_map_sprite.filter()
                                     .swizzle.value()
                                     .string() },
-        texture_page,
-        palette]() -> std::vector<std::filesystem::path>
+        texture_page, palette]() -> std::vector<std::filesystem::path>
      {
           spdlog::debug(
             "Generating swizzle paths for field: '{}', texture_page: {}, "

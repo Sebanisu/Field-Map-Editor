@@ -189,8 +189,12 @@ struct [[nodiscard]] map_sprite// final
      }
      [[nodiscard]] const std::array<
        glengine::Texture,
-       MAX_TEXTURES>                                      &
+       MAX_TEXTURES> &
        get_textures() const;
+     [[nodiscard]] const std::map<
+       std::string,
+       glengine::Texture>                                      &
+       get_full_filename_textures();
      [[nodiscard]] const glengine::Texture *get_texture(
        BPPT         bpp,
        std::uint8_t palette,
@@ -308,9 +312,11 @@ struct [[nodiscard]] map_sprite// final
        std::string,
        std::vector<ff_8::PupuID>> &
        get_deswizzle_combined_textures_pupuids();
-     [[nodiscard]] std::map<
-       std::string,
-       std::optional<glengine::FrameBuffer>> &
+     [[nodiscard]] std::expected<
+       std::map<
+         std::string,
+         std::optional<glengine::FrameBuffer>> *,
+       std::string>
        get_deswizzle_combined_textures(const int scale = {});
      [[nodiscard]] std::string generate_deswizzle_combined_tool_tip(
        const toml::table *file_table) const;

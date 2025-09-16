@@ -1,4 +1,6 @@
 #include "textures_window.hpp"
+#include "tool_tip.hpp"
+#include <ranges>
 
 void fme::textures_window::render() const
 {
@@ -18,6 +20,10 @@ void fme::textures_window::render() const
             "m_map_sprite is no longer valid. File: {}, Line: {}",
             __FILE__,
             __LINE__);
+          return;
+     }
+     if (map_sprite->fail())
+     {
           return;
      }
      if (!selections->get<ConfigKey::DisplayTexturesWindow>())
@@ -41,6 +47,159 @@ void fme::textures_window::render() const
      {
           return;
      }
+     handle_thumbnail_size_adjustment();
+
+     ImGui::BeginChild(
+       "##ScrollingTextures",
+       ImVec2(0, 0),// full remaining size
+       false,       // no border
+       ImGuiWindowFlags_HorizontalScrollbar);
+     ImGui::Columns(
+       calc_column_count(m_thumb_size_width),
+       "##get_map_sprite_textures",
+       false);
+     for (const auto &[index, texture] :
+          map_sprite->get_textures() | std::views::enumerate)
+     {
+          if (texture.id() == 0)
+          {
+               continue;
+          }
+          std::string title = fmt::format("{}", index);
+          render_thumbnail_button(title, texture, false, []() {});
+          tool_tip(
+            fmt::format(
+              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}", index,
+              static_cast<std::uint32_t>(texture.id()), texture.width(),
+              texture.height()));
+          draw_thumbnail_label(title);
+          ImGui::NextColumn();
+     }
+
+     ImGui::Columns(1);
+
+     ImGui::Columns(
+       calc_column_count(m_thumb_size_width),
+       "##get_map_sprite_textures",
+       false);
+     for (const auto &[index, pair] :
+          map_sprite->get_full_filename_textures() | std::views::enumerate)
+     {
+          const auto &[file_name, texture] = pair;
+          if (texture.id() == 0)
+          {
+               continue;
+          }
+          render_thumbnail_button(file_name, texture, false, []() {});
+          tool_tip(
+            fmt::format(
+              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}\nFilename: {}",
+              index, static_cast<std::uint32_t>(texture.id()), texture.width(),
+              texture.height(), file_name));
+          draw_thumbnail_label(file_name);
+          ImGui::NextColumn();
+     }
+
+     ImGui::Columns(1);
+     ImGui::EndChild();
+}
+
+void fme::textures_window::handle_thumbnail_size_adjustment() const
+{
+     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 3072.f);
+     bool  ctrl  = ImGui::GetIO().KeyCtrl;
+     float wheel = ImGui::GetIO().MouseWheel;
+
+     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && ctrl)
+     {
+          static const constexpr auto speed = 20.f;
+          if (wheel > 0.0f)
+               m_thumb_size_width
+                 = std::min(m_thumb_size_width + (wheel * speed), 3072.f);
+          else if (wheel < 0.0f)
+               m_thumb_size_width = std::max(
+                 m_thumb_size_width + (wheel * speed),
+                 96.f);// add because wheel is negative
+     }
+}
+
+int fme::textures_window::calc_column_count(float width) const
+{
+     const ImVec2 region_size = ImGui::GetContentRegionAvail();
+     const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f
+                           + ImGui::GetStyle().ItemSpacing.x;
+     const int count = static_cast<int>(region_size.x / (width + padding));
+     return count > 0 ? count : 1;
+}
+
+void fme::textures_window::render_thumbnail_button(
+  const std::string              &file_name,
+  const glengine::Texture        &texture,
+  const bool                      selected,
+  std::move_only_function<void()> on_click) const
+{
+
+     ImTextureID tex_id
+       = glengine::ConvertGliDtoImTextureId<ImTextureID>(texture.id());
+     m_aspect_ratio = static_cast<float>(texture.height())
+                      / static_cast<float>(texture.width());
+     const ImVec2 thumb_size
+       = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+
+     const auto pop_style_color
+       = glengine::ScopeGuard{ [selected]()
+                               {
+                                    if (selected)
+                                    {
+                                         ImGui::PopStyleColor(3);
+                                    }
+                               } };
+     if (selected)
+     {
+          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+     }
+
+     if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
+     {
+          std::invoke(on_click);
+     }
+}
+
+void fme::textures_window::draw_thumbnail_label(
+  const std::string &file_name) const
+{
+     // Label under image (optional)
+     const float  button_width = ImGui::GetFrameHeight();
+     const ImVec2 button_size  = { button_width, button_width };
+     const float  text_area_width
+       = m_thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
+     // Remember the top-left of where we want to start
+     const ImVec2 text_start_pos = ImGui::GetCursorScreenPos();
+
+     ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + text_area_width);
+     ImGui::Text("%s", file_name.c_str());
+     ImGui::PopTextWrapPos();
+     const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
+     // Position the button at top-right of this block (same Y as the start
+     // of the text)
+     ImGui::SetCursorScreenPos(ImVec2(
+       text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
+       text_start_pos.y));
+     const auto pop_id = PushPopID();
+     //  if (ImGui::Button(ICON_FA_TRASH, button_size))
+     //  {
+     //       m_remove_queue.push_back(file_name);
+     //  }
+     //  else
+     //  {
+     //       tool_tip("Remove");
+     //  }
+     ImGui::SetCursorScreenPos(ImVec2(
+       backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
 }
 
 void fme::textures_window::update(

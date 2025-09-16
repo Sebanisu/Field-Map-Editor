@@ -292,6 +292,7 @@ void gui::start(GLFWwindow *const window)
           control_panel_window();
           m_import.render();
           m_history_window.render();
+          m_textures_window.render();
           m_filter_window.render();
           m_draw_window.render();
           //  m_mouse_positions.cover.setColor(clear_color);
@@ -1334,6 +1335,7 @@ void gui::update_field()
                // m_draw_window.update(m_map_sprite);
                // m_import.update(m_map_sprite);
                // m_history_window.update(m_map_sprite);
+               // m_textures_window.update(m_map_sprite);
                break;
      }
 
@@ -1682,6 +1684,16 @@ void gui::windows_menu()
      {
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
+
+     if (ImGui::MenuItem(
+           "Display Textures",
+           nullptr,
+           &m_selections->get<ConfigKey::DisplayTexturesWindow>()))
+     {
+          m_selections->update<ConfigKey::DisplayTexturesWindow>();
+     }
+
+
      ImGui::Separator();
      if (ImGui::MenuItem(
            gui_labels::display_draw_window.data(),
@@ -3687,6 +3699,7 @@ void gui::refresh_draw_mode()
                // m_draw_window.update(m_map_sprite);
                // m_import.update(m_map_sprite);
                // m_history_window.update(m_map_sprite);
+               // m_textures_window.update(m_map_sprite);
                break;
      }
      m_changed = true;
@@ -4080,8 +4093,10 @@ gui::gui(GLFWwindow *const window)
      m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
      m_history_window.update(m_selections);
+     m_textures_window.update(m_selections);
      m_import.update(m_map_sprite);
      m_history_window.update(m_map_sprite);
+     m_textures_window.update(m_map_sprite);
 
      if (m_field)
      {

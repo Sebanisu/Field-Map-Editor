@@ -31,6 +31,7 @@
 #include "RangeConsumer.hpp"
 #include "safedir.hpp"
 #include "Selections.hpp"
+#include "textures_window.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
 #include <imgui.h>
@@ -95,6 +96,7 @@ struct gui
      float                                          saved_window_height = {};
      fme::import                                    m_import            = {};
      fme::history_window                            m_history_window    = {};
+     fme::textures_window                           m_textures_window   = {};
 
      // sf::RenderTexture m_shader_renderTexture        = {};
 
