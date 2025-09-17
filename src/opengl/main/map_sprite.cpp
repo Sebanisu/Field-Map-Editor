@@ -1215,14 +1215,475 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      (void)generate_texture(*m_render_framebuffer);
 }
 
-struct PupuOpEntry
+
+void map_sprite::purge_empty_full_filename_texture() const
 {
-     ff_8::PupuID         pupu;
-     int                  color_index;
-     glengine::SubTexture main_texture;
-     glengine::SubTexture mask_texture;
-     std::uint32_t        count;
-     float                distance;
+     spdlog::debug("Task 1: Purge empty textures (sync, quick)");
+     std::erase_if(
+       m_full_filename_textures,
+       [](auto &pair)
+       {
+            const auto &texture = pair.second;
+            const auto  size    = texture.get_size();
+            return size.x == 0 || size.y == 0;
+       });
+     spdlog::info(
+       "{}:{}, Loaded and purged empty textures, "
+       "m_full_filename_textures.size() = {}",
+       __FILE__,
+       __LINE__,
+       std::ranges::size(m_full_filename_textures));
+};
+
+
+bool map_sprite::check_all_masks_exists_full_filename_texture() const
+{
+     spdlog::debug("Task 2: Check if all masks exist (sync, quick)");
+     return std::ranges::all_of(
+       m_full_filename_to_mask_name,
+       [&](const auto &pair)
+       {
+            const auto &[filename, maskname] = pair;
+            if (!m_full_filename_textures.contains(filename))
+            {
+                 // we don't care if the mask name doesn't exist if
+                 // filename does not.
+                 return true;
+            }
+            return m_full_filename_textures.contains(maskname);
+       });
+}
+
+void map_sprite::load_child_map_sprite_full_filename_texture() const
+{
+     if (!check_all_masks_exists_full_filename_texture())
+     {
+          spdlog::debug(
+            "Task 3.1: Load child map_sprite with only the mim textures.");
+          m_child_map_sprite = std::make_unique<map_sprite>(
+            m_map_group,
+            false,
+            ff_8::filters{ false },
+            true,
+            false,
+            m_selections);
+          m_child_map_sprite->consume_now();
+          // return;// return early here as the texture loading is placed
+          // in
+          //  the queue.
+     }
+}
+
+void map_sprite::
+  generate_combined_textures_for_child_map_sprite_full_filename_texture() const
+{
+
+     spdlog::debug(
+       "Task 3.2: Trigger child map_sprite call to "
+       "get_deswizzle_combined_textures.");
+     // Task 3.2: Preparation (mask generation if needed + init
+     // shaders/buffers) This is the outer task, returning a future for the
+     // follow-up (processing). Queue it as m_future_of_future_consumer for
+     // deferred execution.
+     // this generates framebuffers containing the masks on
+     // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
+
+     // calculate scale using one of the existing textures
+     const auto canvas           = m_child_map_sprite->get_canvas();
+     const auto [min_it, max_it] = std::ranges::minmax_element(
+       m_full_filename_textures,
+       [](const auto &apair, const auto &bpair)
+       {
+            const auto &a  = std::get<1>(apair);
+            const auto &b  = std::get<1>(bpair);
+            const auto  sa = a.get_size();
+            const auto  sb = b.get_size();
+            return (sa.x * sa.y) < (sb.x * sb.y);
+       });
+
+     const auto max_size = std::get<1>(*max_it).get_size();
+     assert(std::get<1>(*min_it).get_size() == max_size);
+     const auto scale = glm::ivec2(canvas.width(), canvas.height()) / max_size;
+     assert(scale.x == scale.y);
+     assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
+     const auto temp
+       = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+
+     m_child_map_sprite->consume_now();
+     if (!temp.has_value())
+     {
+          m_child_textures_map.clear();
+          spdlog::error(
+            "{}:{} m_textures_map is nullptr: {}",
+            __FILE__,
+            __LINE__,
+            temp.error());
+          // lets try again next frame.
+          // m_child_map_sprite->update_render_texture(true);
+          // m_future_consumer += std::async(
+          //   std::launch::deferred, [this] { update_render_texture(); });
+          // return;
+     }
+     // m_future_consumer += std::async(
+     //   std::launch::deferred,
+     [this, scale]
+     {
+          if (!m_child_map_sprite)
+          {
+               return;
+          }
+          const auto temp
+            = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+          if (!temp.has_value())
+          {
+               m_child_textures_map.clear();
+               spdlog::error(
+                 "{}:{} m_textures_map is nullptr: {}",
+                 __FILE__,
+                 __LINE__,
+                 temp.error());
+               return;
+          }
+          else
+          {
+               m_child_textures_map = std::move(*temp.value());
+          }
+          spdlog::debug(
+            "Move child combined textures into m_child_textures_map: "
+            "{}, futures_done: {}",
+            m_child_textures_map.size(),
+            m_child_map_sprite->all_futures_done());
+          // get_deswizzle_combined_textures queues up texture
+          // generation. so we're queueing up the post operation that
+          // should run afterwards here.
+          m_child_map_sprite.reset();
+     }();
+
+
+     // return;
+}
+
+std::tuple<
+  glengine::PaletteBuffer,
+  glengine::HistogramBuffer,
+  glengine::DistanceBuffer>
+  map_sprite::initialize_buffers(const std::vector<glm::vec4> &palette) const
+{
+     std::tuple<
+       glengine::PaletteBuffer, glengine::HistogramBuffer,
+       glengine::DistanceBuffer>
+       ret{ glengine::PaletteBuffer{},
+            glengine::HistogramBuffer{ std::ranges::size(palette) },
+            glengine::DistanceBuffer{ std::ranges::size(palette) } };
+     auto &[pb, hb, db] = ret;
+     pb.initialize(palette);
+     if (!pb.id())
+          spdlog::critical("PaletteBuffer initialization failed, aborting");
+
+     if (!hb.id())
+          spdlog::critical("HistogramBuffer initialization failed, aborting");
+
+     if (!db.id())
+          spdlog::critical("DistanceBuffer initialization failed, aborting");
+
+     return ret;
+}
+
+
+std::pair<
+  std::vector<PupuOpEntry>,
+  std::vector<std::string>>
+  map_sprite::collect_post_op_entries(
+    std::tuple<
+      glengine::PaletteBuffer,
+      glengine::HistogramBuffer,
+      glengine::DistanceBuffer> &buffers) const
+{
+     const auto &unique_pupu = working_unique_pupu();
+     const auto &palette     = m_map_group.maps.working_unique_pupu_color();
+     std::pair<std::vector<PupuOpEntry>, std::vector<std::string>> ret = {};
+
+     auto &[multi_pupu_post_op, remove_queue]                          = ret;
+     auto &[pb, hb, db] = buffers;
+     // Main loop over pairs
+     for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
+     {
+          if (!m_full_filename_textures.contains(filename))
+               continue;
+          glengine::Texture &main_texture
+            = m_full_filename_textures.at(filename);
+          // todo support multiple white on black mask textures?
+          const auto mask_texture
+            = [&]() -> std::expected<const glengine::SubTexture, std::string>
+          {
+               if (auto it = m_full_filename_textures.find(maskname);
+                   it != m_full_filename_textures.end())
+               {
+
+                    spdlog::debug(
+                      "{}:{} Mask chosen external mask png id: {}, "
+                      "mask_filename: {}",
+                      __FILE__, __LINE__,
+                      static_cast<std::uint32_t>(it->second.id()), maskname);
+                    return it->second;
+               }
+
+               if (m_child_textures_map.empty())
+               {
+                    return std::unexpected("opt_textures_map is empty");
+               }
+
+               auto map_it = m_child_textures_map.find(filename);
+               if (map_it == m_child_textures_map.end())
+               {
+                    return std::unexpected("Filename not found: " + filename);
+               }
+
+               if (!map_it->second.has_value())
+               {
+                    return std::unexpected("FrameBuffer has no value");
+               }
+               spdlog::debug(
+                 "{}:{} Mask chosen generated map id: {}, toml_filename: "
+                 "{}",
+                 __FILE__, __LINE__,
+                 static_cast<std::uint32_t>(
+                   map_it->second->color_attachment_id(1)),
+                 filename);
+               return map_it->second->color_attachment_id(1);
+          }();
+          if (!mask_texture)
+          {
+               spdlog::error("Mask lookup failed: {}", mask_texture.error());
+               // Continue anyway, as in original code (could add skip
+               // logic)
+          }
+
+          const toml::table *file_table
+            = get_deswizzle_combined_toml_table(filename);
+          ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
+            = { ff_8::FilterSettings::All_Disabled };
+          multi_pupu.reload(*file_table);
+          if (!multi_pupu.enabled())
+          {
+               continue;
+          }
+          if (multi_pupu.value().empty())
+          {
+               continue;
+          }
+
+          // if (std::cmp_equal(multi_pupu.value().size(), 1))
+          // {
+          //      // Only one pupu.
+          //      glengine::Texture *target_texture
+          //        = get_texture_mutable(multi_pupu.value().front());
+          //      if (!target_texture)
+          //      {
+          //           continue;
+          //      }
+          //      const auto size = main_texture.get_size();
+
+          //      if (const auto t_size = target_texture->get_size();
+          //          t_size.x != 0 and t_size.y != 0)
+          //      {
+          //           continue;// texture in use already.
+          //      }
+          //      *target_texture = glengine::Texture(size.x, size.y);
+
+          //      mask_texture->bind_read_only(0);
+          //      main_texture.bind_read_only(1);
+          //      target_texture->bind_write_only(2);
+
+          //      // Load and execute compute shader
+          //      const auto pop_shader = m_mask_comp_shader->backup();
+          //      m_mask_comp_shader->bind();
+          //      m_mask_comp_shader->set_uniform(
+          //        "chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+          //      m_mask_comp_shader->execute(
+          //        static_cast<GLuint>(size.x),
+          //        static_cast<GLuint>(size.y),
+          //        GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+          //      remove_queue.push_back(filename);
+          //      remove_queue.push_back(maskname);
+          // }
+          // else// more than one.
+          {
+
+               db.bind(3);
+               pb.bind(2);
+               hb.bind(1);
+               mask_texture->bind_read_only(0);
+               const auto size       = main_texture.get_size();
+               const auto pop_shader = m_mask_count_comp_shader->backup();
+               m_mask_count_comp_shader->bind();
+               m_mask_count_comp_shader->set_uniform(
+                 "numColors", static_cast<GLint>(std::ranges::size(palette)));
+               m_mask_count_comp_shader->execute(
+                 static_cast<GLuint>(size.x),
+                 static_cast<GLuint>(size.y),
+                 GL_SHADER_STORAGE_BARRIER_BIT);
+
+               // todo use a std::async to defer this to later.
+               // Because of warnings from gpu for doing it too fast.
+               // And I'm not sure it'll fix it but it might.
+               //(For now, kept sync; you can wrap read_back in another
+               // future<void> here if needed)
+               std::vector<GLuint> counts;
+               hb.read_back(counts);
+               hb.reset();
+               std::vector<float> distances;
+               db.read_back(distances);
+               db.reset();
+
+               spdlog::info("Maskname \"{}\" counts: ", maskname);
+               for (const auto &[index, zip] :
+                    std::views::zip(palette, unique_pupu, counts, distances)
+                      | std::views::enumerate)
+               {
+                    const auto &[color, pupu, count, distance] = zip;
+                    multi_pupu_post_op.push_back(
+                      PupuOpEntry{ .pupu         = pupu,
+                                   .color_index  = static_cast<int>(index),
+                                   .main_texture = main_texture,
+                                   .mask_texture = *mask_texture,
+                                   .count        = count,
+                                   .distance     = distance });
+                    if (count > 0)
+                    {
+                         spdlog::info(
+                           "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
+                           "Distance {}",
+                           index,
+                           fme::color{ color },
+                           pupu,
+                           count,
+                           distance);
+                    }
+               }
+               // I need both textures a index and count.
+               // We need to take an index that doesn't have texture
+               // or texture.get_size() == glm::ivec2(0,0) We to sort
+               // the textures by the count for that index, largest to
+               // smallest We can grab the color again using the
+               // index. We use the color and the decided main_texture
+               // and mask_texture and creat the output texture at
+               // *m_texture[index];
+               //  Then we remove the filename and maskname using the
+               //  remove_queue. We'll need to using some kinda map of
+               //  index to tuple. And start a new loop after this
+               //  loop.
+
+               remove_queue.push_back(filename);
+               remove_queue.push_back(maskname);
+          }
+     }
+     return ret;
+}
+
+void map_sprite::process_post_op_entries(
+  const std::vector<PupuOpEntry> &multi_pupu_post_op,
+  glengine::PaletteBuffer        &pb) const
+{
+     const auto &unique_pupu = working_unique_pupu();
+     const auto &palette     = m_map_group.maps.working_unique_pupu_color();
+     // Post-op loop
+     for (auto &&current_unique_pupu : unique_pupu)
+     {
+          // Create a view over only matching items
+          auto matching = multi_pupu_post_op
+                          | std::views::filter(
+                            [&](const PupuOpEntry &values)
+                            { return values.pupu == current_unique_pupu; });
+
+          // Find the element with the largest count among the matching
+          // ones
+          auto best_it = std::ranges::max_element(
+            matching,
+            [](const PupuOpEntry &a, const PupuOpEntry &b)
+            { return a.count < b.count; });
+
+          if (best_it == std::ranges::end(matching))
+               continue;
+
+          glengine::Texture *target_texture
+            = get_texture_mutable(current_unique_pupu);
+          if (!target_texture)
+          {
+               spdlog::error(
+                 "{}:{} target_texture is nullptr", __FILE__, __LINE__);
+               continue;
+          }
+
+          const auto size = best_it->main_texture.get_size();
+
+          if (const auto t_size = target_texture->get_size();
+              t_size.x != 0 && t_size.y != 0)
+          {
+               spdlog::error(
+                 "{}:{} target_texture is in use.", __FILE__, __LINE__);
+               continue;// texture already in use
+          }
+
+          *target_texture = glengine::Texture(size.x, size.y);
+
+          best_it->mask_texture.bind_read_only(0);
+          best_it->main_texture.bind_read_only(1);
+          target_texture->bind_write_only(2);
+          pb.bind(3);
+
+          const auto pop_shader = m_mask_comp_shader->backup();
+          m_mask_comp_shader->bind();
+          m_mask_comp_shader->set_uniform("chosenIndex", best_it->color_index);
+          m_mask_comp_shader->set_uniform(
+            "numColors", static_cast<GLint>(std::ranges::size(palette)));
+          m_mask_comp_shader->execute(
+            static_cast<GLuint>(size.x),
+            static_cast<GLuint>(size.y),
+            GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+          target_texture->generate_mipmaps();
+
+          spdlog::debug(
+            "PupuOpEntry: pupu={}, color_index={}, "
+            "main_tex_id={}, main_tex_size=({}x{}), "
+            "mask_tex_id={}, mask_tex_size=({}x{}), count={}, "
+            "distance={}",
+            best_it->pupu, best_it->color_index,
+            static_cast<std::uint32_t>(best_it->main_texture.id()),
+            best_it->main_texture.get_size().x,
+            best_it->main_texture.get_size().y,
+            static_cast<std::uint32_t>(best_it->mask_texture.id()),
+            best_it->mask_texture.get_size().x,
+            best_it->mask_texture.get_size().y, best_it->count,
+            best_it->distance);
+     }
+}
+
+void map_sprite::cleanup_full_filename_textures(
+  const std::vector<std::string> &remove_queue) const
+{
+     // cleanup
+     for (const std::string &filename : remove_queue)
+     {
+          // m_full_filename_textures.erase(filename);
+          m_full_filename_to_mask_name.erase(filename);
+     }
+}
+
+void map_sprite::post_op_full_filename_texture() const
+{
+     spdlog::debug(
+       "Task 4: Follow-up processing task (main loop + post-op + "
+       "cleanup)");
+     // This is the inner task, chained after preparation.
+
+     auto buffers
+       = initialize_buffers(m_map_group.maps.working_unique_pupu_color());
+     auto &[pb, hb, db] = buffers;
+     auto post_op_data  = collect_post_op_entries(buffers);
+     auto &[multi_pupu_post_op, remove_queue] = post_op_data;
+     process_post_op_entries(multi_pupu_post_op, pb);
+     cleanup_full_filename_textures(remove_queue);
 };
 
 void map_sprite::process_full_filename_textures() const
@@ -1250,451 +1711,16 @@ void map_sprite::process_full_filename_textures() const
           m_full_filename_textures.clear();
           return;
      }
+     purge_empty_full_filename_texture();
 
-
-     spdlog::debug("Task 1: Purge empty textures (sync, quick)");
-     [this]()
-     {
-          std::erase_if(
-            m_full_filename_textures,
-            [](auto &pair)
-            {
-                 const auto &texture = pair.second;
-                 const auto  size    = texture.get_size();
-                 return size.x == 0 || size.y == 0;
-            });
-          spdlog::info(
-            "{}:{}, Loaded and purged empty textures, "
-            "m_full_filename_textures.size() = {}",
-            __FILE__,
-            __LINE__,
-            std::ranges::size(m_full_filename_textures));
-     }();
      if (m_full_filename_textures.empty())
      {
           return;
      }
+     load_child_map_sprite_full_filename_texture();
+     generate_combined_textures_for_child_map_sprite_full_filename_texture();
 
-
-     // if (!m_child_map_sprite && m_child_textures_map.empty())
-     {
-          spdlog::debug("Task 2: Check if all masks exist (sync, quick)");
-          const bool all_masks_exist = std::ranges::all_of(
-            m_full_filename_to_mask_name,
-            [&](const auto &pair)
-            {
-                 const auto &[filename, maskname] = pair;
-                 if (!m_full_filename_textures.contains(filename))
-                 {
-                      // we don't care if the mask name doesn't exist if
-                      // filename does not.
-                      return true;
-                 }
-                 return m_full_filename_textures.contains(maskname);
-            });
-
-
-          spdlog::debug(
-            "Task 3.1: Load child map_sprite with only the mim textures.");
-
-          if (!all_masks_exist)
-          {
-               m_child_map_sprite = std::make_unique<map_sprite>(
-                 m_map_group,
-                 false,
-                 ff_8::filters{ false },
-                 true,
-                 false,
-                 m_selections);
-               m_child_map_sprite->consume_now();
-               // return;// return early here as the texture loading is placed
-               // in
-               //  the queue.
-          }
-     }
-
-     // if (m_child_map_sprite && m_child_textures_map.empty())
-     {
-
-          spdlog::debug(
-            "Task 3.2: Trigger child map_sprite call to "
-            "get_deswizzle_combined_textures.");
-          // Task 3.2: Preparation (mask generation if needed + init
-          // shaders/buffers) This is the outer task, returning a future for the
-          // follow-up (processing). Queue it as m_future_of_future_consumer for
-          // deferred execution.
-          // this generates framebuffers containing the masks on
-          // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
-
-          // calculate scale using one of the existing textures
-          const auto canvas           = m_child_map_sprite->get_canvas();
-          const auto [min_it, max_it] = std::ranges::minmax_element(
-            m_full_filename_textures,
-            [](const auto &apair, const auto &bpair)
-            {
-                 const auto &a  = std::get<1>(apair);
-                 const auto &b  = std::get<1>(bpair);
-                 const auto  sa = a.get_size();
-                 const auto  sb = b.get_size();
-                 return (sa.x * sa.y) < (sb.x * sb.y);
-            });
-
-          const auto max_size = std::get<1>(*max_it).get_size();
-          assert(std::get<1>(*min_it).get_size() == max_size);
-          const auto scale
-            = glm::ivec2(canvas.width(), canvas.height()) / max_size;
-          assert(scale.x == scale.y);
-          assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
-          const auto temp
-            = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
-
-          m_child_map_sprite->consume_now();
-          if (!temp.has_value())
-          {
-               m_child_textures_map.clear();
-               spdlog::error(
-                 "{}:{} m_textures_map is nullptr: {}",
-                 __FILE__,
-                 __LINE__,
-                 temp.error());
-               // lets try again next frame.
-               // m_child_map_sprite->update_render_texture(true);
-               // m_future_consumer += std::async(
-               //   std::launch::deferred, [this] { update_render_texture(); });
-               // return;
-          }
-          // m_future_consumer += std::async(
-          //   std::launch::deferred,
-          [this, scale]
-          {
-               if (!m_child_map_sprite)
-               {
-                    return;
-               }
-               const auto temp
-                 = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
-               if (!temp.has_value())
-               {
-                    m_child_textures_map.clear();
-                    spdlog::error(
-                      "{}:{} m_textures_map is nullptr: {}",
-                      __FILE__,
-                      __LINE__,
-                      temp.error());
-                    return;
-               }
-               else
-               {
-                    m_child_textures_map = std::move(*temp.value());
-               }
-               spdlog::debug(
-                 "Move child combined textures into m_child_textures_map: "
-                 "{}, futures_done: {}",
-                 m_child_textures_map.size(),
-                 m_child_map_sprite->all_futures_done());
-               // get_deswizzle_combined_textures queues up texture
-               // generation. so we're queueing up the post operation that
-               // should run afterwards here.
-               m_child_map_sprite.reset();
-          }();
-
-
-          // return;
-     }
-
-
-     spdlog::debug(
-       "Task 4: Follow-up processing task (main loop + post-op + cleanup)");
-     // This is the inner task, chained after preparation.
-     [&]()
-     {
-          std::vector<PupuOpEntry> multi_pupu_post_op = {};
-          std::vector<std::string> remove_queue       = {};
-
-          const auto              &unique_pupu        = working_unique_pupu();
-          const auto &palette = m_map_group.maps.working_unique_pupu_color();
-          glengine::PaletteBuffer pb{};
-          pb.initialize(palette);
-          if (!pb.id())
-          {
-               spdlog::critical(
-                 "PaletteBuffer initialization failed, aborting");
-               return;
-          }
-          glengine::HistogramBuffer hb{ std::ranges::size(palette) };
-          if (!hb.id())
-          {
-               spdlog::critical(
-                 "HistogramBuffer initialization failed, aborting");
-               return;
-          }
-          glengine::DistanceBuffer db{ std::ranges::size(palette) };
-          if (!db.id())
-          {
-               spdlog::critical(
-                 "DistanceBuffer initialization failed, aborting");
-               return;
-          }
-
-          // Main loop over pairs
-          for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
-          {
-               if (!m_full_filename_textures.contains(filename))
-                    continue;
-               glengine::Texture &main_texture
-                 = m_full_filename_textures.at(filename);
-               // todo support multiple white on black mask textures?
-               const auto mask_texture =
-                 [&]() -> std::expected<const glengine::SubTexture, std::string>
-               {
-                    if (auto it = m_full_filename_textures.find(maskname);
-                        it != m_full_filename_textures.end())
-                    {
-
-                         spdlog::debug(
-                           "{}:{} Mask chosen external mask png id: {}, "
-                           "mask_filename: {}",
-                           __FILE__, __LINE__,
-                           static_cast<std::uint32_t>(it->second.id()),
-                           maskname);
-                         return it->second;
-                    }
-
-                    if (m_child_textures_map.empty())
-                    {
-                         return std::unexpected("opt_textures_map is empty");
-                    }
-
-                    auto map_it = m_child_textures_map.find(filename);
-                    if (map_it == m_child_textures_map.end())
-                    {
-                         return std::unexpected(
-                           "Filename not found: " + filename);
-                    }
-
-                    if (!map_it->second.has_value())
-                    {
-                         return std::unexpected("FrameBuffer has no value");
-                    }
-                    spdlog::debug(
-                      "{}:{} Mask chosen generated map id: {}, toml_filename: "
-                      "{}",
-                      __FILE__, __LINE__,
-                      static_cast<std::uint32_t>(
-                        map_it->second->color_attachment_id(1)),
-                      filename);
-                    return map_it->second->color_attachment_id(1);
-               }();
-               if (!mask_texture)
-               {
-                    spdlog::error(
-                      "Mask lookup failed: {}", mask_texture.error());
-                    // Continue anyway, as in original code (could add skip
-                    // logic)
-               }
-
-               const toml::table *file_table
-                 = get_deswizzle_combined_toml_table(filename);
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
-                 = { ff_8::FilterSettings::All_Disabled };
-               multi_pupu.reload(*file_table);
-               if (!multi_pupu.enabled())
-               {
-                    continue;
-               }
-               if (multi_pupu.value().empty())
-               {
-                    continue;
-               }
-
-               // if (std::cmp_equal(multi_pupu.value().size(), 1))
-               // {
-               //      // Only one pupu.
-               //      glengine::Texture *target_texture
-               //        = get_texture_mutable(multi_pupu.value().front());
-               //      if (!target_texture)
-               //      {
-               //           continue;
-               //      }
-               //      const auto size = main_texture.get_size();
-
-               //      if (const auto t_size = target_texture->get_size();
-               //          t_size.x != 0 and t_size.y != 0)
-               //      {
-               //           continue;// texture in use already.
-               //      }
-               //      *target_texture = glengine::Texture(size.x, size.y);
-
-               //      mask_texture->bind_read_only(0);
-               //      main_texture.bind_read_only(1);
-               //      target_texture->bind_write_only(2);
-
-               //      // Load and execute compute shader
-               //      const auto pop_shader = m_mask_comp_shader->backup();
-               //      m_mask_comp_shader->bind();
-               //      m_mask_comp_shader->set_uniform(
-               //        "chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-               //      m_mask_comp_shader->execute(
-               //        static_cast<GLuint>(size.x),
-               //        static_cast<GLuint>(size.y),
-               //        GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-               //      remove_queue.push_back(filename);
-               //      remove_queue.push_back(maskname);
-               // }
-               // else// more than one.
-               {
-
-                    db.bind(3);
-                    pb.bind(2);
-                    hb.bind(1);
-                    mask_texture->bind_read_only(0);
-                    const auto size       = main_texture.get_size();
-                    const auto pop_shader = m_mask_count_comp_shader->backup();
-                    m_mask_count_comp_shader->bind();
-                    m_mask_count_comp_shader->set_uniform(
-                      "numColors",
-                      static_cast<GLint>(std::ranges::size(palette)));
-                    m_mask_count_comp_shader->execute(
-                      static_cast<GLuint>(size.x),
-                      static_cast<GLuint>(size.y),
-                      GL_SHADER_STORAGE_BARRIER_BIT);
-
-                    // todo use a std::async to defer this to later.
-                    // Because of warnings from gpu for doing it too fast.
-                    // And I'm not sure it'll fix it but it might.
-                    //(For now, kept sync; you can wrap read_back in another
-                    // future<void> here if needed)
-                    std::vector<GLuint> counts;
-                    hb.read_back(counts);
-                    hb.reset();
-                    std::vector<float> distances;
-                    db.read_back(distances);
-                    db.reset();
-
-                    spdlog::info("Maskname \"{}\" counts: ", maskname);
-                    for (const auto &[index, zip] :
-                         std::views::zip(
-                           palette, unique_pupu, counts, distances)
-                           | std::views::enumerate)
-                    {
-                         const auto &[color, pupu, count, distance] = zip;
-                         multi_pupu_post_op.push_back(
-                           PupuOpEntry{ .pupu         = pupu,
-                                        .color_index  = static_cast<int>(index),
-                                        .main_texture = main_texture,
-                                        .mask_texture = *mask_texture,
-                                        .count        = count,
-                                        .distance     = distance });
-                         if (count > 0)
-                         {
-                              spdlog::info(
-                                "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
-                                "Distance {}",
-                                index,
-                                fme::color{ color },
-                                pupu,
-                                count,
-                                distance);
-                         }
-                    }
-                    // I need both textures a index and count.
-                    // We need to take an index that doesn't have texture
-                    // or texture.get_size() == glm::ivec2(0,0) We to sort
-                    // the textures by the count for that index, largest to
-                    // smallest We can grab the color again using the
-                    // index. We use the color and the decided main_texture
-                    // and mask_texture and creat the output texture at
-                    // *m_texture[index];
-                    //  Then we remove the filename and maskname using the
-                    //  remove_queue. We'll need to using some kinda map of
-                    //  index to tuple. And start a new loop after this
-                    //  loop.
-
-                    remove_queue.push_back(filename);
-                    remove_queue.push_back(maskname);
-               }
-          }
-
-          // Post-op loop
-          for (auto &&current_unique_pupu : unique_pupu)
-          {
-               // Create a view over only matching items
-               auto matching
-                 = multi_pupu_post_op
-                   | std::views::filter(
-                     [&](const PupuOpEntry &values)
-                     { return values.pupu == current_unique_pupu; });
-
-               // Find the element with the largest count among the matching
-               // ones
-               auto best_it = std::ranges::max_element(
-                 matching,
-                 [](const PupuOpEntry &a, const PupuOpEntry &b)
-                 { return a.count < b.count; });
-
-               if (best_it == std::ranges::end(matching))
-                    continue;
-
-               glengine::Texture *target_texture
-                 = get_texture_mutable(current_unique_pupu);
-               if (!target_texture)
-               {
-                    spdlog::error(
-                      "{}:{} target_texture is nullptr", __FILE__, __LINE__);
-                    continue;
-               }
-
-               const auto size = best_it->main_texture.get_size();
-
-               if (const auto t_size = target_texture->get_size();
-                   t_size.x != 0 && t_size.y != 0)
-               {
-                    spdlog::error(
-                      "{}:{} target_texture is in use.", __FILE__, __LINE__);
-                    continue;// texture already in use
-               }
-
-               *target_texture = glengine::Texture(size.x, size.y);
-
-               best_it->mask_texture.bind_read_only(0);
-               best_it->main_texture.bind_read_only(1);
-               target_texture->bind_write_only(2);
-               pb.bind(3);
-
-               const auto pop_shader = m_mask_comp_shader->backup();
-               m_mask_comp_shader->bind();
-               m_mask_comp_shader->set_uniform(
-                 "chosenIndex", best_it->color_index);
-               m_mask_comp_shader->set_uniform(
-                 "numColors", static_cast<GLint>(std::ranges::size(palette)));
-               m_mask_comp_shader->execute(
-                 static_cast<GLuint>(size.x),
-                 static_cast<GLuint>(size.y),
-                 GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-               target_texture->generate_mipmaps();
-
-               spdlog::debug(
-                 "PupuOpEntry: pupu={}, color_index={}, "
-                 "main_tex_id={}, main_tex_size=({}x{}), "
-                 "mask_tex_id={}, mask_tex_size=({}x{}), count={}, "
-                 "distance={}",
-                 best_it->pupu, best_it->color_index,
-                 static_cast<std::uint32_t>(best_it->main_texture.id()),
-                 best_it->main_texture.get_size().x,
-                 best_it->main_texture.get_size().y,
-                 static_cast<std::uint32_t>(best_it->mask_texture.id()),
-                 best_it->mask_texture.get_size().x,
-                 best_it->mask_texture.get_size().y, best_it->count,
-                 best_it->distance);
-          }
-
-          // cleanup
-          for (const std::string &filename : remove_queue)
-          {
-               // m_full_filename_textures.erase(filename);
-               m_full_filename_to_mask_name.erase(filename);
-          }
-     }();
+     post_op_full_filename_texture();
 }
 
 void map_sprite::set_uniforms(
@@ -2095,7 +2121,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 //   auto value = std::ranges::begin(values);
 //   static_assert(sizeof...(T) == std::ranges::size(names));
 //   const auto result = std::ranges::any_of(
-//     std::array{ ([](const char *const local_name, int &local_value) -> bool {
+//     std::array{ ([](const char *const local_name, int &local_value) ->
+//     bool {
 //       using Real_Factor   = sf::BlendMode::Factor;
 //       using Real_Equation = sf::BlendMode::Equation;
 //       if constexpr (std::is_same_v<T, Real_Factor>) {
@@ -2115,7 +2142,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 //     std::identity());
 //   if (result) {
 //     value              = std::ranges::begin(values);
-//     GetBlendSubtract() = sf::BlendMode{ (static_cast<T>(*(value++)))... };
+//     GetBlendSubtract() = sf::BlendMode{ (static_cast<T>(*(value++)))...
+//     };
 //   }
 //   return result;
 // }
@@ -2124,17 +2152,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  * @brief Saves swizzled texture pages (and optionally palettes) to disk
  * asynchronously.
  *
- * Generates textures for each unique texture page (and conflicting palettes if
- * needed) and saves them as PNG files. If the texture has palette conflicts
- * (e.g., multiple palettes for the same texture page), generates separate files
- * for each conflicting palette.
+ * Generates textures for each unique texture page (and conflicting
+ * palettes if needed) and saves them as PNG files. If the texture has
+ * palette conflicts (e.g., multiple palettes for the same texture page),
+ * generates separate files for each conflicting palette.
  *
  * @param path The base directory path where the images will be saved.
- * @return A vector of futures representing the save operations, allowing the
- * caller to later wait or check for completion.
+ * @return A vector of futures representing the save operations, allowing
+ * the caller to later wait or check for completion.
  *
- * @note Caller is responsible for consuming or waiting on the futures to ensure
- * save completion.
+ * @note Caller is responsible for consuming or waiting on the futures to
+ * ensure save completion.
  */
 [[nodiscard]] std::vector<std::future<void>> map_sprite::save_swizzle_textures(
   const std::string           &keyed_string,
@@ -2148,8 +2176,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
      consume_now();
 
-     // Extract unique texture page IDs and BPP (bits per pixel) values from the
-     // map.
+     // Extract unique texture page IDs and BPP (bits per pixel) values
+     // from the map.
      const auto  unique_values = get_all_unique_values_and_strings();
      const auto &unique_texture_page_ids
        = unique_values.texture_page_id().values();
@@ -2161,7 +2189,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Adjust scale based on texture height or deswizzle state.
      std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
 
-     // If there’s only one bpp and at most one palette, nothing needs saving.
+     // If there’s only one bpp and at most one palette, nothing needs
+     // saving.
      if (
        unique_bpp.size() == 1U
        && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
@@ -2206,8 +2235,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     const auto &unique_palette
                       = unique_values.palette().at(bpp).values();
 
-                    // Filter palettes that conflict with the current texture
-                    // page.
+                    // Filter palettes that conflict with the current
+                    // texture page.
                     auto filter_palette
                       = unique_palette
                         | std::views::filter(
@@ -2232,7 +2261,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                          if (generate_texture(out_framebuffer))
                          {
 
-                              // Determine output path based on COO presence.
+                              // Determine output path based on COO
+                              // presence.
                               const key_value_data cpm
                                 = { .field_name = get_base_name(),
                                     .ext        = ".png",
@@ -2291,17 +2321,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  * @brief Saves swizzled texture pages (and optionally palettes) to disk
  * asynchronously.
  *
- * Generates textures for each unique texture page (and conflicting palettes if
- * needed) and saves them as PNG files. If the texture has palette conflicts
- * (e.g., multiple palettes for the same texture page), generates separate files
- * for each conflicting palette.
+ * Generates textures for each unique texture page (and conflicting
+ * palettes if needed) and saves them as PNG files. If the texture has
+ * palette conflicts (e.g., multiple palettes for the same texture page),
+ * generates separate files for each conflicting palette.
  *
  * @param path The base directory path where the images will be saved.
- * @return A vector of futures representing the save operations, allowing the
- * caller to later wait or check for completion.
+ * @return A vector of futures representing the save operations, allowing
+ * the caller to later wait or check for completion.
  *
- * @note Caller is responsible for consuming or waiting on the futures to ensure
- * save completion.
+ * @note Caller is responsible for consuming or waiting on the futures to
+ * ensure save completion.
  */
 [[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_swizzle_as_one_image_textures(
@@ -2315,8 +2345,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return {};
      }
      consume_now();
-     // Extract unique texture page IDs and BPP (bits per pixel) values from the
-     // map.
+     // Extract unique texture page IDs and BPP (bits per pixel) values
+     // from the map.
      const auto  unique_values = get_all_unique_values_and_strings();
      const auto &unique_texture_page_ids
        = unique_values.texture_page_id().values();
@@ -2345,7 +2375,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
          + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id
                                                                         //+ 1);
 
-     // If there’s only one bpp and at most one palette, nothing needs saving.
+     // If there’s only one bpp and at most one palette, nothing needs
+     // saving.
      if (
        unique_bpp.size() == 1U
        && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
@@ -2357,8 +2388,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const auto conflicting_palettes_map = get_conflicting_palettes();
      auto       conflicting_palettes_flatten
        = conflicting_palettes_map
-         | std::ranges::views::values// Get the vectors (values of the map)
-         | std::ranges::views::join  // Flatten the vectors into a single range
+         | std::ranges::views::values     // Get the vectors (values of the map)
+         | std::ranges::views::join       // Flatten the vectors into a single
+                                          // range
          | std::ranges::to<std::vector>();// merge to vector;
      sort_and_remove_duplicates(conflicting_palettes_flatten);
 
@@ -2386,7 +2418,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                const auto &unique_palette
                  = unique_values.palette().at(bpp).values();
 
-               // Filter palettes that conflict with the current texture page.
+               // Filter palettes that conflict with the current texture
+               // page.
                auto filter_palette
                  = unique_palette
                    | std::views::filter(
@@ -2520,14 +2553,15 @@ std::string map_sprite::get_base_name() const
  * files.
  *
  * This function sets up temporary settings specifically for Pupu texture
- * rendering, generates textures using the current map data, and asynchronously
- * saves them to disk. Each texture is saved under a specific file naming
- * pattern based on the field name and Pupu ID.
+ * rendering, generates textures using the current map data, and
+ * asynchronously saves them to disk. Each texture is saved under a
+ * specific file naming pattern based on the field name and Pupu ID.
  *
- * @param path Filesystem path where the textures should be saved. Must be a
- * directory.
- * @return A vector of futures, each wrapping a future task that will save one
- * texture. Caller should consume or wait on these to ensure saving completes.
+ * @param path Filesystem path where the textures should be saved. Must be
+ * a directory.
+ * @return A vector of futures, each wrapping a future task that will save
+ * one texture. Caller should consume or wait on these to ensure saving
+ * completes.
  */
 [[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_deswizzle_textures(
@@ -2598,8 +2632,8 @@ std::string map_sprite::get_base_name() const
      }
 
      return future_of_futures;
-     // Note: Caller should consume_futures(future_of_futures) to wait for saves
-     // to finish
+     // Note: Caller should consume_futures(future_of_futures) to wait for
+     // saves to finish
 }
 void map_sprite::save_deswizzle_generate_toml(
   const std::string           &keyed_string,
@@ -2688,8 +2722,8 @@ void map_sprite::save_deswizzle_generate_toml(
             filters.multi_pupu.update(std::vector{ pupu }).enable());
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(
-                out_framebuffer))// todo make a if would pass filter with out
-                                 // generating textures.
+                out_framebuffer))// todo make a if would pass filter with
+                                 // out generating textures.
           {
                toml::table          file;
                const key_value_data cpm
@@ -2855,8 +2889,8 @@ void map_sprite::save_deswizzle_generate_toml(
           }
      }
      return future_of_futures;
-     // Note: Caller should consume_futures(future_of_futures) to wait for saves
-     // to finish
+     // Note: Caller should consume_futures(future_of_futures) to wait for
+     // saves to finish
 }
 
 [[nodiscard]] const std::map<
@@ -4066,7 +4100,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
     std::uint8_t                      texture_page)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is
+     // null");
      return
        [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                 .opt_coo    = in_map_sprite.get_opt_coo(),
@@ -4094,7 +4129,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      assert(
        in_selections
        && "generate_swizzle_as_one_image_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is
+     // null");
      return
        [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                 .opt_coo    = in_map_sprite.get_opt_coo(),
@@ -4131,7 +4167,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
     std::uint8_t                      palette)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is
+     // null");
      return
        [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                 .opt_coo    = in_map_sprite.get_opt_coo(),
@@ -4187,8 +4224,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
 {
      assert(
        in_selections && "generate_full_filename_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_full_filename_paths: in_map_sprite is
-     // null");
+     // assert(in_map_sprite && "generate_full_filename_paths:
+     // in_map_sprite is null");
      return
        [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                 .opt_coo    = in_map_sprite.get_opt_coo(),
@@ -4214,7 +4251,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
     const map_sprite                 &in_map_sprite)
 {
      assert(in_selections && "generate_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is
+     // null");
      return
        [ps
         = ff_8::path_search{ .selections = std::move(in_selections),
@@ -4228,5 +4266,6 @@ std::move_only_function<std::vector<std::filesystem::path>()>
           return ps.generate_map_paths(".map");
      };
 }
+
 
 }// namespace fme

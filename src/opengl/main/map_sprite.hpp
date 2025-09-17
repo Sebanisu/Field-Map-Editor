@@ -22,15 +22,27 @@
 #include <BatchRenderer.hpp>
 #include <CompShader.hpp>
 #include <cstdint>
+#include <DistanceBuffer.hpp>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
+#include <HistogramBuffer.hpp>
 #include <OrthographicCamera.hpp>
+#include <PaletteBuffer.hpp>
 #include <Shader.hpp>
 #include <Texture.hpp>
 #include <utility>
 
 namespace fme
 {
+struct PupuOpEntry
+{
+     ff_8::PupuID         pupu;
+     int                  color_index;
+     glengine::SubTexture main_texture;
+     glengine::SubTexture mask_texture;
+     std::uint32_t        count;
+     float                distance;
+};
 struct [[nodiscard]] map_sprite// final
 //   : public sf::Drawable
 //   , public sf::Transformable
@@ -59,6 +71,33 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle  = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
+     void               purge_empty_full_filename_texture() const;
+     [[nodiscard]] bool check_all_masks_exists_full_filename_texture() const;
+     void               load_child_map_sprite_full_filename_texture() const;
+     void
+       generate_combined_textures_for_child_map_sprite_full_filename_texture()
+         const;
+     void post_op_full_filename_texture() const;
+     std::tuple<
+       glengine::PaletteBuffer,
+       glengine::HistogramBuffer,
+       glengine::DistanceBuffer>
+       initialize_buffers(const std::vector<glm::vec4> &palette) const;
+
+     std::pair<
+       std::vector<PupuOpEntry>,
+       std::vector<std::string>>
+       collect_post_op_entries(
+         std::tuple<
+           glengine::PaletteBuffer,
+           glengine::HistogramBuffer,
+           glengine::DistanceBuffer> &buffers) const;
+
+     void process_post_op_entries(
+       const std::vector<PupuOpEntry> &multi_pupu_post_op,
+       glengine::PaletteBuffer        &pb) const;
+     void cleanup_full_filename_textures(
+       const std::vector<std::string> &remove_queue) const;
      mutable std::map<std::string, glengine::Texture> m_full_filename_textures
        = {};
      mutable std::map<std::string, std::string> m_full_filename_to_mask_name
