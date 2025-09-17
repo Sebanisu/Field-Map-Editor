@@ -126,7 +126,7 @@ static constexpr TileT MaxTile = []()
                    FUNCTION)                                                 \
                  < TileT >)                                                  \
           {                                                                  \
-               spdlog::debug(                                                \
+               spdlog::trace(                                                \
                  "Used with_" #FUNCTION " to assign: {}", m_value);          \
                return tile.CONCAT(with_, FUNCTION)(                          \
                  static_cast < CONCAT(STRING, T) < TileT >> (m_value));      \
@@ -193,7 +193,7 @@ static constexpr TileT MaxTile = []()
                  < TileT >)                                                  \
           {                                                                  \
                const auto current = m_to + tile.FUNCTION() - m_from;         \
-               spdlog::debug(                                                \
+               spdlog::trace(                                                \
                  "Used with_" #FUNCTION " to assign: {}", current);          \
                return tile.CONCAT(with_, FUNCTION)(                          \
                  static_cast<ValueT>(current));                              \
