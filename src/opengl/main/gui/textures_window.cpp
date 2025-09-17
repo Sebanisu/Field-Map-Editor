@@ -54,6 +54,7 @@ void fme::textures_window::render() const
        ImVec2(0, 0),// full remaining size
        false,       // no border
        ImGuiWindowFlags_HorizontalScrollbar);
+     format_imgui_text("map_sprite->get_textures()");
      ImGui::Columns(
        calc_column_count(m_thumb_size_width),
        "##get_map_sprite_textures",
@@ -75,9 +76,8 @@ void fme::textures_window::render() const
           draw_thumbnail_label(title);
           ImGui::NextColumn();
      }
-
      ImGui::Columns(1);
-
+     format_imgui_text("map_sprite->get_full_filename_textures()");
      ImGui::Columns(
        calc_column_count(m_thumb_size_width),
        "##get_map_sprite_textures",
@@ -99,8 +99,64 @@ void fme::textures_window::render() const
           draw_thumbnail_label(file_name);
           ImGui::NextColumn();
      }
-
      ImGui::Columns(1);
+     format_imgui_text("map_sprite->child_textures_map() Main");
+     ImGui::Columns(
+       calc_column_count(m_thumb_size_width),
+       "##get_map_sprite_textures",
+       false);
+     for (const auto &[index, pair] :
+          map_sprite->child_textures_map() | std::views::enumerate)
+     {
+          const auto &[file_name, opt_framebuffer] = pair;
+          if (!opt_framebuffer.has_value())
+          {
+               continue;
+          }
+          const auto texture_id = opt_framebuffer->color_attachment_id();
+          if (texture_id == 0)
+          {
+               continue;
+          }
+          render_thumbnail_button(
+            file_name, texture_id, opt_framebuffer->get_size(), false, []() {});
+          tool_tip(
+            fmt::format(
+              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}\nFilename: {}",
+              index, static_cast<std::uint32_t>(texture_id),
+              opt_framebuffer->width(), opt_framebuffer->height(), file_name));
+          draw_thumbnail_label(file_name);
+          ImGui::NextColumn();
+     }
+     ImGui::Columns(1);
+     format_imgui_text("map_sprite->child_textures_map() Masks");
+     ImGui::Columns(
+       calc_column_count(m_thumb_size_width),
+       "##get_map_sprite_textures",
+       false);
+     for (const auto &[index, pair] :
+          map_sprite->child_textures_map() | std::views::enumerate)
+     {
+          const auto &[file_name, opt_framebuffer] = pair;
+          if (!opt_framebuffer.has_value())
+          {
+               continue;
+          }
+          const auto texture_id = opt_framebuffer->color_attachment_id(1);
+          if (texture_id == 0)
+          {
+               continue;
+          }
+          render_thumbnail_button(
+            file_name, texture_id, opt_framebuffer->get_size(), false, []() {});
+          tool_tip(
+            fmt::format(
+              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}\nFilename: {}",
+              index, static_cast<std::uint32_t>(texture_id),
+              opt_framebuffer->width(), opt_framebuffer->height(), file_name));
+          draw_thumbnail_label(file_name);
+          ImGui::NextColumn();
+     }
      ImGui::EndChild();
 }
 
@@ -163,6 +219,45 @@ void fme::textures_window::render_thumbnail_button(
             ImGuiCol_ButtonActive, colors::ButtonGreenActive);
      }
 
+     const auto pop_id = PushPopID();
+     if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
+     {
+          std::invoke(on_click);
+     }
+}
+
+
+void fme::textures_window::render_thumbnail_button(
+  const std::string              &file_name,
+  const uint32_t                 &id,
+  const glm::ivec2               &size,
+  const bool                      selected,
+  std::move_only_function<void()> on_click) const
+{
+
+     ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(id);
+     m_aspect_ratio = static_cast<float>(size.y) / static_cast<float>(size.x);
+     const ImVec2 thumb_size
+       = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+
+     const auto pop_style_color
+       = glengine::ScopeGuard{ [selected]()
+                               {
+                                    if (selected)
+                                    {
+                                         ImGui::PopStyleColor(3);
+                                    }
+                               } };
+     if (selected)
+     {
+          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+     }
+
+     const auto pop_id = PushPopID();
      if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
      {
           std::invoke(on_click);

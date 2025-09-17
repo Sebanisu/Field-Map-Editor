@@ -225,6 +225,14 @@ std::size_t map_sprite::get_texture_pos(
      return m_full_filename_textures;
 }
 
+const std::map<
+  std::string,
+  std::optional<glengine::FrameBuffer>> &
+  map_sprite::child_textures_map() const
+{
+     return m_child_textures_map;
+}
+
 const glengine::Texture *map_sprite::get_texture(
   const open_viii::graphics::BPPT bpp,
   const std::uint8_t              palette,
@@ -321,6 +329,8 @@ void map_sprite::queue_texture_loading() const
 
      if (m_filters.full_filename.enabled())
      {
+          // m_child_map_sprite.reset();
+          m_child_textures_map.clear();
           // Deswizzling is enabled; load textures based on PupuIDs in order
           const auto filenames = toml_filenames();
           // const auto &unique_pupu = working_unique_pupu();
@@ -1205,11 +1215,22 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      (void)generate_texture(*m_render_framebuffer);
 }
 
+struct PupuOpEntry
+{
+     ff_8::PupuID         pupu;
+     int                  color_index;
+     glengine::SubTexture main_texture;
+     glengine::SubTexture mask_texture;
+     std::uint32_t        count;
+     float                distance;
+};
+
 void map_sprite::process_full_filename_textures() const
 {
      if (
        !all_futures_done() || !m_filters.full_filename.enabled()
-       || m_full_filename_textures.empty())
+       || m_full_filename_textures.empty()
+       || m_full_filename_to_mask_name.empty())
      {
           return;
      }
@@ -1255,7 +1276,7 @@ void map_sprite::process_full_filename_textures() const
      }
 
 
-     if (!m_child_map_sprite && m_child_textures_map.empty())
+     // if (!m_child_map_sprite && m_child_textures_map.empty())
      {
           spdlog::debug("Task 2: Check if all masks exist (sync, quick)");
           const bool all_masks_exist = std::ranges::all_of(
@@ -1286,12 +1307,13 @@ void map_sprite::process_full_filename_textures() const
                  false,
                  m_selections);
                m_child_map_sprite->consume_now();
-               return;// return early here as the texture loading is placed in
-                      // the queue.
+               // return;// return early here as the texture loading is placed
+               // in
+               //  the queue.
           }
      }
 
-     if (m_child_map_sprite && m_child_textures_map.empty())
+     // if (m_child_map_sprite && m_child_textures_map.empty())
      {
 
           spdlog::debug(
@@ -1325,6 +1347,8 @@ void map_sprite::process_full_filename_textures() const
           assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
           const auto temp
             = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+
+          m_child_map_sprite->consume_now();
           if (!temp.has_value())
           {
                m_child_textures_map.clear();
@@ -1334,47 +1358,48 @@ void map_sprite::process_full_filename_textures() const
                  __LINE__,
                  temp.error());
                // lets try again next frame.
-               m_child_map_sprite->update_render_texture(true);
-               m_future_consumer += std::async(
-                 std::launch::deferred, [this] { update_render_texture(); });
-               return;
+               // m_child_map_sprite->update_render_texture(true);
+               // m_future_consumer += std::async(
+               //   std::launch::deferred, [this] { update_render_texture(); });
+               // return;
           }
-          m_future_consumer += std::async(
-            std::launch::deferred,
-            [this, scale]
-            {
-                 if (!m_child_map_sprite)
-                 {
-                      return;
-                 }
-                 const auto temp
-                   = m_child_map_sprite->get_deswizzle_combined_textures(
-                     scale.x);
-                 if (!temp.has_value())
-                 {
-                      m_child_textures_map.clear();
-                      spdlog::error(
-                        "{}:{} m_textures_map is nullptr: {}",
-                        __FILE__,
-                        __LINE__,
-                        temp.error());
-                      return;
-                 }
-                 else
-                 {
-                      m_child_textures_map = std::move(*temp.value());
-                 }
-                 spdlog::debug(
-                   "Move child combined textures into m_child_textures_map: "
-                   "{}, futures_done: {}",
-                   m_child_textures_map.size(),
-                   m_child_map_sprite->all_futures_done());
-                 // get_deswizzle_combined_textures queues up texture
-                 // generation. so we're queueing up the post operation that
-                 // should run afterwards here.
-                 m_child_map_sprite.reset();
-            });
-          return;
+          // m_future_consumer += std::async(
+          //   std::launch::deferred,
+          [this, scale]
+          {
+               if (!m_child_map_sprite)
+               {
+                    return;
+               }
+               const auto temp
+                 = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+               if (!temp.has_value())
+               {
+                    m_child_textures_map.clear();
+                    spdlog::error(
+                      "{}:{} m_textures_map is nullptr: {}",
+                      __FILE__,
+                      __LINE__,
+                      temp.error());
+                    return;
+               }
+               else
+               {
+                    m_child_textures_map = std::move(*temp.value());
+               }
+               spdlog::debug(
+                 "Move child combined textures into m_child_textures_map: "
+                 "{}, futures_done: {}",
+                 m_child_textures_map.size(),
+                 m_child_map_sprite->all_futures_done());
+               // get_deswizzle_combined_textures queues up texture
+               // generation. so we're queueing up the post operation that
+               // should run afterwards here.
+               m_child_map_sprite.reset();
+          }();
+
+
+          // return;
      }
 
 
@@ -1383,11 +1408,7 @@ void map_sprite::process_full_filename_textures() const
      // This is the inner task, chained after preparation.
      [&]()
      {
-          std::map<
-            std::size_t, std::vector<std::tuple<
-                           std::uint32_t, float, glengine::SubTexture,
-                           glengine::SubTexture>>>
-                                   multi_pupu_post_op = {};
+          std::vector<PupuOpEntry> multi_pupu_post_op = {};
           std::vector<std::string> remove_queue       = {};
 
           const auto              &unique_pupu        = working_unique_pupu();
@@ -1429,6 +1450,13 @@ void map_sprite::process_full_filename_textures() const
                     if (auto it = m_full_filename_textures.find(maskname);
                         it != m_full_filename_textures.end())
                     {
+
+                         spdlog::debug(
+                           "{}:{} Mask chosen external mask png id: {}, "
+                           "mask_filename: {}",
+                           __FILE__, __LINE__,
+                           static_cast<std::uint32_t>(it->second.id()),
+                           maskname);
                          return it->second;
                     }
 
@@ -1448,7 +1476,13 @@ void map_sprite::process_full_filename_textures() const
                     {
                          return std::unexpected("FrameBuffer has no value");
                     }
-
+                    spdlog::debug(
+                      "{}:{} Mask chosen generated map id: {}, toml_filename: "
+                      "{}",
+                      __FILE__, __LINE__,
+                      static_cast<std::uint32_t>(
+                        map_it->second->color_attachment_id(1)),
+                      filename);
                     return map_it->second->color_attachment_id(1);
                }();
                if (!mask_texture)
@@ -1473,41 +1507,41 @@ void map_sprite::process_full_filename_textures() const
                     continue;
                }
 
-               if (std::cmp_equal(multi_pupu.value().size(), 1))
-               {
-                    // Only one pupu.
-                    glengine::Texture *target_texture
-                      = get_texture_mutable(multi_pupu.value().front());
-                    if (!target_texture)
-                    {
-                         continue;
-                    }
-                    const auto size = main_texture.get_size();
+               // if (std::cmp_equal(multi_pupu.value().size(), 1))
+               // {
+               //      // Only one pupu.
+               //      glengine::Texture *target_texture
+               //        = get_texture_mutable(multi_pupu.value().front());
+               //      if (!target_texture)
+               //      {
+               //           continue;
+               //      }
+               //      const auto size = main_texture.get_size();
 
-                    if (const auto t_size = target_texture->get_size();
-                        t_size.x != 0 and t_size.y != 0)
-                    {
-                         continue;// texture in use already.
-                    }
-                    *target_texture = glengine::Texture(size.x, size.y);
+               //      if (const auto t_size = target_texture->get_size();
+               //          t_size.x != 0 and t_size.y != 0)
+               //      {
+               //           continue;// texture in use already.
+               //      }
+               //      *target_texture = glengine::Texture(size.x, size.y);
 
-                    mask_texture->bind_read_only(0);
-                    main_texture.bind_read_only(1);
-                    target_texture->bind_write_only(2);
+               //      mask_texture->bind_read_only(0);
+               //      main_texture.bind_read_only(1);
+               //      target_texture->bind_write_only(2);
 
-                    // Load and execute compute shader
-                    const auto pop_shader = m_mask_comp_shader->backup();
-                    m_mask_comp_shader->bind();
-                    m_mask_comp_shader->set_uniform(
-                      "chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-                    m_mask_comp_shader->execute(
-                      static_cast<GLuint>(size.x),
-                      static_cast<GLuint>(size.y),
-                      GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-                    remove_queue.push_back(filename);
-                    remove_queue.push_back(maskname);
-               }
-               else// more than one.
+               //      // Load and execute compute shader
+               //      const auto pop_shader = m_mask_comp_shader->backup();
+               //      m_mask_comp_shader->bind();
+               //      m_mask_comp_shader->set_uniform(
+               //        "chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+               //      m_mask_comp_shader->execute(
+               //        static_cast<GLuint>(size.x),
+               //        static_cast<GLuint>(size.y),
+               //        GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+               //      remove_queue.push_back(filename);
+               //      remove_queue.push_back(maskname);
+               // }
+               // else// more than one.
                {
 
                     db.bind(3);
@@ -1544,21 +1578,24 @@ void map_sprite::process_full_filename_textures() const
                            | std::views::enumerate)
                     {
                          const auto &[color, pupu, count, distance] = zip;
-                         if (count == 0)
+                         multi_pupu_post_op.push_back(
+                           PupuOpEntry{ .pupu         = pupu,
+                                        .color_index  = static_cast<int>(index),
+                                        .main_texture = main_texture,
+                                        .mask_texture = *mask_texture,
+                                        .count        = count,
+                                        .distance     = distance });
+                         if (count > 0)
                          {
-                              continue;
+                              spdlog::info(
+                                "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
+                                "Distance {}",
+                                index,
+                                fme::color{ color },
+                                pupu,
+                                count,
+                                distance);
                          }
-                         multi_pupu_post_op[static_cast<std::size_t>(index)]
-                           .emplace_back(
-                             count, distance, *mask_texture, main_texture);
-                         spdlog::info(
-                           "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
-                           "Distance {}",
-                           index,
-                           fme::color{ color },
-                           pupu,
-                           count,
-                           distance);
                     }
                     // I need both textures a index and count.
                     // We need to take an index that doesn't have texture
@@ -1579,54 +1616,82 @@ void map_sprite::process_full_filename_textures() const
           }
 
           // Post-op loop
-          for (auto &&[index, tuple_vector] : multi_pupu_post_op)
+          for (auto &&current_unique_pupu : unique_pupu)
           {
-               const auto &pupu  = unique_pupu.at(index);
-               const auto &color = palette.at(index);
-               // sort the tuple vector
-               std::ranges::sort(
-                 tuple_vector,
-                 std::greater{},
-                 [](const auto &tuple) { return std::get<0>(tuple); });
-               const auto &[count, distance, mask_texture, main_texture]
-                 = tuple_vector.front();
+               // Create a view over only matching items
+               auto matching
+                 = multi_pupu_post_op
+                   | std::views::filter(
+                     [&](const PupuOpEntry &values)
+                     { return values.pupu == current_unique_pupu; });
 
-               glengine::Texture *target_texture = get_texture_mutable(pupu);
+               // Find the element with the largest count among the matching
+               // ones
+               auto best_it = std::ranges::max_element(
+                 matching,
+                 [](const PupuOpEntry &a, const PupuOpEntry &b)
+                 { return a.count < b.count; });
+
+               if (best_it == std::ranges::end(matching))
+                    continue;
+
+               glengine::Texture *target_texture
+                 = get_texture_mutable(current_unique_pupu);
                if (!target_texture)
                {
+                    spdlog::error(
+                      "{}:{} target_texture is nullptr", __FILE__, __LINE__);
                     continue;
                }
-               const auto size = main_texture.get_size();
+
+               const auto size = best_it->main_texture.get_size();
 
                if (const auto t_size = target_texture->get_size();
-                   t_size.x != 0 and t_size.y != 0)
+                   t_size.x != 0 && t_size.y != 0)
                {
-                    continue;// texture in use already.
+                    spdlog::error(
+                      "{}:{} target_texture is in use.", __FILE__, __LINE__);
+                    continue;// texture already in use
                }
+
                *target_texture = glengine::Texture(size.x, size.y);
 
-               mask_texture.bind_read_only(0);
-               main_texture.bind_read_only(1);
+               best_it->mask_texture.bind_read_only(0);
+               best_it->main_texture.bind_read_only(1);
                target_texture->bind_write_only(2);
+               pb.bind(3);
 
-               // Load and execute compute shader
                const auto pop_shader = m_mask_comp_shader->backup();
                m_mask_comp_shader->bind();
                m_mask_comp_shader->set_uniform(
-                 "chosenColor", color);// Set target color (e.g., red)
-               // todo might need to adjust the distance it's slightly off.
-               // like round up or something.
-               m_mask_comp_shader->set_uniform("threshold", distance);
+                 "chosenIndex", best_it->color_index);
+               m_mask_comp_shader->set_uniform(
+                 "numColors", static_cast<GLint>(std::ranges::size(palette)));
                m_mask_comp_shader->execute(
                  static_cast<GLuint>(size.x),
                  static_cast<GLuint>(size.y),
                  GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+               target_texture->generate_mipmaps();
+
+               spdlog::debug(
+                 "PupuOpEntry: pupu={}, color_index={}, "
+                 "main_tex_id={}, main_tex_size=({}x{}), "
+                 "mask_tex_id={}, mask_tex_size=({}x{}), count={}, "
+                 "distance={}",
+                 best_it->pupu, best_it->color_index,
+                 static_cast<std::uint32_t>(best_it->main_texture.id()),
+                 best_it->main_texture.get_size().x,
+                 best_it->main_texture.get_size().y,
+                 static_cast<std::uint32_t>(best_it->mask_texture.id()),
+                 best_it->mask_texture.get_size().x,
+                 best_it->mask_texture.get_size().y, best_it->count,
+                 best_it->distance);
           }
 
           // cleanup
           for (const std::string &filename : remove_queue)
           {
-               m_full_filename_textures.erase(filename);
+               // m_full_filename_textures.erase(filename);
                m_full_filename_to_mask_name.erase(filename);
           }
      }();

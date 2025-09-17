@@ -193,8 +193,12 @@ struct [[nodiscard]] map_sprite// final
        get_textures() const;
      [[nodiscard]] const std::map<
        std::string,
-       glengine::Texture>                                      &
+       glengine::Texture> &
        get_full_filename_textures();
+     [[nodiscard]] const std::map<
+       std::string,
+       std::optional<glengine::FrameBuffer>>                                      &
+       child_textures_map() const;
      [[nodiscard]] const glengine::Texture *get_texture(
        BPPT         bpp,
        std::uint8_t palette,

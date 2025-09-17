@@ -24,6 +24,13 @@ void Texture::bind(int slot) const
      // GLCall{}( glBindTextureUnit, slot, m_renderer_id );
 }
 
+void Texture::generate_mipmaps() const
+{
+     // Ensure the texture is bound before generating mipmaps
+     bind(0);// Bind to slot 0 (or any slot you prefer)
+     GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+}
+
 
 void Texture::bind_read_only(int slot) const
 {

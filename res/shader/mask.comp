@@ -1,63 +1,63 @@
 #version 430 core
 
+precision highp float;
+precision highp int;
 
-precision highp float; // sets default float precision for the shader
-precision highp int;   // sets default int precision for the shader
+// Input textures
+layout(binding = 0, rgba8) uniform image2D maskTexture;
+layout(binding = 1, rgba8) uniform image2D imageTexture;
 
-// Input textures: mask and image
-layout(binding = 0,rgba8) uniform image2D maskTexture;
-layout(binding = 1,rgba8) uniform image2D imageTexture;
-
-// Output texture with RGBA8 format
+// Output texture
 layout(binding = 2, rgba8) uniform image2D outputTexture;
 
-// Uniform for the chosen target color (RGB, normalized 0-1)
-uniform vec4 chosenColor;
+// Palette buffer
+layout(binding = 3, std430) buffer PaletteBuffer {
+    vec4 palette[];
+};
 
-// Tolerance for black (RGB sum < tolerance)
-uniform float blackTolerance = 0.01; 
+// Uniforms
+uniform int chosenIndex;
+uniform int numColors;
+uniform float blackTolerance = 0.01;
 
-// threshold for difference in maskColor and chosenColor
-uniform float threshold = 0.1;
-
-// Extra tolerance for color distance comparison
-uniform float distanceAllowance = 0.0001;
-
-// Compute shader work group size
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 void main() {
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputSize = imageSize(outputTexture);
-    
+
     if (pixelCoord.x >= outputSize.x || pixelCoord.y >= outputSize.y) {
         return;
     }
-    
+
     vec4 maskColor = imageLoad(maskTexture, pixelCoord);
     vec4 imageColor = imageLoad(imageTexture, pixelCoord);
-    
-    
-    // Check if chosenColor is approximately black (small tolerance for floating-point precision)
-    bool isChosenBlack = (distance(chosenColor.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance);
-    
-    if (isChosenBlack) {
-        // Reverse logic: use image color if mask is not black, transparent if mask is black
-        if (distance(maskColor.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance) {
-            imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0)); // Transparent for black
-        } else {
-            imageStore(outputTexture, pixelCoord, imageColor); // Use image for non-black
+        //imageStore(outputTexture, pixelCoord, imageColor);
+        //return;
+
+    // Early out if mask is black
+    if (distance(maskColor.rgb, vec3(0.0)) < blackTolerance) {
+        imageStore(outputTexture, pixelCoord, vec4(0.0));
+        return;
+    }
+
+    // Find closest palette color to maskColor
+    int bestIndex = 0;
+    float bestDist = 1e20;
+
+    for (int i = 0; i < numColors; i++) {
+        vec4 d = maskColor - palette[i];
+        float dist = dot(d, d);
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestIndex = i;
         }
+    }
+
+    // Only draw if it matched the chosen index
+    if (bestIndex == chosenIndex) {
+        imageStore(outputTexture, pixelCoord, imageColor);
     } else {
-        
-    // Find the closest color by comparing with chosenColor
-        vec4 d = maskColor - chosenColor;
-        float dist = dot(d,d);
-        // Original logic: use image color if within threshold of chosenColor
-        if (dist <= threshold + distanceAllowance) {
-            imageStore(outputTexture, pixelCoord, imageColor);
-        } else {                        
-            imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0));
-        }
+        imageStore(outputTexture, pixelCoord, vec4(0.0));
     }
 }

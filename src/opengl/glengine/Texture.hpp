@@ -138,17 +138,35 @@ class Texture
             glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
           GlCall{}(
             glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          GlCall{}(
-            glTexImage2D,
-            GL_TEXTURE_2D,
-            0,
-            s_sized_interal_format,
-            width(),
-            height(),
-            0,
-            s_base_interal_format,
-            s_type,
-            color);
+          if (color == nullptr)
+          {
+               std::vector<std::uint8_t> new_color(width() * height() * 4, 0u);
+               GlCall{}(
+                 glTexImage2D,
+                 GL_TEXTURE_2D,
+                 0,
+                 s_sized_interal_format,
+                 width(),
+                 height(),
+                 0,
+                 s_base_interal_format,
+                 s_type,
+                 new_color.data());
+          }
+          else
+          {
+               GlCall{}(
+                 glTexImage2D,
+                 GL_TEXTURE_2D,
+                 0,
+                 s_sized_interal_format,
+                 width(),
+                 height(),
+                 0,
+                 s_base_interal_format,
+                 s_type,
+                 color);
+          }
           // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
           GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
@@ -247,6 +265,7 @@ class Texture
      GlidCopy              id() const noexcept;
      // use for sampler2d
      void                  bind(int slot = 0) const;
+     void                  generate_mipmaps() const;
      // use for image2d
      void                  bind_read_only(int slot) const;
      void                  bind_write_only(int slot) const;
@@ -279,10 +298,12 @@ class Texture
      }
 };
 #undef FME_NOT_CONSTEVAL
-template<typename T = std::uint64_t>
-constexpr inline T ConvertGliDtoImTextureId(
-  GlidCopy r_id)// this is for imgui but imgui isn't part of the glengine so i
-                // made this a template
+template<
+  typename T = std::uint64_t,
+  typename U = GlidCopy>
+constexpr inline T
+  ConvertGliDtoImTextureId(U r_id)// this is for imgui but imgui isn't part of
+                                  // the glengine so i made this a template
 {
      // ImTextureID used to be a void pointer or something now it's a 64 bit
      // unsigned int.

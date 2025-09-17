@@ -25,6 +25,12 @@ class [[nodiscard]] textures_window
        const glengine::Texture &,
        const bool,
        std::move_only_function<void()>) const;
+     void render_thumbnail_button(
+       const std::string &,
+       const uint32_t &,
+       const glm::ivec2 &,
+       const bool,
+       std::move_only_function<void()>) const;
      void draw_thumbnail_label(const std::string &) const;
      void update(const std::shared_ptr<map_sprite> &) const;
      void update(const std::shared_ptr<Selections> &) const;
