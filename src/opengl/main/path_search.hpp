@@ -17,11 +17,11 @@ struct path_search
      std::shared_ptr<const fme::Selections> selections = {};
      OptCoo                                 opt_coo    = {};
      std::string                            field_name = {};
-     std::string                            filters_deswizzle_value_string = {};
-     std::string               filters_full_filename_value_string          = {};
-     std::string               filters_swizzle_value_string                = {};
-     std::string               filters_swizzle_as_one_image_string         = {};
-     std::string               filters_map_value_string                    = {};
+     std::filesystem::path                  filters_deswizzle_value_string = {};
+     std::filesystem::path     filters_full_filename_value_string          = {};
+     std::filesystem::path     filters_swizzle_value_string                = {};
+     std::filesystem::path     filters_swizzle_as_one_image_string         = {};
+     std::filesystem::path     filters_map_value_string                    = {};
      std::vector<ff_8::PupuID> working_unique_pupu                         = {};
      std::vector<std::string>  current_filenames                           = {};
      std::
@@ -118,7 +118,7 @@ struct path_search
        const std::string           &ext = ".png") const;
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
-       const std::string                      &filter_path,
+       const std::filesystem::path            &filter_path,
        const fme::key_value_data              &cpm,
        const std::vector<const std::string *> &output_patterns = {}) const;
 
@@ -133,7 +133,7 @@ struct path_search
       */
      [[nodiscard]] static std::vector<std::filesystem::path> generate_paths(
        const std::filesystem::path           &field_root,
-       fme::key_value_data                    copy_data,
+       const fme::key_value_data             &copy_data,
        std::shared_ptr<const fme::Selections> selections);
 
      /**
@@ -148,7 +148,7 @@ struct path_search
       */
      [[nodiscard]] static bool has_path(
        const std::filesystem::path           &field_root,
-       fme::key_value_data                    copy_data,
+       const fme::key_value_data             &copy_data,
        std::shared_ptr<const fme::Selections> selections);
 
      /**

@@ -572,7 +572,7 @@ std::future<std::future<void>>
           return {};
      }
      return { std::async(
-       std::launch::async,
+       std::launch::deferred,// async
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
          &(m_full_filename_textures[filename]),
          fme::generate_full_filename_paths(
@@ -1268,7 +1268,7 @@ void map_sprite::load_child_map_sprite_full_filename_texture() const
             true,
             false,
             m_selections);
-          m_child_map_sprite->consume_now();
+          m_child_map_sprite->consume_now(true);
           // return;// return early here as the texture loading is placed
           // in
           //  the queue.
@@ -1309,8 +1309,7 @@ void map_sprite::
      assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
      const auto temp
        = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
-
-     m_child_map_sprite->consume_now();
+     m_child_map_sprite->consume_now(true);
      if (!temp.has_value())
      {
           m_child_textures_map.clear();
@@ -1327,38 +1326,23 @@ void map_sprite::
      }
      // m_future_consumer += std::async(
      //   std::launch::deferred,
-     [this, scale]
+     if (!m_child_map_sprite)
      {
-          if (!m_child_map_sprite)
-          {
-               return;
-          }
-          const auto temp
-            = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
-          if (!temp.has_value())
-          {
-               m_child_textures_map.clear();
-               spdlog::error(
-                 "{}:{} m_textures_map is nullptr: {}",
-                 __FILE__,
-                 __LINE__,
-                 temp.error());
-               return;
-          }
-          else
-          {
-               m_child_textures_map = std::move(*temp.value());
-          }
-          spdlog::debug(
-            "Move child combined textures into m_child_textures_map: "
-            "{}, futures_done: {}",
-            m_child_textures_map.size(),
-            m_child_map_sprite->all_futures_done());
-          // get_deswizzle_combined_textures queues up texture
-          // generation. so we're queueing up the post operation that
-          // should run afterwards here.
-          m_child_map_sprite.reset();
-     }();
+          return;
+     }
+     if (temp.has_value())
+     {
+          m_child_textures_map = std::move(*temp.value());
+     }
+     spdlog::debug(
+       "Move child combined textures into m_child_textures_map: "
+       "{}, futures_done: {}",
+       m_child_textures_map.size(),
+       m_child_map_sprite->all_futures_done());
+     // get_deswizzle_combined_textures queues up texture
+     // generation. so we're queueing up the post operation that
+     // should run afterwards here.
+     m_child_map_sprite.reset();
 
 
      // return;
@@ -1456,8 +1440,8 @@ std::pair<
           if (!mask_texture)
           {
                spdlog::error("Mask lookup failed: {}", mask_texture.error());
-               // Continue anyway, as in original code (could add skip
-               // logic)
+               remove_queue.push_back(filename);
+               continue;
           }
 
           const toml::table *file_table
@@ -3976,7 +3960,7 @@ void fme::map_sprite::consume_now(const bool update) const
 {
      if (m_child_map_sprite)
      {
-          m_child_map_sprite->consume_now();
+          m_child_map_sprite->consume_now(update);
      }
      m_future_of_future_consumer.consume_now();
      m_future_consumer.consume_now();

@@ -95,6 +95,8 @@ struct gui_labels
        = { "Generate .toml for combined deswizzles" };
      static constexpr std::string_view deswizzle_full_filename
        = { "Read .toml for combined deswizzles to make images" };
+     static constexpr std::string_view deswizzle_full_filename_input
+       = { "Read .toml and search for the listed filenames" };
      static constexpr std::string_view disable_blending
        = { "Disable Blending" };
      static constexpr std::string_view force_reloading_of_textures

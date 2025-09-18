@@ -692,7 +692,7 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                //      name = fme::gui_labels::deswizzle_generate_toml;
                //      break;
                case fme::input_types::deswizzle_full_filename:
-                    name = fme::gui_labels::deswizzle_full_filename;
+                    name = fme::gui_labels::deswizzle_full_filename_input;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

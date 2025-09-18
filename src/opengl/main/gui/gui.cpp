@@ -4376,8 +4376,7 @@ std::future<std::future<gui::PathsAndEnabled>>
 {
      return std::async(
        std::launch::async,
-       [ps = static_cast<ff_8::path_search>(
-          *m_map_sprite)]() -> std::future<PathsAndEnabled>
+       [ps = ff_8::path_search(*m_map_sprite)]() -> std::future<PathsAndEnabled>
        {
             gui::PathsAndEnabled pande{
                  .path_key    = ConfigKey::CacheTextureAndMapPaths,
@@ -4460,15 +4459,7 @@ std::future<std::future<gui::PathsAndEnabled>>
 {
      return std::async(
        std::launch::async,
-       [ps
-        = ff_8::path_search{ .selections = m_selections,
-                             .opt_coo    = get_coo(),
-                             .field_name = m_map_sprite->get_base_name(),
-                             .filters_swizzle_value_string
-                             = m_map_sprite->filter().swizzle.value().string(),
-                             .filters_map_value_string
-                             = m_map_sprite->filter().map.value().string() }]()
-         -> std::future<PathsAndEnabled>
+       [ps = ff_8::path_search(*m_map_sprite)]() -> std::future<PathsAndEnabled>
        {
             gui::PathsAndEnabled pande{ .path_key
                                         = ConfigKey::CacheTextureAndMapPaths,
