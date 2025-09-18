@@ -1187,6 +1187,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
 
      if (fail())
      {
+          spdlog::warn("map in fail() state");
           return;
      }
 
@@ -2344,7 +2345,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     consume_now();
+     consume_now(true);
      // Extract unique texture page IDs and BPP (bits per pixel) values
      // from the map.
      const auto  unique_values = get_all_unique_values_and_strings();
@@ -2357,8 +2358,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings_backup settings       = get_backup_settings(true);
      settings.disable_texture_page_shift = false;// Disable texture page shifts
      std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
+     if (height == 0)
+     {
+          return {};
+     }
 
-     const auto   max_source_x = m_map_group.maps.working().visit_tiles(
+     const auto max_source_x = m_map_group.maps.working().visit_tiles(
        [&](const auto &tiles) -> std::uint8_t
        {
             auto f_t_range
@@ -3025,7 +3030,7 @@ void map_sprite::save_deswizzle_generate_toml(
               }));
      }
      m_future_consumer += std::move(futures);
-     spdlog::debug(
+     spdlog::trace(
        "{}:{} Framebuffer generation queued up. Currently framebuffer "
        "placeholders empty.",
        __FILE__, __LINE__);
@@ -3655,6 +3660,11 @@ void map_sprite::copy_deswizzle_combined_toml_table(
 
 uint32_t map_sprite::get_max_texture_height() const
 {
+     if (!m_texture)
+     {
+          spdlog::error("{}:{} m_texture is nullptr", __FILE__, __LINE__);
+          return 0;
+     }
      auto transform_range
        = (*m_texture)
          | std::views::transform([](const glengine::Texture &texture)
@@ -3664,11 +3674,21 @@ uint32_t map_sprite::get_max_texture_height() const
      if (max_height_it != std::ranges::end(transform_range))
      {
           tex_height = static_cast<std::uint32_t>(*max_height_it);
+          if (tex_height == 0)
+          {
+               spdlog::error(
+                 "{}:{} Max texture height is 0", __FILE__,
+                 __LINE__);//, falling back to mim_texture_height
+               // tex_height = 256U; // Default to 256 if all heights are 0
+          }
      }
      else
      {
           static constexpr std::uint16_t mim_texture_height = 256U;
           tex_height = mim_texture_height;
+          spdlog::warn(
+            "{}:{} No textures in m_texture, using default height {}", __FILE__,
+            __LINE__, tex_height);
      }
      if (const auto tex_height_scale = static_cast<std::uint16_t>(
            static_cast<std::uint16_t>(m_imported_tile_size >> 4U) << 8U);
@@ -3677,7 +3697,9 @@ uint32_t map_sprite::get_max_texture_height() const
      {
           tex_height = tex_height_scale;
      }
-
+     spdlog::trace(
+       "{}:{} get_max_texture_height: returning {}", __FILE__, __LINE__,
+       tex_height);
      return tex_height;
 }
 std::filesystem::path map_sprite::save_path_coo(

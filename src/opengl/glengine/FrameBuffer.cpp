@@ -3,7 +3,9 @@
 //
 
 #include "FrameBuffer.hpp"
+#include "Formatters.hpp"
 #include <spdlog/spdlog.h>
+#include <stacktrace>
 namespace glengine
 {
 static constexpr auto attachments
@@ -46,8 +48,36 @@ static std::uint32_t AttachColorTexture(
   GLenum format,
   GLenum type = GL_UNSIGNED_BYTE)
 {
+     // Validate input parameters
+     if (width <= 0 || height <= 0)
+     {
+          spdlog::error("Invalid texture dimensions: w={} h={}", width, height);
+          return 0;
+     }
+     // bool validFormat
+     //   = (internal_format == GL_RGBA8 && format == GL_RGBA)
+     //     || (internal_format == GL_RGB8 && format == GL_RGB)
+     //     || (internal_format == GL_R8 && format == GL_RED);// Add other valid
+     //                                                       // pairs
+     // if (!validFormat)
+     // {
+     //      spdlog::error(
+     //        "Incompatible formats: internal=0x{:x} format=0x{:x}",
+     //        internal_format,
+     //        format);
+     //      return 0;
+     // }
+
+     // Generate texture
      std::uint32_t tmp{};
      GlCall{}(glGenTextures, 1, &tmp);
+     if (tmp == 0)
+     {
+          spdlog::error("glGenTextures failed to generate texture ID");
+          return 0;
+     }
+
+     // Set up texture parameters
      GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
      GlCall{}(
        &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -61,7 +91,7 @@ static std::uint32_t AttachColorTexture(
      GlCall{}(
        &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-
+     // Allocate texture storage
      GlCall{}(
        glTexImage2D,
        GL_TEXTURE_2D,
@@ -73,6 +103,15 @@ static std::uint32_t AttachColorTexture(
        format,
        type,
        nullptr);
+     GLenum error = glGetError();
+     if (error != GL_NO_ERROR)
+     {
+          spdlog::error("glTexImage2D failed: GL error 0x{:x}", error);
+          glDeleteTextures(1, &tmp);
+          return 0;
+     }
+
+     // Generate Mipmaps
      if (type != GL_INT)
      {
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
@@ -140,6 +179,8 @@ static std::uint32_t GenerateFramebuffer(
             __FILE__,
             __LINE__,
             status);
+
+          spdlog::error("{}", std::stacktrace::current());
      }
      glDrawBuffers(num_attachments, attachments.data());
      return tmp;
