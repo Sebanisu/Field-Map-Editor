@@ -2530,7 +2530,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           path
           = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable
          {
-              ;
               map.unshift_from_origin();
               map.save_csv(path, pupu);
          }));
@@ -2978,20 +2977,24 @@ void map_sprite::save_deswizzle_generate_toml(
             = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
           if (!inserted)
                continue;
-          const auto queue_framebuffer_load
-            = [this, it, file_table = file_node.as_table(), in_scale]()
+
+          const int scale = [&]()
           {
-               const int scale = [&]()
+               if (
+                 in_scale <= 0
+                 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
                {
-                    if (
-                      in_scale <= 0
-                      || !std::has_single_bit(
-                        static_cast<unsigned int>(in_scale)))
-                    {
-                         return m_render_framebuffer->scale();
-                    }
-                    return in_scale;
-               }();
+                    return m_render_framebuffer->scale();
+               }
+               return in_scale;
+          }();
+          const auto queue_framebuffer_load
+            = [this, it, file_table = file_node.as_table(), scale]()
+          {
+               if (!m_texture)
+               {
+                    return;
+               }
                // Setup an off-screen render texture
                iRectangle const canvas
                  = m_map_group.maps.const_working().canvas() * scale;
