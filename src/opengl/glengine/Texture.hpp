@@ -140,7 +140,10 @@ class Texture
             glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
           if (color == nullptr)
           {
-               std::vector<std::uint8_t> new_color(width() * height() * 4, 0u);
+               std::vector<std::uint8_t> new_color(
+                 static_cast<std::size_t>(width())
+                   * static_cast<std::size_t>(height()) * 4u,
+                 0u);
                GlCall{}(
                  glTexImage2D,
                  GL_TEXTURE_2D,
