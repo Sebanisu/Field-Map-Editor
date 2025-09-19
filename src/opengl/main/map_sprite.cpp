@@ -520,7 +520,8 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
             +palette);
           return { std::async(
             std::launch::async,
-            [=]() -> std::future<void>
+            [         =,
+             weak_ptr = std::weak_ptr<void>(m_texture)]() -> std::future<void>
             {
                  spdlog::debug(
                    "Getting colors from .mim file : bpp {}, palette {}",
@@ -529,7 +530,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
                  return { std::async(
                    std::launch::deferred,
                    future_operations::LoadColorsIntoTexture{
-                     .weak_ptr = m_texture,
+                     .weak_ptr = weak_ptr,
                      .texture  = texture,
                      .colors   = get_colors(mim, bpp, palette),
                      .size
