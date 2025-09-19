@@ -268,9 +268,8 @@ void fme::textures_window::draw_thumbnail_label(
   const std::string &file_name) const
 {
      // Label under image (optional)
-     const float  button_width = ImGui::GetFrameHeight();
-     const ImVec2 button_size  = { button_width, button_width };
-     const float  text_area_width
+     const float button_width = ImGui::GetFrameHeight();
+     const float text_area_width
        = m_thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
      // Remember the top-left of where we want to start
      const ImVec2 text_start_pos = ImGui::GetCursorScreenPos();
