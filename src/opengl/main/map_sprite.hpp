@@ -55,7 +55,7 @@ enum class DrawError
      Other
 };
 
-inline auto operator<=>(
+inline std::strong_ordering operator<=>(
   DrawError a,
   DrawError b)
 {
