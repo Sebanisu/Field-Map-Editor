@@ -9,18 +9,18 @@
 #include <stacktrace>
 namespace fme
 {
-future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
-  glengine::Texture *const                      in_texture,
-  std::vector<open_viii::graphics::Color32RGBA> in_colors,
-  glm::uvec2                                    in_size)
-  : m_texture(in_texture)
-  , m_colors(std::move(in_colors))
-  , m_size(in_size)
-{
-}
 void future_operations::LoadColorsIntoTexture::operator()() const
 {
-     if (!m_texture)
+     if (weak_ptr.expired())
+     {
+          spdlog::warn(
+            "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+            "is expired.",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (!texture)
      {
           spdlog::error(
             "Failed to lock texture weak_ptr: texture is expired or not set.");
@@ -30,16 +30,18 @@ void future_operations::LoadColorsIntoTexture::operator()() const
      {
           spdlog::debug(
             "Trying to pass colors[{}] into texture ({}, {})",
-            std::ranges::size(m_colors),
-            m_size.x,
-            m_size.y);
-          assert(m_size.x * m_size.y == std::ranges::size(m_colors));
-          if (std::ranges::empty(m_colors) || m_size.x == 0 || m_size.y == 0)
+            std::ranges::size(colors),
+            size.x,
+            size.y);
+          assert(size.x * size.y == std::ranges::size(colors));
+          if (std::ranges::empty(colors) || size.x == 0 || size.y == 0)
           {
                return;
           }
-          *m_texture = glengine::Texture(
-            m_colors, static_cast<int>(m_size.x), static_cast<int>(m_size.y));
+          *texture = glengine::Texture(
+            std::move(colors),
+            static_cast<int>(size.x),
+            static_cast<int>(size.y));
      }
      catch (const std::exception &e)
      {
@@ -48,16 +50,19 @@ void future_operations::LoadColorsIntoTexture::operator()() const
             "Exception caught while creating texture: {}", e.what());
      }
 }
-future_operations::LoadImageIntoTexture::LoadImageIntoTexture(
-  glengine::Texture *const in_texture,
-  glengine::Image          in_image)
-  : m_texture(in_texture)
-  , m_image(std::move(in_image))
+
+void future_operations::LoadImageIntoTexture::operator()() const
 {
-}
-void future_operations::LoadImageIntoTexture::operator()()
-{
-     if (!m_texture)
+     if (weak_ptr.expired())
+     {
+          spdlog::warn(
+            "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+            "is expired.",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (!texture)
      {
           spdlog::error("m_texture is a nullptr");
           return;
@@ -67,14 +72,14 @@ void future_operations::LoadImageIntoTexture::operator()()
 
           spdlog::info(
             "Trying to pass image[{}] into texture ({}, {})",
-            m_image.path.string(),
-            m_image.width,
-            m_image.height);
-          if (m_image.width == 0 || m_image.height == 0)
+            image.path.string(),
+            image.width,
+            image.height);
+          if (image.width == 0 || image.height == 0)
           {
                return;
           }
-          *m_texture = glengine::Texture(std::move(m_image));
+          *texture = glengine::Texture(std::move(image));
      }
      catch (const std::exception &e)
      {
@@ -83,26 +88,28 @@ void future_operations::LoadImageIntoTexture::operator()()
             "Exception caught while creating texture: {}", e.what());
      }
 }
-future_operations::GetImageFromPathCreateFuture::GetImageFromPathCreateFuture(
-  glengine::Texture *const in_texture,
-  std::filesystem::path    in_path)
-  : m_texture(in_texture)
-  , m_path(std::move(in_path))
-{
-}
-std::future<void> future_operations::GetImageFromPathCreateFuture::operator()()
+std::future<void>
+  future_operations::GetImageFromPathCreateFuture::operator()() const
 {
      try
      {
+          if (weak_ptr.expired())
+          {
+               spdlog::warn(
+                 "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+                 "is expired.",
+                 __FILE__,
+                 __LINE__);
+               return {};
+          }
           spdlog::info(
-            "{}:{} - texture path: \"{}\"",
-            __FILE__,
-            __LINE__,
-            m_path.string());
+            "{}:{} - texture path: \"{}\"", __FILE__, __LINE__, path.string());
           return { std::async(
             std::launch::deferred,
             LoadImageIntoTexture{
-              m_texture, glengine::Image(std::move(m_path), false) }) };
+              .weak_ptr = weak_ptr,
+              .texture  = texture,
+              .image    = glengine::Image(std::move(path), false) }) };
      }
      catch (const std::exception &e)
      {
@@ -112,24 +119,24 @@ std::future<void> future_operations::GetImageFromPathCreateFuture::operator()()
      }
 }
 
-future_operations::GetImageFromFromFirstValidPathCreateFuture::
-  GetImageFromFromFirstValidPathCreateFuture(
-    glengine::Texture *const in_texture,
-    std::move_only_function<std::vector<std::filesystem::path>()>
-      &&in_paths_get)
-  : m_texture(in_texture)
-  , m_paths_get(std::move(in_paths_get))
-{
-}
 std::future<void>
   future_operations::GetImageFromFromFirstValidPathCreateFuture::operator()()
     const
 {
      try
      {
-          std::vector<std::filesystem::path> m_paths = m_paths_get();
+          if (weak_ptr.expired())
+          {
+               spdlog::warn(
+                 "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+                 "is expired.",
+                 __FILE__,
+                 __LINE__);
+               return {};
+          }
+          std::vector<std::filesystem::path> paths = paths_get();
           auto                               filtered_paths
-            = m_paths
+            = paths
               | std::ranges::views::transform(
                 [](auto &&path) -> std::filesystem::path
                 { return std::forward<decltype(path)>(path); })
@@ -142,11 +149,13 @@ std::future<void>
                  "{}:{} - filtered_paths empty. m_paths.size() = {}",
                  __FILE__,
                  __LINE__,
-                 std::ranges::size(m_paths));
+                 std::ranges::size(paths));
                return {};
           }
-          return GetImageFromPathCreateFuture{ m_texture,
-                                               *filtered_paths.begin() }();
+          return GetImageFromPathCreateFuture{ .weak_ptr = weak_ptr,
+                                               .texture  = texture,
+                                               .path
+                                               = *filtered_paths.begin() }();
      }
      catch (const std::exception &e)
      {

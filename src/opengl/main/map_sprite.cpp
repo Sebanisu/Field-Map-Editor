@@ -222,7 +222,7 @@ std::size_t map_sprite::get_texture_pos(
   glengine::Texture> &
   map_sprite::get_full_filename_textures()
 {
-     return m_full_filename_textures;
+     return *m_full_filename_textures;
 }
 
 const std::map<
@@ -364,7 +364,7 @@ void map_sprite::queue_texture_loading() const
             "{}:{}, Queued up m_full_filename_textures.size() = {}",
             __FILE__,
             __LINE__,
-            std::ranges::size(m_full_filename_textures));
+            std::ranges::size(*m_full_filename_textures));
           return;
      }
 
@@ -529,8 +529,11 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
                  return { std::async(
                    std::launch::deferred,
                    future_operations::LoadColorsIntoTexture{
-                     texture, get_colors(mim, bpp, palette),
-                     glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
+                     .weak_ptr = m_texture,
+                     .texture  = texture,
+                     .colors   = get_colors(mim, bpp, palette),
+                     .size
+                     = glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
             }) };
      }
 }
@@ -558,8 +561,10 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)),
-         fme::generate_deswizzle_paths(std::move(selections), *this, pupu) }) };
+         .weak_ptr  = m_texture,
+         .texture   = &(m_texture->at(pos)),
+         .paths_get = fme::generate_deswizzle_paths(
+           std::move(selections), *this, pupu) }) };
 }
 
 std::future<std::future<void>>
@@ -572,10 +577,11 @@ std::future<std::future<void>>
           return {};
      }
      return { std::async(
-       std::launch::deferred,// async
+       std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_full_filename_textures[filename]),
-         fme::generate_full_filename_paths(
+         .weak_ptr  = m_full_filename_textures,
+         .texture   = &((*m_full_filename_textures)[filename]),
+         .paths_get = fme::generate_full_filename_paths(
            std::move(selections), *this, filename) }) };
 }
 
@@ -604,8 +610,9 @@ std::future<std::future<void>> map_sprite::load_swizzle_textures(
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)),
-         fme::generate_swizzle_paths(
+         .weak_ptr  = m_texture,
+         .texture   = &(m_texture->at(pos)),
+         .paths_get = fme::generate_swizzle_paths(
            std::move(selections), *this, texture_page, palette) }) };
 }
 
@@ -632,8 +639,9 @@ std::future<std::future<void>>
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)),
-         fme::generate_swizzle_paths(
+         .weak_ptr  = m_texture,
+         .texture   = &(m_texture->at(pos)),
+         .paths_get = fme::generate_swizzle_paths(
            std::move(selections), *this, texture_page) }) };
 }
 
@@ -659,10 +667,12 @@ std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(
           return {};
      }
      return { std::async(
-       std::launch::deferred,
+       std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(
-                                  std::move(selections), *this, palette) }) };
+         .weak_ptr  = m_texture,
+         .texture   = &(m_texture->at(pos)),
+         .paths_get = fme::generate_swizzle_as_one_image_paths(
+           std::move(selections), *this, palette) }) };
 }
 
 enum struct texture_page_width : std::uint16_t
@@ -1221,7 +1231,7 @@ void map_sprite::purge_empty_full_filename_texture() const
 {
      spdlog::debug("Task 1: Purge empty textures (sync, quick)");
      std::erase_if(
-       m_full_filename_textures,
+       *m_full_filename_textures,
        [](auto &pair)
        {
             const auto &texture = pair.second;
@@ -1233,7 +1243,7 @@ void map_sprite::purge_empty_full_filename_texture() const
        "m_full_filename_textures.size() = {}",
        __FILE__,
        __LINE__,
-       std::ranges::size(m_full_filename_textures));
+       std::ranges::size(*m_full_filename_textures));
 };
 
 
@@ -1245,13 +1255,13 @@ bool map_sprite::check_all_masks_exists_full_filename_texture() const
        [&](const auto &pair)
        {
             const auto &[filename, maskname] = pair;
-            if (!m_full_filename_textures.contains(filename))
+            if (!m_full_filename_textures->contains(filename))
             {
                  // we don't care if the mask name doesn't exist if
                  // filename does not.
                  return true;
             }
-            return m_full_filename_textures.contains(maskname);
+            return m_full_filename_textures->contains(maskname);
        });
 }
 
@@ -1292,7 +1302,7 @@ void map_sprite::
      // calculate scale using one of the existing textures
      const auto canvas           = m_child_map_sprite->get_canvas();
      const auto [min_it, max_it] = std::ranges::minmax_element(
-       m_full_filename_textures,
+       *m_full_filename_textures,
        [](const auto &apair, const auto &bpair)
        {
             const auto &a  = std::get<1>(apair);
@@ -1395,16 +1405,16 @@ std::pair<
      // Main loop over pairs
      for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
      {
-          if (!m_full_filename_textures.contains(filename))
+          if (!m_full_filename_textures->contains(filename))
                continue;
           glengine::Texture &main_texture
-            = m_full_filename_textures.at(filename);
+            = m_full_filename_textures->at(filename);
           // todo support multiple white on black mask textures?
           const auto mask_texture
             = [&]() -> std::expected<const glengine::SubTexture, std::string>
           {
-               if (auto it = m_full_filename_textures.find(maskname);
-                   it != m_full_filename_textures.end())
+               if (auto it = m_full_filename_textures->find(maskname);
+                   it != m_full_filename_textures->end())
                {
 
                     spdlog::debug(
@@ -1677,7 +1687,7 @@ void map_sprite::process_full_filename_textures() const
 {
      if (
        !all_futures_done() || !m_filters.full_filename.enabled()
-       || m_full_filename_textures.empty()
+       || m_full_filename_textures->empty()
        || m_full_filename_to_mask_name.empty())
      {
           return;
@@ -1687,7 +1697,7 @@ void map_sprite::process_full_filename_textures() const
      {
           spdlog::critical(
             "CompShader m_mask_comp_shader {}", m_mask_comp_shader.error());
-          m_full_filename_textures.clear();
+          m_full_filename_textures->clear();
           return;
      }
      if (!m_mask_count_comp_shader)
@@ -1695,12 +1705,12 @@ void map_sprite::process_full_filename_textures() const
           spdlog::critical(
             "CompShader m_mask_count_comp_shader {}",
             m_mask_count_comp_shader.error());
-          m_full_filename_textures.clear();
+          m_full_filename_textures->clear();
           return;
      }
      purge_empty_full_filename_texture();
 
-     if (m_full_filename_textures.empty())
+     if (m_full_filename_textures->empty())
      {
           return;
      }
@@ -2967,7 +2977,8 @@ void map_sprite::save_deswizzle_generate_toml(
             = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
           if (!inserted)
                continue;
-          const auto queue_framebuffer_load = [this, it, &file_node, in_scale]()
+          const auto queue_framebuffer_load
+            = [this, it, file_table = file_node.as_table(), in_scale]()
           {
                const int scale = [&]()
                {
@@ -2992,11 +3003,11 @@ void map_sprite::save_deswizzle_generate_toml(
                // textures
                auto  settings = get_backup_settings(false);
                auto &filters  = settings.filters.value();
-               filters.reload(*file_node.as_table());
+               filters.reload(*file_table);
 
                // Generate
                m_cache_framebuffer_tooltips[it->first]
-                 = generate_deswizzle_combined_tool_tip(file_node.as_table());
+                 = generate_deswizzle_combined_tool_tip(file_table);
 
                cache_pupuids(it->first, filters);
 

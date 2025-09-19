@@ -71,8 +71,9 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle  = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     mutable std::map<std::string, glengine::Texture> m_full_filename_textures
-       = {};
+     mutable std::shared_ptr<std::map<std::string, glengine::Texture>>
+       m_full_filename_textures
+       = std::make_shared<std::map<std::string, glengine::Texture>>();
      mutable std::map<std::string, std::string> m_full_filename_to_mask_name
        = {};
      std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> m_texture
