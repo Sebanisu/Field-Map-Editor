@@ -1308,7 +1308,7 @@ void map_sprite::
      assert(scale.x == scale.y);
      assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
      const auto temp
-       = m_child_map_sprite->get_deswizzle_combined_textures(scale.x);
+       = m_child_map_sprite->get_deswizzle_combined_textures(scale.x, true);
      m_child_map_sprite->consume_now(true);
      if (!temp.has_value())
      {
@@ -2905,7 +2905,9 @@ void map_sprite::save_deswizzle_generate_toml(
     std::string,
     std::optional<glengine::FrameBuffer>> *,
   std::string>
-  map_sprite::get_deswizzle_combined_textures(const int in_scale)
+  map_sprite::get_deswizzle_combined_textures(
+    const int  in_scale,
+    const bool force_load)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2963,61 +2965,74 @@ void map_sprite::save_deswizzle_generate_toml(
             = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
           if (!inserted)
                continue;
+          const auto queue_framebuffer_load = [this, it, &file_node, in_scale]()
+          {
+               const int scale = [&]()
+               {
+                    if (
+                      in_scale <= 0
+                      || !std::has_single_bit(
+                        static_cast<unsigned int>(in_scale)))
+                    {
+                         return m_render_framebuffer->scale();
+                    }
+                    return in_scale;
+               }();
+               // Setup an off-screen render texture
+               iRectangle const canvas
+                 = m_map_group.maps.const_working().canvas() * scale;
+               const auto specification
+                 = glengine::FrameBufferSpecification{ .width = canvas.width(),
+                                                       .height
+                                                       = canvas.height(),
+                                                       .scale = scale };
+               // Backup current settings and adjust for saving Pupu
+               // textures
+               auto  settings = get_backup_settings(false);
+               auto &filters  = settings.filters.value();
+               filters.reload(*file_node.as_table());
 
-          futures.emplace_back(
-            std::async(
-              std::launch::deferred,
-              [this, it, &file_node, in_scale]()
-              {
-                   const int scale = [&]()
-                   {
-                        if (
-                          in_scale <= 0
-                          || !std::has_single_bit(
-                            static_cast<unsigned int>(in_scale)))
-                        {
-                             return m_render_framebuffer->scale();
-                        }
-                        return in_scale;
-                   }();
-                   // Setup an off-screen render texture
-                   iRectangle const canvas
-                     = m_map_group.maps.const_working().canvas() * scale;
-                   const auto specification
-                     = glengine::FrameBufferSpecification{ .width
-                                                           = canvas.width(),
-                                                           .height
-                                                           = canvas.height(),
-                                                           .scale = scale };
-                   // Backup current settings and adjust for saving Pupu
-                   // textures
-                   auto  settings = get_backup_settings(false);
-                   auto &filters  = settings.filters.value();
-                   filters.reload(*file_node.as_table());
+               // Generate
+               m_cache_framebuffer_tooltips[it->first]
+                 = generate_deswizzle_combined_tool_tip(file_node.as_table());
 
-                   // Generate
-                   m_cache_framebuffer_tooltips[it->first]
-                     = generate_deswizzle_combined_tool_tip(
-                       file_node.as_table());
+               cache_pupuids(it->first, filters);
 
-                   cache_pupuids(it->first, filters);
+               if (glengine::FrameBuffer fb(specification);
+                   generate_texture(fb))
+               {
+                    it->second = std::move(fb);// replace empty optional
+               }
+               else
+               {
+                    it->second.reset();// stays empty if generation failed
+               }
+          };
 
-                   if (glengine::FrameBuffer fb(specification);
-                       generate_texture(fb))
-                   {
-                        it->second = std::move(fb);// replace empty optional
-                   }
-                   else
-                   {
-                        it->second.reset();// stays empty if generation failed
-                   }
-              }));
+          if (force_load)
+          {
+               queue_framebuffer_load();
+          }
+          else
+          {
+               futures.emplace_back(
+                 std::async(std::launch::deferred, queue_framebuffer_load));
+          }
      }
-     m_future_consumer += std::move(futures);
-     spdlog::trace(
-       "{}:{} Framebuffer generation queued up. Currently framebuffer "
-       "placeholders empty.",
-       __FILE__, __LINE__);
+     if (force_load)
+     {
+          m_future_consumer += std::move(futures);
+          spdlog::trace(
+            "{}:{} Framebuffer generation queued up. Currently framebuffer "
+            "placeholders empty.",
+            __FILE__, __LINE__);
+     }
+     else
+     {
+
+          spdlog::trace(
+            "{}:{} Framebuffer generation force loaded!", __FILE__, __LINE__);
+     }
      return &m_cache_framebuffer;
 }
 

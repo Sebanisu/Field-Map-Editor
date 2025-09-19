@@ -360,7 +360,9 @@ struct [[nodiscard]] map_sprite// final
          std::string,
          std::optional<glengine::FrameBuffer>> *,
        std::string>
-       get_deswizzle_combined_textures(const int scale = {});
+       get_deswizzle_combined_textures(
+         const int  scale      = {},
+         const bool force_load = false);
      [[nodiscard]] std::string generate_deswizzle_combined_tool_tip(
        const toml::table *file_table) const;
      [[nodiscard]] std::vector<ff_8::PupuID>
