@@ -56,6 +56,13 @@ enum class DrawError
 };
 }// namespace fme
 
+inline auto operator<=>(
+  DrawError a,
+  DrawError b)
+{
+     return std::to_underlying(a) <=> std::to_underlying(b);
+}
+
 template<>
 struct fmt::formatter<fme::DrawError> : fmt::formatter<std::string_view>
 {// parse is inherited from formatter<string_view>.
