@@ -843,17 +843,6 @@ void fme::batch::combo_flatten_type_bpp()
      static constexpr auto tool_tips
        = std::array{ gui_labels::flatten_bpp_tooltip };
 
-
-     static auto filter = []()
-     {
-          ff_8::filter_old<ff_8::FilterTag::Flatten> f{
-               ff_8::FilterSettings::All_Disabled
-          };
-          f.update(flatten_type::bpp);
-          f.enable();
-          return f;
-     }();
-
      const auto gcc = fme::GenericComboWithFilter(
        gui_labels::compact,
        []() { return values; },
