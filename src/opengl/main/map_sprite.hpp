@@ -75,6 +75,9 @@ struct fmt::formatter<fme::DrawError> : fmt::formatter<std::string_view>
           std::string_view name = {};
           switch (in_draw_error)
           {
+               case fme::DrawError::None:
+                    name = "NoTexture";
+                    break;
                case fme::DrawError::NoTexture:
                     name = "NoTexture";
                     break;
@@ -159,7 +162,14 @@ struct fmt::formatter<fme::DrawFailure>
                }
           };
 
-          write_part(df.error);
+          if (!df.message.empty())
+          {
+               write_part(df.error);
+          }
+          else
+          {
+               first = false;
+          }
           write_part(df.message);
           return ctx.out();
      }
