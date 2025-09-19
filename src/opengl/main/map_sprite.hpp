@@ -54,7 +54,6 @@ enum class DrawError
      PupuIdZero,
      Other
 };
-}// namespace fme
 
 inline auto operator<=>(
   DrawError a,
@@ -62,6 +61,7 @@ inline auto operator<=>(
 {
      return std::to_underlying(a) <=> std::to_underlying(b);
 }
+}// namespace fme
 
 template<>
 struct fmt::formatter<fme::DrawError> : fmt::formatter<std::string_view>
