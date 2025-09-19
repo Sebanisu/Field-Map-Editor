@@ -809,9 +809,12 @@ void map_sprite::update_position(
      update_render_texture();
 }
 
-[[nodiscard]] bool map_sprite::local_draw(
-  const glengine::FrameBuffer   &target_framebuffer,
-  const glengine::BatchRenderer &target_renderer) const
+[[nodiscard]] std::expected<
+  void,
+  std::set<DrawFailure>>
+  map_sprite::local_draw(
+    const glengine::FrameBuffer   &target_framebuffer,
+    const glengine::BatchRenderer &target_renderer) const
 {
      const auto &shader             = target_renderer.shader();
      const auto  reset_blend_at_end = glengine::ScopeGuard(
@@ -821,8 +824,9 @@ void map_sprite::update_position(
      [[maybe_unused]] BlendModeT last_blend_mode{ BlendModeT::none };
      m_uniform_color = s_default_color;
      shader.set_uniform("u_Tint", s_default_color);
-     bool        drew            = false;
-     const auto &unique_pupu_ids = working_unique_pupu();
+     bool                  drew_any_tile   = { false };
+     std::set<DrawFailure> failures        = {};
+     const auto           &unique_pupu_ids = working_unique_pupu();
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles(
@@ -833,9 +837,9 @@ void map_sprite::update_position(
             {
                  if (pupu_id.raw() == 0)
                  {
-                      throw std::logic_error(
-                        "pupu_id.raw() returned 0 — this indicates a coding "
-                        "error.");
+                      failures.emplace(
+                        DrawError::PupuIdZero, "pupu_id.raw() returned 0");
+                      return;// continue to next tile
                  }
                  if (
                    m_filters.multi_animation_id.enabled()
@@ -844,6 +848,7 @@ void map_sprite::update_position(
                      [&](const auto &test) -> bool
                      { return test != tile.animation_id(); }))
                  {
+                      failures.emplace(DrawError::FilteredOut);
                       return;
                  }
                  if (
@@ -852,21 +857,25 @@ void map_sprite::update_position(
                      m_filters.multi_pupu.value(),
                      [&](const auto &test) -> bool { return test != pupu_id; }))
                  {
+                      failures.emplace(DrawError::FilteredOut);
                       return;
                  }
                  if (
                    m_filters.pupu.enabled()
                    && m_filters.pupu.value() != pupu_id)
                  {
+                      failures.emplace(DrawError::FilteredOut);
                       return;
                  }
 
                  if (tile.z() != z)
                  {
+                      failures.emplace(DrawError::FilteredOut);
                       return;
                  }
                  if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
                  {
+                      failures.emplace(DrawError::FilteredOut);
                       return;
                  }
                  const auto *texture = [&]()
@@ -886,10 +895,18 @@ void map_sprite::update_position(
                       }
                  }();
 
-                 if (
-                   texture == nullptr || texture->height() == 0
-                   || texture->width() == 0)
+
+                 if (!texture)
                  {
+                      failures.emplace(
+                        DrawError::NoTexture, "Texture not found for tile");
+                      return;
+                 }
+
+                 if (texture->width() == 0 || texture->height() == 0)
+                 {
+                      failures.emplace(
+                        DrawError::ZeroSizedTexture, "Texture has zero size");
                       return;
                  }
                  if (!m_disable_blends)
@@ -1008,15 +1025,16 @@ void map_sprite::update_position(
                    static_cast<int>(
                      m_map_group.maps.get_offset_from_working(tile)),
                    static_cast<GLuint>(find_id()));
-                 drew = true;
+                 drew_any_tile = true;
             });
      }
-     if (drew)
+     if (drew_any_tile)
      {
           target_renderer.draw();
           target_renderer.on_render();
+          return {};// success
      }
-     return drew;
+     return std::unexpected(failures);// failed to draw anything
 }
 
 [[nodiscard]] bool map_sprite::draw_imported(
@@ -3816,7 +3834,10 @@ std::filesystem::path map_sprite::save_path(
 }
 
 
-bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
+std::expected<
+  void,
+  std::set<DrawFailure>>
+  map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
 {
      const auto fbb = fbo.backup();
      fbo.bind();
@@ -3827,14 +3848,24 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      m_batch_renderer.bind();
      set_uniforms(fbo, m_batch_renderer.shader());
      m_batch_renderer.clear();
-     if (local_draw(fbo, m_batch_renderer))
+     if (auto exp = local_draw(fbo, m_batch_renderer); exp)
      {
           //(void)draw_imported(fbo);
+          // generate mipmaps by binding
           fbo.bind_color_attachment(0);
           fbo.bind_color_attachment(1);
-          return true;
+          return exp;
      }
-     return false;
+     else
+     {
+          for (const auto &[index, err] : exp.error() | std::views::enumerate)
+          {
+               spdlog::warn("local_draw failed ({}): {}", index, err);
+               // or if you made a to_string(DrawError) helper:
+               // spdlog::warn("Draw failed: {}", to_string(err));
+          }
+          return exp;
+     }
 }
 void map_sprite::load_map(const std::filesystem::path &src_path)
 {

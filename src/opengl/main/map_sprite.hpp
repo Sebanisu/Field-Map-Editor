@@ -28,6 +28,7 @@
 #include <HistogramBuffer.hpp>
 #include <OrthographicCamera.hpp>
 #include <PaletteBuffer.hpp>
+#include <set>
 #include <Shader.hpp>
 #include <Texture.hpp>
 #include <utility>
@@ -43,6 +44,119 @@ struct PupuOpEntry
      std::uint32_t        count;
      float                distance;
 };
+
+enum class DrawError
+{
+     None,
+     NoTexture,
+     ZeroSizedTexture,
+     FilteredOut,
+     PupuIdZero,
+     Other
+};
+}// namespace fme
+
+template<>
+struct fmt::formatter<fme::DrawError> : fmt::formatter<std::string_view>
+{// parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       fme::DrawError in_draw_error,
+       FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_draw_error)
+          {
+               case fme::DrawError::NoTexture:
+                    name = "NoTexture";
+                    break;
+               case fme::DrawError::ZeroSizedTexture:
+                    name = "ZeroSizedTexture";
+                    break;
+               case fme::DrawError::FilteredOut:
+                    name = "FilteredOut";
+                    break;
+               case fme::DrawError::PupuIdZero:
+                    name = "PupuIdZero";
+                    break;
+               case fme::DrawError::Other:
+                    name = "Other";
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+namespace fme
+{
+// Optional: For more descriptive errors
+struct DrawFailure
+{
+     DrawError   error   = DrawError::None;
+     std::string message = "";
+
+     DrawFailure(DrawError in_error)
+       : error(in_error)
+     {
+     }
+
+     DrawFailure(std::string in_message)
+       : error(DrawError::Other)
+       , message(std::move(in_message))
+     {
+     }
+
+     DrawFailure(
+       DrawError   in_error,
+       std::string in_message)
+       : error(in_error)
+       , message(std::move(in_message))
+     {
+     }
+};
+}// namespace fme
+
+template<>
+struct fmt::formatter<fme::DrawFailure>
+{
+     // parse is default; no custom format parsing needed
+     template<typename ParseContext>
+     constexpr auto parse(ParseContext &ctx)
+     {
+          return ctx.begin();
+     }
+
+     template<typename FormatContext>
+     auto format(
+       fme::DrawFailure df,
+       FormatContext   &ctx) const
+     {
+          using enum fme::BackgroundSettings;
+
+
+          bool       first      = true;
+          const auto write_part = [&](const auto &part)
+          {
+               if (!first)
+               {
+                    fmt::format_to(ctx.out(), "{} : ", part);
+                    first = false;
+               }
+               else
+               {
+                    fmt::format_to(ctx.out(), "\"{}\"", part);
+               }
+          };
+
+          write_part(df.error);
+          write_part(df.message);
+          return ctx.out();
+     }
+};
+
+namespace fme
+{
 struct [[nodiscard]] map_sprite// final
 //   : public sf::Drawable
 //   , public sf::Transformable
@@ -253,12 +367,17 @@ struct [[nodiscard]] map_sprite// final
        get_texture(const ff_8::PupuID &pupu) const;
      [[nodiscard]] glm::uvec2
        get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] bool
+     std::expected<
+       void,
+       std::set<DrawFailure>>
        generate_texture(const glengine::FrameBuffer &texture) const;
      [[nodiscard]] std::uint32_t get_max_texture_height() const;
-     [[nodiscard]] bool          local_draw(
-                const glengine::FrameBuffer   &target_framebuffer,
-                const glengine::BatchRenderer &target_renderer) const;
+     std::expected<
+       void,
+       std::set<DrawFailure>>
+       local_draw(
+         const glengine::FrameBuffer   &target_framebuffer,
+         const glengine::BatchRenderer &target_renderer) const;
      [[nodiscard]] bool draw_imported(const glengine::FrameBuffer &) const;
      [[nodiscard]] std::string get_base_name() const;
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
