@@ -103,6 +103,7 @@ struct DrawFailure
      DrawError   error   = DrawError::None;
      std::string message = "";
 
+
      DrawFailure(DrawError in_error)
        : error(in_error)
      {
@@ -121,6 +122,8 @@ struct DrawFailure
        , message(std::move(in_message))
      {
      }
+
+     auto operator<=>(const DrawFailure &other) const = default;
 };
 }// namespace fme
 
