@@ -48,32 +48,32 @@ class batch
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = { nullptr };
      RangeConsumer<decltype(open_viii::LangCommon::to_array())> m_lang_consumer
        = RangeConsumer{ open_viii::LangCommon::to_array() };
-     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-       m_future_of_future_consumer                                    = {};
      FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
+     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+                        m_future_of_future_consumer = {};
 
-     void                                           combo_input_type();
-     void                                           combo_output_type();
-     void                                           combo_compact_type_ffnx();
-     void                                           combo_compact_type();
-     void                                           combo_flatten_type_bpp();
-     void                                           combo_flatten_type();
-     void                                           browse_input_path();
-     void                                           browse_output_path();
-     void                                           button_start();
-     void                                           button_stop();
-     void                                           checkbox_load_map();
-     void                                           choose_field_and_coo();
-     void                                           reset_for_next();
-     void                                           generate_map_sprite();
-     void                                           compact();
-     void                                           flatten();
-     bool                                           consume_one_future();
-     void                                           open_directory_browser();
-     void                                           button_input_browse();
-     void                                           button_output_browse();
-     void                                           example_input_paths();
-     void                                           example_output_paths();
+     void               combo_input_type();
+     void               combo_output_type();
+     void               combo_compact_type_ffnx();
+     void               combo_compact_type();
+     void               combo_flatten_type_bpp();
+     void               combo_flatten_type();
+     void               browse_input_path();
+     void               browse_output_path();
+     void               button_start();
+     void               button_stop();
+     void               checkbox_load_map();
+     void               choose_field_and_coo();
+     void               reset_for_next();
+     void               generate_map_sprite();
+     void               compact();
+     void               flatten();
+     bool               consume_one_future();
+     void               open_directory_browser();
+     void               button_input_browse();
+     void               button_output_browse();
+     void               example_input_paths();
+     void               example_output_paths();
      // both use the output pattern currently
      const std::string &get_output_pattern(fme::input_types type);
      const std::string &get_output_pattern(fme::output_types type);

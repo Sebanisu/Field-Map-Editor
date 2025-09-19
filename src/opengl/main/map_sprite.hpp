@@ -172,10 +172,10 @@ struct [[nodiscard]] map_sprite// final
      mutable glm::vec4 m_uniform_color = s_default_color;
 
 
-     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-       m_future_of_future_consumer = {};
      mutable FutureConsumer<std::vector<std::future<void>>> m_future_consumer
        = {};
+     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+                                   m_future_of_future_consumer = {};
 
      [[nodiscard]] settings_backup get_backup_settings(const bool);
 

@@ -133,50 +133,50 @@ struct gui
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 
-     FutureOfFutureConsumer<
-       std::vector<std::future<std::future<PathsAndEnabled>>>>
-       m_future_of_future_paths_consumer = {};
      FutureConsumer<std::vector<std::future<PathsAndEnabled>>>
        m_future_paths_consumer = {};
-     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-       m_future_of_future_consumer                                    = {};
+     FutureOfFutureConsumer<
+       std::vector<std::future<std::future<PathsAndEnabled>>>>
+       m_future_of_future_paths_consumer                              = {};
      FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
+     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+                                 m_future_of_future_consumer = {};
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
-     archives_group                                 get_archives_group() const;
-     void                                           update_path();
-     void                                           consume_one_future();
-     std::shared_ptr<mim_sprite>                    get_mim_sprite() const;
-     std::shared_ptr<map_sprite>                    get_map_sprite() const;
-     bool                                           combo_path();
-     void                                           combo_draw();
-     void                                           file_browser_display();
-     void                                           directory_browser_display();
-     void                                           menu_bar();
-     void                                           selected_tiles_panel();
-     void                                           tile_conflicts_panel();
-     void                                           hovered_tiles_panel();
-     void                                           combo_mim_palette();
-     void                                           combo_mim_bpp();
-     void         checkbox_mim_palette_texture();
-     void         combo_field();
-     void         combo_coo();
-     std::string  save_texture_path() const;
-     void         update_field();
-     bool         mim_test() const;
-     bool         map_test() const;
-     void         checkbox_map_swizzle();
-     void         checkbox_map_disable_blending();
-     void         menuitem_locate_ff8();
-     void         menuitem_save_swizzle_textures();
-     void         menuitem_save_swizzle_as_one_image_textures();
-     void         menuitem_save_deswizzle_textures();
-     void         menuitem_load_swizzle_textures();
-     void         menuitem_load_swizzle_as_one_image_textures();
-     void         menuitem_load_deswizzle_textures();
-     void         menuitem_save_texture(bool enabled = true);
-     void         menuitem_save_mim_file(bool enabled = true);
-     void         menuitem_save_map_file(bool enabled = true);
+     archives_group              get_archives_group() const;
+     void                        update_path();
+     void                        consume_one_future();
+     std::shared_ptr<mim_sprite> get_mim_sprite() const;
+     std::shared_ptr<map_sprite> get_map_sprite() const;
+     bool                        combo_path();
+     void                        combo_draw();
+     void                        file_browser_display();
+     void                        directory_browser_display();
+     void                        menu_bar();
+     void                        selected_tiles_panel();
+     void                        tile_conflicts_panel();
+     void                        hovered_tiles_panel();
+     void                        combo_mim_palette();
+     void                        combo_mim_bpp();
+     void                        checkbox_mim_palette_texture();
+     void                        combo_field();
+     void                        combo_coo();
+     std::string                 save_texture_path() const;
+     void                        update_field();
+     bool                        mim_test() const;
+     bool                        map_test() const;
+     void                        checkbox_map_swizzle();
+     void                        checkbox_map_disable_blending();
+     void                        menuitem_locate_ff8();
+     void                        menuitem_save_swizzle_textures();
+     void                        menuitem_save_swizzle_as_one_image_textures();
+     void                        menuitem_save_deswizzle_textures();
+     void                        menuitem_load_swizzle_textures();
+     void                        menuitem_load_swizzle_as_one_image_textures();
+     void                        menuitem_load_deswizzle_textures();
+     void                        menuitem_save_texture(bool enabled = true);
+     void                        menuitem_save_mim_file(bool enabled = true);
+     void                        menuitem_save_map_file(bool enabled = true);
      void         menuitem_save_map_file_modified(bool enabled = true);
      void         menuitem_load_map_file(bool enabled = true);
      // void                      scale_window(float width = {}, float height =
