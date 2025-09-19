@@ -16,7 +16,7 @@ namespace fme
 {
 namespace future_operations
 {
-     class LoadColorsIntoTexture
+     struct LoadColorsIntoTexture
      {
           std::weak_ptr<void>                                   weak_ptr;
           glengine::Texture                                    *texture;
@@ -25,7 +25,7 @@ namespace future_operations
 
           void operator()() const;
      };
-     class LoadImageIntoTexture
+     struct LoadImageIntoTexture
      {
           std::weak_ptr<void>      weak_ptr;
           glengine::Texture *const texture;
