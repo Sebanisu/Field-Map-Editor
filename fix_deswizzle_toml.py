@@ -1,15 +1,20 @@
 from pathlib import Path
 import tomlkit
+from tomlkit import array
 
+# Path to your TOML++ file
 toml_file = Path("res") / "deswizzle.toml"
 
+# Load TOML++ preserving formatting
 with open(toml_file, "r", encoding="utf-8") as f:
     data = tomlkit.parse(f.read())
 
+# Track all existing filenames to avoid duplicates
 existing_filenames = set()
 processed_count = 0  # Counter for progress
 
 def collect_filenames(obj):
+    """Recursively collect all section names ending in .png."""
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k.endswith(".png"):
@@ -19,6 +24,7 @@ def collect_filenames(obj):
 collect_filenames(data)
 
 def find_new_hex(pupu_ids):
+    """Return first unused 8-digit hex from pupu_ids."""
     for pupu in pupu_ids:
         hex_id = f"{pupu:08X}"
         if hex_id not in existing_filenames:
@@ -26,6 +32,7 @@ def find_new_hex(pupu_ids):
     return None
 
 def process_sections(obj, depth=0):
+    """Recursively update timestamped section names and make arrays multiline."""
     global processed_count
     if isinstance(obj, dict):
         to_update = []
@@ -35,9 +42,15 @@ def process_sections(obj, depth=0):
             process_sections(v, depth + 1)
 
         for old_name, content in to_update:
+            # Convert filter_multi_pupu array to multiline
+            if "filter_multi_pupu" in content:
+                arr = array(content["filter_multi_pupu"])
+                arr.multiline(True)
+                content["filter_multi_pupu"] = arr
+
             pupu_ids = content.get("filter_multi_pupu", [])
             prefix, _ = old_name.split("_202", 1)
-            ext = old_name[old_name.rfind("."):]
+            ext = old_name[old_name.rfind("."):]  # e.g., .png
             new_hex = find_new_hex(pupu_ids)
             if new_hex:
                 new_name = f"{prefix}_{new_hex}{ext}"
@@ -49,8 +62,10 @@ def process_sections(obj, depth=0):
             if processed_count % 50 == 0:
                 print(f"[Progress] Processed {processed_count} sections... Depth {depth}")
 
+# Process the whole TOML recursively
 process_sections(data)
 
+# Write back the updated TOML++ file
 with open(toml_file, "w", encoding="utf-8") as f:
     f.write(tomlkit.dumps(data))
 
