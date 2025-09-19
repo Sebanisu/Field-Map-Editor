@@ -56,6 +56,15 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
+
+     struct PathsAndEnabled
+     {
+          std::vector<std::filesystem::path> path{};
+          std::vector<std::vector<bool>>     enabled{};
+          ConfigKey                          path_key{};
+          std::vector<ConfigKey>             enabled_key{};
+     };
+
      std::shared_ptr<Selections>  m_selections = std::make_shared<Selections>();
      // todo replace with glengine::Shader
      // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader
@@ -77,36 +86,21 @@ struct gui
      custom_paths_window       m_custom_paths_window = { m_selections };
      field_file_window         m_field_file_window = { m_field, m_selections };
      keyboard_shortcuts_window m_keyboard_shortcuts_window = { m_selections };
-     struct PathsAndEnabled
-     {
-          std::vector<std::filesystem::path> path{};
-          std::vector<std::vector<bool>>     enabled{};
-          ConfigKey                          path_key{};
-          std::vector<ConfigKey>             enabled_key{};
-     };
-     FutureOfFutureConsumer<
-       std::vector<std::future<std::future<PathsAndEnabled>>>>
-       m_future_of_future_paths_consumer = {};
-     FutureConsumer<std::vector<std::future<PathsAndEnabled>>>
-       m_future_paths_consumer = {};
-     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-       m_future_of_future_consumer                                      = {};
-     FutureConsumer<std::vector<std::future<void>>> m_future_consumer   = {};
-     float                                          saved_window_width  = {};
-     float                                          saved_window_height = {};
-     fme::import                                    m_import            = {};
-     fme::history_window                            m_history_window    = {};
-     fme::textures_window                           m_textures_window   = {};
+     float                     saved_window_width          = {};
+     float                     saved_window_height         = {};
+     fme::import               m_import                    = {};
+     fme::history_window       m_history_window            = {};
+     fme::textures_window      m_textures_window           = {};
 
      // sf::RenderTexture m_shader_renderTexture        = {};
 
-     bool                                           m_changed = { false };
+     bool                      m_changed                   = { false };
      //  ImGuiStyle                  m_original_style  = {};
      // todo fix events
      // sf::Event m_event                           = {};
-     glm::vec2                                      m_cam_pos = {};
+     glm::vec2                 m_cam_pos                   = {};
      // create a file browser instances
-     ImGui::FileBrowser                             m_save_file_browser{
+     ImGui::FileBrowser        m_save_file_browser{
           ImGuiFileBrowserFlags_EnterNewFilename
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
@@ -136,42 +130,53 @@ struct gui
              .button_hover_color  = colors::ButtonPinkHovered,
              .button_active_color = colors::ButtonPinkActive } };
 
+
+     static inline constinit bool toggle_imgui_demo_window = { false };
+
+     FutureOfFutureConsumer<
+       std::vector<std::future<std::future<PathsAndEnabled>>>>
+       m_future_of_future_paths_consumer = {};
+     FutureConsumer<std::vector<std::future<PathsAndEnabled>>>
+       m_future_paths_consumer = {};
+     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+       m_future_of_future_consumer                                    = {};
+     FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
-     archives_group              get_archives_group() const;
-     void                        update_path();
-     void                        consume_one_future();
-     std::shared_ptr<mim_sprite> get_mim_sprite() const;
-     std::shared_ptr<map_sprite> get_map_sprite() const;
-     bool                        combo_path();
-     void                        combo_draw();
-     void                        file_browser_display();
-     void                        directory_browser_display();
-     void                        menu_bar();
-     void                        selected_tiles_panel();
-     void                        tile_conflicts_panel();
-     void                        hovered_tiles_panel();
-     void                        combo_mim_palette();
-     void                        combo_mim_bpp();
-     void                        checkbox_mim_palette_texture();
-     void                        combo_field();
-     void                        combo_coo();
-     std::string                 save_texture_path() const;
-     void                        update_field();
-     bool                        mim_test() const;
-     bool                        map_test() const;
-     void                        checkbox_map_swizzle();
-     void                        checkbox_map_disable_blending();
-     void                        menuitem_locate_ff8();
-     void                        menuitem_save_swizzle_textures();
-     void                        menuitem_save_swizzle_as_one_image_textures();
-     void                        menuitem_save_deswizzle_textures();
-     void                        menuitem_load_swizzle_textures();
-     void                        menuitem_load_swizzle_as_one_image_textures();
-     void                        menuitem_load_deswizzle_textures();
-     void                        menuitem_save_texture(bool enabled = true);
-     void                        menuitem_save_mim_file(bool enabled = true);
-     void                        menuitem_save_map_file(bool enabled = true);
+     archives_group                                 get_archives_group() const;
+     void                                           update_path();
+     void                                           consume_one_future();
+     std::shared_ptr<mim_sprite>                    get_mim_sprite() const;
+     std::shared_ptr<map_sprite>                    get_map_sprite() const;
+     bool                                           combo_path();
+     void                                           combo_draw();
+     void                                           file_browser_display();
+     void                                           directory_browser_display();
+     void                                           menu_bar();
+     void                                           selected_tiles_panel();
+     void                                           tile_conflicts_panel();
+     void                                           hovered_tiles_panel();
+     void                                           combo_mim_palette();
+     void                                           combo_mim_bpp();
+     void         checkbox_mim_palette_texture();
+     void         combo_field();
+     void         combo_coo();
+     std::string  save_texture_path() const;
+     void         update_field();
+     bool         mim_test() const;
+     bool         map_test() const;
+     void         checkbox_map_swizzle();
+     void         checkbox_map_disable_blending();
+     void         menuitem_locate_ff8();
+     void         menuitem_save_swizzle_textures();
+     void         menuitem_save_swizzle_as_one_image_textures();
+     void         menuitem_save_deswizzle_textures();
+     void         menuitem_load_swizzle_textures();
+     void         menuitem_load_swizzle_as_one_image_textures();
+     void         menuitem_load_deswizzle_textures();
+     void         menuitem_save_texture(bool enabled = true);
+     void         menuitem_save_mim_file(bool enabled = true);
+     void         menuitem_save_map_file(bool enabled = true);
      void         menuitem_save_map_file_modified(bool enabled = true);
      void         menuitem_load_map_file(bool enabled = true);
      // void                      scale_window(float width = {}, float height =
@@ -283,10 +288,7 @@ struct gui
        const std::vector<std::string> &paths);
 
      [[nodiscard]] static std::ptrdiff_t
-                                  add_delete_button(const std::ptrdiff_t index);
-
-
-     static inline constinit bool toggle_imgui_demo_window = { false };
+       add_delete_button(const std::ptrdiff_t index);
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

@@ -71,40 +71,9 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle  = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     void               purge_empty_full_filename_texture() const;
-     [[nodiscard]] bool check_all_masks_exists_full_filename_texture() const;
-     void               load_child_map_sprite_full_filename_texture() const;
-     void
-       generate_combined_textures_for_child_map_sprite_full_filename_texture()
-         const;
-     void post_op_full_filename_texture() const;
-     std::tuple<
-       glengine::PaletteBuffer,
-       glengine::HistogramBuffer,
-       glengine::DistanceBuffer>
-       initialize_buffers(const std::vector<glm::vec4> &palette) const;
-
-     std::pair<
-       std::vector<PupuOpEntry>,
-       std::vector<std::string>>
-       collect_post_op_entries(
-         std::tuple<
-           glengine::PaletteBuffer,
-           glengine::HistogramBuffer,
-           glengine::DistanceBuffer> &buffers) const;
-
-     void process_post_op_entries(
-       const std::vector<PupuOpEntry> &multi_pupu_post_op,
-       glengine::PaletteBuffer        &pb) const;
-     void cleanup_full_filename_textures(
-       const std::vector<std::string> &remove_queue) const;
      mutable std::map<std::string, glengine::Texture> m_full_filename_textures
        = {};
      mutable std::map<std::string, std::string> m_full_filename_to_mask_name
-       = {};
-     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-       m_future_of_future_consumer = {};
-     mutable FutureConsumer<std::vector<std::future<void>>> m_future_consumer
        = {};
      std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> m_texture
        = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
@@ -200,8 +169,43 @@ struct [[nodiscard]] map_sprite// final
      static constexpr auto s_quarter_color
        = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
 
-     mutable glm::vec4             m_uniform_color = s_default_color;
+     mutable glm::vec4 m_uniform_color = s_default_color;
+
+
+     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
+       m_future_of_future_consumer = {};
+     mutable FutureConsumer<std::vector<std::future<void>>> m_future_consumer
+       = {};
+
      [[nodiscard]] settings_backup get_backup_settings(const bool);
+
+     void                          purge_empty_full_filename_texture() const;
+     [[nodiscard]] bool check_all_masks_exists_full_filename_texture() const;
+     void               load_child_map_sprite_full_filename_texture() const;
+     void
+       generate_combined_textures_for_child_map_sprite_full_filename_texture()
+         const;
+     void post_op_full_filename_texture() const;
+     std::tuple<
+       glengine::PaletteBuffer,
+       glengine::HistogramBuffer,
+       glengine::DistanceBuffer>
+       initialize_buffers(const std::vector<glm::vec4> &palette) const;
+
+     std::pair<
+       std::vector<PupuOpEntry>,
+       std::vector<std::string>>
+       collect_post_op_entries(
+         std::tuple<
+           glengine::PaletteBuffer,
+           glengine::HistogramBuffer,
+           glengine::DistanceBuffer> &buffers) const;
+
+     void process_post_op_entries(
+       const std::vector<PupuOpEntry> &multi_pupu_post_op,
+       glengine::PaletteBuffer        &pb) const;
+     void cleanup_full_filename_textures(
+       const std::vector<std::string> &remove_queue) const;
 
    public:
      map_sprite() = default;

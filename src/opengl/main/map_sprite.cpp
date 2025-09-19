@@ -1314,7 +1314,9 @@ void map_sprite::
      {
           m_child_textures_map.clear();
           spdlog::error(
-            "{}:{} m_textures_map is nullptr: {}",
+            "{}:{} "
+            "m_child_map_sprite->get_deswizzle_combined_textures(scale.x, "
+            "true) failed: {}",
             __FILE__,
             __LINE__,
             temp.error());
@@ -3019,7 +3021,7 @@ void map_sprite::save_deswizzle_generate_toml(
                  std::async(std::launch::deferred, queue_framebuffer_load));
           }
      }
-     if (force_load)
+     if (!force_load)
      {
           m_future_consumer += std::move(futures);
           spdlog::trace(
@@ -3030,7 +3032,7 @@ void map_sprite::save_deswizzle_generate_toml(
      else
      {
 
-          spdlog::trace(
+          spdlog::debug(
             "{}:{} Framebuffer generation force loaded!", __FILE__, __LINE__);
      }
      return &m_cache_framebuffer;
