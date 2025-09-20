@@ -4193,12 +4193,15 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
      //     map_sprite(ff_8::map_group map_group, bool draw_swizzle,
      //     ff_8::filters in_filters, bool force_disable_blends, bool
      //     require_coo);
+     map_sprite_settings settings = {
+          .draw_swizzle   = m_selections->get<ConfigKey::DrawSwizzle>(),
+          .disable_blends = m_selections->get<ConfigKey::DrawDisableBlending>(),
+          .require_coo    = false,
+     };
      return std::make_shared<map_sprite>(
        ff_8::map_group{ m_field, get_coo() },
-       m_selections->get<ConfigKey::DrawSwizzle>(),
+       settings,
        ff_8::filters{ true },
-       m_selections->get<ConfigKey::DrawDisableBlending>(),
-       false,
        m_selections);
 }
 

@@ -35,6 +35,8 @@
 
 namespace fme
 {
+
+
 struct PupuOpEntry
 {
      ff_8::PupuID         pupu;
@@ -151,7 +153,7 @@ struct fmt::formatter<fme::DrawFailure>
           bool       first      = true;
           const auto write_part = [&](const auto &part)
           {
-               if (!first)
+               if (first)
                {
                     fmt::format_to(ctx.out(), "{} : ", part);
                     first = false;
@@ -162,15 +164,16 @@ struct fmt::formatter<fme::DrawFailure>
                }
           };
 
-          if (!df.message.empty())
+          if (df.message.empty())
           {
+               first = false;
                write_part(df.error);
           }
           else
           {
-               first = false;
+               write_part(df.error);
+               write_part(df.message);
           }
-          write_part(df.message);
           return ctx.out();
      }
 };
@@ -219,13 +222,11 @@ struct [[nodiscard]] map_sprite// final
      mutable std::map<std::string, std::vector<ff_8::PupuID>>
                                          m_cache_framebuffer_pupuids = {};
      ff_8::map_group                     m_map_group                 = {};
+     map_sprite_settings                 m_settings                  = {};
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
-                           m_child_textures_map         = {};
-     bool                  m_draw_swizzle               = { false };
-     bool                  m_disable_texture_page_shift = { false };
-     bool                  m_disable_blends             = { false };
+                           m_child_textures_map = {};
      mutable ff_8::filters m_filters
        = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>           m_selections             = {};
@@ -346,10 +347,8 @@ struct [[nodiscard]] map_sprite// final
      map_sprite() = default;
      map_sprite(
        ff_8::map_group                        map_group,
-       bool                                   draw_swizzle,
+       map_sprite_settings                    settings,
        ff_8::filters                          in_filters,
-       bool                                   force_disable_blends,
-       bool                                   require_coo,
        std::weak_ptr<Selections>              selections,
        std::shared_ptr<glengine::FrameBuffer> framebuffer
        = std::make_shared<glengine::FrameBuffer>());
@@ -673,7 +672,7 @@ struct [[nodiscard]] map_sprite// final
        bool                skip_filters = false,
        bool                find_all     = false) const
      {
-          if (m_draw_swizzle)
+          if (m_settings.draw_swizzle)
           {
                return ff_8::find_intersecting_swizzle(
                  tiles,
@@ -1018,9 +1017,9 @@ struct [[nodiscard]] map_sprite// final
           }();
           const auto dest = [this, &tile]()
           {
-               if (m_draw_swizzle)
+               if (m_settings.draw_swizzle)
                {
-                    if (m_disable_texture_page_shift)
+                    if (m_settings.disable_texture_page_shift)
                     {
                          return to_vec2(
                            ff_8::dest_coords_for_swizzle_disable_shift(tile));

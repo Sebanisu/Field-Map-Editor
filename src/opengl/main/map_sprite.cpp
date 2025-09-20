@@ -33,19 +33,16 @@ namespace fme
 
 map_sprite::map_sprite(
   ff_8::map_group                        map_group,
-  bool                                   draw_swizzle,
+  map_sprite_settings                    settings,
   ff_8::filters                          in_filters,
-  bool                                   force_disable_blends,
-  bool                                   require_coo,
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
-      !require_coo
+      !settings.require_coo
           || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic)
         ? std::move(map_group)
         : ff_8::map_group{})
-  , m_draw_swizzle(draw_swizzle)
-  , m_disable_blends(force_disable_blends)
+  , m_settings(settings)
   , m_filters(std::move(in_filters))
   , m_selections(selections)
   , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
@@ -128,32 +125,22 @@ map_sprite::operator ff_8::path_search() const
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ m_map_group.field, coo },
-              m_draw_swizzle,
-              m_filters,
-              m_disable_blends,
-              false,
-              m_selections,
-              m_render_framebuffer };
+
+     return { ff_8::map_group{ m_map_group.field, coo }, m_settings, m_filters,
+              m_selections, m_render_framebuffer };
 }
 
 map_sprite map_sprite::with_field(
   map_sprite::WeakField  field,
   const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo },
-              m_draw_swizzle,
-              m_filters,
-              m_disable_blends,
-              false,
-              m_selections,
-              m_render_framebuffer };
+     return { ff_8::map_group{ std::move(field), coo }, m_settings, m_filters,
+              m_selections, m_render_framebuffer };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group,         m_draw_swizzle, std::move(filters),
-              m_disable_blends,    false,          m_selections,
+     return { m_map_group, m_settings, std::move(filters), m_selections,
               m_render_framebuffer };
 }
 
@@ -302,15 +289,29 @@ void map_sprite::queue_texture_loading() const
      std::vector<std::future<std::future<void>>> future_of_futures{};
 
 
-     const auto                                  fofh_consumer
-       = glengine::ScopeGuard{ [&]()
-                               {
-                                    // Consume the collected nested futures
-                                    // immediately to kick off the work
+     const auto fofh_consumer = glengine::ScopeGuard{
+          [&]()
+          {
+               // Consume the collected nested futures
+               // immediately to kick off the work
 
-                                    m_future_of_future_consumer
-                                      += std::move(future_of_futures);
-                               } };
+               if (m_settings.force_loading)
+               {
+                    spdlog::debug(
+                      "Force_loading textures: {}",
+                      std::ranges::size(future_of_futures));
+                    m_future_of_future_consumer += std::move(future_of_futures);
+                    consume_now();
+               }
+               else
+               {
+                    spdlog::debug(
+                      "Queued textures: {}",
+                      std::ranges::size(future_of_futures));
+                    m_future_of_future_consumer += std::move(future_of_futures);
+               }
+          }
+     };
 
      // Check if the deswizzle filter is enabled
      if (m_filters.deswizzle.enabled())
@@ -742,7 +743,7 @@ void map_sprite::update_position(
           {
                const auto &original_tile = const_tiles[i];
                auto       &working_tile  = tiles[i];
-               if (m_draw_swizzle)
+               if (m_settings.draw_swizzle)
                {
                     const std::int32_t texture_page_width = 256;
                     const std::int32_t x_offset
@@ -906,10 +907,13 @@ void map_sprite::update_position(
                  if (texture->width() == 0 || texture->height() == 0)
                  {
                       failures.emplace(
-                        DrawError::ZeroSizedTexture, "Texture has zero size");
+                        DrawError::ZeroSizedTexture,
+                        fmt::format(
+                          "Texture has size ({},{})", texture->width(),
+                          texture->height()));
                       return;
                  }
-                 if (!m_disable_blends)
+                 if (!m_settings.disable_blends)
                  {
                       auto blend_mode = tile.blend_mode();
                       if (blend_mode != last_blend_mode)
@@ -1156,13 +1160,13 @@ glm::uvec2 map_sprite::get_tile_texture_size(
 
 void map_sprite::enable_draw_swizzle()
 {
-     m_draw_swizzle = true;
+     m_settings.draw_swizzle = true;
      update_render_texture();
 }
 
 void map_sprite::disable_draw_swizzle()
 {
-     m_draw_swizzle = false;
+     m_settings.draw_swizzle = false;
      update_render_texture();
 }
 
@@ -1232,7 +1236,10 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           // see if no textures are loaded and fall
           // back to .mim if not.
           spdlog::debug("Loading Fallback Textures (.mim)");
-          return;
+          if (!m_settings.force_loading)
+          {
+               return;
+          }
      }
      // don't resize render texture till we have something to draw?
      // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) {
@@ -1290,13 +1297,13 @@ void map_sprite::load_child_map_sprite_full_filename_texture() const
      {
           spdlog::debug(
             "Task 3.1: Load child map_sprite with only the mim textures.");
+          map_sprite_settings settings
+            = { .draw_swizzle   = false,
+                .disable_blends = true,
+                .require_coo    = m_settings.require_coo,
+                .force_loading  = true };
           m_child_map_sprite = std::make_unique<map_sprite>(
-            m_map_group,
-            false,
-            ff_8::filters{ false },
-            true,
-            false,
-            m_selections);
+            m_map_group, settings, ff_8::filters{ false }, m_selections);
           m_child_map_sprite->consume_now(true);
           // return;// return early here as the texture loading is placed
           // in
@@ -1965,7 +1972,7 @@ open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 
 std::uint32_t map_sprite::width() const
 {
-     if (m_draw_swizzle)
+     if (m_settings.draw_swizzle)
      {
           if (m_map_group.mim)
           {
@@ -1978,7 +1985,7 @@ std::uint32_t map_sprite::width() const
 
 std::uint32_t map_sprite::height() const
 {
-     if (m_draw_swizzle)
+     if (m_settings.draw_swizzle)
      {
           if (m_map_group.mim)
           {
@@ -2008,8 +2015,9 @@ map_sprite map_sprite::update(
   ff_8::map_group map_group,
   bool            draw_swizzle) const
 {
-     return { std::move(map_group), draw_swizzle, m_filters,
-              m_disable_blends,     false,        m_selections };
+     auto settings         = m_settings;
+     settings.draw_swizzle = draw_swizzle;
+     return { std::move(map_group), settings, m_filters, m_selections };
 }
 const ff_8::all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -2369,9 +2377,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const auto &unique_bpp         = unique_values.bpp().values();
      const auto max_texture_page_id = std::ranges::max(unique_texture_page_ids);
 
-     // Backup and override current settings for exporting textures.
-     settings_backup settings       = get_backup_settings(true);
-     settings.disable_texture_page_shift = false;// Disable texture page shifts
+     // Backup and override current backup for exporting textures.
+     settings_backup backup         = get_backup_settings(true);
+     backup.settings->disable_texture_page_shift = false;
      std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
      if (height == 0)
      {
@@ -2454,8 +2462,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
                for (const auto &palette : filter_palette)
                {
-                    settings.filters.value().palette.update(palette).enable();
-                    settings.filters.value().bpp.update(bpp).enable();
+                    backup.filters.value().palette.update(palette).enable();
+                    backup.filters.value().bpp.update(bpp).enable();
 
                     // Generate the texture.
                     auto out_framebuffer
@@ -2485,8 +2493,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
 
      // No conflicting palettes — save the texture page normally.
-     settings.filters.value().palette.disable();
-     settings.filters.value().bpp.disable();
+     backup.filters.value().palette.disable();
+     backup.filters.value().bpp.disable();
 
      auto out_framebuffer = glengine::FrameBuffer{ specification };
      if (generate_texture(out_framebuffer))
@@ -2795,24 +2803,24 @@ void map_sprite::save_deswizzle_generate_toml(
 [[nodiscard]] settings_backup
   map_sprite::get_backup_settings(const bool draw_swizzle)
 {
-     auto settings = settings_backup{
-          m_filters, m_draw_swizzle, m_disable_texture_page_shift,
-          m_disable_blends
+     auto backup = settings_backup{
+          m_filters, m_settings
           //, m_render_framebuffer.mutable_scale()
      };
-     settings.filters                 = ff_8::filters{ false };
-     settings.filters.value().swizzle = settings.filters.backup().swizzle;
-     settings.filters.value().swizzle_as_one_image
-       = settings.filters.backup().swizzle_as_one_image;
-     settings.filters.value().deswizzle = settings.filters.backup().deswizzle;
-     settings.filters.value().full_filename
-       = settings.filters.backup().full_filename;
-     settings.filters.value().map = settings.filters.backup().map;
-     settings.draw_swizzle        = draw_swizzle;// No swizzling when saving
-     settings.disable_texture_page_shift = true; // Disable texture page shifts
-     settings.disable_blends             = true; // Disable blending
+     backup.filters                 = ff_8::filters{ false };
+     backup.filters.value().swizzle = backup.filters.backup().swizzle;
+     backup.filters.value().swizzle_as_one_image
+       = backup.filters.backup().swizzle_as_one_image;
+     backup.filters.value().deswizzle = backup.filters.backup().deswizzle;
+     backup.filters.value().full_filename
+       = backup.filters.backup().full_filename;
+     backup.filters.value().map    = backup.filters.backup().map;
+     backup.settings->draw_swizzle = draw_swizzle;// No swizzling when saving
+     backup.settings->disable_texture_page_shift
+       = true;                              // Disable texture page shifts
+     backup.settings->disable_blends = true;// Disable blending
 
-     return settings;
+     return backup;
 }
 
 [[nodiscard]] std::vector<std::future<void>>
@@ -3044,7 +3052,7 @@ void map_sprite::save_deswizzle_generate_toml(
                }
           };
 
-          if (force_load)
+          if (force_load || m_settings.force_loading)
           {
                queue_framebuffer_load();
           }
@@ -3054,7 +3062,7 @@ void map_sprite::save_deswizzle_generate_toml(
                  std::async(std::launch::deferred, queue_framebuffer_load));
           }
      }
-     if (!force_load)
+     if (!(force_load || m_settings.force_loading))
      {
           m_future_consumer += std::move(futures);
           spdlog::trace(
@@ -3969,12 +3977,12 @@ void map_sprite::update_render_texture(
 // }
 void map_sprite::enable_disable_blends()
 {
-     m_disable_blends = true;
+     m_settings.disable_blends = true;
      update_render_texture();
 }
 void map_sprite::disable_disable_blends()
 {
-     m_disable_blends = false;
+     m_settings.disable_blends = false;
      update_render_texture();
 }
 void map_sprite::compact_move_conflicts_only()
@@ -4135,7 +4143,7 @@ std::vector<std::size_t> map_sprite::find_intersecting(
   bool              skip_filters,
   bool              find_all) const
 {
-     if (m_draw_swizzle)
+     if (m_settings.draw_swizzle)
      {
           return ff_8::find_intersecting_swizzle(
             map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
