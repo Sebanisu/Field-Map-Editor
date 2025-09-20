@@ -2,6 +2,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/v68sdv6ldtv3ll22?svg=true)](https://ci.appveyor.com/project/Sebanisu/field-map-editor) 
 [![C++ 23](https://img.shields.io/badge/C++%20-23-ff69b4.svg)](https://en.cppreference.com/w/cpp/23) 
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/Sebanisu/Field-Map-Editor/pulls)
 <!--![CMake](https://github.com/Sebanisu/Field-Map-Editor/workflows/CMake/badge.svg)-->
 
 Test Application for editing the tiles of a FF8 field. See [releases](https://github.com/Sebanisu/Field-Map-Editor/releases) to download the most recent build. Everything is in constant flux. You might want to backup your current build of the program before upgrading as their maybe breaking changes.
@@ -28,16 +29,65 @@ If you notice any missing features or have suggestions, feel free to share your 
 > **Note:** This version also requires the `res` folder, which contains essential shaders and textures.
 
 ![image](https://github.com/user-attachments/assets/730fbd48-b742-47cf-bffa-b7a106e586b6)
-
 #### Batch Operation Window
 
-The Batch Operation Window will let you take input in one format and output in another format. Input formats such as `.mim`, swizzle, and deswizzle. Output formats such as swizzle, deswizzle, and swizzle as one file.
+The **Batch Operation Window** allows you to take input in one format and output it in another.  
 
-![image](https://github.com/user-attachments/assets/d67f25ba-b6a8-4efc-b724-17bb98da315c)
+---
+
+**Supported Input Formats:**
+
+- **`.mim`** — Mim is the storage format of the field textures in *Final Fantasy VIII*. Selecting this option means you are using the original low-resolution textures.  
+- **Deswizzle** — Load a directory of deswizzled textures, including `.map` files if present.  
+- **Swizzle** — Load a directory of swizzled textures, including `.map` files if present.  
+- **Swizzle as One Image** — Load a directory of swizzled “as one image” textures, including `.map` files if present.  
+  - ⚠️ May not load correctly without a `.map` file. Might require enforcing FFNX formatting when `.map` is missing.  
+- **Full Filename Image** — Load a directory of full filename textures, including `.map` files if present (`.toml` supported).  
+  - Uses the **`Deswizzle.toml`** configuration file to read filenames and **PupuIDs**.  
+
+---
+
+**Supported Output Formats:**
+
+- **Deswizzle** — Output in deswizzled format.  
+- **Swizzle** — Output in swizzled format.  
+- **Swizzle as One Image** — Output swizzled textures combined into a single image.  
+- **Deswizzle + Generate TOML** — Output deswizzled textures and generate a new `deswizzle.toml` configuration.  
+- **Deswizzle (Full Filename)** — Output deswizzled textures using the full filename convention (based on `deswizzle.toml`).  
+- **CSV** — Outputs a `.csv` file containing a dump of all the tiles found in the `.map` file.  
+
+---
+
+![image](https://github.com/user-attachments/assets/d67f25ba-b6a8-4efc-b724-17bb98da315c)  
+
+#### Deswizzle.toml Editor ***(NEW)***
+
+The **Deswizzle.toml Editor** provides a configuration interface for defining image combinations used during batch generation.  
+
+- **PupuIDs** are the primary keys used to group images together and later separate them back into individual components.  
+- **Filters**:  
+  - Filters can be applied to **output images only**.  
+  - Input images do **not** support filters other than PupuIDs.  
+- **Masks** (batch output only):  
+  - **Multi-colored masks** can be generated to define cut regions.  
+  - **White-on-black masks** can also be generated for external editing tools (e.g., Photoshop).  
+  - White-on-black masks are **output-only** and are **not accepted as input** for batch operations.  
+
+You may edit the **`deswizzle.toml`** file directly to customize configurations.  
+- Configurations can be **shared with others** or contributed back via a [pull request](https://github.com/Sebanisu/Field-Map-Editor/pulls).  
+- The current version of `deswizzle.toml` is **preliminary** and may contain bugs; it was created in limited time for the initial release.  
+
+> ⚠️ **Note:** The `deswizzle.toml` included with this release is an **initial draft**.  
+> Expect incomplete mappings or errors. Contributions and improvements are welcome.  
+
+![image](https://github.com/user-attachments/assets/8305b9a7-5f3e-4f5a-9cae-c2667dc610ac)  
+![image](https://github.com/user-attachments/assets/12d567f5-ec35-42b9-a489-4e7c3590b4e9)  
+
 
 #### Impot Window WIP
 
-This feature needs more work. I did have a working test where I used this to add tiles to the swizzle, loaded in the game. You might still be able to get it to work.
+Feature is **disabled** for now needs reworked!
+This feature needs more work. I did have a working test where I used this to add tiles to the swizzle, loaded in the game. You might still be able to get it to work. 
 
 ![image](https://github.com/user-attachments/assets/73d254c3-0835-4b1f-a93d-43ddeb020deb)
 
