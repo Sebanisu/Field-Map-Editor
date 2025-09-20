@@ -133,17 +133,44 @@ If you find something in the Experimental version that you'd like to see in the 
 
 ---
 
-
 ### Credits
 
-This project is based on the work of the following developers:
+This project is based on the work of the following developers. I referenced their code or videos in the development of this project:
 
-- [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) ([source](https://github.com/Sebanisu/Pupu))
-- [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) ([source](https://github.com/myst6re/deling))
-- [Maki](https://forums.qhimm.com/index.php?topic=18656.0) ([source](https://github.com/MaKiPL/OpenVIII-monogame))
-- [TheCherno](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT) ([source](https://github.com/thecherno))
+| Developer | Forum / Profile | Source |
+|-----------|----------------|--------|
+| Omzy      | [Link](https://forums.qhimm.com/index.php?topic=13444.0) | [GitHub](https://github.com/Sebanisu/Pupu) |
+| myst6re  | [Link](https://forums.qhimm.com/index.php?topic=13050.0) | [GitHub](https://github.com/myst6re/deling) |
+| Maki      | [Link](https://forums.qhimm.com/index.php?topic=18656.0) | [GitHub](https://github.com/MaKiPL/OpenVIII-monogame) |
+| TheCherno | [Link](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT) | [GitHub](https://github.com/thecherno) |
+| TrueOdin  | [Link](https://forums.qhimm.com/index.php?topic=19970.0) | [GitHub](https://github.com/julianxhokaxhiu/FFNx) |
 
-I referenced their code or videos in the development of this project.
+
+### Build Info
+
+[![OpenGL 4.3](https://img.shields.io/badge/OpenGL-4.3-blue.svg)](https://www.khronos.org/opengl/)
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-lightgrey.svg)](https://en.cppreference.com/w/cpp/23)
+[![Conan](https://img.shields.io/badge/dependencies-conan-green.svg)](https://conan.io/)
+
+#### Libraries (via Conan)
+[![lz4 1.10.0](https://img.shields.io/badge/lz4-1.10.0-blue.svg)](https://github.com/lz4/lz4)
+[![spdlog 1.15.0](https://img.shields.io/badge/spdlog-1.15.0-blue.svg)](https://github.com/gabime/spdlog)
+[![glfw 3.4](https://img.shields.io/badge/glfw-3.4-blue.svg)](https://www.glfw.org/)
+[![glew 2.2.0](https://img.shields.io/badge/glew-2.2.0-blue.svg)](http://glew.sourceforge.net/)
+[![glm 0.9.9.8](https://img.shields.io/badge/glm-0.9.9.8-blue.svg)](https://github.com/g-truc/glm)
+[![imgui 1.91.8-docking](https://img.shields.io/badge/imgui-1.91.8--docking-blue.svg)](https://github.com/ocornut/imgui)
+[![boost.ut 2.1.0](https://img.shields.io/badge/boost.ut-2.1.0-blue.svg)](https://github.com/boost-ext/ut)
+[![toml++ 3.0.1](https://img.shields.io/badge/toml++-3.0.1-blue.svg)](https://github.com/marzer/tomlplusplus)
+[![libpng 1.6.44](https://img.shields.io/badge/libpng-1.6.44-blue.svg)](http://www.libpng.org/pub/png/libpng.html)
+[![stb](https://img.shields.io/badge/stb-cci.20230920-blue.svg)](https://github.com/nothings/stb)
+[![iconfontcppheaders](https://img.shields.io/badge/iconfontcppheaders-cci.20240620-blue.svg)](https://github.com/owengage/iconfontcppheaders)
+[![ctre 3.9.0](https://img.shields.io/badge/ctre-3.9.0-blue.svg)](https://github.com/eranpeer/CompileTimeRegex)
+
+#### Build Tools
+[![CMake 3.31.6](https://img.shields.io/badge/CMake-3.31.6-blue.svg)](https://cmake.org/)
+[![Ninja 1.12.1](https://img.shields.io/badge/Ninja-1.12.1-blue.svg)](https://ninja-build.org/)
+[![Visual Studio 2022 v17.14](https://img.shields.io/badge/Visual%20Studio-2022%20v17.14-blue.svg)](https://visualstudio.microsoft.com/vs/)
+[![GCC 15.1.1](https://img.shields.io/badge/GCC-15.1.1-red.svg)](https://gcc.gnu.org/)
 
 ---
 
