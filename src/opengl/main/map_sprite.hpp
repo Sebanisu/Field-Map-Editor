@@ -588,7 +588,9 @@ struct [[nodiscard]] map_sprite// final
      void compact_all();
      void flatten_bpp();
      void flatten_palette();
-     void load_map(const std::filesystem::path &dest_path);
+     void load_map(
+       const std::filesystem::path &dest_path,
+       const bool                   skip_update = false);
      void resize_render_texture() const;
      void update_render_texture(
        const glengine::Texture *p_texture,

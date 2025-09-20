@@ -74,12 +74,14 @@ map_sprite::map_sprite(
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
      };
+
+
      if (m_filters.map.enabled())
      {
           if (const auto paths = ps.generate_map_paths(".map");
               !std::ranges::empty(paths))
           {
-               load_map(paths.front());// grab the first match.
+               load_map(paths.front(), true);// grab the first match.
           }
           else
           {
@@ -3894,7 +3896,9 @@ std::expected<
           return exp;
      }
 }
-void map_sprite::load_map(const std::filesystem::path &src_path)
+void map_sprite::load_map(
+  const std::filesystem::path &src_path,
+  const bool                   skip_update)
 {
      const auto path = src_path.string();
      open_viii::tools::read_from_file(
@@ -3943,7 +3947,10 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
        path);
 
      spdlog::info("Load map: {}", src_path.string());
-     update_render_texture();
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
 }
 void map_sprite::test_map(const std::filesystem::path &saved_path) const
 {
