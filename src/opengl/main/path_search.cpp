@@ -173,7 +173,7 @@ std::vector<std::filesystem::path>
              ? opt_coo
              : std::nullopt,
          .palette = palette },
-       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
+       { &selections->get<fme::ConfigKey::OutputSwizzleAsOneImagePattern>() });
 }
 
 std::vector<std::filesystem::path>
