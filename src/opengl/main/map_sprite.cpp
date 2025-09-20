@@ -1281,13 +1281,8 @@ bool map_sprite::check_all_masks_exists_full_filename_texture() const
        [&](const auto &pair)
        {
             const auto &[filename, maskname] = pair;
-            if (!m_full_filename_textures->contains(filename))
-            {
-                 // we don't care if the mask name doesn't exist if
-                 // filename does not.
-                 return true;
-            }
-            return m_full_filename_textures->contains(maskname);
+            return m_full_filename_textures->contains(filename)
+                   && m_full_filename_textures->contains(maskname);
        });
 }
 
@@ -1330,23 +1325,32 @@ void map_sprite::
      // GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
 
      // calculate scale using one of the existing textures
-     const auto canvas           = m_child_map_sprite->get_canvas();
-     const auto [min_it, max_it] = std::ranges::minmax_element(
-       *m_full_filename_textures,
-       [](const auto &apair, const auto &bpair)
-       {
-            const auto &a  = std::get<1>(apair);
-            const auto &b  = std::get<1>(bpair);
-            const auto  sa = a.get_size();
-            const auto  sb = b.get_size();
-            return (sa.x * sa.y) < (sb.x * sb.y);
-       });
 
-     const auto max_size = std::get<1>(*max_it).get_size();
-     assert(std::get<1>(*min_it).get_size() == max_size);
-     const auto scale = glm::ivec2(canvas.width(), canvas.height()) / max_size;
+     const auto scale = [&]() -> glm::ivec2
+     {
+          if (m_full_filename_textures->empty())
+               return glm::ivec2{ 1, 1 };
+
+          const auto [min_it, max_it] = std::ranges::minmax_element(
+            *m_full_filename_textures,
+            [](const auto &apair, const auto &bpair)
+            {
+                 const auto &a  = std::get<1>(apair);
+                 const auto &b  = std::get<1>(bpair);
+                 const auto  sa = a.get_size();
+                 const auto  sb = b.get_size();
+                 return (sa.x * sa.y) < (sb.x * sb.y);
+            });
+
+          const auto max_size = std::get<1>(*max_it).get_size();
+          assert(std::get<1>(*min_it).get_size() == max_size);
+
+          const auto canvas = m_child_map_sprite->get_canvas();
+          return glm::ivec2(canvas.width(), canvas.height()) / max_size;
+     }();
      assert(scale.x == scale.y);
      assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
+
      const auto temp
        = m_child_map_sprite->get_deswizzle_combined_textures(scale.x, true);
      m_child_map_sprite->consume_now(true);
@@ -1435,23 +1439,19 @@ std::pair<
      // Main loop over pairs
      for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
      {
-          if (!m_full_filename_textures->contains(filename))
-               continue;
-          glengine::Texture &main_texture
-            = m_full_filename_textures->at(filename);
-          // todo support multiple white on black mask textures?
-          const auto mask_texture
-            = [&]() -> std::expected<const glengine::SubTexture, std::string>
+
+          auto get_mask_texture
+            = [&](int in_color_attachment_id, const std::string &in_maskname)
+            -> std::expected<const glengine::SubTexture, std::string>
           {
-               if (auto it = m_full_filename_textures->find(maskname);
+               if (auto it = m_full_filename_textures->find(in_maskname);
                    it != m_full_filename_textures->end())
                {
-
                     spdlog::debug(
                       "{}:{} Mask chosen external mask png id: {}, "
                       "mask_filename: {}",
                       __FILE__, __LINE__,
-                      static_cast<std::uint32_t>(it->second.id()), maskname);
+                      static_cast<std::uint32_t>(it->second.id()), in_maskname);
                     return it->second;
                }
 
@@ -1470,15 +1470,28 @@ std::pair<
                {
                     return std::unexpected("FrameBuffer has no value");
                }
+
                spdlog::debug(
-                 "{}:{} Mask chosen generated map id: {}, toml_filename: "
-                 "{}",
+                 "{}:{} Mask chosen generated map id: {}, toml_filename: {}",
                  __FILE__, __LINE__,
                  static_cast<std::uint32_t>(
-                   map_it->second->color_attachment_id(1)),
+                   map_it->second->color_attachment_id(in_color_attachment_id)),
                  filename);
-               return map_it->second->color_attachment_id(1);
-          }();
+
+               return map_it->second->color_attachment_id(
+                 in_color_attachment_id);
+          };
+
+          // Example call
+          auto main_texture = get_mask_texture(0, filename);
+          if (!main_texture)
+          {
+               spdlog::error("Mask lookup failed: {}", main_texture.error());
+               remove_queue.push_back(filename);
+               continue;
+          }
+
+          auto mask_texture = get_mask_texture(1, maskname);
           if (!mask_texture)
           {
                spdlog::error("Mask lookup failed: {}", mask_texture.error());
@@ -1541,7 +1554,7 @@ std::pair<
                pb.bind(2);
                hb.bind(1);
                mask_texture->bind_read_only(0);
-               const auto size       = main_texture.get_size();
+               const auto size       = main_texture->get_size();
                const auto pop_shader = m_mask_count_comp_shader->backup();
                m_mask_count_comp_shader->bind();
                m_mask_count_comp_shader->set_uniform(
@@ -1572,7 +1585,7 @@ std::pair<
                     multi_pupu_post_op.push_back(
                       PupuOpEntry{ .pupu         = pupu,
                                    .color_index  = static_cast<int>(index),
-                                   .main_texture = main_texture,
+                                   .main_texture = *main_texture,
                                    .mask_texture = *mask_texture,
                                    .count        = count,
                                    .distance     = distance });
@@ -1740,10 +1753,10 @@ void map_sprite::process_full_filename_textures() const
      }
      purge_empty_full_filename_texture();
 
-     if (m_full_filename_textures->empty())
-     {
-          return;
-     }
+     // if (m_full_filename_textures->empty())
+     // {
+     //      return;
+     // }
      load_child_map_sprite_full_filename_texture();
      generate_combined_textures_for_child_map_sprite_full_filename_texture();
 
