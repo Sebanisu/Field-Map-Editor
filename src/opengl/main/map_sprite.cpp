@@ -2393,32 +2393,34 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
        = unique_values.texture_page_id().values();
      const auto &unique_bpp         = unique_values.bpp().values();
      const auto max_texture_page_id = std::ranges::max(unique_texture_page_ids);
+     const auto max_source_x
+       = m_map_group.maps.working().visit_tiles(
+           [&](const auto &tiles) -> std::int32_t
+           {
+                auto f_t_range
+                  = tiles
+                    | std::ranges::views::filter(
+                      [&](const auto &tile)
+                      { return tile.texture_id() == max_texture_page_id; })
+                    | std::ranges::views::transform(
+                      [](const auto &tile) { return tile.source_x(); });
+                return static_cast<std::int32_t>(std::ranges::max(f_t_range));
+           })
+         + static_cast<std::int32_t>(TILE_SIZE);
 
      // Backup and override current backup for exporting textures.
-     settings_backup backup         = get_backup_settings(true);
+     settings_backup backup                      = get_backup_settings(true);
      backup.settings->disable_texture_page_shift = false;
-     std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
-     if (height == 0)
+     if (auto detected_height
+         = static_cast<std::int32_t>(get_max_texture_height());
+         detected_height == 0)
      {
           return {};
      }
-
-     const auto max_source_x = m_map_group.maps.working().visit_tiles(
-       [&](const auto &tiles) -> std::uint8_t
-       {
-            auto f_t_range
-              = tiles
-                | std::ranges::views::filter(
-                  [&](const auto &tile)
-                  { return tile.texture_id() == max_texture_page_id; })
-                | std::ranges::views::transform([](const auto &tile)
-                                                { return tile.source_x(); });
-            return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
-       });
+     const std::int32_t height = 256 * m_render_framebuffer->scale();
      const std::int32_t width
-       = height * static_cast<std::int32_t>(max_texture_page_id)
-         + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id
-                                                                        //+ 1);
+       = ((256 * static_cast<std::int32_t>(max_texture_page_id)) + max_source_x)
+         * m_render_framebuffer->scale();
 
      // If there’s only one bpp and at most one palette, nothing needs
      // saving.
@@ -4020,6 +4022,8 @@ void map_sprite::compact_map_order()
 }
 void map_sprite::compact_map_order_ffnx()
 {
+     spdlog::debug(
+       "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2);
      ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(
        fmt::format(
          "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
