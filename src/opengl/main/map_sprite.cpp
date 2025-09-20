@@ -1314,7 +1314,11 @@ void map_sprite::load_child_map_sprite_full_filename_texture() const
 void map_sprite::
   generate_combined_textures_for_child_map_sprite_full_filename_texture() const
 {
-
+     if (!m_child_map_sprite)
+     {
+          spdlog::warn("m_child_map_sprite is nullptr");
+          return;
+     }
      spdlog::debug(
        "Task 3.2: Trigger child map_sprite call to "
        "get_deswizzle_combined_textures.");
