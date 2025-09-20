@@ -14,7 +14,7 @@ void future_operations::LoadColorsIntoTexture::operator()() const
      if (weak_ptr.expired())
      {
           spdlog::warn(
-            "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+            "{}:{} - LoadColorsIntoTexture weak_ptr "
             "is expired.",
             __FILE__,
             __LINE__);
@@ -56,7 +56,7 @@ void future_operations::LoadImageIntoTexture::operator()() const
      if (weak_ptr.expired())
      {
           spdlog::warn(
-            "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+            "{}:{} - LoadImageIntoTexture weak_ptr "
             "is expired.",
             __FILE__,
             __LINE__);
@@ -96,7 +96,7 @@ std::future<void>
           if (weak_ptr.expired())
           {
                spdlog::warn(
-                 "{}:{} - GetImageFromFromFirstValidPathCreateFuture weak_ptr "
+                 "{}:{} - GetImageFromPathCreateFuture weak_ptr "
                  "is expired.",
                  __FILE__,
                  __LINE__);
