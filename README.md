@@ -87,13 +87,13 @@ You may edit the **`deswizzle.toml`** file directly to customize configurations.
 #### Impot Window WIP
 
 Feature is **disabled** for now needs reworked!
-This feature needs more work. I did have a working test where I used this to add tiles to the swizzle, loaded in the game. You might still be able to get it to work. 
+This feature needs more work. I did have a working test where I used this to add tiles to the swizzle, loaded in the game. You might still be able to get it to work in an older build of this program.
 
 ![image](https://github.com/user-attachments/assets/73d254c3-0835-4b1f-a93d-43ddeb020deb)
 
 #### History Window
 
-The History Window lets you see opreations performed that you can undo or redo.
+The History Window lets you see opreations performed that you can undo or redo. The undo and redo only effect the edits to the .map currently loaded in memory.
 
 ![image](https://github.com/user-attachments/assets/b6da167d-6627-4b36-841c-9c4b12abe76f)
 
