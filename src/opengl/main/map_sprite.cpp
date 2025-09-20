@@ -1442,8 +1442,9 @@ std::pair<
      for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
      {
 
-          auto get_mask_texture
-            = [&](int in_color_attachment_id, const std::string &in_maskname)
+          auto get_mask_texture = [&](
+                                    std::uint32_t      in_color_attachment_id,
+                                    const std::string &in_maskname)
             -> std::expected<const glengine::SubTexture, std::string>
           {
                if (auto it = m_full_filename_textures->find(in_maskname);
