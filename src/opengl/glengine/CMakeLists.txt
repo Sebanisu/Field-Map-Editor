@@ -14,10 +14,13 @@ add_library(
   glengine STATIC
   BatchRenderer.cpp
   BlendModeSettings.cpp
+  CompShader.cpp
   Counter.cpp
+  DistanceBuffer.cpp
   FrameBuffer.cpp
   FrameBufferBackup.cpp
   GLCheck.cpp
+  HistogramBuffer.cpp
   Image.cpp
   IndexBuffer.cpp
   IndexBufferDynamic.cpp
@@ -25,6 +28,7 @@ add_library(
   Layer/LayerItem.cpp
   Layer/LayerStack.cpp
   MenuItem.cpp
+  PaletteBuffer.cpp
   Shader.cpp
   SubTexture.cpp
   Texture.cpp

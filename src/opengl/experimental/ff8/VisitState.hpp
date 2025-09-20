@@ -8,10 +8,10 @@ namespace ff_8
 {
 enum class VisitState
 {
-  None,
-  ShortCircuit,
-  Undo,
-  UndoAll,
+     None,
+     ShortCircuit,
+     Undo,
+     UndoAll,
 };
 }
 #endif// FIELD_MAP_EDITOR_VISITSTATE_HPP

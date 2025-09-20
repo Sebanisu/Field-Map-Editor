@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <Formatters.hpp>
 #include <functional>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/Map.hpp>
@@ -25,14 +26,20 @@ namespace ff_8
 template<open_viii::graphics::background::is_tile tileT>
 static constexpr auto to_hex(const tileT &tile)
 {
-     constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char {
+     constexpr auto to_hex_operation
+       = [](const std::uint8_t input_byte, const auto operation) -> char
+     {
           constexpr std::uint8_t number_of_values_in_nibble = 16U;
           constexpr char         threshold_of_A_to_F        = 10;
-          char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
-          return static_cast<char>((
-            half_transformed_char < threshold_of_A_to_F ? half_transformed_char + '0' : half_transformed_char - threshold_of_A_to_F + 'A'));
+          char const             half_transformed_char      = static_cast<char>(
+            operation(input_byte, number_of_values_in_nibble));
+          return static_cast<char>(
+            (half_transformed_char < threshold_of_A_to_F
+               ? half_transformed_char + '0'
+               : half_transformed_char - threshold_of_A_to_F + 'A'));
      };
-     const auto                               raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
+     const auto raw_bytes
+       = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
      std::array<char, sizeof(tileT) * 2U + 1> raw_hex{};
      raw_hex.back() = '\0';
      auto rhi       = raw_hex.begin();
@@ -50,10 +57,13 @@ static constexpr auto to_hex(const tileT &tile)
 template<>
 struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
 {
-     // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
+     // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size,
+     // tile_sizes::x_8_size, tile_sizes::x_16_size
      //  parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(tile_sizes tile_sizes_t, FormatContext &ctx) const
+     constexpr auto format(
+       tile_sizes     tile_sizes_t,
+       FormatContext &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;
@@ -85,7 +95,9 @@ struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(ff_8::draw_bitT draw_bit_t, FormatContext &ctx) const
+     constexpr auto format(
+       ff_8::draw_bitT draw_bit_t,
+       FormatContext  &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;
@@ -107,11 +119,14 @@ struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
 };
 
 template<>
-struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::formatter<std::string_view>
+struct fmt::formatter<open_viii::graphics::background::BlendModeT>
+  : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(open_viii::graphics::background::BlendModeT blend_mode_t, FormatContext &ctx) const
+     constexpr auto format(
+       open_viii::graphics::background::BlendModeT blend_mode_t,
+       FormatContext                              &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;
@@ -144,7 +159,9 @@ struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(draw_mode draw_mode_t, FormatContext &ctx) const
+     constexpr auto format(
+       draw_mode      draw_mode_t,
+       FormatContext &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;
@@ -161,12 +178,60 @@ struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
+
+template<>
+struct fmt::formatter<fme::FailOverLevels> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       fme::FailOverLevels level,
+       FormatContext      &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (level)
+          {
+               case fme::FailOverLevels::EN:
+                    name = open_viii::LangCommon::ENFULL;
+                    break;
+               case fme::FailOverLevels::FR:
+                    name = open_viii::LangCommon::FRFULL;
+                    break;
+               case fme::FailOverLevels::DE:
+                    name = open_viii::LangCommon::DEFULL;
+                    break;
+               case fme::FailOverLevels::IT:
+                    name = open_viii::LangCommon::ITFULL;
+                    break;
+               case fme::FailOverLevels::ES:
+                    name = open_viii::LangCommon::ESFULL;
+                    break;
+               case fme::FailOverLevels::JP:
+                    name = open_viii::LangCommon::JPFULL;
+                    break;
+               case fme::FailOverLevels::Generic:
+                    name = "Generic"sv;
+                    break;
+               case fme::FailOverLevels::All:
+                    name = "All"sv;
+                    break;
+               case fme::FailOverLevels::Loaded:
+                    name = "Loaded"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
 template<>
 struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(open_viii::LangT lang_t, FormatContext &ctx) const
+     constexpr auto format(
+       open_viii::LangT lang_t,
+       FormatContext   &ctx) const
      {
           using namespace open_viii::graphics::background;
           using namespace std::string_view_literals;
@@ -200,28 +265,14 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
      }
 };
 
-
-// template<open_viii::Number numT>
-// struct fmt::formatter<sf::Vector2<numT>> : fmt::formatter<numT>
-// {
-//      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-//      template<typename FormatContext>
-//      constexpr auto format(sf::Vector2<numT> point, FormatContext &ctx) const
-//      {
-//           fmt::format_to(ctx.out(), "{}", '(');
-//           fmt::formatter<numT>::format(point.x, ctx);
-//           fmt::format_to(ctx.out(), "{}", ", ");
-//           fmt::formatter<numT>::format(point.y, ctx);
-//           return fmt::format_to(ctx.out(), "{}", ')');
-//      }
-// };
-
 template<open_viii::Number numT>
 struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>
 {
      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
      template<typename FormatContext>
-     constexpr auto format(open_viii::graphics::Point<numT> point, FormatContext &ctx) const
+     constexpr auto format(
+       open_viii::graphics::Point<numT> point,
+       FormatContext                   &ctx) const
      {
           fmt::format_to(ctx.out(), "{}", '(');
           fmt::formatter<numT>::format(point.x(), ctx);
@@ -230,17 +281,72 @@ struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>
           return fmt::format_to(ctx.out(), "{}", ')');
      }
 };
+
+template<>
+struct fmt::formatter<fme::BackgroundSettings>
+{
+     // parse is default; no custom format parsing needed
+     template<typename ParseContext>
+     constexpr auto parse(ParseContext &ctx)
+     {
+          return ctx.begin();
+     }
+
+     template<typename FormatContext>
+     auto format(
+       fme::BackgroundSettings bs,
+       FormatContext          &ctx) const
+     {
+          using enum fme::BackgroundSettings;
+
+          if (bs == Default)
+          {
+               return fmt::format_to(
+                 ctx.out(), "Default (OneColor | Checkerboard)");
+          }
+
+          bool       first      = true;
+
+          const auto write_part = [&](std::string_view part)
+          {
+               if (!first)
+                    fmt::format_to(ctx.out(), " | ");
+               fmt::format_to(ctx.out(), "{}", part);
+               first = false;
+          };
+
+          if (HasFlag(bs, TwoColors))
+               write_part("TwoColors");
+          else
+               write_part("OneColor");
+
+          if (HasFlag(bs, Solid))
+               write_part("Solid");
+          else
+               write_part("Checkerboard");
+
+          return ctx.out();
+     }
+};
+
 template<open_viii::Number numT>
-struct fmt::formatter<open_viii::graphics::Rectangle<numT>> : fmt::formatter<open_viii::graphics::Point<numT>>
+struct fmt::formatter<open_viii::graphics::Rectangle<numT>>
+  : fmt::formatter<open_viii::graphics::Point<numT>>
 {
      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
      template<typename FormatContext>
-     constexpr auto format(open_viii::graphics::Rectangle<numT> rectangle, FormatContext &ctx) const
+     constexpr auto format(
+       open_viii::graphics::Rectangle<numT> rectangle,
+       FormatContext                       &ctx) const
      {
-          fmt::formatter<open_viii::graphics::Point<numT>>::format(open_viii::graphics::Point<numT>{ rectangle.x(), rectangle.y() }, ctx);
+          fmt::formatter<open_viii::graphics::Point<numT>>::format(
+            open_viii::graphics::Point<numT>{ rectangle.x(), rectangle.y() },
+            ctx);
           fmt::format_to(ctx.out(), "{}", ' ');
           return fmt::formatter<open_viii::graphics::Point<numT>>::format(
-            open_viii::graphics::Point<numT>{ rectangle.width(), rectangle.height() }, ctx);
+            open_viii::graphics::Point<numT>{ rectangle.width(),
+                                              rectangle.height() },
+            ctx);
      }
 };
 
@@ -249,7 +355,9 @@ struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(open_viii::graphics::BPPT bppt, FormatContext &ctx) const
+     constexpr auto format(
+       open_viii::graphics::BPPT bppt,
+       FormatContext            &ctx) const
      {
           using namespace open_viii::graphics;
           using namespace std::string_view_literals;
@@ -276,7 +384,9 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string>.
      template<typename FormatContext>
-     constexpr auto format(const tileT &tile, FormatContext &ctx) const
+     constexpr auto format(
+       const tileT   &tile,
+       FormatContext &ctx) const
      {
           const auto array   = ff_8::to_hex(tile);
           const auto hexview = std::string_view(array.data(), array.size() - 1);
@@ -317,7 +427,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
             tile.blend(),
             fme::gui_labels::animation_id,
             tile.animation_id(),
-            fme::gui_labels::animation_frame,
+            fme::gui_labels::animation_state,
             tile.animation_state(),
             fme::gui_labels::draw,
             tile.draw());
@@ -325,11 +435,14 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
 };
 
 template<>
-struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> : fmt::formatter<std::string>
+struct fmt::formatter<open_viii::graphics::background::normalized_source_tile>
+  : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string>.
      template<typename FormatContext>
-     constexpr auto format(const open_viii::graphics::background::normalized_source_tile &tile, FormatContext &ctx) const
+     constexpr auto format(
+       const open_viii::graphics::background::normalized_source_tile &tile,
+       FormatContext                                                 &ctx) const
      {
           const auto array   = ff_8::to_hex(tile);
           const auto hexview = std::string_view(array.data(), array.size() - 1);
@@ -365,7 +478,7 @@ struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> :
             tile.m_tex_id_buffer.blend(),
             fme::gui_labels::animation_id,
             tile.m_animation_id,
-            fme::gui_labels::animation_frame,
+            fme::gui_labels::animation_state,
             tile.m_animation_state,
             fme::gui_labels::draw,
             tile.m_tex_id_buffer.draw);
@@ -373,7 +486,9 @@ struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> :
 };
 
 template<typename range_t>
-concept tile_range = std::ranges::range<range_t> && open_viii::graphics::background::is_tile<std::ranges::range_value_t<range_t>>;
+concept tile_range = std::ranges::range<range_t>
+                     && open_viii::graphics::background::is_tile<
+                       std::ranges::range_value_t<range_t>>;
 
 template<tile_range TileRange>
 struct fmt::is_range<TileRange, char> : std::false_type
@@ -387,7 +502,9 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(const TileRange &tiles, FormatContext &ctx) const
+     constexpr auto format(
+       const TileRange &tiles,
+       FormatContext   &ctx) const
      {
           const auto count = std::ranges::distance(tiles);
 
@@ -399,7 +516,8 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 template<>
 struct fmt::formatter<fme::color>
 {
-     // Parses format specs; in this case, we don't support any custom formatting
+     // Parses format specs; in this case, we don't support any custom
+     // formatting
      constexpr auto parse(format_parse_context &ctx)
      {
           return ctx.begin();// no custom formatting, so just return the end
@@ -407,9 +525,12 @@ struct fmt::formatter<fme::color>
 
      // Formats the color as "(r,g,b,a)"
      template<typename FormatContext>
-     auto format(const fme::color &c, FormatContext &ctx) const
+     auto format(
+       const fme::color &c,
+       FormatContext    &ctx) const
      {
-          return fmt::format_to(ctx.out(), "({},{},{},{})", c.r, c.g, c.b, c.a);
+          return fmt::format_to(
+            ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
      }
 };
 
@@ -418,7 +539,9 @@ struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::root_path_types in_root_path_types, FormatContext &ctx) const
+     constexpr auto format(
+       fme::root_path_types in_root_path_types,
+       FormatContext       &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
@@ -443,7 +566,9 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::PatternSelector pattern_selector, FormatContext &ctx) const
+     constexpr auto format(
+       fme::PatternSelector pattern_selector,
+       FormatContext       &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
@@ -452,8 +577,17 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputSwizzlePattern:
                     name = "Output swizzle pattern"sv;
                     break;
+               case fme::PatternSelector::OutputSwizzleAsOneImagePattern:
+                    name = "Output Swizzle as One Image Pattern"sv;
+                    break;
                case fme::PatternSelector::OutputDeswizzlePattern:
                     name = "Output deswizzle pattern"sv;
+                    break;
+               case fme::PatternSelector::OutputFullFileNamePattern:
+                    name = "Output Full Filename Pattern (.toml)"sv;
+                    break;
+               case fme::PatternSelector::OutputTomlPattern:
+                    name = "Output '.toml' Pattern"sv;
                     break;
                case fme::PatternSelector::OutputMapPatternForSwizzle:
                     name = "Output map pattern for swizzle"sv;
@@ -461,23 +595,35 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputMapPatternForDeswizzle:
                     name = "Output map pattern for deswizzle"sv;
                     break;
-               case fme::PatternSelector::PathPatternsCommonUpscale:
-                    name = "Path Patterns Common Upscale"sv;
+               case fme::PatternSelector::OutputMapPatternForFullFileName:
+                    name = "Output map pattern for Full Filename (.toml)"sv;
                     break;
-               case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-                    name = "Path Patterns Common Upscale For Maps"sv;
+               case fme::PatternSelector::PatternsCommonPrefixes:
+                    name = "Path Patterns Common Swizzle"sv;
                     break;
-               case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+               case fme::PatternSelector::PatternsCommonPrefixesForMaps:
+                    name = "Path Patterns Common Swizzle For Maps"sv;
+                    break;
+               case fme::PatternSelector::PatternsBase:
                     name = "Path Patterns No Palette And Texture Page"sv;
                     break;
                case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                     name = "Path Patterns With Palette And Texture Page"sv;
                     break;
-               case fme::PatternSelector::PathPatternsWithPupuID:
-                    name = "Path Patterns With PupuID"sv;
+               case fme::PatternSelector::PathPatternsWithPalette:
+                    name = "Path Patterns With Palette"sv;
                     break;
                case fme::PatternSelector::PathPatternsWithTexturePage:
                     name = "Path Patterns With Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPupuID:
+                    name = "Path Patterns With PupuID"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithFullFileName:
+                    name = "Path Patterns With Full Filename (.toml)"sv;
+                    break;
+               case fme::PatternSelector::End:
+                    name = "End";
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
@@ -489,14 +635,16 @@ template<>
 struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
 {// parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::compact_type in_compact_type, FormatContext &ctx) const
+     constexpr auto format(
+       fme::compact_type in_compact_type,
+       FormatContext    &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
           switch (in_compact_type)
           {
                case fme::compact_type::map_order_ffnx:
-                    name = fme::gui_labels::compact_map_order_ffnx;
+                    name = fme::gui_labels::compact_map_order_ffnx2;
                     break;
                case fme::compact_type::map_order:
                     name = fme::gui_labels::map_order;
@@ -520,7 +668,9 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::input_types in_input_type, FormatContext &ctx) const
+     constexpr auto format(
+       fme::input_types in_input_type,
+       FormatContext   &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
@@ -538,6 +688,12 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
+               // case fme::input_types::deswizzle_generate_toml:
+               //      name = fme::gui_labels::deswizzle_generate_toml;
+               //      break;
+               case fme::input_types::deswizzle_full_filename:
+                    name = fme::gui_labels::deswizzle_full_filename_input;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -545,10 +701,11 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 
 template<>
 struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
+{// parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::output_types in_output_type, FormatContext &ctx) const
+     constexpr auto format(
+       fme::output_types in_output_type,
+       FormatContext    &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
@@ -563,6 +720,15 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                case fme::output_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
+               case fme::output_types::deswizzle_generate_toml:
+                    name = fme::gui_labels::deswizzle_generate_toml;
+                    break;
+               case fme::output_types::deswizzle_full_filename:
+                    name = fme::gui_labels::deswizzle_full_filename;
+                    break;
+               case fme::output_types::csv:
+                    name = ".csv";
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -573,7 +739,9 @@ struct fmt::formatter<fme::flatten_type> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
-     constexpr auto format(fme::flatten_type in_flatten_type, FormatContext &ctx) const
+     constexpr auto format(
+       fme::flatten_type in_flatten_type,
+       FormatContext    &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};

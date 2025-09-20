@@ -16,28 +16,49 @@ class PixelBuffer
 
      using ArrayT                                   = GlidArray<array_size>;
      using ValueT                                   = typename ArrayT::ValueT;
-     using ParameterT                               = typename ArrayT::ParameterT;
-     // wrapping this pointer to force it to call glUnmapBuffer. Should scope this.
-     using UniqueGlubyte = std::unique_ptr<uint8_t, decltype([](const GLubyte *const) { glUnmapBuffer(GL_PIXEL_PACK_BUFFER); })>;
+     using ParameterT    = typename ArrayT::ParameterT;
+     // wrapping this pointer to force it to call glUnmapBuffer. Should scope
+     // this.
+     using UniqueGlubyte = std::unique_ptr<
+       uint8_t,
+       decltype([](const GLubyte *const)
+                { glUnmapBuffer(GL_PIXEL_PACK_BUFFER); })>;
 
    public:
      PixelBuffer(const glengine::FrameBufferSpecification &fbs)
        : width(fbs.width)
        , height(fbs.height)
-       , data_size(static_cast<std::ptrdiff_t>(fbs.height) * static_cast<std::ptrdiff_t>(fbs.width) * std::ptrdiff_t{ 4 })
-       , pbos{ [](ParameterT ids) { GlCall{}(glDeleteBuffers, static_cast<std::int32_t>(std::ranges::size(ids)), std::ranges::data(ids)); },
-               [&]() {
+       , data_size(
+           static_cast<std::ptrdiff_t>(fbs.height)
+           * static_cast<std::ptrdiff_t>(fbs.width) * std::ptrdiff_t{ 4 })
+       , pbos{ [](ParameterT ids)
+               {
+                    GlCall{}(
+                      glDeleteBuffers,
+                      static_cast<std::int32_t>(std::ranges::size(ids)),
+                      std::ranges::data(ids));
+               },
+               [&]()
+               {
                     auto ids = ValueT{};
-                    // create 2 pixel buffer objects, you need to delete them when
-                    // program exits. glBufferData() with NULL pointer reserves only
-                    // memory space.
-                    GlCall{}(glGenBuffers, static_cast<std::int32_t>(std::ranges::size(ids)), std::ranges::data(ids));
+                    // create 2 pixel buffer objects, you need to delete them
+                    // when program exits. glBufferData() with NULL pointer
+                    // reserves only memory space.
+                    GlCall{}(
+                      glGenBuffers,
+                      static_cast<std::int32_t>(std::ranges::size(ids)),
+                      std::ranges::data(ids));
                     for (auto &id : ids)
                     {
                          GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, id);
-                         GlCall{}(glBufferData, GL_PIXEL_PACK_BUFFER, data_size, nullptr, GL_STREAM_READ);
-                         // todo will need to alter DATA_SIZE and update buffers when
-                         // window resizes
+                         GlCall{}(
+                           glBufferData,
+                           GL_PIXEL_PACK_BUFFER,
+                           data_size,
+                           nullptr,
+                           GL_STREAM_READ);
+                         // todo will need to alter DATA_SIZE and update buffers
+                         // when window resizes
                     }
                     return ids;
                } }
@@ -50,7 +71,10 @@ class PixelBuffer
       * @param full pointer to bool if all values are present.
       * @return true if any values are present
       */
-     bool operator()(const glengine::FrameBuffer &fb, std::filesystem::path path, bool *const full = nullptr) const
+     bool operator()(
+       const glengine::FrameBuffer &fb,
+       std::filesystem::path        path,
+       bool *const                  full = nullptr) const
      {
           next();
           to_pbo(fb, std::move(path));
@@ -65,7 +89,11 @@ class PixelBuffer
       * @param call_back accepts image data and does something
       * @return true if any values are still present
       */
-     bool operator()(std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto &&call_back) const
+     bool operator()(std::invocable<
+                     std::span<std::uint8_t>,
+                     std::filesystem::path,
+                     int,
+                     int> auto &&call_back) const
      {
           next();
           from_pbo(std::forward<decltype(call_back)>(call_back));
@@ -73,26 +101,40 @@ class PixelBuffer
      }
 
    private:
-     void from_pbo(std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto &&call_back) const
+     void from_pbo(
+       std::invocable<
+         std::span<std::uint8_t>,
+         std::filesystem::path,
+         int,
+         int> auto &&call_back) const
      {
           // map the PBO to process its data by CPU
           const auto unbind_pbo_buffer = ScopeGuard([] { unbind(); });
           bind(next_index);
           set[next_index] = false;
           {
-               UniqueGlubyte ptr{ static_cast<uint8_t *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY)) };
+               UniqueGlubyte ptr{ static_cast<uint8_t *>(
+                 glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY)) };
                if (ptr)
                {
                     std::invoke(
-                      call_back, std::span{ ptr.get(), static_cast<std::size_t>(data_size) }, std::move(paths[next_index]), width, height);
+                      call_back,
+                      std::span{ ptr.get(),
+                                 static_cast<std::size_t>(data_size) },
+                      std::move(paths[next_index]),
+                      width,
+                      height);
                }
           }
      }
-     void to_pbo(const glengine::FrameBuffer &fb, std::filesystem::path path) const
+     void to_pbo(
+       const glengine::FrameBuffer &fb,
+       std::filesystem::path        path) const
      {
           // set the target framebuffer to read
           fb.bind();
-          const auto unbind_frame_buffer = ScopeGuard{ [] { glengine::FrameBuffer::unbind(); } };
+          const auto unbind_frame_buffer
+            = ScopeGuard{ [] { glengine::FrameBuffer::unbind(); } };
           glReadBuffer(GL_COLOR_ATTACHMENT0);
 
           // read pixels from framebuffer to PBO
@@ -102,7 +144,15 @@ class PixelBuffer
                bind(index);
                set[index]   = true;
                paths[index] = std::move(path);
-               GlCall{}(glReadPixels, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+               GlCall{}(
+                 glReadPixels,
+                 0,
+                 0,
+                 width,
+                 height,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 nullptr);
           }
      }
      void next() const
@@ -121,14 +171,14 @@ class PixelBuffer
           // back to conventional pixel operation
           GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
      }
-     mutable std::size_t                                   index      = {};
-     mutable std::size_t                                   next_index = { (index + 1) % array_size };
-     std::int32_t                                          width      = {};
-     std::int32_t                                          height     = {};
-     std::ptrdiff_t                                        data_size  = {};// number of bytes in image.
-     mutable std::array<bool, array_size>                  set        = {};
-     mutable std::array<std::filesystem::path, array_size> paths      = {};
-     ArrayT                                                pbos       = {};
+     mutable std::size_t index      = {};
+     mutable std::size_t next_index = { (index + 1) % array_size };
+     std::int32_t        width      = {};
+     std::int32_t        height     = {};
+     std::ptrdiff_t      data_size  = {};// number of bytes in image.
+     mutable std::array<bool, array_size>                  set   = {};
+     mutable std::array<std::filesystem::path, array_size> paths = {};
+     ArrayT                                                pbos  = {};
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_PIXELBUFFER_HPP

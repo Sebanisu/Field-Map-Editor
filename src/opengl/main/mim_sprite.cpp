@@ -7,7 +7,10 @@ namespace fme
 {
 open_viii::graphics::background::Mim mim_sprite::get_mim() const
 {
-     auto lang_name = fmt::format("_{}{}", std::string(open_viii::LangCommon::to_string(m_coo)), open_viii::graphics::background::Mim::EXT);
+     auto lang_name = fmt::format(
+       "_{}{}",
+       std::string(open_viii::LangCommon::to_string(m_coo)),
+       open_viii::graphics::background::Mim::EXT);
      const auto field = m_field.lock();
      if (!field)
      {
@@ -15,11 +18,15 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
           return {};
      }
 
-     return { field->get_entry_data({ std::string_view(lang_name), open_viii::graphics::background::Mim::EXT }, &m_mim_path),
+     return { field->get_entry_data(
+                { std::string_view(lang_name),
+                  open_viii::graphics::background::Mim::EXT },
+                &m_mim_path),
               field->get_base_name() };
 }
 
-open_viii::graphics::BPPT mim_sprite::get_bpp(const open_viii::graphics::BPPT &in_bpp)
+open_viii::graphics::BPPT
+  mim_sprite::get_bpp(const open_viii::graphics::BPPT &in_bpp)
 {
      using namespace open_viii::graphics::literals;
      if (in_bpp.bpp4() || in_bpp.bpp8() || in_bpp.bpp16())
@@ -41,7 +48,8 @@ std::shared_ptr<glengine::Texture> mim_sprite::find_texture() const
 
 std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
-     return m_mim.get_colors<open_viii::graphics::Color32RGBA>(m_bpp, m_palette, m_draw_palette);
+     return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
+       m_bpp, m_palette, m_draw_palette);
 }
 
 [[maybe_unused]] mim_sprite::mim_sprite(
@@ -61,7 +69,8 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
 }
 
-mim_sprite mim_sprite::with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const
+mim_sprite mim_sprite::with_field(
+  std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const
 {
      return { std::move(in_field), m_bpp, m_palette, m_coo, m_draw_palette };
 }
@@ -110,11 +119,18 @@ void mim_sprite::save(const std::filesystem::path &dest_path) const
 {
      if (open_viii::tools::i_ends_with(dest_path.string(), ".ppm"))
      {
-          open_viii::graphics::Ppm::save(m_colors, width(), height(), dest_path.string());
+          open_viii::graphics::Ppm::save(
+            m_colors, width(), height(), dest_path.string());
      }
      else if (open_viii::tools::i_ends_with(dest_path.string(), ".png"))
      {
-          open_viii::graphics::Png::save(m_colors, width(), height(), dest_path.string(), dest_path.stem().string(), "");
+          open_viii::graphics::Png::save(
+            m_colors,
+            width(),
+            height(),
+            dest_path.string(),
+            dest_path.stem().string(),
+            "");
      }
 }
 
@@ -129,8 +145,9 @@ void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
      open_viii::tools::write_buffer(m_mim.buffer(), path, "");
 }
 
-[[nodiscard]] const open_viii::graphics::background::Mim &mim_sprite::mim() const noexcept
+[[nodiscard]] const open_viii::graphics::background::Mim &
+  mim_sprite::mim() const noexcept
 {
      return m_mim;
 }
-}
+}// namespace fme

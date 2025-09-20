@@ -21,30 +21,50 @@ class BatchRenderer
 {
    public:
      BatchRenderer();
-     BatchRenderer(std::size_t quad_count, Shader shader = { std::filesystem::current_path() / "res" / "shader" / "basic3.shader" });
+     BatchRenderer(
+       std::size_t quad_count,
+       Shader      shader = { std::filesystem::current_path() / "res" / "shader"
+                              / "basic3.shader" });
 
-     void                                       on_update(float) const;
-     void                                       on_render() const;
-     void                                       on_im_gui_update() const;
-     void                                       on_event(const event::Item &e) const;
+     void                      on_update(float) const;
+     void                      on_render() const;
+     void                      on_im_gui_update() const;
+     void                      on_event(const event::Item &e) const;
 
-     [[nodiscard]] std::size_t                  quad_count() const noexcept;
-     [[nodiscard]] std::size_t                  vert_count() const noexcept;
+     [[nodiscard]] std::size_t quad_count() const noexcept;
+     [[nodiscard]] std::size_t vert_count() const noexcept;
      [[nodiscard]] [[maybe_unused]] std::size_t index_count() const noexcept;
      [[nodiscard]] static std::uint32_t         max_texture_image_units();
      void                                       clear() const;
-     void draw_quad(const Texture &texture, glm::vec3 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
-     void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id) const;
-     void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
+     void                                       draw_quad(
+                                             const Texture &texture,
+                                             glm::vec3      offset,
+                                             glm::vec2      size = glm::vec2{ 1.F }) const;
+     void draw_quad(
+       const SubTexture &texture,
+       glm::vec3         offset,
+       glm::vec2         size,
+       int               id,
+       unsigned int      pupu_id) const;
+     void draw_quad(
+       const SubTexture &texture,
+       glm::vec3         offset,
+       glm::vec2         size = glm::vec2{ 1.F }) const;
      void draw_quad(
        glm::vec3         offset,
        glm::vec4         color,
        const SubTexture &texture,
        const float       tiling_factor = 1.F,
        glm::vec2         size          = glm::vec2{ 1.F },
-       int               id            = -1) const;
-     [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color) const;
-     [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color, glm::vec2 size) const;
+       int               id            = -1,
+       unsigned int      pupu_id       = 0) const;
+     [[maybe_unused]] void draw_quad(
+       glm::vec3 offset,
+       glm::vec4 color) const;
+     [[maybe_unused]] void draw_quad(
+       glm::vec3 offset,
+       glm::vec4 color,
+       glm::vec2 size) const;
      void                                               draw(Quad quad) const;
      void                                               draw() const;
 
@@ -57,9 +77,12 @@ class BatchRenderer
 
           GLint active_texture;
           GlCall{}(glGetIntegerv, GL_ACTIVE_TEXTURE, &active_texture);
-          return ScopeGuard{ [=, shader_pop = Shader::backup()] {
-               GlCall{}(glActiveTexture, static_cast<GLenum>(active_texture));
-          } };
+          return ScopeGuard{ [=, shader_pop = Shader::backup()]
+                             {
+                                  GlCall{}(
+                                    glActiveTexture,
+                                    static_cast<GLenum>(active_texture));
+                             } };
      }
 
    private:
@@ -70,17 +93,18 @@ class BatchRenderer
      std::size_t                 m_quad_count    = { 100U };
      VertexBufferDynamic         m_vertex_buffer = { quad_count() };
      IndexBufferDynamic          m_index_buffer  = { quad_count() };
-     mutable std::vector<Vertex> m_vertices      = { [this]() {
-          std::vector<Vertex>    r{};
-          r.reserve(vert_count());
-          return r;
-     }() };
+     mutable std::vector<Vertex> m_vertices      = { [this]()
+                                                     {
+                                                     std::vector<Vertex> r{};
+                                                     r.reserve(vert_count());
+                                                     return r;
+                                                }() };
      mutable IndexBufferDynamicSize     index_buffer_size       = {};
      glengine::Shader                   m_shader                = {};
      VertexArray                        m_vertex_array          = {};
      mutable std::vector<std::uint32_t> m_texture_slots         = {};
      mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
-     Texture                            m_blank                 = { (std::numeric_limits<std::uint32_t>::max)() };
+     Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
 static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);

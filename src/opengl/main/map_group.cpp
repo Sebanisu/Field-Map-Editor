@@ -10,13 +10,18 @@ static std::string str_to_lower(std::string input)
      std::string output{};
      output.reserve(std::size(input) + 1);
      std::ranges::transform(
-       input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
+       input,
+       std::back_inserter(output),
+       [](char character) -> char
+       { return static_cast<char>(::tolower(character)); });
      return output;
 }
 
 namespace ff_8
 {
-static map_group::Mim load_mim(const map_group::WeakField &weak_field, const map_group::Coo coo)
+static map_group::Mim load_mim(
+  const map_group::WeakField &weak_field,
+  const map_group::Coo        coo)
 {
      const auto field = weak_field.lock();
      if (!field)
@@ -24,12 +29,20 @@ static map_group::Mim load_mim(const map_group::WeakField &weak_field, const map
           spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return {};
      }
-     auto lang_name = fmt::format("_{}{}", open_viii::LangCommon::to_string(coo), map_group::Mim::EXT);
-     auto long_lang_name =
-       fmt::format("{}_{}{}", field->get_base_name(), open_viii::LangCommon::to_string(coo), open_viii::graphics::background::Mim::EXT);
-     auto long_name = fmt::format("{}{}", field->get_base_name(), open_viii::graphics::background::Mim::EXT);
+     auto lang_name = fmt::format(
+       "_{}{}", open_viii::LangCommon::to_string(coo), map_group::Mim::EXT);
+     auto long_lang_name = fmt::format(
+       "{}_{}{}",
+       field->get_base_name(),
+       open_viii::LangCommon::to_string(coo),
+       open_viii::graphics::background::Mim::EXT);
+     auto long_name = fmt::format(
+       "{}{}",
+       field->get_base_name(),
+       open_viii::graphics::background::Mim::EXT);
      return { field->get_entry_data(
-                { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name), map_group::Mim::EXT }),
+                { std::string_view(long_lang_name), std::string_view(long_name),
+                  std::string_view(lang_name), map_group::Mim::EXT }),
               str_to_lower(std::string{ field->get_base_name() }) };
 }
 static map_group::MapHistory load_map_history(
@@ -65,14 +78,22 @@ map_group::Map load_map(
           coo = map_group::Coo::generic;
      }
      size_t out_path_pos = {};
-     auto   lang_name    = fmt::format("_{}{}", open_viii::LangCommon::to_string(*coo), map_group::Map::EXT);
-     auto   long_lang_name =
-       fmt::format("{}_{}{}", field->get_base_name(), open_viii::LangCommon::to_string(*coo), open_viii::graphics::background::Map::EXT);
-     auto long_name = fmt::format("{}{}", field->get_base_name(), open_viii::graphics::background::Map::EXT);
-     auto map       = map_group::Map{
+     auto   lang_name    = fmt::format(
+       "_{}{}", open_viii::LangCommon::to_string(*coo), map_group::Map::EXT);
+     auto long_lang_name = fmt::format(
+       "{}_{}{}",
+       field->get_base_name(),
+       open_viii::LangCommon::to_string(*coo),
+       open_viii::graphics::background::Map::EXT);
+     auto long_name = fmt::format(
+       "{}{}",
+       field->get_base_name(),
+       open_viii::graphics::background::Map::EXT);
+     auto map = map_group::Map{
           mim->mim_type(),
           field->get_entry_data(
-            { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name), map_group::Map::EXT },
+            { std::string_view(long_lang_name), std::string_view(long_name),
+              std::string_view(lang_name), map_group::Map::EXT },
             out_path,
             &out_path_pos),
           shift
@@ -83,12 +104,20 @@ map_group::Map load_map(
      }
      return map;
 }
-map_group::map_group(map_group::WeakField in_field, map_group::OptCoo in_coo = std::nullopt)
+map_group::map_group(
+  map_group::WeakField in_field,
+  map_group::OptCoo    in_coo = std::nullopt)
   : field{ std::move(in_field) }
-  , mim{ std::make_shared<Mim>(load_mim(field, in_coo ? *in_coo : map_group::Coo::generic)) }
+  , mim{ std::make_shared<Mim>(load_mim(
+      field,
+      in_coo ? *in_coo : map_group::Coo::generic)) }
   , map_path{}
   , opt_coo{ in_coo }
-  , maps{ load_map_history(field, opt_coo, mim, &map_path) }
+  , maps{ load_map_history(
+      field,
+      opt_coo,
+      mim,
+      &map_path) }
 {
 }
 }// namespace ff_8

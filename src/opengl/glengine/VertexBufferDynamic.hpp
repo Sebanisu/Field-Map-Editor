@@ -18,7 +18,10 @@ class VertexBufferDynamic
      std::size_t m_max_size{};
 
    public:
-     VertexBufferDynamic() = default;
+     // A quad is made of 2 triangles, each needing 3 indices → 2 × 3 = 6
+     static constexpr std::size_t IndicesPerQuad = 2 * 3;
+
+     VertexBufferDynamic()                       = default;
      VertexBufferDynamic(size_t count);
      void                      bind() const;
      static void               unbind();
@@ -27,10 +30,16 @@ class VertexBufferDynamic
           GLint vbo_binding{ 0 };
           GlCall{}(glGetIntegerv, GL_ARRAY_BUFFER_BINDING, &vbo_binding);
 
-          return ScopeGuard{ [=]() { glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(vbo_binding)); } };
+          return ScopeGuard{ [=]()
+                             {
+                                  glBindBuffer(
+                                    GL_ARRAY_BUFFER,
+                                    static_cast<GLuint>(vbo_binding));
+                             } };
      }
      template<std::ranges::contiguous_range T>
-     [[nodiscard]] glengine::IndexBufferDynamicSize update(const T &vertices) const
+     [[nodiscard]] glengine::IndexBufferDynamicSize
+       update(const T &vertices) const
      {
           assert(std::ranges::size(vertices) <= m_max_size);
           bind();
@@ -38,9 +47,12 @@ class VertexBufferDynamic
             glBufferSubData,
             GL_ARRAY_BUFFER,
             0,
-            static_cast<std::ptrdiff_t>(std::ranges::size(vertices) * sizeof(std::ranges::range_value_t<T>)),
+            static_cast<std::ptrdiff_t>(
+              std::ranges::size(vertices)
+              * sizeof(std::ranges::range_value_t<T>)),
             std::ranges::data(vertices));
-          return glengine::IndexBufferDynamicSize((std::ranges::size(vertices) / std::size(Quad{}) * 6U));
+          return glengine::IndexBufferDynamicSize(
+            (std::ranges::size(vertices) / std::size(Quad{}) * IndicesPerQuad));
      }
 };
 static_assert(Bindable<VertexBufferDynamic>);

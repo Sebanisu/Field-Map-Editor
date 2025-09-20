@@ -5,23 +5,56 @@
 // clang-format on
 #include "gui/gui.hpp"
 #include <BlendModeSettings.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+int main(
+  int    argc,
+  char **argv);// your existing main
+
+int WINAPI WinMain(
+  [[maybe_unused]] HINSTANCE hInstance,
+  [[maybe_unused]] HINSTANCE hPrevInstance,
+  [[maybe_unused]] LPSTR     lpCmdLine,
+  [[maybe_unused]] int       nCmdShow)
+{
+     // Convert lpCmdLine to argc/argv if needed, or just call main(0,nullptr)
+     return main(__argc, __argv);
+}
+#endif
 
 static void setWindowIcon(GLFWwindow *const window)
 {
      GLFWimage             images[1];
 
      std::error_code       error_code = {};
-     std::filesystem::path path       = std::filesystem::current_path(error_code) / "res" / "temporary_icon_05.png";
-     const auto            image      = glengine::Image(path);
+     std::filesystem::path path = std::filesystem::current_path(error_code)
+                                  / "res" / "temporary_icon_05.png";
+     const auto image = glengine::Image(path);
      if (error_code)
      {
-          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+          spdlog::warn(
+            "{}:{} - {}: {} path: \"{}\"",
+            __FILE__,
+            __LINE__,
+            error_code.value(),
+            error_code.message(),
+            path);
           return;
      }
      error_code.clear();
-     if (const bool exists = std::filesystem::exists(path, error_code); !exists || error_code)
+     if (const bool exists = std::filesystem::exists(path, error_code);
+         !exists || error_code)
      {
-          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+          spdlog::warn(
+            "{}:{} - {}: {} path: \"{}\"",
+            __FILE__,
+            __LINE__,
+            error_code.value(),
+            error_code.message(),
+            path);
           return;
      }
 
@@ -40,9 +73,14 @@ static void setWindowIcon(GLFWwindow *const window)
 
 static GLFWwindow *create_glfw_window()
 {
-     const fme::Configuration config = {};
-     const int window_height         = config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::Selections::window_height_default);
-     const int window_width          = config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::Selections::window_width_default);
+     using namespace fme;
+     const Configuration config = {};
+     const int           window_height
+       = config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(
+         SelectionInfo<ConfigKey::WindowHeight>::default_value());
+     const int window_width
+       = config[SelectionInfo<ConfigKey::WindowWidth>::id].value_or(
+         SelectionInfo<ConfigKey::WindowWidth>::default_value());
 
      if (!glfwInit())
      {
@@ -50,14 +88,19 @@ static GLFWwindow *create_glfw_window()
           return nullptr;
      }
 
-     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// OpenGL 4.0
-     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// OpenGL 4.3
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
      glfwWindowHint(GLFW_DEPTH_BITS, 24);
      glfwWindowHint(GLFW_STENCIL_BITS, 8);
      glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-     GLFWwindow *window = glfwCreateWindow(window_width, window_height, fme::gui_labels::window_title.data(), nullptr, nullptr);
+     GLFWwindow *window = glfwCreateWindow(
+       window_width,
+       window_height,
+       gui_labels::window_title.data(),
+       nullptr,
+       nullptr);
 
      if (!window)
      {
@@ -70,8 +113,38 @@ static GLFWwindow *create_glfw_window()
      glfwSwapInterval(1);// Enable vsync
      return window;
 }
-int main()
+int main(
+  [[maybe_unused]] int    argc,
+  [[maybe_unused]] char **argv)
 {
+     try
+     {
+          // Create file logger and set as default
+          auto file_logger = spdlog::basic_logger_mt(
+            "file_logger", "res/field_map_editor.log", true);
+
+          // Remove logger name from output pattern
+          file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
+
+          spdlog::set_default_logger(file_logger);
+
+          // Set log level based on build type
+          // #ifndef NDEBUG
+          spdlog::set_level(spdlog::level::debug);// Debug build
+          // #else
+          //           spdlog::set_level(spdlog::level::info);// Release build
+          // #endif
+
+          // Optional: control flush policy
+          spdlog::flush_on(spdlog::level::info);
+
+          // Now log anywhere
+          spdlog::info("App started");
+     }
+     catch (const spdlog::spdlog_ex &ex)
+     {
+          std::cerr << "Log init failed: " << ex.what() << std::endl;
+     }
      GLFWwindow *const window = create_glfw_window();
      if (!window)
           return 0;
@@ -79,7 +152,9 @@ int main()
      const GLenum err = glewInit();
      if (std::cmp_not_equal(GLEW_OK, err))
      {
-          spdlog::error("GLEW init failed: {}", reinterpret_cast<const char *>(glewGetErrorString(err)));
+          spdlog::error(
+            "GLEW init failed: {}",
+            reinterpret_cast<const char *>(glewGetErrorString(err)));
           glfwDestroyWindow(window);
           glfwTerminate();
           return -1;
@@ -91,11 +166,13 @@ int main()
      const GLubyte *version = glGetString(GL_VERSION);
      if (version)
      {
-          spdlog::info("OpenGL version: {}", reinterpret_cast<const char *>(version));
+          spdlog::info(
+            "OpenGL version: {}", reinterpret_cast<const char *>(version));
      }
      else
      {
-          spdlog::error("Failed to get OpenGL version. Is the context initialized?");
+          spdlog::error(
+            "Failed to get OpenGL version. Is the context initialized?");
      }
      glengine::BlendModeSettings::enable_blending();
      glengine::BlendModeSettings::default_blend();

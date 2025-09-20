@@ -1,8 +1,10 @@
 #include "create_tile_button.hpp"
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
-[[nodiscard]] bool
-  fme::create_tile_button(std::weak_ptr<const fme::map_sprite> map_ptr, const tileT &tile, const tile_button_options &options)
+[[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite> map_ptr,
+  const tileT                         &tile,
+  const tile_button_options           &options)
 {
      const auto map = map_ptr.lock();
      if (!map)
@@ -17,13 +19,18 @@ template<is_tile tileT>
           return false;
      }
      const auto tile_texture_size = map->get_tile_texture_size(texture);
-     const auto src_x             = [&]() -> std::uint32_t {
-          if (map->filter().deswizzle.enabled())
+     const auto src_x             = [&]() -> std::uint32_t
+     {
+          if (
+            map->filter().deswizzle.enabled()
+            || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.x());
           }
-          auto       source_texture_page_width = tileT::texture_page_width(tile.depth());
-          const auto texture_page_x_offset     = [&]() -> std::uint32_t {
+          auto source_texture_page_width
+            = tileT::texture_page_width(tile.depth());
+          const auto texture_page_x_offset = [&]() -> std::uint32_t
+          {
                if (map->filter().swizzle.enabled())
                {
                     return 0;
@@ -32,8 +39,11 @@ template<is_tile tileT>
           }();
           return tile.source_x() + texture_page_x_offset;
      }();
-     const auto src_y = [&]() -> std::uint32_t {
-          if (map->filter().deswizzle.enabled())
+     const auto src_y = [&]() -> std::uint32_t
+     {
+          if (
+            map->filter().deswizzle.enabled()
+            || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.y());
           }
@@ -42,21 +52,29 @@ template<is_tile tileT>
      static constexpr float tile_size = 16.F;
 
      const auto             rect      = glm::ivec4(
-       static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
-       static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
+       static_cast<int>(
+         (static_cast<float>(src_x) / tile_size)
+         * static_cast<float>(tile_texture_size.x)),
+       static_cast<int>(
+         (static_cast<float>(src_y) / tile_size)
+         * static_cast<float>(tile_texture_size.y)),
        static_cast<int>(tile_texture_size.x),
        static_cast<int>(tile_texture_size.y));
 
-     const ImVec2 texSize       = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
+     const ImVec2 texSize = { static_cast<float>(texture->width()),
+                              static_cast<float>(texture->height()) };
 
-     const ImVec2 uv0           = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
-                                    static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
+     const ImVec2 uv0
+       = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
+           static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
 
-     const ImVec2 uv1           = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
-                                    static_cast<float>(rect.y + rect.w) / static_cast<float>(texSize.y) };
+     const ImVec2 uv1
+       = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
+           static_cast<float>(rect.y + rect.w)
+             / static_cast<float>(texSize.y) };
 
-     int          pop_count     = {};
-     int          pop_var_count = {};
+     int pop_count     = {};
+     int pop_var_count = {};
      if (options.button_color.has_value())
      {
           ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
@@ -64,33 +82,40 @@ template<is_tile tileT>
      }
      if (options.button_hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, options.button_hover_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, options.button_hover_color.value());
           ++pop_count;
      }
      if (options.button_active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, options.button_active_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive, options.button_active_color.value());
           ++pop_count;
      }
      if (options.padding_size.has_value())
      {
-          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, options.padding_size.value());
+          ImGui::PushStyleVar(
+            ImGuiStyleVar_FramePadding, options.padding_size.value());
           ++pop_var_count;
      }
 
      // Use glengine::ScopeGuard to safely pop style colors and variables
-     const auto pop_style = glengine::ScopeGuard{ [&]() {
-          if (pop_count > 0)
-               ImGui::PopStyleColor(pop_count);
-          if (pop_var_count > 0)
-               ImGui::PopStyleVar(pop_var_count);
-     } };
+     const auto pop_style
+       = glengine::ScopeGuard{ [&]()
+                               {
+                                    if (pop_count > 0)
+                                         ImGui::PopStyleColor(pop_count);
+                                    if (pop_var_count > 0)
+                                         ImGui::PopStyleVar(pop_var_count);
+                               } };
      const auto pop_id = PushPopID();
 
      return ImGui::ImageButton(
        "##tile_image_button",
        glengine::ConvertGliDtoImTextureId<ImTextureID>(texture->id()),
-       ((options.size.x == 0 || options.size.y == 0) ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size),
+       ((options.size.x == 0 || options.size.y == 0)
+          ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() }
+          : options.size),
        uv0,
        uv1,
        ImVec4{ options.background_color },
@@ -99,17 +124,28 @@ template<is_tile tileT>
 
 
 // Explicit instantiation for Tiles
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, const tile_button_options &);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, const tile_button_options &);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile1 &,
+  const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile2 &,
+  const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(
+  std::weak_ptr<const fme::map_sprite>,
+  const Tile3 &,
+  const tile_button_options &);
 
 
-[[nodiscard]] bool          fme::create_color_button::operator()() const
+[[nodiscard]] bool fme::create_color_button::operator()() const
 {
-     // needs to be in a std::shared_ptr to be returned from a lambda. it has no move or copy operations. Also it won't just use copy
-     // elision.
+     // needs to be in a std::shared_ptr to be returned from a lambda. it has no
+     // move or copy operations. Also it won't just use copy elision.
 
-     if (m_transparent_texture.width() == 0 || m_transparent_texture.height() == 0)
+     if (
+       m_transparent_texture.width() == 0
+       || m_transparent_texture.height() == 0)
      {
           spdlog::error("{}", "transparent_texture is not loaded");
           return false;
@@ -119,40 +155,48 @@ template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map
      int pop_var_count = {};
      if (m_options.button_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, m_options.button_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_Button, m_options.button_color.value());
           ++pop_count;
      }
      if (m_options.button_hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, m_options.button_hover_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered, m_options.button_hover_color.value());
           ++pop_count;
      }
      if (m_options.button_active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, m_options.button_active_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive, m_options.button_active_color.value());
           ++pop_count;
      }
      if (m_options.padding_size.has_value())
      {
-          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, m_options.padding_size.value());
+          ImGui::PushStyleVar(
+            ImGuiStyleVar_FramePadding, m_options.padding_size.value());
           ++pop_var_count;
      }
 
      // Use glengine::ScopeGuard to safely pop style colors and variables
-     const auto pop_style = glengine::ScopeGuard{ [&]() {
-          if (pop_count > 0)
-               ImGui::PopStyleColor(pop_count);
-          if (pop_var_count > 0)
-               ImGui::PopStyleVar(pop_var_count);
-     } };
+     const auto pop_style
+       = glengine::ScopeGuard{ [&]()
+                               {
+                                    if (pop_count > 0)
+                                         ImGui::PopStyleColor(pop_count);
+                                    if (pop_var_count > 0)
+                                         ImGui::PopStyleVar(pop_var_count);
+                               } };
      const auto pop_id = PushPopID();
      ImVec2     uv0    = ImVec2(0.0f, 0.0f);
      ImVec2     uv1    = ImVec2(1.0f, 1.0f);
      return ImGui::ImageButton(
        "##tile_image_button",
-       glengine::ConvertGliDtoImTextureId<ImTextureID>(m_transparent_texture.id()),
-       ((m_options.size.x == 0 || m_options.size.y == 0) ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() }
-                                                         : m_options.size),
+       glengine::ConvertGliDtoImTextureId<ImTextureID>(
+         m_transparent_texture.id()),
+       ((m_options.size.x == 0 || m_options.size.y == 0)
+          ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() }
+          : m_options.size),
        uv0,
        uv1,
        ImVec4{ m_options.background_color },

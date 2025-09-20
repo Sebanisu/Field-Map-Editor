@@ -4,21 +4,27 @@
 
 #ifndef FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
+#include <filesystem>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
 class Configuration
 {
    public:
      Configuration()
-       : m_table([]() {
-            toml::parse_result result = toml::parse_file(m_path.string());
-            if (!result)
-            {
-                 spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
-                 return toml::table{};
-            }
-            return std::move(result).table();
-       }())
+       : m_table(
+           []()
+           {
+                toml::parse_result result = toml::parse_file(m_path.string());
+                if (!result)
+                {
+                     spdlog::warn(
+                       "TOML Parsing failed: {}\n\t{}",
+                       result.error().description(),
+                       m_path.string());
+                     return toml::table{};
+                }
+                return std::move(result).table();
+           }())
      {
      }
      toml::table *operator->() &
@@ -46,20 +52,29 @@ class Configuration
           if (error_code)
           {
                spdlog::error(
-                 "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), m_path.parent_path().string());
+                 "{}:{} - {}: {} - path: {}",
+                 __FILE__,
+                 __LINE__,
+                 error_code.value(),
+                 error_code.message(),
+                 m_path.parent_path().string());
                error_code.clear();
           }
-          auto fs = std::ofstream(m_path, std::ios::out | std::ios::binary | std::ios::trunc);
+          auto fs = std::ofstream(
+            m_path, std::ios::out | std::ios::binary | std::ios::trunc);
           if (!fs)
           {
-               spdlog::error("ofstream: failed to open \"{}\" for writing", m_path.string());
+               spdlog::error(
+                 "ofstream: failed to open \"{}\" for writing",
+                 m_path.string());
                return;
           }
           fs << m_table;
      }
 
    private:
-     static inline const auto m_path = std::filesystem::current_path() / "res" / "ff8_config.toml";
-     toml::table              m_table{};
+     static inline const auto m_path
+       = std::filesystem::current_path() / "res" / "ff8_config.toml";
+     toml::table m_table{};
 };
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP

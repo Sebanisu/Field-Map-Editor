@@ -13,13 +13,18 @@ namespace glengine
 namespace event
 {
      template<typename T>
-     concept is = glengine::decay_same_as<typename T::ValueType, T> && requires(const T &t) {
-          { t.name() } -> glengine::decay_same_as<std::string_view>;
-          { t.category() } -> glengine::decay_same_as<Category>;
-          { t.category_name() } -> glengine::decay_same_as<std::string_view>;
-          { t.handled() } -> glengine::decay_same_as<bool>;
-          { t.data() } -> glengine::decay_same_as<std::string>;
-     };
+     concept is = glengine::decay_same_as<typename T::ValueType, T>
+                  && requires(const T &t) {
+                          {
+                               t.name()
+                          } -> glengine::decay_same_as<std::string_view>;
+                          { t.category() } -> glengine::decay_same_as<Category>;
+                          {
+                               t.category_name()
+                          } -> glengine::decay_same_as<std::string_view>;
+                          { t.handled() } -> glengine::decay_same_as<bool>;
+                          { t.data() } -> glengine::decay_same_as<std::string>;
+                     };
      template<typename T>
      concept is_Key = is<T> && requires(const T &t) {
           T(glengine::Key::A, glengine::Mods::None);

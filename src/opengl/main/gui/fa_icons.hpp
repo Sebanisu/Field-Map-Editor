@@ -23,7 +23,8 @@ namespace fme
           return nullptr;
      }
 
-     const auto font_path = current_directory / "fonts" / FONT_ICON_FILE_NAME_FAS;
+     const auto font_path
+       = current_directory / "fonts" / FONT_ICON_FILE_NAME_FAS;
      spdlog::info("Font path: {}", font_path.string());
 
      // Check if the font file exists
@@ -42,12 +43,15 @@ namespace fme
      io.Fonts->AddFontDefault();
      static ImFontConfig config{};
      config.MergeMode = true;
-     std::strncpy(config.Name, FONT_ICON_FILE_NAME_FAS, sizeof(config.Name) - 1);
-     config.Name[sizeof(config.Name) - 1]   = '\0';// Ensure null-termination
-     config.GlyphMinAdvanceX                = 13.0f;// Use if you want to make the icon monospaced
+     std::strncpy(
+       config.Name, FONT_ICON_FILE_NAME_FAS, sizeof(config.Name) - 1);
+     config.Name[sizeof(config.Name) - 1] = '\0';// Ensure null-termination
+     config.GlyphMinAdvanceX
+       = 13.0f;// Use if you want to make the icon monospaced
      static const ImWchar     icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
      static const std::string str_path      = font_path.string();
-     fa_icons                               = io.Fonts->AddFontFromFileTTF(str_path.c_str(), 13.0f, &config, icon_ranges);
+     fa_icons                               = io.Fonts->AddFontFromFileTTF(
+       str_path.c_str(), 13.0f, &config, icon_ranges);
      if (!fa_icons)
      {
           spdlog::error("Failed to load font: {}", str_path);

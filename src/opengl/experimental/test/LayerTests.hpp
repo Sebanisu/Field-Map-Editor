@@ -7,25 +7,25 @@
 
 #include "Event/EventItem.hpp"
 
-#include "test/TestMenu.hpp"
 #include "ff8/FF8Menu.hpp"
+#include "test/TestMenu.hpp"
 namespace layer
 {
-//todo rename.
+// todo rename.
 class Tests
 {
-public:
-  void on_update(float) const;
-  void on_render() const;
-  void on_im_gui_update() const;
-  void on_event(const glengine::event::Item &) const;
+   public:
+     void on_update(float) const;
+     void on_render() const;
+     void on_im_gui_update() const;
+     void on_event(const glengine::event::Item &) const;
 
-private:
-  test::TestMenu test_menu = {};
-  ff_8::Ff8Menu ff_8_menu = {};
-  void           main_menu() const;
-  void           fps() const;
-//  void           dock_window() const;
+   private:
+     test::TestMenu test_menu = {};
+     ff_8::Ff8Menu  ff_8_menu = {};
+     void           main_menu() const;
+     void           fps() const;
+     //  void           dock_window() const;
 };
 
 static_assert(glengine::Renderable<test::TestMenu>);

@@ -7,8 +7,7 @@ cmake-build-*/
 .vs/
 .idea/workspace.xml*
 .idea/vcs.xml*
-.vscode/
-!.vscode/settings.json
+*.backup
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json

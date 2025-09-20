@@ -6,6 +6,16 @@
 #define FIELD_MAP_EDITOR_SETTINGS_BACKUP_HPP
 #include "filter.hpp"
 #include <cstdint>
+namespace fme
+{
+struct map_sprite_settings
+{
+     bool draw_swizzle               = false;
+     bool disable_texture_page_shift = false;
+     bool disable_blends             = false;
+     bool require_coo                = true;
+     bool force_loading              = false;
+};
 template<typename T>
 struct setting_backup
 {
@@ -52,7 +62,8 @@ struct setting_backup
           return *this;
      }
 
-     [[nodiscard]] auto operator<=>(const setting_backup<T> &other) const = default;
+     [[nodiscard]] auto operator<=>(const setting_backup<T> &other) const
+       = default;
 
      [[nodiscard]] auto operator<=>(const T &in_value) const
      {
@@ -63,28 +74,41 @@ struct setting_backup
      {
           return m_value == in_value;
      }
+
+     T *operator->()
+     {
+          return &m_value.get();
+     }
+
+     const T *operator->() const
+     {
+          return &m_value.get();
+     }
+
+     T &operator*()
+     {
+          return m_value.get();
+     }
+
+     const T &operator*() const
+     {
+          return m_value.get();
+     }
 };
 struct settings_backup
 {
    public:
-     setting_backup<ff_8::filters> filters;
-     setting_backup<bool>          draw_swizzle;
-     setting_backup<bool>          disable_texture_page_shift;
-     setting_backup<bool>          disable_blends;
-     setting_backup<std::int32_t>  scale;
+     setting_backup<ff_8::filters>       filters;
+     setting_backup<map_sprite_settings> settings;
+     // setting_backup<std::int32_t>  scale;
 
      settings_backup(
-       ff_8::filters &in_filters,
-       bool          &in_draw_swizzle,
-       bool          &in_disable_texture_page_shift,
-       bool          &in_disable_blends,
-       std::int32_t  &in_scale)
+       ff_8::filters       &in_filters,
+       map_sprite_settings &in_settings)
        : filters{ in_filters }
-       , draw_swizzle{ in_draw_swizzle }
-       , disable_texture_page_shift{ in_disable_texture_page_shift }
-       , disable_blends{ in_disable_blends }
-       , scale{ in_scale }
+       , settings{ in_settings }
      {
      }
 };
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_SETTINGS_BACKUP_HPP

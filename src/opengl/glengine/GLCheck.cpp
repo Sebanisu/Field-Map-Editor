@@ -3,18 +3,17 @@
 //
 
 #include "GLCheck.hpp"
+#include "Formatters.hpp"
 #include <iostream>
-#include <stacktrace>
 namespace glengine
 {
-bool GlCheckError(std::string_view prefix, const std::source_location location)
+bool GlCheckError(
+  std::string_view           prefix,
+  const std::source_location location)
 {
      if (GLenum error = glGetError(); error != GL_NO_ERROR)
      {
           using namespace std::string_view_literals;
-
-          const auto stack = std::stacktrace::current();
-
           spdlog::error(
             "{} {}:{}:{} {}: 0x{:>04X}:{}",
             prefix,
@@ -23,7 +22,8 @@ bool GlCheckError(std::string_view prefix, const std::source_location location)
             location.column(),
             location.function_name(),
             error,
-            [&error]() {
+            [&error]()
+            {
                  switch (error)
                  {
                       case GL_INVALID_ENUM:
@@ -43,7 +43,7 @@ bool GlCheckError(std::string_view prefix, const std::source_location location)
                  }
                  return ""sv;
             }());
-          std::cerr << "Stack trace:\n" << stack << std::endl;
+          spdlog::error("{}", std::stacktrace::current());
           return true;
      }
      return false;
@@ -61,7 +61,8 @@ void GlGetError(const std::source_location location)
 {
      while (GlCheckError("Error", location))
      {
-          assert(false);
+          // TODO figure out why clone fails sometimes like when changing ff8
+          // path. assert(false);
      }
 }
 
@@ -77,54 +78,68 @@ void BeginErrorCallBack()
          GLenum                       severity,
          [[maybe_unused]] GLsizei     length,
          const GLchar                *message,
-         [[maybe_unused]] const void *user_param) {
+         [[maybe_unused]] const void *user_param)
+       {
             using namespace std::string_view_literals;
-            static const std::unordered_map<GLenum, std::string_view> error_source_map{
-                 { GL_DEBUG_SOURCE_API, "SOURCE_API"sv },
-                 { GL_DEBUG_SOURCE_WINDOW_SYSTEM, "WINDOW_SYSTEM"sv },
-                 { GL_DEBUG_SOURCE_SHADER_COMPILER, "SHADER_COMPILER"sv },
-                 { GL_DEBUG_SOURCE_THIRD_PARTY, "THIRD_PARTY"sv },
-                 { GL_DEBUG_SOURCE_APPLICATION, "APPLICATION"sv },
-                 { GL_DEBUG_SOURCE_OTHER, "OTHER"sv }
-            };
-            static const std::unordered_map<GLenum, std::string_view> error_type_map{
-                 { GL_DEBUG_TYPE_ERROR, "ERROR"sv },
-                 { GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, "DEPRECATED_BEHAVIOR"sv },
-                 { GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, "UNDEFINED_BEHAVIOR"sv },
-                 { GL_DEBUG_TYPE_PORTABILITY, "PORTABILITY"sv },
-                 { GL_DEBUG_TYPE_PERFORMANCE, "PERFORMANCE"sv },
-                 { GL_DEBUG_TYPE_OTHER, "OTHER"sv },
-                 { GL_DEBUG_TYPE_MARKER, "MARKER"sv }
-            };
-            static const std::unordered_map<GLenum, std::string_view> severity_map{ { GL_DEBUG_SEVERITY_HIGH, "HIGH"sv },
-                                                                                    { GL_DEBUG_SEVERITY_MEDIUM, "MEDIUM"sv },
-                                                                                    { GL_DEBUG_SEVERITY_LOW, "LOW"sv },
-                                                                                    { GL_DEBUG_SEVERITY_NOTIFICATION, "NOTIFICATION"sv } };
+            static const std::unordered_map<GLenum, std::string_view>
+              error_source_map{
+                   { GL_DEBUG_SOURCE_API, "SOURCE_API"sv },
+                   { GL_DEBUG_SOURCE_WINDOW_SYSTEM, "WINDOW_SYSTEM"sv },
+                   { GL_DEBUG_SOURCE_SHADER_COMPILER, "SHADER_COMPILER"sv },
+                   { GL_DEBUG_SOURCE_THIRD_PARTY, "THIRD_PARTY"sv },
+                   { GL_DEBUG_SOURCE_APPLICATION, "APPLICATION"sv },
+                   { GL_DEBUG_SOURCE_OTHER, "OTHER"sv }
+              };
+            static const std::unordered_map<GLenum, std::string_view>
+              error_type_map{ { GL_DEBUG_TYPE_ERROR, "ERROR"sv },
+                              { GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR,
+                                "DEPRECATED_BEHAVIOR"sv },
+                              { GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR,
+                                "UNDEFINED_BEHAVIOR"sv },
+                              { GL_DEBUG_TYPE_PORTABILITY, "PORTABILITY"sv },
+                              { GL_DEBUG_TYPE_PERFORMANCE, "PERFORMANCE"sv },
+                              { GL_DEBUG_TYPE_OTHER, "OTHER"sv },
+                              { GL_DEBUG_TYPE_MARKER, "MARKER"sv } };
+            static const std::unordered_map<GLenum, std::string_view>
+              severity_map{ { GL_DEBUG_SEVERITY_HIGH, "HIGH"sv },
+                            { GL_DEBUG_SEVERITY_MEDIUM, "MEDIUM"sv },
+                            { GL_DEBUG_SEVERITY_LOW, "LOW"sv },
+                            { GL_DEBUG_SEVERITY_NOTIFICATION,
+                              "NOTIFICATION"sv } };
             if (GL_DEBUG_SEVERITY_NOTIFICATION == severity)
             {
                  return;
             }
-            const auto src = error_source_map.at(source);
-            const auto tp  = error_type_map.at(type);
-            const auto sv  = severity_map.at(severity);
-            const auto error_message =
-              fmt::format("GL CALLBACK: {0:s} type = {1:s}, severity = {2:s}, message = {3:s}", src, tp, sv, message);
+            const auto src           = error_source_map.at(source);
+            const auto tp            = error_type_map.at(type);
+            const auto sv            = severity_map.at(severity);
+            const auto error_message = fmt::format(
+              "GL CALLBACK: {0:s} type = {1:s}, severity = {2:s}, message = "
+              "{3:s}",
+              src,
+              tp,
+              sv,
+              message);
             switch (severity)
             {
-                 case GL_DEBUG_SEVERITY_NOTIFICATION: {
+                 case GL_DEBUG_SEVERITY_NOTIFICATION:
+                 {
                       spdlog::info(error_message);
                       break;
                  }
-                 case GL_DEBUG_SEVERITY_LOW: {
+                 case GL_DEBUG_SEVERITY_LOW:
+                 {
                       spdlog::warn(error_message);
                       break;
                  }
-                 case GL_DEBUG_SEVERITY_MEDIUM: {
+                 case GL_DEBUG_SEVERITY_MEDIUM:
+                 {
                       spdlog::error(error_message);
                       break;
                  }
                  case GL_DEBUG_SEVERITY_HIGH:
-                 default: {
+                 default:
+                 {
                       spdlog::critical(error_message);
                       break;
                  }

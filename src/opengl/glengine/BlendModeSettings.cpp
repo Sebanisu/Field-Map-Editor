@@ -7,7 +7,9 @@ void glengine::BlendModeSettings::enable_blending()
 
 void glengine::BlendModeSettings::default_blend()
 {
-     GlCall{}(glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+     GlCall{}(
+       glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+       GL_ONE);
      GlCall{}(glBlendEquationSeparate, GL_FUNC_ADD, GL_MAX);
 }
 
@@ -21,8 +23,8 @@ void glengine::BlendModeSettings::add_blend()
 void glengine::BlendModeSettings::subtract_blend()
 {
      // what i had originally
-     // GlCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
-     // was erasing the pixels below it.
+     // GlCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT,
+     // GL_FUNC_ADD); was erasing the pixels below it.
      //  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
      //  glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
      // gpts fix.

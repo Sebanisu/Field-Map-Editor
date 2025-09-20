@@ -39,16 +39,22 @@ namespace event
      {
           return static_cast<std::uint16_t>(ec);
      }
-     constexpr Category operator|(Category l, Category r)
+     constexpr Category operator|(
+       Category l,
+       Category r)
      {
           return static_cast<Category>(+l | +r);
      }
-     constexpr Category operator&(Category l, Category r)
+     constexpr Category operator&(
+       Category l,
+       Category r)
      {
           return static_cast<Category>(+l & +r);
      }
 
-     constexpr bool HasFlag(Category l, Category r)
+     constexpr bool HasFlag(
+       Category l,
+       Category r)
      {
           return (l & r) != Category::None;
      }

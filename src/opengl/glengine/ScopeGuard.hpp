@@ -37,7 +37,8 @@ struct [[nodiscard]] ScopeGuard final : public AnyScopeGuard
        : m_executed(other.m_executed)
        , m_function(std::move(other.m_function))
      {
-          other.m_executed = true;// Make sure the moved-from object doesn't execute the function
+          other.m_executed = true;// Make sure the moved-from object doesn't
+                                  // execute the function
      }
 
      // Copy assignment operator
@@ -242,7 +243,8 @@ struct [[nodiscard]] ScopeGuard final : public AnyScopeGuard
 // //   [[nodiscard]] static std::array<ScopeGuard_expensive, count> array(T t)
 // //   {
 // //     std::array<ScopeGuard_expensive, count> r{};
-// //     std::ranges::for_each(r, [&t](ScopeGuard_expensive &guard) { guard = t;
+// //     std::ranges::for_each(r, [&t](ScopeGuard_expensive &guard) { guard =
+// t;
 // //     }); return r;
 // //   }
 // //

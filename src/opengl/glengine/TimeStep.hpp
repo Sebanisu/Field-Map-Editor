@@ -16,7 +16,7 @@ class TimeStep
      using Duration  = std::chrono::duration<float>;
      using TimePoint = std::chrono::time_point<LocalClockT, Duration>;
 
-     operator float() const;
+                      operator float() const;
      static TimePoint now();
 
    private:

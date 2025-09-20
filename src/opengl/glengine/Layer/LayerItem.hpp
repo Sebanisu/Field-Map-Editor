@@ -72,15 +72,23 @@ namespace Layer
             : m_impl(nullptr)
           {
           }
-          template<typename T, typename... argsT>
-          Item(std::in_place_type_t<T>, argsT &&...args)
-            : m_impl(std::make_unique<ItemModel<std::remove_cvref_t<T>>>(std::forward<argsT>(args)...))
+          template<
+            typename T,
+            typename... argsT>
+          Item(
+            std::in_place_type_t<T>,
+            argsT &&...args)
+            : m_impl(
+                std::make_unique<ItemModel<std::remove_cvref_t<T>>>(
+                  std::forward<argsT>(args)...))
           {
                static_assert(glengine::Renderable<T>);
           }
           template<typename T>
           Item(T t)
-            : Item(std::in_place_type_t<T>{}, std::move(t))
+            : Item(
+                std::in_place_type_t<T>{},
+                std::move(t))
           {
           }
           Item(const Item &other)                = delete;
@@ -88,7 +96,7 @@ namespace Layer
           Item(Item &&other) noexcept            = default;
           Item &operator=(Item &&other) noexcept = default;
 
-          operator bool() const;
+                operator bool() const;
      };
 }// namespace Layer
 }// namespace glengine

@@ -18,46 +18,55 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # automatically create a module
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)                                         
+include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuizmo.cmake)
-add_executable(
-  ${PROJECT_NAME}_MAIN
-  gui/batch.cpp
-  gui/collapsing_tile_info.cpp
-  gui/create_tile_button.cpp
-  gui/custom_paths_window.cpp
-  gui/draw_window.cpp
-  gui/field_file_window.cpp
-  gui/gui.cpp
-  gui/history_window.cpp
-  gui/key_value_data.cpp
-  gui/import.cpp
-  gui/main_menu_paths.cpp
-  gui/mouse_positions.cpp
-  gui/push_pop_id.cpp
-  gui/Selections.cpp
-  gui/tool_tip.cpp
-  archives_group.cpp
-  Configuration.cpp
-  formatters.cpp
-  future_operations.cpp
-  generic_combo.cpp
-  main.cpp
-  map_group.cpp
-  map_operation.cpp
-  MapHistory.cpp
-  map_sprite.cpp
-  mim_sprite.cpp
-  open_file_explorer.cpp
-  path_search.cpp
-  PupuID.cpp
-  safedir.cpp
-  save_image_pbo.cpp
-  source_tile_conflicts.cpp
-  tile_sizes.cpp
-  unique_values.cpp
-  UniquifyPupu.cpp
-  utilities.cpp)
+set(MAIN_SOURCES
+    gui/batch.cpp
+    gui/collapsing_tile_info.cpp
+    gui/create_tile_button.cpp
+    gui/custom_paths_window.cpp
+    gui/draw_window.cpp
+    gui/field_file_window.cpp
+    gui/filter_window.cpp
+    gui/gui.cpp
+    gui/history_window.cpp
+    gui/key_value_data.cpp
+    gui/keyboard_shortcuts_window.cpp
+    gui/import.cpp
+    gui/main_menu_paths.cpp
+    gui/mouse_positions.cpp
+    gui/push_pop_id.cpp
+    gui/Selections.cpp
+    gui/textures_window.cpp
+    gui/tool_tip.cpp
+    archives_group.cpp
+    Configuration.cpp
+    formatters.cpp
+    future_operations.cpp
+    generic_combo.cpp
+    main.cpp
+    map_group.cpp
+    map_operation.cpp
+    MapHistory.cpp
+    map_sprite.cpp
+    mim_sprite.cpp
+    open_file_explorer.cpp
+    path_search.cpp
+    PupuID.cpp
+    safedir.cpp
+    save_image_pbo.cpp
+    source_tile_conflicts.cpp
+    tile_sizes.cpp
+    unique_values.cpp
+    UniquifyPupu.cpp
+    utilities.cpp)
+
+if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_executable(${PROJECT_NAME}_MAIN WIN32 ${MAIN_SOURCES})
+else()
+  add_executable(${PROJECT_NAME}_MAIN ${MAIN_SOURCES})
+endif()
+
 # set_property(TARGET ${PROJECT_NAME}_MAIN PROPERTY CXX_STANDARD 20)
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
@@ -71,8 +80,8 @@ target_include_directories(${PROJECT_NAME}_MAIN_COMMON
 
 string(TOLOWER "${PROJECT_NAME}" main_exec)
 
-set_target_properties(${PROJECT_NAME}_MAIN
-                      PROPERTIES OUTPUT_NAME "${main_exec}${EXE_SUFFIX}")
+set_target_properties(${PROJECT_NAME}_MAIN PROPERTIES OUTPUT_NAME
+                                                      "${main_exec}")
 target_link_libraries(
   ${PROJECT_NAME}_MAIN
   PRIVATE project_warnings

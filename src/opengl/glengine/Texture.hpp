@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include <utility>
 namespace glengine
 {
 #if __cpp_if_consteval
@@ -28,16 +29,45 @@ class Texture
      // std::int32_t             m_bpp         = {};
      // std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
 
-
    public:
-     operator bool() const noexcept
+     static const constexpr GLint  s_sized_interal_format = GL_RGBA8;
+     static const constexpr GLenum s_base_interal_format  = GL_RGBA;
+     static const constexpr GLenum s_type                 = GL_UNSIGNED_BYTE;
+
+                                   operator bool() const noexcept
      {
           return m_renderer_id != 0U;
      }
      constexpr Texture() = default;
+
+     Texture(
+       Glid       &&new_id,
+       std::int32_t new_width,
+       std::int32_t new_height)
+       : m_renderer_id(
+           std::exchange(
+             new_id,
+             {}))
+       , m_width(new_width)
+       , m_height(new_height)
+     {
+     }
+     Texture(
+       std::int32_t new_width,
+       std::int32_t new_height)
+       : m_width{ new_width }
+       , m_height{ new_height }
+     {
+          init_texture(nullptr);// allocate uninitialized texture
+     }
      Texture(Image image);
-     Texture(std::filesystem::path path, bool in_flip = false);
-     Texture(std::array<std::uint8_t, 4U> color)
+     Texture(
+       std::filesystem::path path,
+       bool                  in_flip = false);
+     Texture(
+       std::array<
+         std::uint8_t,
+         4U> color)
        : Texture(std::bit_cast<std::uint32_t>(color))
      {
      }
@@ -49,11 +79,16 @@ class Texture
           init_texture(&color);
      }
      template<std::ranges::contiguous_range R>
-     Texture(R r, std::int32_t in_width, std::int32_t in_height, bool in_flip = false)
+     Texture(
+       R            r,
+       std::int32_t in_width,
+       std::int32_t in_height,
+       bool         in_flip = false)
        : m_width{ in_width }
        , m_height{ in_height }
      {
-          if constexpr (!std::is_const_v<std::remove_reference_t<std::ranges::range_reference_t<R>>>)
+          if constexpr (!std::is_const_v<std::remove_reference_t<
+                          std::ranges::range_reference_t<R>>>)
           {
                if (in_flip)
                {
@@ -65,7 +100,9 @@ class Texture
           {
                if (in_flip)
                {
-                    std::vector<std::remove_cvref_t<std::ranges::range_value_t<R>>> copy{ std::ranges::begin(r), std::ranges::end(r) };
+                    std::vector<
+                      std::remove_cvref_t<std::ranges::range_value_t<R>>>
+                      copy{ std::ranges::begin(r), std::ranges::end(r) };
                     flip(copy, in_width);
                     init_texture(std::ranges::data(copy));
                }
@@ -81,25 +118,67 @@ class Texture
           {
                return;
           }
-          m_renderer_id = Glid{ []() -> std::uint32_t {
-                                    std::uint32_t tmp;
-                                    GlCall{}(glGenTextures, 1, &tmp);
-                                    GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-                                    return tmp;
-                               }(),
-                                destroy };
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          GlCall{}(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+          m_renderer_id
+            = Glid{ []() -> std::uint32_t
+                    {
+                         std::uint32_t tmp;
+                         GlCall{}(glGenTextures, 1, &tmp);
+                         GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+                         return tmp;
+                    }(),
+                    destroy };
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          GlCall{}(
+            glTexParameteri,
+            GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          GlCall{}(
+            glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          if (color == nullptr)
+          {
+               std::vector<std::uint8_t> new_color(
+                 static_cast<std::size_t>(width())
+                   * static_cast<std::size_t>(height()) * 4u,
+                 0u);
+               GlCall{}(
+                 glTexImage2D,
+                 GL_TEXTURE_2D,
+                 0,
+                 s_sized_interal_format,
+                 width(),
+                 height(),
+                 0,
+                 s_base_interal_format,
+                 s_type,
+                 new_color.data());
+          }
+          else
+          {
+               GlCall{}(
+                 glTexImage2D,
+                 GL_TEXTURE_2D,
+                 0,
+                 s_sized_interal_format,
+                 width(),
+                 height(),
+                 0,
+                 s_base_interal_format,
+                 s_type,
+                 color);
+          }
           // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
           GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
      }
      template<std::ranges::random_access_range R>
           requires std::permutable<std::ranges::iterator_t<R>>
-     static constexpr void flip_slow(R &range, const std::ranges::range_difference_t<R> stride)
+     static constexpr void flip_slow(
+       R                                       &range,
+       const std::ranges::range_difference_t<R> stride)
      {
           using std::ranges::begin;
           using std::ranges::end;
@@ -115,10 +194,18 @@ class Texture
           }
      }
 
-     static void save(std::span<uint8_t> data, std::filesystem::path path, int width, int height)
+     static void save(
+       std::span<uint8_t>    data,
+       std::filesystem::path path,
+       int                   width,
+       int                   height)
      {
           spdlog::debug(
-            "{}\t{} bytes\twidth {}\theight {}", std::filesystem::absolute(path).string().c_str(), std::ranges::size(data), width, height);
+            "{}\t{} bytes\twidth {}\theight {}",
+            std::filesystem::absolute(path).string().c_str(),
+            std::ranges::size(data),
+            width,
+            height);
           Texture::flip(data, width * 4);
           if (path.has_parent_path())
           {
@@ -126,16 +213,25 @@ class Texture
                std::filesystem::create_directories(path.parent_path(), ec);
                if (ec)
                {
-                    spdlog::error("{}:{} - {}: {} - path: {}", __FILE__, __LINE__, ec.value(), ec.message(), path.string().c_str());
+                    spdlog::error(
+                      "{}:{} - {}: {} - path: {}",
+                      __FILE__,
+                      __LINE__,
+                      ec.value(),
+                      ec.message(),
+                      path.string().c_str());
                     ec.clear();
                }
           }
-          stbi_write_png(path.string().c_str(), width, height, 4, data.data(), width * 4);
+          stbi_write_png(
+            path.string().c_str(), width, height, 4, data.data(), width * 4);
      }
 
      template<std::ranges::contiguous_range R>
           requires std::permutable<std::ranges::iterator_t<R>>
-     static void flip(R &range, const std::ranges::range_difference_t<R> stride)
+     static void flip(
+       R                                       &range,
+       const std::ranges::range_difference_t<R> stride)
      {
           if (std::ranges::empty(range))
           {
@@ -146,11 +242,15 @@ class Texture
                // throw or use another function that's more flexible.
                return flip_slow(range, stride);
           }
-          static constexpr auto sizeof_value    = sizeof(std::ranges::range_value_t<R>);
-          const auto            stride_in_bytes = static_cast<std::size_t>(stride) * sizeof_value;
-          auto                  buffer          = std::make_unique<char[]>(stride_in_bytes);
-          const auto            swap_memory     = [tmp = buffer.get(),
-                                    stride_in_bytes](std::ranges::range_reference_t<R> &left, std::ranges::range_reference_t<R> &right) {
+          static constexpr auto sizeof_value
+            = sizeof(std::ranges::range_value_t<R>);
+          const auto stride_in_bytes
+            = static_cast<std::size_t>(stride) * sizeof_value;
+          auto       buffer      = std::make_unique<char[]>(stride_in_bytes);
+          const auto swap_memory = [tmp = buffer.get(), stride_in_bytes](
+                                     std::ranges::range_reference_t<R> &left,
+                                     std::ranges::range_reference_t<R> &right)
+          {
                std::memcpy(tmp, &left, stride_in_bytes);
                std::memcpy(&left, &right, stride_in_bytes);
                std::memcpy(&right, tmp, stride_in_bytes);
@@ -166,7 +266,12 @@ class Texture
      }
 
      GlidCopy              id() const noexcept;
+     // use for sampler2d
      void                  bind(int slot = 0) const;
+     void                  generate_mipmaps() const;
+     // use for image2d
+     void                  bind_read_only(int slot) const;
+     void                  bind_write_only(int slot) const;
      constexpr static void destroy(const std::uint32_t id)
      {
           if FME_NOT_CONSTEVAL
@@ -196,11 +301,15 @@ class Texture
      }
 };
 #undef FME_NOT_CONSTEVAL
-template<typename T = std::uint64_t>
+template<
+  typename T = std::uint64_t,
+  typename U = GlidCopy>
 constexpr inline T
-  ConvertGliDtoImTextureId(GlidCopy r_id)// this is for imgui but imgui isn't part of the glengine so i made this a template
+  ConvertGliDtoImTextureId(U r_id)// this is for imgui but imgui isn't part of
+                                  // the glengine so i made this a template
 {
-     // ImTextureID used to be a void pointer or something now it's a 64 bit unsigned int.
+     // ImTextureID used to be a void pointer or something now it's a 64 bit
+     // unsigned int.
      return static_cast<T>(std::uint32_t(r_id));
 }
 static_assert(Bindable<Texture>);

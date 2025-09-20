@@ -4,12 +4,14 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
+#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "gui/fa_icons.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
+#include "unique_values.hpp"
 #include <algorithm>
 #include <fmt/format.h>
 #include <functional>
@@ -50,10 +52,10 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  tool_tip_lambda_t,
   returns_filter_concept filter_lambdaT>
-class GenericComboClassWithFilter
+class GenericComboWithFilter
 {
    public:
-     GenericComboClassWithFilter(
+     GenericComboWithFilter(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -63,7 +65,8 @@ class GenericComboClassWithFilter
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
+       , tool_tips_(
+           std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
        , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
        , settings_(settings)
        , current_idx_(0)
@@ -92,7 +95,12 @@ class GenericComboClassWithFilter
           if (old_idx != current_idx_)
           {
                static constexpr auto pattern = "{}: \t{}\t{}\t{}";
-               spdlog::info(pattern, gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
+               spdlog::info(
+                 pattern,
+                 gui_labels::set,
+                 name_,
+                 *getNext(values_, current_idx_),
+                 *getNext(strings_, current_idx_));
                filter_.get().update(*getNext(values_, current_idx_));
           }
 
@@ -100,22 +108,45 @@ class GenericComboClassWithFilter
      }
 
    private:
-     std::string_view                                                                  name_;
-     std::invoke_result_t<ValueLambdaT>                                                values_;
-     std::invoke_result_t<StringLambdaT>                                               strings_;
-     std::invoke_result_t<tool_tip_lambda_t>                                           tool_tips_;
-     std::reference_wrapper<std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>> filter_;
-     generic_combo_settings                                                            settings_;
-     mutable std::ranges::range_difference_t<decltype(values_)>                        current_idx_;
-     mutable bool                                                                      changed_;
-     const float                                                                       spacing_;
+     std::string_view                        name_;
+     std::invoke_result_t<ValueLambdaT>      values_;
+     std::invoke_result_t<StringLambdaT>     strings_;
+     std::invoke_result_t<tool_tip_lambda_t> tool_tips_;
+     std::reference_wrapper<
+       std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>>
+                                                                filter_;
+     generic_combo_settings                                     settings_;
+     mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
+     mutable bool                                               changed_;
+     const float                                                spacing_;
 
-     void                                                                              updateCurrentIndex() const
+     void updateCurrentIndex() const
      {
-          const auto found = std::find(std::ranges::begin(values_), std::ranges::end(values_), filter_.get().value());
+          const auto found = std::find_if(
+            std::ranges::begin(values_),
+            std::ranges::end(values_),
+            [&](const auto &tmp)
+            {
+                 using FilterValueT
+                   = std::remove_cvref_t<decltype(filter_.get().value())>;
+                 using ValuesValueT = std::remove_cvref_t<
+                   std::ranges::range_value_t<decltype(values_)>>;
+
+                 if constexpr (
+                   std::is_enum_v<FilterValueT> && std::is_enum_v<ValuesValueT>)
+                 {
+                      return std::to_underlying(filter_.get().value())
+                             == std::to_underlying(tmp);
+                 }
+                 else
+                 {
+                      return filter_.get().value() == tmp;
+                 }
+            });
           if (found != std::ranges::end(values_))
           {
-               current_idx_ = std::ranges::distance(std::ranges::begin(values_), found);
+               current_idx_
+                 = std::ranges::distance(std::ranges::begin(values_), found);
           }
           else
           {
@@ -129,14 +160,17 @@ class GenericComboClassWithFilter
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
           return std::ranges::next(std::ranges::begin(range), idx);
      }
      void renderCheckBox() const
      {
           const auto _ = PushPopID();
-          if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
+          if (bool checked = filter_.get().enabled();
+              ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
                changed_ = true;
@@ -148,7 +182,8 @@ class GenericComboClassWithFilter
      {
           const auto  _            = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = [&]() {
+          const float button_count = [&]()
+          {
                int count = 3;
                if (settings_.show_explore_button)
                {
@@ -156,52 +191,64 @@ class GenericComboClassWithFilter
                }
                return static_cast<float>(count);
           }();
-          ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
+          ImGui::PushItemWidth(
+            ImGui::CalcItemWidth() - spacing_ * button_count
+            - button_size * button_count);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
-          const auto &current_item   = *getNext(strings_, current_idx_);
+          const auto &current_item = *getNext(strings_, current_idx_);
 
-          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
+          if (ImGui::BeginCombo(
+                "##Empty",
+                std::ranges::data(current_item),
+                ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
 
-               std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
-                    const bool  is_selected = (current_item == string);
-                    // You can store your selection however you
-                    // want, outside or inside your objects
-                    const char *c_str_value = std::ranges::data(string);
-                    {
-                         const auto pop_id     = PushPopID();
-                         const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
-                         if (ImGui::Selectable(c_str_value, is_selected))
-                         {
-                              for (current_idx_ = 0; const auto &temp : strings_)
-                              {
-                                   if (std::ranges::equal(temp, string))
-                                   {
-                                        changed_ = true;
-                                        filter_.get().enable();
-                                        break;
-                                   }
-                                   ++current_idx_;
-                              }
-                              //            current_idx =
-                              //            std::distance(std::ranges::data(strings), &string);
-                              //            changed     = true;
-                         }
-                    }
-                    if (is_selected)
-                    {
-                         ImGui::SetItemDefaultFocus();
-                         // You may set the initial focus when
-                         // opening the combo (scrolling + for
-                         // keyboard navigation support)
-                    }
-                    renderToolTip(index);
-                    ++index;
-               });
+               std::ranges::for_each(
+                 strings_,
+                 [&,
+                  index = decltype(current_idx_){}](const auto &string) mutable
+                 {
+                      const bool  is_selected = (current_item == string);
+                      // You can store your selection however you
+                      // want, outside or inside your objects
+                      const char *c_str_value = std::ranges::data(string);
+                      {
+                           const auto pop_id = PushPopID();
+                           const auto pop_column
+                             = glengine::ScopeGuard{ &ImGui::NextColumn };
+                           if (ImGui::Selectable(c_str_value, is_selected))
+                           {
+                                for (current_idx_ = 0;
+                                     const auto &temp : strings_)
+                                {
+                                     if (std::ranges::equal(temp, string))
+                                     {
+                                          changed_ = true;
+                                          filter_.get().enable();
+                                          break;
+                                     }
+                                     ++current_idx_;
+                                }
+                                //            current_idx =
+                                //            std::distance(std::ranges::data(strings),
+                                //            &string); changed     = true;
+                           }
+                      }
+                      if (is_selected)
+                      {
+                           ImGui::SetItemDefaultFocus();
+                           // You may set the initial focus when
+                           // opening the combo (scrolling + for
+                           // keyboard navigation support)
+                      }
+                      renderToolTip(index);
+                      ++index;
+                 });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
@@ -220,22 +267,29 @@ class GenericComboClassWithFilter
 
      auto size_of_values() const
      {
-          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+          return static_cast<std::ranges::range_difference_t<
+            std::remove_cvref_t<decltype(values_)>>>(
+            std::ranges::size(values_));
      }
 
      void renderLeftButton() const
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
-          const bool disabled    = check_valid();
+          const auto check_valid = [&]()
+          {
+               return (current_idx_ <= decltype(current_idx_){})
+                      || (current_idx_ - 1 >= size_of_values());
+          };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
                --current_idx_;
                changed_ = true;
                filter_.get().enable();
-               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               while (std::ranges::empty(*getNext(strings_, current_idx_))
+                      && !check_valid())
                {
                     --current_idx_;
                }
@@ -247,15 +301,17 @@ class GenericComboClassWithFilter
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return (current_idx_ + 1 >= size_of_values()); };
-          const bool disabled    = check_valid();
+          const auto check_valid
+            = [&]() { return (current_idx_ + 1 >= size_of_values()); };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
                ++current_idx_;
                changed_ = true;
                filter_.get().enable();
-               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               while (std::ranges::empty(*getNext(strings_, current_idx_))
+                      && !check_valid())
                {
                     ++current_idx_;
                }
@@ -272,7 +328,8 @@ class GenericComboClassWithFilter
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();
-          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          if (ImGui::Button(
+                ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
                open_directory(*getNext(strings_, current_idx_));
           }
@@ -291,15 +348,506 @@ class GenericComboClassWithFilter
 };
 
 template<
+  ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
+  ff_8::IsFilterOld               IsFilterOldT,
+  std::invocable                  invocableT>
+struct GenericMenuWithFilter
+{
+   private:
+     std::string_view             m_label;
+     HasValuesAndStringsAndZipT &&m_pair;
+     IsFilterOldT                &m_filter;
+     invocableT                 &&m_lambda;
+
+   public:
+     GenericMenuWithFilter(
+       std::string_view             label,
+       HasValuesAndStringsAndZipT &&pair,
+       IsFilterOldT                &filter,
+       invocableT                 &&lambda)
+       : m_label(label)
+       , m_pair(std::forward<HasValuesAndStringsAndZipT>(pair))
+       , m_filter(filter)
+       , m_lambda(std::forward<invocableT>(lambda))
+     {
+     }
+
+     void operator()()
+     {
+          if (ImGui::BeginMenu(m_label.data()))
+          {
+               const auto pop_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
+               const auto process_element = [&](auto &value, auto &str)
+               {
+                    const bool selected = m_filter.value() == value;
+                    bool       checked  = selected && m_filter.enabled();
+                    if (ImGui::MenuItem(str.data(), nullptr, &checked))
+                    {
+                         if (selected)
+                         {
+                              if (m_filter.enabled())
+                              {
+                                   m_filter.disable();
+                              }
+                              else
+                              {
+                                   m_filter.enable();
+                              }
+                         }
+                         else
+                         {
+                              m_filter.update(value);
+                              m_filter.enable();
+                         }
+                         std::invoke(m_lambda);
+                    }
+               };
+               const std::uint32_t cols = { 3U };
+               std::uint32_t       i    = {};
+               ImGui::BeginTable("##filter_menu_items", cols);
+               for (auto &&t : m_pair.zip())
+               {
+                    if (i % cols == 0U)
+                    {
+                         ImGui::TableNextRow();
+                    }
+                    ImGui::TableNextColumn();
+                    if constexpr (
+                      std::tuple_size_v<std::decay_t<decltype(t)>> == 2)
+                    {
+                         auto &&[value, str] = t;
+                         // Handle the case where tuple has 2 elements
+                         process_element(value, str);
+                    }
+                    else if constexpr (
+                      std::tuple_size_v<std::decay_t<decltype(t)>> == 3)
+                    {
+                         auto &&[value, str, tooltip_str] = t;
+                         // Handle the case where tuple has 3 elements
+                         process_element(value, str);
+                         tool_tip(tooltip_str);
+                    }
+                    ++i;
+               }
+               ImGui::EndTable();
+          }
+     }
+};
+
+
+template<
+  ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
+  ff_8::IsFilterOld               IsFilterOldT,
+  std::invocable                  invocableT>
+struct GenericMenuWithMultiFilter
+{
+   private:
+     std::string_view                  m_label;
+     const HasValuesAndStringsAndZipT &m_pair;
+     IsFilterOldT                     &m_filter;
+     invocableT                      &&m_lambda;
+
+   public:
+     GenericMenuWithMultiFilter(
+       std::string_view                  label,
+       const HasValuesAndStringsAndZipT &pair,
+       IsFilterOldT                     &filter,
+       invocableT                      &&lambda)
+       : m_label(label)
+       , m_pair(pair)
+       , m_filter(filter)
+       , m_lambda(std::forward<invocableT>(lambda))
+     {
+     }
+
+     void operator()()
+     {
+          if (ImGui::BeginMenu(m_label.data()))
+          {
+               const auto pop_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
+               const auto process_element = [&](auto &value, auto &str)
+               {
+                    auto copy_value = m_filter.value();
+                    auto it         = std::ranges::find_if(
+                      copy_value,
+                      [&](const auto &tmp) { return tmp == value; });
+                    const bool selected = it != copy_value.end();
+
+                    // ImGui::BeginGroup();
+
+                    // Draw the checkmark icon or empty space for alignment
+                    ImGui::TextUnformatted(
+                      selected ? ICON_FA_CHECK
+                               : "  ");// Keep spacing even if not selected
+
+                    ImGui::SameLine();
+                    if (ImGui::Selectable(
+                          str.data(),
+                          selected,
+                          ImGuiSelectableFlags_DontClosePopups))
+                    {
+                         if (selected)
+                         {
+                              copy_value.erase(it);
+                              m_filter.update(copy_value);
+                              if (m_filter.enabled() && copy_value.empty())
+                              {
+                                   m_filter.disable();
+                              }
+                         }
+                         else
+                         {
+                              copy_value.push_back(value);
+                              std::ranges::sort(copy_value);
+                              m_filter.update(copy_value);
+                              m_filter.enable();
+                         }
+                         std::invoke(m_lambda);
+                    }
+                    // ImGui::EndGroup();
+               };
+               bool checked = m_filter.enabled();
+               if (ImGui::Checkbox("Toggle Filter", &checked))
+               {
+                    if (checked)
+                    {
+                         m_filter.enable();
+                    }
+                    else
+                    {
+                         m_filter.disable();
+                    }
+               }
+               const std::uint32_t cols = { 3U };
+               std::uint32_t       i    = {};
+               ImGui::BeginTable("##filter_menu_items", cols);
+               for (auto &&t : m_pair.zip())
+               {
+                    if (i % cols == 0U)
+                    {
+                         ImGui::TableNextRow();
+                    }
+                    ImGui::TableNextColumn();
+                    if constexpr (
+                      std::tuple_size_v<std::decay_t<decltype(t)>> == 2)
+                    {
+                         auto &&[value, str] = t;
+                         // Handle the case where tuple has 2 elements
+                         process_element(value, str);
+                    }
+                    else if constexpr (
+                      std::tuple_size_v<std::decay_t<decltype(t)>> == 3)
+                    {
+                         auto &&[value, str, tooltip_str] = t;
+                         // Handle the case where tuple has 3 elements
+                         process_element(value, str);
+                         tool_tip(tooltip_str);
+                    }
+                    ++i;
+               }
+               ImGui::EndTable();
+          }
+     }
+};
+
+
+template<
+  returns_range_concept  ValueLambdaT,
+  returns_range_concept  StringLambdaT,
+  returns_range_concept  tool_tip_lambda_t,
+  returns_filter_concept filter_lambdaT>
+class GenericComboWithMultiFilter
+{
+   public:
+     GenericComboWithMultiFilter(
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       StringLambdaT        &&string_lambda,
+       tool_tip_lambda_t    &&tool_tip_lambda,
+       filter_lambdaT       &&filter_lambda,
+       generic_combo_settings settings = {})
+       : name_(name)
+       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
+       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , tool_tips_(
+           std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
+       , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
+       , settings_(settings)
+       , current_idx_(
+           std::ranges::size(values_),
+           false)
+       , changed_(false)
+       , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
+     {
+          updateCurrentIndex();
+     }
+
+     bool render() const
+     {
+          if (values_.empty() || strings_.empty())
+          {
+               return false;
+          }
+
+          updateCurrentIndex();
+
+          const auto old_idx = current_idx_;
+          renderCheckBox();
+          renderComboBox();
+          renderExploreButton();
+          renderTitle();
+
+          if (old_idx != current_idx_)
+          {
+               // Log changes between old and current index states
+               for (auto [value, str, old_flag, new_flag] :
+                    std::views::zip(values_, strings_, old_idx, current_idx_))
+               {
+                    if (old_flag != new_flag)
+                    {
+                         const char *state = new_flag ? "Enabled" : "Disabled";
+                         spdlog::info(
+                           "{}: \t{}\t{}\t{}\t{}",
+                           gui_labels::set,
+                           name_,
+                           value,
+                           str,
+                           state);
+                    }
+               }
+
+               filter_.get().update(
+                 std::views::zip(values_, current_idx_)
+                 | std::views::filter([](const auto &tuple)
+                                      { return std::get<1>(tuple); })
+                 | std::views::transform([](const auto &tuple)
+                                         { return std::get<0>(tuple); })
+                 | std::ranges::to<std::vector>());
+          }
+
+          return old_idx != current_idx_ || changed_;
+     }
+
+   private:
+     std::string_view                        name_;
+     std::invoke_result_t<ValueLambdaT>      values_;
+     std::invoke_result_t<StringLambdaT>     strings_;
+     std::invoke_result_t<tool_tip_lambda_t> tool_tips_;
+     std::reference_wrapper<
+       std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>>
+                               filter_;
+     generic_combo_settings    settings_;
+     mutable std::vector<bool> current_idx_;
+     mutable bool              changed_;
+     const float               spacing_;
+
+     void                      updateCurrentIndex() const
+     {
+          const auto &filter_value = filter_.get().value();
+          for (auto &&[value, enabled] : std::views::zip(values_, current_idx_))
+          {
+               if (auto it = std::ranges::find(filter_value, value);
+                   it != filter_value.end())
+               {
+                    enabled = true;
+               }
+          }
+     }
+
+     // template<typename Range>
+     // auto getNext(const Range &range, const auto &idx) const
+     // {
+     //      return std::ranges::next(std::ranges::begin(range), idx);
+     // }
+     void renderCheckBox() const
+     {
+          const auto _  = PushPopID();
+          bool disabled = std::ranges::none_of(current_idx_, std::identity{});
+          if (disabled && filter_.get().enabled())
+          {
+               filter_.get().disable();
+               changed_ = true;
+          }
+          ImGui::BeginDisabled(disabled);
+
+          if (bool checked = filter_.get().enabled();
+              ImGui::Checkbox("", &checked))
+          {
+               checked ? filter_.get().enable() : filter_.get().disable();
+               changed_ = true;
+          }
+          ImGui::SameLine(0, spacing_);
+          ImGui::EndDisabled();
+     }
+
+     void renderComboBox() const
+     {
+          const auto  _            = PushPopID();
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_count = [&]()
+          {
+               int count = 1;
+               if (settings_.show_explore_button)
+               {
+                    ++count;
+               }
+               return static_cast<float>(count);
+          }();
+          ImGui::PushItemWidth(
+            ImGui::CalcItemWidth() - spacing_ * button_count
+            - button_size * button_count);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
+
+          auto zip_view = std::views::zip(strings_, current_idx_, tool_tips_);
+
+          auto current_view
+            = std::views::zip(strings_, current_idx_)
+              | std::views::filter([](const auto &tup)
+                                   { return std::get<1>(tup); })
+              | std::views::transform([](const auto &tup)
+                                      { return std::get<0>(tup); });
+          const auto current_item = [&]()
+          {
+               auto tmp = std::ranges::join_with_view(
+                            current_view, std::string_view{ ", " })
+                          | std::ranges::to<std::string>();
+               if (std::ranges::empty(tmp))
+               {
+                    tmp = "Select a value...";
+               }
+               return tmp;
+          }();
+
+
+          if (ImGui::BeginCombo(
+                "##Empty",
+                std::ranges::data(current_item),
+                ImGuiComboFlags_HeightLarge))
+          // The second parameter is the label previewed
+          // before opening the combo.
+          {
+               ImGui::Columns(settings_.num_columns, "##columns", false);
+
+               for (auto &&[string, is_selected, tooltip] : zip_view)
+               {
+                    // You can store your selection however you
+                    // want, outside or inside your objects
+                    const char *c_str_value = std::ranges::data(string);
+                    {
+                         const auto pop_id = PushPopID();
+                         const auto pop_column
+                           = glengine::ScopeGuard{ &ImGui::NextColumn };
+                         if (ImGui::Selectable(
+                               c_str_value,
+                               is_selected,
+                               ImGuiSelectableFlags_DontClosePopups))
+                         {
+                              if (!is_selected)
+                              {
+                                   filter_.get().enable();
+                              }
+                              is_selected = !is_selected;
+                              changed_    = true;
+                         }
+
+                         if (is_selected)
+                         {
+                              ImGui::SetItemDefaultFocus();
+                              // You may set the initial focus when
+                              // opening the combo (scrolling + for
+                              // keyboard navigation support)
+                         }
+                         tool_tip(tooltip);
+                    }
+               }
+               ImGui::Columns(1);
+               ImGui::EndCombo();
+          }
+
+          tool_tip(current_item);
+     }
+
+     auto size_of_values() const
+     {
+          return static_cast<std::ranges::range_difference_t<
+            std::remove_cvref_t<decltype(values_)>>>(
+            std::ranges::size(values_));
+     }
+
+     void renderExploreButton() const
+     {
+          if constexpr (std::same_as<
+                          std::filesystem::path,
+                          std::ranges::range_value_t<
+                            std::remove_cvref_t<decltype(values_)>>>)
+          {
+               if (!settings_.show_explore_button)
+               {
+                    return;
+               }
+
+               ImGui::SameLine(0, spacing_);
+               const float button_size = ImGui::GetFrameHeight();
+               const auto  _           = PushPopID();
+
+               if (ImGui::Button(
+                     ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+               {
+                    ImGui::OpenPopup("ExploreDirectoryPopup");
+               }
+
+               tool_tip(gui_labels::explore_tooltip);
+
+               if (ImGui::BeginPopup("ExploreDirectoryPopup"))
+               {
+                    bool any_active = false;
+                    for (auto [val, active] :
+                         std::views::zip(values_, current_idx_))
+                    {
+                         if (active)
+                         {
+                              any_active = true;
+                              if (ImGui::MenuItem(val.c_str()))
+                              {
+                                   open_directory(val);
+                                   ImGui::CloseCurrentPopup();
+                              }
+                         }
+                    }
+
+                    if (!any_active)
+                    {
+                         ImGui::TextDisabled("No active entries.");
+                    }
+
+                    ImGui::EndPopup();
+               }
+          }
+     }
+
+     void renderTitle() const
+     {
+          if (std::ranges::empty(name_))
+          {
+               return;
+          }
+          ImGui::SameLine(0, spacing_);
+          format_imgui_text("{}", name_);
+     }
+};
+
+
+template<
   returns_range_concept  ValueLambdaT,
   returns_range_concept  FixedTogglesLambdaT,
   returns_range_concept  StringLambdaT,
   returns_range_concept  ToolTipLambdaT,
   returns_filter_concept FilterLambdaT>
-class GenericComboClassWithFilterAndFixedToggles
+class GenericComboWithFilterAndFixedToggles
 {
    public:
-     GenericComboClassWithFilterAndFixedToggles(
+     GenericComboWithFilterAndFixedToggles(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        FixedTogglesLambdaT  &&fixed_toggles_lambda,
@@ -309,7 +857,8 @@ class GenericComboClassWithFilterAndFixedToggles
        generic_combo_settings settings = {})
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , fixed_toggles_(std::invoke(std::forward<FixedTogglesLambdaT>(fixed_toggles_lambda)))
+       , fixed_toggles_(
+           std::invoke(std::forward<FixedTogglesLambdaT>(fixed_toggles_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , tool_tips_(std::invoke(std::forward<ToolTipLambdaT>(tool_tip_lambda)))
        , filter_(std::invoke(std::forward<FilterLambdaT>(filter_lambda)))
@@ -332,8 +881,10 @@ class GenericComboClassWithFilterAndFixedToggles
           const auto old_idx = current_idx_;
           renderCheckBox();
           {
-               ImGui::BeginDisabled(std::ranges::none_of(fixed_toggles_, std::identity{}));
-               const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
+               ImGui::BeginDisabled(
+                 std::ranges::none_of(fixed_toggles_, std::identity{}));
+               const auto pop_disabled
+                 = glengine::ScopeGuard{ &ImGui::EndDisabled };
                renderComboBox();
                renderLeftButton();
                renderRightButton();
@@ -345,7 +896,12 @@ class GenericComboClassWithFilterAndFixedToggles
           if (old_idx != current_idx_)
           {
                static constexpr auto pattern = "{}: \t{}\t{}\t{}";
-               spdlog::info(pattern, gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
+               spdlog::info(
+                 pattern,
+                 gui_labels::set,
+                 name_,
+                 *getNext(values_, current_idx_),
+                 *getNext(strings_, current_idx_));
                filter_.get().update(*getNext(values_, current_idx_));
           }
 
@@ -353,23 +909,29 @@ class GenericComboClassWithFilterAndFixedToggles
      }
 
    private:
-     std::string_view                                                                 name_;
-     std::invoke_result_t<ValueLambdaT>                                               values_;
-     std::invoke_result_t<FixedTogglesLambdaT>                                        fixed_toggles_;
-     std::invoke_result_t<StringLambdaT>                                              strings_;
-     std::invoke_result_t<ToolTipLambdaT>                                             tool_tips_;
-     std::reference_wrapper<std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>> filter_;
-     generic_combo_settings                                                           settings_;
-     mutable std::ranges::range_difference_t<decltype(values_)>                       current_idx_;
-     mutable bool                                                                     changed_;
-     const float                                                                      spacing_;
+     std::string_view                          name_;
+     std::invoke_result_t<ValueLambdaT>        values_;
+     std::invoke_result_t<FixedTogglesLambdaT> fixed_toggles_;
+     std::invoke_result_t<StringLambdaT>       strings_;
+     std::invoke_result_t<ToolTipLambdaT>      tool_tips_;
+     std::reference_wrapper<
+       std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>>
+                                                                filter_;
+     generic_combo_settings                                     settings_;
+     mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
+     mutable bool                                               changed_;
+     const float                                                spacing_;
 
-     void                                                                             updateCurrentIndex() const
+     void updateCurrentIndex() const
      {
-          const auto found = std::find(std::ranges::begin(values_), std::ranges::end(values_), filter_.get().value());
+          const auto found = std::find(
+            std::ranges::begin(values_),
+            std::ranges::end(values_),
+            filter_.get().value());
           if (found != std::ranges::end(values_))
           {
-               current_idx_ = std::ranges::distance(std::ranges::begin(values_), found);
+               current_idx_
+                 = std::ranges::distance(std::ranges::begin(values_), found);
           }
           else
           {
@@ -383,17 +945,31 @@ class GenericComboClassWithFilterAndFixedToggles
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
+          assert(
+            std::cmp_less(idx, std::ranges::size(range))
+            && "Index out of range!");
           return std::ranges::next(std::ranges::begin(range), idx);
      }
+
      void renderCheckBox() const
      {
-          const auto  _                    = PushPopID();
-          const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
-          ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
+          if (std::cmp_less_equal(
+                std::ranges::size(fixed_toggles_), current_idx_))
+          {
+               return;
+          }
+          const auto  _ = PushPopID();
+          const auto &current_fixed_toggle
+            = *getNext(fixed_toggles_, current_idx_);
+          ImGui::BeginDisabled(
+            !current_fixed_toggle && !filter_.get().enabled());
           const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
-          if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
+          if (bool checked = filter_.get().enabled();
+              ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
                changed_ = true;
@@ -405,7 +981,8 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto  _            = PushPopID();// RAII for ImGui ID stack
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = [&]() {
+          const float button_count = [&]()
+          {
                int count = 3;
                if (settings_.show_explore_button)
                {
@@ -415,28 +992,50 @@ class GenericComboClassWithFilterAndFixedToggles
           }();
 
           // Set up combo box width
-          ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
+          ImGui::PushItemWidth(
+            ImGui::CalcItemWidth() - spacing_ * button_count
+            - button_size * button_count);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
           // Get the current item
-          const auto &current_item   = *getNext(strings_, current_idx_);
+          const auto &current_item = *getNext(strings_, current_idx_);
 
           // Begin combo box with preview of current item
-          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
+          if (ImGui::BeginCombo(
+                "##Empty",
+                std::ranges::data(current_item),
+                ImGuiComboFlags_HeightLarge))
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
-               for (const auto &[index_raw, string] : std::ranges::views::enumerate(strings_))
+               for (const auto &[index_raw, string] :
+                    std::ranges::views::enumerate(strings_))
                {
-                    const auto  index                = static_cast<decltype(current_idx_)>(index_raw);
-                    const bool  is_selected          = std::ranges::equal(current_item, string);
-                    const auto  pop_id               = PushPopID();
-                    const auto  pop_column           = glengine::ScopeGuard{ &ImGui::NextColumn };
+                    const auto index
+                      = static_cast<decltype(current_idx_)>(index_raw);
+                    const bool is_selected
+                      = std::ranges::equal(current_item, string);
+                    const auto pop_id = PushPopID();
+                    const auto pop_column
+                      = glengine::ScopeGuard{ &ImGui::NextColumn };
 
-                    const auto &current_fixed_toggle = *getNext(fixed_toggles_, index);
+                    if (std::cmp_less_equal(
+                          std::ranges::size(fixed_toggles_), index))
+                    {
+                         continue;
+                    }
+                    const auto &current_fixed_toggle
+                      = *getNext(fixed_toggles_, index);
+                    if (!current_fixed_toggle)
+                    {
+                         continue;
+                    }
                     ImGui::BeginDisabled(!current_fixed_toggle);
-                    const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
+                    const auto pop_disabled
+                      = glengine::ScopeGuard{ &ImGui::EndDisabled };
 
-                    if (ImGui::Selectable(std::ranges::data(string), is_selected))
+                    if (ImGui::Selectable(
+                          std::ranges::data(string), is_selected))
                     {
                          current_idx_ = index;
                          changed_     = true;
@@ -470,20 +1069,34 @@ class GenericComboClassWithFilterAndFixedToggles
 
      auto size_of_values() const
      {
-          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+          return static_cast<std::ranges::range_difference_t<
+            std::remove_cvref_t<decltype(values_)>>>(
+            std::ranges::size(values_));
      }
 
      void renderLeftButton() const
      {
           const auto _           = PushPopID();
 
-          const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
-          // Check if there is any index < current_idx_ where fixed_toggles_ is true
-          const auto has_valid_left_index = [&]() -> std::optional<decltype(current_idx_)> {
+          const auto check_valid = [&]()
+          {
+               return (current_idx_ <= decltype(current_idx_){})
+                      || (current_idx_ - 1 >= size_of_values());
+          };
+          // Check if there is any index < current_idx_ where fixed_toggles_ is
+          // true
+          const auto has_valid_left_index
+            = [&]() -> std::optional<decltype(current_idx_)>
+          {
                if (!check_valid())
                {
                     for (auto i = current_idx_ - 1; i >= 0; --i)
                     {
+                         if (std::cmp_less_equal(
+                               std::ranges::size(fixed_toggles_), i))
+                         {
+                              continue;
+                         }
                          if (*getNext(fixed_toggles_, i))
                          {
                               return i;
@@ -507,12 +1120,20 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid           = [&]() { return (current_idx_ + 1 >= size_of_values()); };
-          const auto has_valid_right_index = [&]() -> std::optional<decltype(current_idx_)> {
+          const auto check_valid
+            = [&]() { return (current_idx_ + 1 >= size_of_values()); };
+          const auto has_valid_right_index
+            = [&]() -> std::optional<decltype(current_idx_)>
+          {
                if (!check_valid())
                {
                     for (auto i = current_idx_ + 1; i < size_of_values(); ++i)
                     {
+                         if (std::cmp_less_equal(
+                               std::ranges::size(fixed_toggles_), i))
+                         {
+                              continue;
+                         }
                          if (*getNext(fixed_toggles_, i))
                          {
                               return i;
@@ -540,7 +1161,8 @@ class GenericComboClassWithFilterAndFixedToggles
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();
-          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          if (ImGui::Button(
+                ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
                open_directory(*getNext(strings_, current_idx_));
           }
@@ -557,11 +1179,12 @@ class GenericComboClassWithFilterAndFixedToggles
           format_imgui_text("{}", name_);
 
           // Get size of the text for hover area
-          ImVec2 textSize     = ImGui::CalcTextSize(name_.data());
+          ImVec2 textSize = ImGui::CalcTextSize(name_.data());
 
           // Move back to same position
-          ImVec2 cursorBackup = ImGui::GetCursorScreenPos();// Save cursor position
-          ImGui::SetItemAllowOverlap();// Allow us to draw on top
+          ImVec2 cursorBackup
+            = ImGui::GetCursorScreenPos();// Save cursor position
+          ImGui::SetItemAllowOverlap();   // Allow us to draw on top
           ImGui::SetCursorScreenPos(ImGui::GetItemRectMin());
 
           // Make invisible button the same size as the text
@@ -579,10 +1202,10 @@ template<
   returns_range_concept StringLambdaT,
   typename ValueT,
   returns_range_concept tool_tip_lambda_t = StringLambdaT>
-class GenericComboClass
+class GenericCombo
 {
    public:
-     GenericComboClass(
+     GenericCombo(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -600,7 +1223,7 @@ class GenericComboClass
      {
      }
 
-     GenericComboClass(
+     GenericCombo(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -639,7 +1262,12 @@ class GenericComboClass
 
           if (old_idx != current_idx_)
           {
-               spdlog::info("{}: \t{}\t{}\t{}", gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
+               spdlog::info(
+                 "{}: \t{}\t{}\t{}",
+                 gui_labels::set,
+                 name_,
+                 *getNext(values_, current_idx_),
+                 *getNext(strings_, current_idx_));
           }
           return old_idx != current_idx_ || changed_;
      }
@@ -655,12 +1283,16 @@ class GenericComboClass
      mutable bool                                               changed_;
      const float                                                spacing_;
 
-     void                                                       updateCurrentIndex() const
+     void updateCurrentIndex() const
      {
-          const auto found = std::find(std::ranges::begin(values_), std::ranges::end(values_), value_.get());
+          const auto found = std::find(
+            std::ranges::begin(values_),
+            std::ranges::end(values_),
+            value_.get());
           if (found != std::ranges::end(values_))
           {
-               current_idx_ = std::ranges::distance(std::ranges::begin(values_), found);
+               current_idx_
+                 = std::ranges::distance(std::ranges::begin(values_), found);
           }
           else
           {
@@ -674,16 +1306,21 @@ class GenericComboClass
      }
 
      template<typename Range>
-     auto getNext(const Range &range, const auto &idx) const
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
      {
-          return std::ranges::next(std::ranges::begin(range), static_cast<std::ranges::range_difference_t<Range>>(idx));
+          return std::ranges::next(
+            std::ranges::begin(range),
+            static_cast<std::ranges::range_difference_t<Range>>(idx));
      }
 
      void renderComboBox() const
      {
           const auto  pop_id       = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = [&]() {
+          const float button_count = [&]()
+          {
                int count = 2;
                if (settings_.show_explore_button)
                {
@@ -691,54 +1328,66 @@ class GenericComboClass
                }
                return static_cast<float>(count);
           }();
-          ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
+          ImGui::PushItemWidth(
+            ImGui::CalcItemWidth() - spacing_ * button_count
+            - button_size * button_count);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
-          const auto &current_item   = *getNext(strings_, current_idx_);
+          const auto &current_item = *getNext(strings_, current_idx_);
 
-          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
+          if (ImGui::BeginCombo(
+                "##Empty",
+                std::ranges::data(current_item),
+                ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
-               std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
-                    const bool is_selected = (current_item == string);
-                    // You can store your selection however you
-                    // want, outside or inside your objects
-                    if (std::ranges::empty(string))
-                    {
-                         return;
-                    }
-                    const char *c_str_value = std::ranges::data(string);
-                    {
-                         const auto pop_id2     = PushPopID();
-                         const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
+               std::ranges::for_each(
+                 strings_,
+                 [&,
+                  index = decltype(current_idx_){}](const auto &string) mutable
+                 {
+                      const bool is_selected = (current_item == string);
+                      // You can store your selection however you
+                      // want, outside or inside your objects
+                      if (std::ranges::empty(string))
+                      {
+                           return;
+                      }
+                      const char *c_str_value = std::ranges::data(string);
+                      {
+                           const auto pop_id2 = PushPopID();
+                           const auto pop_column
+                             = glengine::ScopeGuard{ &ImGui::NextColumn };
 
-                         if (ImGui::Selectable(c_str_value, is_selected))
-                         {
-                              for (current_idx_ = 0; const auto &temp : strings_)
-                              {
-                                   if (std::ranges::equal(temp, string))
-                                   {
-                                        changed_ = true;
-                                        break;
-                                   }
-                                   ++current_idx_;
-                              }
-                              //            current_idx =
-                              //            std::distance(std::ranges::data(strings), &string);
-                              //            changed     = true;
-                         }
-                    }
-                    if (is_selected)
-                    {
-                         ImGui::SetItemDefaultFocus();
-                         // You may set the initial focus when
-                         // opening the combo (scrolling + for
-                         // keyboard navigation support)
-                    }
-                    renderToolTip(index++);
-               });
+                           if (ImGui::Selectable(c_str_value, is_selected))
+                           {
+                                for (current_idx_ = 0;
+                                     const auto &temp : strings_)
+                                {
+                                     if (std::ranges::equal(temp, string))
+                                     {
+                                          changed_ = true;
+                                          break;
+                                     }
+                                     ++current_idx_;
+                                }
+                                //            current_idx =
+                                //            std::distance(std::ranges::data(strings),
+                                //            &string); changed     = true;
+                           }
+                      }
+                      if (is_selected)
+                      {
+                           ImGui::SetItemDefaultFocus();
+                           // You may set the initial focus when
+                           // opening the combo (scrolling + for
+                           // keyboard navigation support)
+                      }
+                      renderToolTip(index++);
+                 });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
@@ -763,15 +1412,20 @@ class GenericComboClass
           const auto _            = PushPopID();
           const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
-          const bool disabled    = check_valid();
+          const auto check_valid = [&]()
+          {
+               return (current_idx_ <= decltype(current_idx_){})
+                      || (current_idx_ - 1 >= size_of_values());
+          };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
                --current_idx_;
                changed_ = true;
 
-               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               while (std::ranges::empty(*getNext(strings_, current_idx_))
+                      && !check_valid())
                {
                     --current_idx_;
                }
@@ -780,21 +1434,25 @@ class GenericComboClass
 
      auto size_of_values() const
      {
-          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+          return static_cast<std::ranges::range_difference_t<
+            std::remove_cvref_t<decltype(values_)>>>(
+            std::ranges::size(values_));
      }
 
      void renderRightButton() const
      {
           const auto pop_id_right = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return (current_idx_ + 1 >= size_of_values()); };
-          const bool disabled    = check_valid();
+          const auto check_valid
+            = [&]() { return (current_idx_ + 1 >= size_of_values()); };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
                ++current_idx_;
                changed_ = true;
-               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               while (std::ranges::empty(*getNext(strings_, current_idx_))
+                      && !check_valid())
                {
                     ++current_idx_;
                }
@@ -811,7 +1469,8 @@ class GenericComboClass
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();
-          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          if (ImGui::Button(
+                ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
                open_directory(*getNext(strings_, current_idx_));
           }

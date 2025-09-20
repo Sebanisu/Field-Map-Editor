@@ -8,35 +8,43 @@
 #include <fmt/format.h>
 enum class tile_sizes : std::uint16_t
 {
-  default_size = 16U,
-  x_2_size     = default_size << 1U,
-  x_4_size     = default_size << 2U,
-  x_8_size     = default_size << 3U,
-  x_16_size    = default_size << 4U,
+     default_size = 16U,
+     x_2_size     = default_size << 1U,
+     x_4_size     = default_size << 2U,
+     x_8_size     = default_size << 3U,
+     x_16_size    = default_size << 4U,
 };
 
 template<typename T>
-inline static auto operator*(const T &num, tile_sizes tile_size)
+inline static auto operator*(
+  const T   &num,
+  tile_sizes tile_size)
 {
-  return num * static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
+     return num * static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
 }
 
 template<typename T>
-inline static auto operator*(tile_sizes tile_size, const T &num)
+inline static auto operator*(
+  tile_sizes tile_size,
+  const T   &num)
 {
-  return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) * num;
+     return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) * num;
 }
 
 template<typename T>
-inline static auto operator+(const T &num, tile_sizes tile_size)
+inline static auto operator+(
+  const T   &num,
+  tile_sizes tile_size)
 {
-  return num + static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
+     return num + static_cast<std::underlying_type_t<tile_sizes>>(tile_size);
 }
 
 template<typename T>
-inline static auto operator+(tile_sizes tile_size, const T &num)
+inline static auto operator+(
+  tile_sizes tile_size,
+  const T   &num)
 {
-  return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) + num;
+     return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) + num;
 }
 
 

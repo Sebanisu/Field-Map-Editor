@@ -19,7 +19,8 @@ class UniquifyPupu
           auto         operator<=>(const PupuKey &) const = default;
      };
 
-     PupuID operator()(const open_viii::graphics::background::is_tile auto &tile_const);
+     PupuID operator()(
+       const open_viii::graphics::background::is_tile auto &tile_const);
 
    private:
      std::map<PupuKey, std::uint8_t> m_pupu_map = {};

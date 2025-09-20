@@ -32,7 +32,8 @@ class Clear_impl
      {
           if FME_NOT_CONSTEVAL
           {
-               GlCall{}(glClearColor, m_color.r, m_color.g, m_color.b, m_color.a);
+               GlCall{}(
+                 glClearColor, m_color.r, m_color.g, m_color.b, m_color.a);
                GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
           }
      }
@@ -100,15 +101,20 @@ struct Renderer
 
           // Call backup() for each argument and store in-place
           (
-            [&]() {
+            [&]()
+            {
                  using T = std::decay_t<decltype(ts)>;
                  if constexpr (HasInstanceBackup<T>)
                  {
-                      backups.emplace_back(std::make_unique<std::decay_t<decltype(ts.backup())>>(ts.backup()));
+                      backups.emplace_back(
+                        std::make_unique<std::decay_t<decltype(ts.backup())>>(
+                          ts.backup()));
                  }
                  else if constexpr (HasStaticBackup<T>)
                  {
-                      backups.emplace_back(std::make_unique<std::decay_t<decltype(T::backup())>>(T::backup()));
+                      backups.emplace_back(
+                        std::make_unique<std::decay_t<decltype(T::backup())>>(
+                          T::backup()));
                  }
             }(),
             ...);
@@ -118,10 +124,16 @@ struct Renderer
           auto   type = glengine::Type<Ts...>(ts...);
 
           assert(
-            type == glengine::IndexType::UnsignedInt || type == glengine::IndexType::UnsignedShort
+            type == glengine::IndexType::UnsignedInt
+            || type == glengine::IndexType::UnsignedShort
             || type == glengine::IndexType::UnsignedByte);
           assert(size != 0);
-          GlCall{}(glDrawElements, GL_TRIANGLES, static_cast<std::int32_t>(size), +type, nullptr);
+          GlCall{}(
+            glDrawElements,
+            GL_TRIANGLES,
+            static_cast<std::int32_t>(size),
+            +type,
+            nullptr);
      }
 };
 }// namespace glengine

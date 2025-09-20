@@ -7,6 +7,7 @@
 #include "safedir.hpp"
 #include <filesystem>
 #include <future>
+#include <map>
 #include <open_viii/graphics/Color.hpp>
 #include <spdlog/spdlog.h>
 #include <Texture.hpp>
@@ -15,49 +16,41 @@ namespace fme
 {
 namespace future_operations
 {
-class LoadColorsIntoTexture
-{
-     glengine::Texture                            *m_texture;
-     std::vector<open_viii::graphics::Color32RGBA> m_colors;
-     glm::uvec2                                    m_size{};
+     struct LoadColorsIntoTexture
+     {
+          std::weak_ptr<void>                                   weak_ptr;
+          glengine::Texture                                    *texture;
+          mutable std::vector<open_viii::graphics::Color32RGBA> colors;
+          glm::uvec2                                            size;
 
-   public:
-     LoadColorsIntoTexture(
-       glengine::Texture *const                      in_texture,
-       std::vector<open_viii::graphics::Color32RGBA> in_colors,
-       glm::uvec2                                    in_size);
-     void operator()() const;
-};
-class LoadImageIntoTexture
-{
-     glengine::Texture *const m_texture;
-     glengine::Image          m_image;
+          void operator()() const;
+     };
+     struct LoadImageIntoTexture
+     {
+          std::weak_ptr<void>      weak_ptr;
+          glengine::Texture *const texture;
+          mutable glengine::Image  image;
 
-   public:
-     LoadImageIntoTexture(glengine::Texture *const in_texture, glengine::Image in_image);
-     void operator()();
-};
-class GetImageFromPathCreateFuture
-{
-     glengine::Texture *const m_texture;
-     std::filesystem::path    m_path;
+          void                     operator()() const;
+     };
+     struct GetImageFromPathCreateFuture
+     {
+          std::weak_ptr<void>           weak_ptr;
+          glengine::Texture *const      texture;
+          mutable std::filesystem::path path;
 
-   public:
-     GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
-     std::future<void> operator()();
-};
+          std::future<void>             operator()() const;
+     };
 
-class GetImageFromFromFirstValidPathCreateFuture
-{
-     glengine::Texture *const m_texture;
-     mutable std::move_only_function<std::vector<std::filesystem::path>()> m_paths_get;
+     struct GetImageFromFromFirstValidPathCreateFuture
+     {
+          std::weak_ptr<void>      weak_ptr;
+          glengine::Texture *const texture;
+          mutable std::move_only_function<std::vector<std::filesystem::path>()>
+                            paths_get;
 
-   public:
-     GetImageFromFromFirstValidPathCreateFuture(
-       glengine::Texture *const                                        in_texture,
-       std::move_only_function<std::vector<std::filesystem::path>()> &&in_paths_get);
-     std::future<void> operator()() const;
-};
+          std::future<void> operator()() const;
+     };
 }// namespace future_operations
-}
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP

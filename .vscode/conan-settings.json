@@ -1,0 +1,14 @@
+{
+    "profiles": [
+        {
+            "name": "Field-Map-Editor-default\r",
+            "conanFile": "${workspaceFolder}/conanfile.py",
+            "profile": "default\r",
+            "installArg": "",
+            "buildArg": "",
+            "createUser": "disroop",
+            "createChannel": "development",
+            "createArg": ""
+        }
+    ]
+}

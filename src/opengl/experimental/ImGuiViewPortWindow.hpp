@@ -27,7 +27,8 @@ inline namespace impl
 
           void on_render(const std::invocable auto &&callable) const
           {
-               const auto pop_style = ImGuiPushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+               const auto pop_style = ImGuiPushStyleVar(
+                 ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
                {
                     const auto pop_id_0 = ImGuiPushId();
                     const auto pop_end  = ScopeGuard([]() { ImGui::End(); });
@@ -38,49 +39,81 @@ inline namespace impl
                     sync_open_gl_view_port();
                     // do any rendering here.
                     {
-                         m_packed.parent_window_hovered = ImGui::IsWindowHovered();
-                         m_packed.parent_window_focused = ImGui::IsWindowFocused();
-                         // Using a Child allow to fill all the space of the window.
-                         // It also allows customization
-                         const auto pop_id_1            = ImGuiPushId();
+                         m_packed.parent_window_hovered
+                           = ImGui::IsWindowHovered();
+                         m_packed.parent_window_focused
+                           = ImGui::IsWindowFocused();
+                         // Using a Child allow to fill all the space of the
+                         // window. It also allows customization
+                         const auto pop_id_1 = ImGuiPushId();
                          ImGui::BeginChild(m_title);
-                         const auto pop_child    = ScopeGuard([]() { ImGui::EndChild(); });
+                         const auto pop_child
+                           = ScopeGuard([]() { ImGui::EndChild(); });
                          m_packed.window_hovered = ImGui::IsWindowHovered();
                          m_packed.window_focused = ImGui::IsWindowFocused();
-                         // Get the size of the child (i.e. the whole draw size of the
-                         // windows).
-                         m_viewport_size         = convert_im_vec_2(ImGui::GetContentRegionAvail());// ImGui::GetWindowSize();
+                         // Get the size of the child (i.e. the whole draw size
+                         // of the windows).
+                         m_viewport_size         = convert_im_vec_2(
+                           ImGui::
+                             GetContentRegionAvail());// ImGui::GetWindowSize();
                          if (
                            !m_fb || (m_fb.specification().height != static_cast<int>(m_viewport_size.y) && m_viewport_size.y > 5.0F)
                            || m_fb.specification().width != static_cast<int>(m_viewport_size.x))
                          {
                               m_fb = glengine::FrameBuffer(
-                                m_fb.specification().resize(static_cast<int>(m_viewport_size.x), static_cast<int>(m_viewport_size.y)));
+                                m_fb.specification().resize(
+                                  static_cast<int>(m_viewport_size.x),
+                                  static_cast<int>(m_viewport_size.y)));
                          }
-                         else if (m_fb.specification().height != static_cast<int>(m_viewport_size.y))
+                         else if (
+                           m_fb.specification().height
+                           != static_cast<int>(m_viewport_size.y))
                          {
-                              m_viewport_size.y = static_cast<float>(m_fb.specification().height);
-                              // Sometimes imgui would detect height as 4 px. I donno why. Seemed
-                              // to be related to drawing more than once. I removed that extra
-                              // draw but left this check here.
+                              m_viewport_size.y = static_cast<float>(
+                                m_fb.specification().height);
+                              // Sometimes imgui would detect height as 4 px. I
+                              // donno why. Seemed to be related to drawing more
+                              // than once. I removed that extra draw but left
+                              // this check here.
                          }
                          {
                               const auto ffb = FrameBufferBackup();
                               m_fb.bind();
                               m_clear_impl();
-                              m_fb.clear_red_integer_color_attachment();
+                              m_fb.clear_non_standard_color_attachments();
                               callable();
                               if (m_debug_text)
                               {
-                                   m_tile_id = m_fb.read_pixel(
-                                     1, static_cast<int>(m_viewport_int_mouse_pos.x), static_cast<int>(m_viewport_int_mouse_pos.y));
+                                   m_tile_id = std::visit(
+                                     [](auto &&value) -> int
+                                     {
+                                          if constexpr (std::is_same_v<
+                                                          std::decay_t<
+                                                            decltype(value)>,
+                                                          int>)
+                                          {
+                                               return value;
+                                          }
+                                          else
+                                          {
+                                               return -1;
+                                          }
+                                     },
+                                     m_fb.read_pixel(
+                                       1,
+                                       static_cast<int>(
+                                         m_viewport_int_mouse_pos.x),
+                                       static_cast<int>(
+                                         m_viewport_int_mouse_pos.y)));
                               }
                               m_fb.unbind();
                          }
-                         // Because I use the texture from OpenGL, I need to invert the V from
-                         // the UV.
-                         m_imgui_texture_id_ref = ConvertGliDtoImTextureId<std::uint64_t>(m_fb.color_attachment_id(0));
-                         const auto c_pos       = ImGui::GetCursorPos();
+                         // Because I use the texture from OpenGL, I need to
+                         // invert the V from the UV.
+                         m_imgui_texture_id_ref
+                           = ConvertGliDtoImTextureId<std::uint64_t>(
+                             m_fb.color_attachment_id(0));
+                         const auto c_pos = ImGui::GetCursorPos();
                          ImGui::SetItemAllowOverlap();
                          const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);
                          ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -89,7 +122,9 @@ inline namespace impl
                          m_packed.button_clicked = ImGui::ImageButton(
                            "##view_port_button",
                            m_imgui_texture_id_ref,
-                           ImVec2(static_cast<float>(m_fb.specification().width), static_cast<float>(m_fb.specification().height)),
+                           ImVec2(
+                             static_cast<float>(m_fb.specification().width),
+                             static_cast<float>(m_fb.specification().height)),
                            ImVec2(0, 1),
                            ImVec2(1, 0));
 
@@ -116,14 +151,18 @@ inline namespace impl
           float                 view_port_aspect_ratio() const;
           void                  disable_debug_text();
           [[maybe_unused]] void enable_debug_text();
-          void                  fit(const bool width, const bool height) const;
-          glm::vec2             offset_mouse_pos() const;
+          void                  fit(
+                             const bool width,
+                             const bool height) const;
+          glm::vec2 offset_mouse_pos() const;
 
           friend ImGuiViewPortPreview;
 
         private:
-          static void                set_preview_aspect_ratio(float) noexcept;
-          glm::vec4                  adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
+          static void set_preview_aspect_ratio(float) noexcept;
+          glm::vec4   adjust_mouse_pos(
+              glm::vec2 topright,
+              glm::vec2 bottomleft) const;
           [[maybe_unused]] glm::vec2 view_port_dims() const;
           glm::vec4                  view_port_mouse_pos() const;
           void                       fit_both() const;
@@ -151,22 +190,22 @@ inline namespace impl
                bool fit_width : 1             = { true };
                bool fit_height : 1            = { true };
           };
-          const char                                    *m_title                  = {};
-          mutable glengine::FrameBuffer                  m_fb                     = {};
-          mutable PackedSettings                         m_packed                 = {};
-          mutable bool                                   m_debug_text             = { false };
-          mutable glm::vec2                              m_min                    = {};
-          mutable glm::vec2                              m_max                    = {};
-          mutable glm::vec2                              m_viewport_size          = {};
-          mutable glm::vec2                              m_clamp_mouse_pos        = {};
-          mutable ImTextureID                            m_imgui_texture_id_ref   = {};
-          mutable glm::vec4                              m_viewport_mouse_pos     = {};
-          mutable glengine::OrthographicCameraController m_main_camera            = {};
-          mutable glengine::OrthographicCameraController m_mouse_camera           = {};
-          mutable glm::vec4                              m_background_color       = { 0.F, 0.F, 0.F, 255.F };
-          mutable glengine::Clear_impl                   m_clear_impl             = { m_background_color };
-          mutable glm::vec4                              m_viewport_int_mouse_pos = {};
-          mutable int                                    m_tile_id                = {};
+          const char                   *m_title                = {};
+          mutable glengine::FrameBuffer m_fb                   = {};
+          mutable PackedSettings        m_packed               = {};
+          mutable bool                  m_debug_text           = { false };
+          mutable glm::vec2             m_min                  = {};
+          mutable glm::vec2             m_max                  = {};
+          mutable glm::vec2             m_viewport_size        = {};
+          mutable glm::vec2             m_clamp_mouse_pos      = {};
+          mutable ImTextureID           m_imgui_texture_id_ref = {};
+          mutable glm::vec4             m_viewport_mouse_pos   = {};
+          mutable glengine::OrthographicCameraController m_main_camera  = {};
+          mutable glengine::OrthographicCameraController m_mouse_camera = {};
+          mutable glm::vec4 m_background_color      = { 0.F, 0.F, 0.F, 255.F };
+          mutable glengine::Clear_impl m_clear_impl = { m_background_color };
+          mutable glm::vec4            m_viewport_int_mouse_pos = {};
+          mutable int                  m_tile_id                = {};
      };
      static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

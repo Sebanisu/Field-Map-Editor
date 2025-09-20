@@ -2,57 +2,45 @@
 // Created by pcvii on 11/22/2021.
 //
 #include "Shader.hpp"
+#include "Formatters.hpp"
 #include <iostream>
-#include <stacktrace>
 namespace glengine
 {
-Shader::Shader(std::filesystem::path file_path)
-  : m_file_path(std::move(file_path))
+
+GLuint Shader::create(const std::filesystem::path &path)
 {
      const auto          pop_backup = backup();
-     ShaderProgramSource source     = parse_shader();
-     m_renderer_id                  = create_shader(source.vertex_shader, source.fragment_shader);
+     ShaderProgramSource source     = parse_shader(path);
+     return create_shader(source.vertex_shader, source.fragment_shader);
 }
-Shader::~Shader()
+
+void Shader::destroy(const GLuint id)
 {
-     GlCall{}(glDeleteProgram, m_renderer_id);
+     GlCall{}(glDeleteProgram, id);
      unbind();
 }
-Shader::Shader(Shader &&other) noexcept
-  : Shader()
-{
-     swap(*this, other);
-}
-Shader &Shader::operator=(Shader &&other) noexcept
-{
-     swap(*this, other);
-     return *this;
-}
-void swap(Shader &first, Shader &second) noexcept// nothrow
-{
-     // enable ADL (not necessary in our case, but good practice)
-     using std::swap;
 
-     // by swapping the members of two objects,
-     // the two objects are effectively swapped
-     swap(first.m_renderer_id, second.m_renderer_id);
-     swap(first.m_file_path, second.m_file_path);
-     swap(first.m_cache, second.m_cache);
-}
 void Shader::bind() const
 {
      GlCall{}(glUseProgram, m_renderer_id);
 }
+
 void Shader::unbind()
 {
      GlCall{}(glUseProgram, 0U);
 }
-Shader::ShaderProgramSource Shader::parse_shader()
+
+Shader::ShaderProgramSource
+  Shader::parse_shader(const std::filesystem::path &path)
 {
-     std::ifstream fs(m_file_path, std::ios::binary | std::ios::in);
+     std::ifstream fs(path, std::ios::binary | std::ios::in);
      if (!fs.is_open())
      {
-          spdlog::error("{}:{} - Failed to open shader \n\t\"{}\"", __FILE__, __LINE__, m_file_path.string());
+          spdlog::error(
+            "{}:{} - Failed to open shader \n\t\"{}\"",
+            __FILE__,
+            __LINE__,
+            path.string());
           return {};
      }
      enum class ShaderType
@@ -82,7 +70,8 @@ Shader::ShaderProgramSource Shader::parse_shader()
                }
                else
                {
-                    if (std::string::size_type pos = line.find("#"); pos != std::string::npos)
+                    if (std::string::size_type pos = line.find("#");
+                        pos != std::string::npos)
                     {
                          line.erase(0, pos);
                     }
@@ -93,7 +82,10 @@ Shader::ShaderProgramSource Shader::parse_shader()
 
      return { ss[0].str(), ss[1].str() };
 }
-std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string_view source)
+
+std::uint32_t Shader::compile_shader(
+  const std::uint32_t    type,
+  const std::string_view source)
 {
      using namespace std::string_view_literals;
      const std::uint32_t id  = GlCall{}(glCreateShader, type);
@@ -107,26 +99,30 @@ std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string
      {
           int length{};
           GlCall{}(glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length);
-          std::string message(static_cast<std::string::size_type>(length), '\0');
+          std::string message(
+            static_cast<std::string::size_type>(length), '\0');
           GlCall{}(glGetShaderInfoLog, id, length, &length, std::data(message));
           spdlog::error(
             "Error {}:{} - Failed to compile shader {} - {}",
             __FILE__,
             __LINE__,
-            (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv : "GL_FRAGMENT_SHADER"sv),
+            (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv
+                                      : "GL_FRAGMENT_SHADER"sv),
             message);
           GlCall{}(glDeleteShader, id);
-          const auto st = std::stacktrace::current();
-          std::cerr << st << std::endl;
+          spdlog::error("{}", std::stacktrace::current());
           return 0U;
      }
 
      return id;
 }
-std::uint32_t Shader::create_shader(const std::string_view vertex_shader, const std::string_view fragment_shader)
+std::uint32_t Shader::create_shader(
+  const std::string_view vertex_shader,
+  const std::string_view fragment_shader)
 {
-     const std::uint32_t vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-     const std::uint32_t fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
+     const std::uint32_t vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+     const std::uint32_t fs
+       = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
      const std::uint32_t program = GlCall{}(glCreateProgram);
      GlCall{}(glAttachShader, program, vs);
      GlCall{}(glAttachShader, program, fs);
@@ -143,38 +139,59 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
           return m_cache.at(name);
      }
 
-     std::int32_t location = GlCall{}(glGetUniformLocation, m_renderer_id, std::ranges::data(name));
+     std::int32_t location
+       = GlCall{}(glGetUniformLocation, m_renderer_id, std::ranges::data(name));
 
      if (location == -1)
      {
-          spdlog::warn("{}:{} uniform name {} doesn't exist, Invalid uniform location {}", __FILE__, __LINE__, name, location);
+          spdlog::warn(
+            "{}:{} uniform name {} doesn't exist, Invalid uniform location {}",
+            __FILE__,
+            __LINE__,
+            name,
+            location);
      }
 
      m_cache.emplace(std::move(name), location);
 
      return location;
 }
-void Shader::set_uniform(std::string_view name, glm::vec1 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec1        v) const
 {
      set_uniform(name, v.x);
 }
-void Shader::set_uniform(std::string_view name, glm::vec2 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec2        v) const
 {
      set_uniform(name, v.x, v.y);
 }
-void Shader::set_uniform(std::string_view name, glm::vec3 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec3        v) const
 {
      set_uniform(name, v.x, v.y, v.z);
 }
-void Shader::set_uniform(std::string_view name, glm::vec4 v) const
+void Shader::set_uniform(
+  std::string_view name,
+  glm::vec4        v) const
 {
      set_uniform(name, v.r, v.g, v.b, v.a);
 }
-void Shader::set_uniform(std::string_view name, const glm::mat4 &matrix) const
+void Shader::set_uniform(
+  std::string_view name,
+  const glm::mat4 &matrix) const
 {
      const int32_t location = get_uniform_location(name);
      if (location == -1)
           return;
-     GlCall{}(glUniformMatrix4fv, location, 1, GLboolean{ GL_FALSE }, glm::value_ptr(matrix));
+     GlCall{}(
+       glUniformMatrix4fv,
+       location,
+       1,
+       GLboolean{ GL_FALSE },
+       glm::value_ptr(matrix));
 }
 }// namespace glengine

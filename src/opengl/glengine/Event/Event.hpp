@@ -20,17 +20,18 @@ namespace event
           return StaticName;                                             \
      }
 
-#define EVENT_CLASS_CATEGORY(in_category)                                       \
-   public:                                                                      \
-     constexpr static auto StaticCategory     = in_category;                    \
-     constexpr static auto StaticCategoryName = std::string_view(#in_category); \
-     constexpr auto        category() const                                     \
-     {                                                                          \
-          return StaticCategory;                                                \
-     }                                                                          \
-     constexpr auto category_name() const                                       \
-     {                                                                          \
-          return StaticCategoryName;                                            \
+#define EVENT_CLASS_CATEGORY(in_category)                \
+   public:                                               \
+     constexpr static auto StaticCategory = in_category; \
+     constexpr static auto StaticCategoryName            \
+       = std::string_view(#in_category);                 \
+     constexpr auto category() const                     \
+     {                                                   \
+          return StaticCategory;                         \
+     }                                                   \
+     constexpr auto category_name() const                \
+     {                                                   \
+          return StaticCategoryName;                     \
      }
      class Dispatcher;
 #define EVENT_HANDLED               \
@@ -52,7 +53,9 @@ namespace event
           EVENT_HANDLED
         public:
           constexpr WindowResize() = default;
-          constexpr WindowResize(int width, int height)
+          constexpr WindowResize(
+            int width,
+            int height)
             : m_width(std::move(width))
             , m_height(std::move(height))
           {
@@ -84,7 +87,9 @@ namespace event
           EVENT_HANDLED
         public:
           constexpr FrameBufferResize() = default;
-          constexpr FrameBufferResize(int width, int height)
+          constexpr FrameBufferResize(
+            int width,
+            int height)
             : m_width(std::move(width))
             , m_height(std::move(height))
           {
@@ -128,11 +133,17 @@ namespace event
           EVENT_HANDLED
         public:
           constexpr WindowMoved() = default;
-          constexpr WindowMoved(int x, int y)
-            : m_offset{ std::move(x), std::move(y) }
+          constexpr WindowMoved(
+            int x,
+            int y)
+            : m_offset{ std::move(x),
+                        std::move(y) }
           {
           }
-          constexpr std::array<int, 2U> position() const
+          constexpr std::array<
+            int,
+            2U>
+            position() const
           {
                return m_offset;
           }
@@ -161,7 +172,10 @@ namespace event
           EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
           EVENT_HANDLED
           constexpr KeyPressed() = default;
-          constexpr KeyPressed(glengine::Key code, glengine::Mods mods, bool repeat = false)
+          constexpr KeyPressed(
+            glengine::Key  code,
+            glengine::Mods mods,
+            bool           repeat = false)
             : m_key(code)
             , m_mods(mods)
             , m_repeat(repeat)
@@ -185,7 +199,8 @@ namespace event
                {
                     return fmt::format("{:>3}, {}", +m_key, m_repeat);
                }
-               return fmt::format("{:>3} + {:>2},  {}", +m_key, +m_mods, m_repeat);
+               return fmt::format(
+                 "{:>3} + {:>2},  {}", +m_key, +m_mods, m_repeat);
           }
 
         private:
@@ -201,7 +216,9 @@ namespace event
           EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
           EVENT_HANDLED
           constexpr KeyReleased() = default;
-          constexpr KeyReleased(glengine::Key code, glengine::Mods mods)
+          constexpr KeyReleased(
+            glengine::Key  code,
+            glengine::Mods mods)
             : m_key(code)
             , m_mods(mods)
           {
@@ -232,10 +249,13 @@ namespace event
      class MouseButtonPressed
      {
           EVENT_CLASS_TYPE(MouseButtonPressed)
-          EVENT_CLASS_CATEGORY(Category::Input | Category::Mouse | Category::MouseButton)
+          EVENT_CLASS_CATEGORY(
+            Category::Input | Category::Mouse | Category::MouseButton)
           EVENT_HANDLED
           constexpr MouseButtonPressed() = default;
-          constexpr MouseButtonPressed(glengine::Mouse code, glengine::Mods mods)
+          constexpr MouseButtonPressed(
+            glengine::Mouse code,
+            glengine::Mods  mods)
             : m_button(code)
             , m_mods(mods)
           {
@@ -266,10 +286,13 @@ namespace event
      class MouseButtonReleased
      {
           EVENT_CLASS_TYPE(MouseButtonReleased)
-          EVENT_CLASS_CATEGORY(Category::Input | Category::Mouse | Category::MouseButton)
+          EVENT_CLASS_CATEGORY(
+            Category::Input | Category::Mouse | Category::MouseButton)
           EVENT_HANDLED
           constexpr MouseButtonReleased() = default;
-          constexpr MouseButtonReleased(glengine::Mouse code, glengine::Mods mods)
+          constexpr MouseButtonReleased(
+            glengine::Mouse code,
+            glengine::Mods  mods)
             : m_button(code)
             , m_mods(mods)
           {
@@ -304,11 +327,17 @@ namespace event
           EVENT_HANDLED
         public:
           constexpr MouseScroll() = default;
-          constexpr MouseScroll(float x_offset, float y_offset)
-            : m_offset{ std::move(x_offset), std::move(y_offset) }
+          constexpr MouseScroll(
+            float x_offset,
+            float y_offset)
+            : m_offset{ std::move(x_offset),
+                        std::move(y_offset) }
           {
           }
-          constexpr std::array<float, 2U> offsets() const
+          constexpr std::array<
+            float,
+            2U>
+            offsets() const
           {
                return m_offset;
           }
@@ -324,7 +353,8 @@ namespace event
 
           std::string data() const
           {
-               return fmt::format("{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
+               return fmt::format(
+                 "{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
           }
 
         private:
@@ -339,11 +369,17 @@ namespace event
           EVENT_HANDLED
         public:
           constexpr MouseMoved() = default;
-          constexpr MouseMoved(float x, float y)
-            : m_position{ std::move(x), std::move(y) }
+          constexpr MouseMoved(
+            float x,
+            float y)
+            : m_position{ std::move(x),
+                          std::move(y) }
           {
           }
-          constexpr std::array<float, 2U> position() const
+          constexpr std::array<
+            float,
+            2U>
+            position() const
           {
                return m_position;
           }
@@ -358,7 +394,8 @@ namespace event
           }
           std::string data() const
           {
-               return fmt::format("{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
+               return fmt::format(
+                 "{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
           }
 
         private:

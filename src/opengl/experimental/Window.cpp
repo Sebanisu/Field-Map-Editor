@@ -6,6 +6,7 @@
 #include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
 #include <BlendModeSettings.hpp>
+#include <filesystem>
 #include <spdlog/spdlog.h>
 
 namespace glengine
@@ -26,11 +27,11 @@ void        Window::begin_frame() const
 void Window::render_dockspace() const
 {
      // If you strip some features of, this demo is pretty much equivalent to
-     // calling DockSpaceOverViewport()! In most cases you should be able to just
-     // call DockSpaceOverViewport() and ignore all the code below! In this
+     // calling DockSpaceOverViewport()! In most cases you should be able to
+     // just call DockSpaceOverViewport() and ignore all the code below! In this
      // specific demo, we are not using DockSpaceOverViewport() because:
-     // - we allow the host window to be floating/moveable instead of filling the
-     // viewport (when opt_fullscreen == false)
+     // - we allow the host window to be floating/moveable instead of filling
+     // the viewport (when opt_fullscreen == false)
      // - we allow the host window to have padding (when opt_padding == true)
      // - we have a local menu bar in the host window (vs. you could use
      // BeginMainMenuBar() + DockSpaceOverViewport() in your code!) TL;DR; this
@@ -45,10 +46,11 @@ void Window::render_dockspace() const
      static bool               opt_padding     = false;
      static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window
-     // not dockable into, because it would be confusing to have two docking
-     // targets within each others.
-     ImGuiWindowFlags          window_flags    = ImGuiWindowFlags_NoDocking;// ImGuiWindowFlags_MenuBar
+     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent
+     // window not dockable into, because it would be confusing to have two
+     // docking targets within each others.
+     ImGuiWindowFlags          window_flags
+       = ImGuiWindowFlags_NoDocking;// ImGuiWindowFlags_MenuBar
      if (opt_fullscreen)
      {
           const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -57,27 +59,30 @@ void Window::render_dockspace() const
           ImGui::SetNextWindowViewport(viewport->ID);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-          window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-          window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+          window_flags |= ImGuiWindowFlags_NoTitleBar
+                          | ImGuiWindowFlags_NoCollapse
+                          | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+          window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus
+                          | ImGuiWindowFlags_NoNavFocus;
      }
      else
      {
           dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
      }
 
-     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render
-     // our background and handle the pass-thru hole, so we ask Begin() to not
-     // render a background.
+     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
+     // render our background and handle the pass-thru hole, so we ask Begin()
+     // to not render a background.
      if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
           window_flags |= ImGuiWindowFlags_NoBackground;
 
-     // Important: note that we proceed even if Begin() returns false (aka window
-     // is collapsed). This is because we want to keep our DockSpace() active. If a
-     // DockSpace() is inactive, all active windows docked into it will lose their
-     // parent and become undocked. We cannot preserve the docking relationship
-     // between an active window and an inactive docking, otherwise any change of
-     // dockspace/settings would lead to windows being stuck in limbo and never
-     // being visible.
+     // Important: note that we proceed even if Begin() returns false (aka
+     // window is collapsed). This is because we want to keep our DockSpace()
+     // active. If a DockSpace() is inactive, all active windows docked into it
+     // will lose their parent and become undocked. We cannot preserve the
+     // docking relationship between an active window and an inactive docking,
+     // otherwise any change of dockspace/settings would lead to windows being
+     // stuck in limbo and never being visible.
      if (!opt_padding)
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
      ImGui::Begin("DockSpace Demo", nullptr, window_flags);
@@ -156,7 +161,8 @@ Window::Window(Window::WindowData in_data)
 
      const char *glsl_version = "#version 130";
      init_glfw();
-     const char *gl_version = reinterpret_cast<const char *>(GlCall{}(glGetString, GL_VERSION));
+     const char *gl_version
+       = reinterpret_cast<const char *>(GlCall{}(glGetString, GL_VERSION));
      if (gl_version != nullptr)
      {
           spdlog::debug("{}", gl_version);
@@ -171,7 +177,8 @@ void Window::init_glfw()
      {
           if (!glfwInit())
           {
-               spdlog::critical("{}:{} GLFW Failed to Initialize", __FILE__, __LINE__);
+               spdlog::critical(
+                 "{}:{} GLFW Failed to Initialize", __FILE__, __LINE__);
                std::exit(EXIT_FAILURE);
           }
           GlfwInit = true;
@@ -190,14 +197,16 @@ void Window::init_glfw()
 
      if (!m_window)
      {
-          spdlog::critical("Error! {}:{} GLFW Failed to create Window", __FILE__, __LINE__);
+          spdlog::critical(
+            "Error! {}:{} GLFW Failed to create Window", __FILE__, __LINE__);
           std::exit(EXIT_FAILURE);
      }
      glfwMakeContextCurrent(m_window.get());
      glfwSetWindowUserPointer(m_window.get(), &m_data);
      bind_input_polling_to_window();
      enable_v_sync();
-     glfwGetFramebufferSize(m_window.get(), &m_data.frame_buffer_width, &m_data.frame_buffer_height);
+     glfwGetFramebufferSize(
+       m_window.get(), &m_data.frame_buffer_width, &m_data.frame_buffer_height);
      /* Init GLEW after context */
      if (glewInit() != GLEW_OK)
      {
@@ -217,19 +226,29 @@ void Window::init_im_gui(const char *const glsl_version) const
           ImGui::CreateContext();
           ImGuiIO          &io         = ImGui::GetIO();
           std::error_code   error_code = {};
-          static const auto path       = (std::filesystem::current_path(error_code) / "res" / "field-map-editor-experimental_imgui.ini").string();
-          io.IniFilename               = path.c_str();
+          static const auto path
+            = (std::filesystem::current_path(error_code) / "res"
+               / "field-map-editor-experimental_imgui.ini")
+                .string();
+          io.IniFilename = path.c_str();
           if (error_code)
           {
-               spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+               spdlog::warn(
+                 "{}:{} - {}: {} path: \"{}\"",
+                 __FILE__,
+                 __LINE__,
+                 error_code.value(),
+                 error_code.message(),
+                 path);
                error_code.clear();
           }
           // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
-          // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
-          // Enable Gamepad Controls
+          // Keyboard Controls io.ConfigFlags |=
+          // ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
           io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-          //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't work
-          // with viewports
+          // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't
+          // work
+          //  with viewports
 
           // Setup Dear ImGui style
           ImGui::StyleColorsDark();
@@ -243,8 +262,8 @@ void Window::init_im_gui(const char *const glsl_version) const
      // - If no fonts are loaded, dear imgui will use the default font. You can
      // also load multiple fonts and use ImGui::PushFont()/PopFont() to select
      // them.
-     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
-     // need to select the font among multiple.
+     // - AddFontFromFileTTF() will return the ImFont* so you can store it if
+     // you need to select the font among multiple.
      // - If the file cannot be loaded, the function will return NULL. Please
      // handle those errors in your application (e.g. use an assertion, or
      // display an error and quit).
@@ -253,8 +272,8 @@ void Window::init_im_gui(const char *const glsl_version) const
      // ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame
      // below will call.
      // - Read 'docs/FONTS.md' for more instructions and details.
-     // - Remember that in C/C++ if you want to include a backslash \ in a string
-     // literal you need to write a double backslash \\ !
+     // - Remember that in C/C++ if you want to include a backslash \ in a
+     // string literal you need to write a double backslash \\ !
      // io.Fonts->AddFontDefault();
      // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
      // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
@@ -271,83 +290,133 @@ void Window::init_callbacks() const
      BeginErrorCallBack();
      // GLFW callBacks
 
-     glfwSetErrorCallback([](int error, const char *description) {
-          spdlog::error("GLFW {:X}: {}", error, description);
-          throw;
-     });
+     glfwSetErrorCallback(
+       [](int error, const char *description)
+       {
+            spdlog::error("GLFW {:X}: {}", error, description);
+            throw;
+       });
 
-     glfwSetWindowSizeCallback(m_window.get(), [](GLFWwindow *window, int width, int height) {
-          auto &data  = get_window_data(window);
-          data.width  = width;
-          data.height = height;
-          data.event_callback(event::WindowResize(width, height));
-     });
+     glfwSetWindowSizeCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int width, int height)
+       {
+            auto &data  = get_window_data(window);
+            data.width  = width;
+            data.height = height;
+            data.event_callback(event::WindowResize(width, height));
+       });
 
-     glfwSetFramebufferSizeCallback(m_window.get(), [](GLFWwindow *window, int width, int height) {
-          auto &data               = get_window_data(window);
-          data.frame_buffer_width  = width;
-          data.frame_buffer_height = height;
-          GlCall{}(glViewport, 0, 0, width, height);
-          data.event_callback(event::FrameBufferResize(width, height));
-     });
+     glfwSetFramebufferSizeCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int width, int height)
+       {
+            auto &data               = get_window_data(window);
+            data.frame_buffer_width  = width;
+            data.frame_buffer_height = height;
+            GlCall{}(glViewport, 0, 0, width, height);
+            data.event_callback(event::FrameBufferResize(width, height));
+       });
 
-     glfwSetWindowCloseCallback(m_window.get(), [](GLFWwindow *window) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::WindowClose());
-     });
+     glfwSetWindowCloseCallback(
+       m_window.get(),
+       [](GLFWwindow *window)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::WindowClose());
+       });
 
-     glfwSetKeyCallback(m_window.get(), [](GLFWwindow *window, int key, [[maybe_unused]] int scancode, int action, int mods) {
-          if (key == +Key::Unknown)
-          {
-               //        spdlog::warn("glfwSetKeyCallback Unsupported Scan Code");
-               return;
-          }
-          auto &data = get_window_data(window);
-          switch (action)
-          {
-               case +Key::Press: {
-                    data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, false));
-                    break;
-               }
-               case +Key::Release: {
-                    data.event_callback(event::KeyReleased(glengine::Key{ key }, glengine::Mods{ mods }));
-                    break;
-               }
-               case +Key::Repeat: {
-                    data.event_callback(event::KeyPressed(glengine::Key{ key }, glengine::Mods{ mods }, true));
-                    break;
-               }
-          }
-     });
-     glfwSetMouseButtonCallback(m_window.get(), [](GLFWwindow *window, int button, int action, int mods) {
-          using glengine::Mouse;
-          auto &data = get_window_data(window);
-          switch (action)
-          {
-               case +Mouse::Press: {
-                    data.event_callback(event::MouseButtonPressed(Mouse{ button }, Mods{ mods }));
-                    break;
-               }
-               case +Mouse::Release: {
-                    data.event_callback(event::MouseButtonReleased(Mouse{ button }, Mods{ mods }));
-                    break;
-               }
-          }
-     });
-     glfwSetScrollCallback(m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::MouseScroll(static_cast<float>(x_offset), static_cast<float>(y_offset)));
-     });
+     glfwSetKeyCallback(
+       m_window.get(),
+       [](
+         GLFWwindow          *window,
+         int                  key,
+         [[maybe_unused]] int scancode,
+         int                  action,
+         int                  mods)
+       {
+            if (key == +Key::Unknown)
+            {
+                 //        spdlog::warn("glfwSetKeyCallback Unsupported Scan
+                 //        Code");
+                 return;
+            }
+            auto &data = get_window_data(window);
+            switch (action)
+            {
+                 case +Key::Press:
+                 {
+                      data.event_callback(
+                        event::KeyPressed(
+                          glengine::Key{ key }, glengine::Mods{ mods }, false));
+                      break;
+                 }
+                 case +Key::Release:
+                 {
+                      data.event_callback(
+                        event::KeyReleased(
+                          glengine::Key{ key }, glengine::Mods{ mods }));
+                      break;
+                 }
+                 case +Key::Repeat:
+                 {
+                      data.event_callback(
+                        event::KeyPressed(
+                          glengine::Key{ key }, glengine::Mods{ mods }, true));
+                      break;
+                 }
+            }
+       });
+     glfwSetMouseButtonCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int button, int action, int mods)
+       {
+            using glengine::Mouse;
+            auto &data = get_window_data(window);
+            switch (action)
+            {
+                 case +Mouse::Press:
+                 {
+                      data.event_callback(
+                        event::MouseButtonPressed(
+                          Mouse{ button }, Mods{ mods }));
+                      break;
+                 }
+                 case +Mouse::Release:
+                 {
+                      data.event_callback(
+                        event::MouseButtonReleased(
+                          Mouse{ button }, Mods{ mods }));
+                      break;
+                 }
+            }
+       });
+     glfwSetScrollCallback(
+       m_window.get(),
+       [](GLFWwindow *window, double x_offset, double y_offset)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(
+              event::MouseScroll(
+                static_cast<float>(x_offset), static_cast<float>(y_offset)));
+       });
 
-     glfwSetCursorPosCallback(m_window.get(), [](GLFWwindow *window, double x, double y) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
-     });
+     glfwSetCursorPosCallback(
+       m_window.get(),
+       [](GLFWwindow *window, double x, double y)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(
+              event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
+       });
 
-     glfwSetWindowPosCallback(m_window.get(), [](GLFWwindow *window, int x, int y) {
-          auto &data = get_window_data(window);
-          data.event_callback(event::WindowMoved(x, y));
-     });
+     glfwSetWindowPosCallback(
+       m_window.get(),
+       [](GLFWwindow *window, int x, int y)
+       {
+            auto &data = get_window_data(window);
+            data.event_callback(event::WindowMoved(x, y));
+       });
 
      ImGui_ImplGlfw_InstallCallbacks(m_window.get());
 }

@@ -9,21 +9,23 @@ namespace glengine
 {
 inline namespace impl
 {
-  class BlendModeParametersStrings
-  {
-    static constexpr auto strings = []() {
-      using namespace std::string_view_literals;
-      return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv, "dstAlpha"sv };
-    }();
+     class BlendModeParametersStrings
+     {
+          static constexpr auto strings = []()
+          {
+               using namespace std::string_view_literals;
+               return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv,
+                                  "dstAlpha"sv };
+          }();
 
-  public:
-    constexpr const auto &operator()() const noexcept
-    {
-      return strings;
-    }
-  };
-  using BlendModeParameters =
-    BlendModeGenerics<BlendModeParametersStrings, BlendModeParameter>;
+        public:
+          constexpr const auto &operator()() const noexcept
+          {
+               return strings;
+          }
+     };
+     using BlendModeParameters
+       = BlendModeGenerics<BlendModeParametersStrings, BlendModeParameter>;
 }// namespace impl
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEPARAMETERS_HPP

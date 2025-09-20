@@ -22,12 +22,14 @@ inline constexpr GLenum operator+(IndexType it)
 {
      return static_cast<GLenum>(it);
 }
-inline constexpr IndexType operator+(IndexType l, IndexType r)
+inline constexpr IndexType operator+(
+  IndexType l,
+  IndexType r)
 {
      auto value = static_cast<IndexType>((+l) + (+r));
      assert(
-       value == IndexType::None || value == IndexType::UnsignedByte || value == IndexType::UnsignedShort
-       || value == IndexType::UnsignedInt);
+       value == IndexType::None || value == IndexType::UnsignedByte
+       || value == IndexType::UnsignedShort || value == IndexType::UnsignedInt);
      return value;
 }
 template<typename T>
@@ -48,7 +50,8 @@ inline constexpr IndexType GetIndexType<GLuint>()
      return IndexType::UnsignedInt;
 }
 template<typename T>
-concept has_Type_for_IndexType = requires(const T &t) { t.type() + IndexType::None; };
+concept has_Type_for_IndexType
+  = requires(const T &t) { t.type() + IndexType::None; };
 template<typename T>
 // clang-format off
   requires(!has_Type_for_IndexType<T>)

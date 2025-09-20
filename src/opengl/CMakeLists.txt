@@ -29,12 +29,6 @@ target_compile_definitions(
   imgui_glfw
   PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW
   PUBLIC GLEW_STATIC)
-
-if(WIN32)
-  set(EXE_SUFFIX ".exe")
-else()
-  set(EXE_SUFFIX "")
-endif()
 add_subdirectory(stbi)
 add_subdirectory(glengine)
 add_subdirectory(experimental)

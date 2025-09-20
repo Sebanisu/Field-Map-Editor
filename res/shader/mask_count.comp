@@ -1,0 +1,59 @@
+#version 430 core
+layout(binding = 0, rgba8) uniform image2D inputTexture;
+layout(binding = 1, std430) buffer HistogramBuffer {
+    uint counts[];
+};
+layout(binding = 2, std430) buffer PaletteBuffer {
+    vec4 palette[];
+};
+layout(binding = 3, std430) buffer DistanceBuffer {
+    float palette_distance[];
+};
+layout(binding = 4, std430) buffer MaxDistanceBuffer {
+    uint max_distance_bits[]; // Store float bits for atomic operations
+};
+uniform int numColors;
+uniform float blackTolerance = 0.01; // Tolerance for black (RGB sum < tolerance)
+
+// Compute shader work group size
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+void main() {
+    ivec2 texCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(inputTexture);
+    if (texCoords.x >= size.x || texCoords.y >= size.y) return;
+
+    vec4 pixel = imageLoad(inputTexture, texCoords);
+
+    // Check if pixel is approximately black (sum of RGB < tolerance)
+    if (distance(pixel.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance) {
+        atomicAdd(counts[10], 1u);
+        return; // Skip black/unused areas
+    }
+
+    uint bestIndex = 0u;
+    float bestDist = 1e20; // Very large initial distance
+    for (int i = 0; i < numColors; i++) {
+        vec4 p = palette[i];
+        vec4 d = pixel - p;
+        float dist = dot(d, d); // Squared distance
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestIndex = uint(i);
+        }
+    }
+
+    // Increment histogram count
+    atomicAdd(counts[bestIndex], 1u);
+
+    // Convert best distance to uint for atomic comparison
+    uint newDistBits = floatBitsToUint(bestDist);
+
+    // Atomically update max_distance_bits if newDistBits is larger
+    uint currentDistBits = atomicMax(max_distance_bits[bestIndex], newDistBits);
+
+    // If the new distance is larger (or equal, to handle first write), update palette_distance
+    if (newDistBits >= currentDistBits) {
+        palette_distance[bestIndex] = bestDist;
+    }
+}
