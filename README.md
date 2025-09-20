@@ -29,6 +29,14 @@ If you notice any missing features or have suggestions, feel free to share your 
 > **Note:** This version also requires the `res` folder, which contains essential shaders and textures.
 
 ![image](https://github.com/user-attachments/assets/730fbd48-b742-47cf-bffa-b7a106e586b6)
+
+#### Hotkeys
+
+I added a help menu that lists out keyboard shortcuts.
+
+![image](https://github.com/user-attachments/assets/860c9daf-70da-4dc2-be5d-fb6bdbd813d2)
+
+
 #### Batch Operation Window
 
 The **Batch Operation Window** allows you to take input in one format and output it in another.  
