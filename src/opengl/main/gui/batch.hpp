@@ -52,6 +52,12 @@ class batch
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
                         m_future_of_future_consumer = {};
 
+     mutable bool       m_update_delay              = false;
+     mutable bool       m_force_loading             = true;
+
+     mutable float      m_interval                  = 0.03f;
+     mutable float      m_total_elapsed_time        = 0.f;
+
      void               combo_input_type();
      void               combo_output_type();
      void               combo_compact_type_ffnx();

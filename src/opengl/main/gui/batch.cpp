@@ -106,6 +106,29 @@ void fme::batch::draw_window()
      }
      prev_disabled = disabled;
 
+     if (ImGui::Checkbox("Enable Delay", &m_update_delay))
+     {
+          spdlog::info("Toggle Delay for Batch Operation: {}", m_update_delay);
+     }
+     tool_tip(
+       fmt::format(
+         "Delay processing operations by: {:.2f} seconds", m_interval));
+     ImGui::SameLine();
+     if (ImGui::Checkbox("Toggle Force Loading", &m_force_loading))
+     {
+          spdlog::info("Toggle Force loading: {}", m_force_loading);
+     }
+     tool_tip(
+       "Some operations toml might fail when force loading is disabled. But it "
+       "might be breaking other operations for on weaker hardware.");
+     if (ImGui::SliderFloat(
+           "Delay Interval (seconds)", &m_interval, 0.03F, 3.00F, "%.2f"))
+     {
+          spdlog::info(
+            "Interval Delay for Batch Operation changed: {:.2f}", m_interval);
+     }
+     tool_tip("Adjust delay interval larger number is slower.");
+
      ImGui::BeginDisabled(disabled);
      // input values
      combo_input_type();
@@ -1232,26 +1255,35 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           return;
      }
 
-     // // Interval between updates in seconds
-     // static constexpr float interval           = 0.03f;
+     if (m_update_delay)
+     {
+          // Interval between updates in seconds
 
-     // // Accumulated elapsed time (preserved across calls)
-     // static float           total_elapsed_time = 0.f;
+          // Accumulated elapsed time (preserved across calls)
 
-     // // Add elapsed time from this frame to the total
-     // total_elapsed_time += elapsed_time;
+          // Add elapsed time from this frame to the total
+          m_total_elapsed_time += elapsed_time;
 
-     // // Skip update if interval threshold hasn't been reached
-     // if (total_elapsed_time < interval)
-     // {
-     //      return;
-     // }
+          // Skip update if interval threshold hasn't been reached
+          if (m_total_elapsed_time < m_interval)
+          {
+               return;
+          }
 
-     // // Reset accumulated time after reaching the threshold
-     // total_elapsed_time = 0.f;
+          // Reset accumulated time after reaching the threshold
+          m_total_elapsed_time = 0.f;
 
-     // Attempt to process any pending futures first
-     (void)consume_one_future();
+          // Attempt to process any pending futures first
+          if (consume_one_future())
+          {
+               return;// Exit early if a future was consumed
+          }
+     }
+     else
+     {
+          // Without delay, just attempt but ignore result
+          (void)consume_one_future();
+     }
 
      // hold back we queue too much it crashes.
      if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
@@ -1495,7 +1527,7 @@ void fme::batch::generate_map_sprite()
                                == output_types::swizzle,
                .disable_blends = true,
                .require_coo    = true,
-               .force_loading  = true
+               .force_loading  = m_force_loading
           };
           if (
             map_group.opt_coo.has_value()
@@ -1514,7 +1546,7 @@ void fme::batch::generate_map_sprite()
                                == output_types::swizzle,
                .disable_blends = true,
                .require_coo    = false,
-               .force_loading  = true
+               .force_loading  = m_force_loading
           };
           if (
             !map_group.opt_coo.has_value()
