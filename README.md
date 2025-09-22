@@ -211,6 +211,12 @@ This project is based on the work of the following developers. I referenced thei
 [![iconfontcppheaders](https://img.shields.io/badge/iconfontcppheaders-cci.20240620-blue.svg)](https://github.com/owengage/iconfontcppheaders)
 [![ctre 3.9.0](https://img.shields.io/badge/ctre-3.9.0-blue.svg)](https://github.com/eranpeer/CompileTimeRegex)
 
+#### Libraries (via CMake FetchContent)
+[![imgui-filebrowser fork](https://img.shields.io/badge/imgui--filebrowser-fork-blue.svg)](https://github.com/yourusername/imgui-filebrowser)
+[![ImGuizmo eb90849](https://img.shields.io/badge/ImGuizmo-eb90849-blue.svg)](https://github.com/CedricGuillemet/ImGuizmo/tree/eb90849)
+[![OpenVIII_CPP_WIP](https://img.shields.io/badge/OpenVIII_CPP_WIP-latest-blue.svg)](https://github.com/Sebanisu/OpenVIII_CPP_WIP)
+[![ToolsLibrary](https://img.shields.io/badge/ToolsLibrary-latest-blue.svg)](https://github.com/Sebanisu/ToolsLibrary)
+
 #### Build Tools
 [![CMake 3.31.6](https://img.shields.io/badge/CMake-3.31.6-blue.svg)](https://cmake.org/)
 [![Ninja 1.12.1](https://img.shields.io/badge/Ninja-1.12.1-blue.svg)](https://ninja-build.org/)
