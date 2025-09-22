@@ -42,6 +42,7 @@ class batch
           ImGuiFileBrowserFlags_SelectDirectory
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
 
      RangeConsumer<open_viii::archive::FIFLFS<true>>    m_fields_consumer = {};
