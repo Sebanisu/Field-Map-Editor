@@ -9,12 +9,49 @@ Test Application for editing the tiles of a FF8 field. See [releases](https://gi
 
 **Possible Issue:** with saving and loading of filters. If you have problems, clear out the `.toml` file or the `imgui.ini` to reset the settings to defaults. If you want to send me your `.toml` in an issue. I might be able to figure out why it was bugging out.
 
-#### Pupu Compatibility Issue
+#### Pupu Compatibility Notes
+The original Pupu application generates IDs differently. I’ve tried to stay mostly consistent, but there are a few differences to be aware of:
 
--  **2025.JAN.13** - I found a small bug https://github.com/Sebanisu/Field-Map-Editor/issues/121. This could cause the Pupu to not be unique enough. It might break your exports. You may need to convert to swizzled in your current version before upgrading.
--  **2022.SEP.12** - https://github.com/Sebanisu/Field-Map-Editor/issues/80 & https://github.com/Sebanisu/Field-Map-Editor/issues/122. I used 2 bits to note if a tile is not aligned with the 16x16 grid, via the X-axis or the Y-axis.
+- **2025.JAN.13** — [Issue #121](https://github.com/Sebanisu/Field-Map-Editor/issues/121)  
+  Fixed a bug that could cause Pupu IDs to be insufficiently unique, potentially breaking exports.  
+  If you are upgrading, you may need to convert your data to the swizzled format in your current version first.
+
+- **2022.SEP.12** — [Issue #80](https://github.com/Sebanisu/Field-Map-Editor/issues/80), [Issue #122](https://github.com/Sebanisu/Field-Map-Editor/issues/122)  
+  I used 2 bits to record whether a tile is misaligned with the 16×16 grid along the X-axis or Y-axis.
+
 
 ---
+
+## Graphics Drivers
+
+This project makes use of GPU rendering. Outdated or broken graphics drivers may cause crashes, display issues, or poor performance.  
+If you run into problems, **please update your graphics drivers** before reporting issues.
+
+### Tested Hardware
+- **NVIDIA GeForce GTX 980 Ti** (released in 2015–2016 era)  
+  Works reliably. Other GPUs from NVIDIA or AMD from around the same time or newer should also work.  
+- Intel integrated graphics: one user reported issues. I cannot fully test this at the moment, so please ensure you are on the latest drivers.
+
+### Driver Update Links
+- **Intel**
+  - [Intel Arc, Iris Xe, and 11th+ Gen Graphics](https://www.intel.com/content/www/us/en/download/785597/intel-arc-iris-xe-graphics-windows.html)  
+    (May also cover integrated graphics on 11th–14th Gen CPUs)  
+  - [Intel 11th–14th Gen Processor Graphics](https://www.intel.com/content/www/us/en/download/864990/intel-11th-14th-gen-processor-graphics.html)  
+  - [Intel 7th–10th Gen Processor Graphics](https://www.intel.com/content/www/us/en/download/776137/intel-7th-10th-gen-processor-graphics-windows.html)  
+  - [Intel 6th Gen Processor Graphics](https://www.intel.com/content/www/us/en/download/762755/intel-6th-10th-gen-processor-graphics-windows.html)  
+  - If you’re unsure which driver to install, use the  
+    [Intel Driver & Support Assistant](https://www.intel.com/content/www/us/en/support/detect.html)
+
+- **NVIDIA**  
+  - [GeForce Drivers](https://www.nvidia.com/download/index.aspx)
+
+- **AMD**  
+  - [Radeon Drivers](https://www.amd.com/en/support)
+
+---
+
+⚠️ If you experience graphical issues, **always update your drivers first** before assuming it’s a problem with this software.
+
 
 ### Main Application
 
