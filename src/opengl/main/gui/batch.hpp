@@ -42,6 +42,7 @@ class batch
           ImGuiFileBrowserFlags_SelectDirectory
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
 
      RangeConsumer<open_viii::archive::FIFLFS<true>>    m_fields_consumer = {};
@@ -51,6 +52,12 @@ class batch
      FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
                         m_future_of_future_consumer = {};
+
+     mutable bool       m_update_delay              = false;
+     mutable bool       m_force_loading             = true;
+
+     mutable float      m_interval                  = 0.03f;
+     mutable float      m_total_elapsed_time        = 0.f;
 
      void               combo_input_type();
      void               combo_output_type();
@@ -96,6 +103,8 @@ class batch
        const std::string_view          name,
        const std::vector<std::string> &items,
        std::vector<bool>              &enabled);
+     void save_textures();
+     void save_map();
 
 
    public:

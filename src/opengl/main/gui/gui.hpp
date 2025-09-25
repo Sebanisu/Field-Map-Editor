@@ -104,14 +104,17 @@ struct gui
           ImGuiFileBrowserFlags_EnterNewFilename
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
      ImGui::FileBrowser m_load_file_browser{
           ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
      ImGui::FileBrowser m_directory_browser{
           ImGuiFileBrowserFlags_SelectDirectory
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
 
 

@@ -41,6 +41,7 @@ class [[nodiscard]] import
           ImGuiFileBrowserFlags_SelectDirectory
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
 
    public:

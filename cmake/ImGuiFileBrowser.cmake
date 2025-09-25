@@ -5,7 +5,7 @@ FetchContent_Populate(
     imgui_filebrowser_fetch
     QUIET
     #GIT_REPOSITORY https://github.com/AirGuanZ/imgui-filebrowser.git
-    GIT_REPOSITORY https://github.com/sebanisu/imgui-filebrowser.git
+    GIT_REPOSITORY https://github.com/Sebanisu/imgui-filebrowser.git
     GIT_TAG origin/master
     GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
     SOURCE_DIR "${CMAKE_BINARY_DIR}/_deps/imgui_filebrowser_src"

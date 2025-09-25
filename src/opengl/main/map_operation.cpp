@@ -57,22 +57,27 @@ void compact_map_order_ffnx(map_group::Map &map)
        {
             // dest_coords_for_horizontal_tile_index_swizzle
 
-            auto filtered_tiles = tiles | std::ranges::views::enumerate;
-            using tile_t        = std::remove_cvref_t<
-                     std::ranges::range_value_t<decltype(tiles)>>;
+            auto filtered_and_enumerated_tiles
+              = tiles | std::views::filter(not_invalid)
+                | std::ranges::views::enumerate;
+            auto       filtered_tiles = tiles | std::views::filter(not_invalid);
+            const auto size_of_tiles  = std::ranges::distance(filtered_tiles);
+            using tile_t              = std::remove_cvref_t<
+                           std::ranges::range_value_t<decltype(tiles)>>;
             const auto with_depth_operation
               = ff_8::tile_operations::WithDepth<tile_t>{
                      open_viii::graphics::BPPT::BPP4_CONST()
                 };
-            for (auto &&[tile_index, tile] : filtered_tiles)
+            for (auto &&[tile_index, tile] : filtered_and_enumerated_tiles)
             {
+
                  if (!not_invalid(tile))
                  {
                       continue;
                  }
                  const auto new_pos
                    = dest_coords_for_horizontal_tile_index_swizzle(
-                     tile_index, std::ranges::size(tiles));
+                     tile_index, size_of_tiles);
                  const auto source_x
                    = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
                      new_pos.source_xy.x);
@@ -92,6 +97,7 @@ void compact_map_order_ffnx(map_group::Map &map)
             }
        });
 }
+
 void compact_move_conflicts_only(
   map_group::Map              &map,
   const source_tile_conflicts &conflicts)
