@@ -23,7 +23,13 @@ struct filter_window
      void               update(std::weak_ptr<map_sprite>);
 
    private:
+     [[nodiscard]] toml::table *
+       get_root_table(const std::shared_ptr<Selections> &lock_selections) const;
+     void root_table_to_imgui_tree(
+       const toml::table *root_table,
+       const bool         skip_search = false) const;
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
+     [[nodiscard]] bool contains_key_recursive(const toml::table *tbl) const;
      void               handle_remove_queue(
                      const std::shared_ptr<Selections> &,
                      const std::shared_ptr<map_sprite> &) const;
@@ -169,6 +175,7 @@ struct filter_window
        = { ff_8::FilterSettings::All_Disabled };
      mutable std::vector<std::string>   m_multi_select        = {};
      mutable std::vector<std::string>   m_reload_list         = {};
+     mutable std::string                m_search_field        = {};
      mutable std::string                m_selected_file_name  = {};
      mutable std::string                m_hovered_file_name   = {};
      mutable std::optional<std::string> m_previous_file_name  = {};

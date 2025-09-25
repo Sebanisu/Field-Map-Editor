@@ -146,6 +146,19 @@ void fme::filter_window::render() const
             "draw window.");
      }
 
+     const toml::table           *root_table = get_root_table(lock_selections);
+
+     static std::array<char, 128> filter_buf = {};
+     if (!filter_buf[0])
+     {
+          m_search_field.clear();
+     }
+     if (ImGui::InputText("Filter", filter_buf.data(), filter_buf.size()))
+     {
+          m_search_field = filter_buf.data();
+     }
+     root_table_to_imgui_tree(root_table);
+
      handle_remove_queue(lock_selections, lock_map_sprite);
      handle_rename_queue(lock_selections, lock_map_sprite);
      handle_regenerate(lock_selections, lock_map_sprite);
@@ -208,6 +221,127 @@ void fme::filter_window::update(std::weak_ptr<Selections> in_selections)
 void fme::filter_window::update(std::weak_ptr<map_sprite> in_map_sprite)
 {
      m_map_sprite = std::move(in_map_sprite);
+}
+
+
+toml::table *fme::filter_window::get_root_table(
+  const std::shared_ptr<Selections> &lock_selections) const
+{
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path = config_path_values.replace_tags(
+       lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
+     auto config = Configuration(config_path);
+     return &(config.operator toml::table &());
+}
+
+void fme::filter_window::root_table_to_imgui_tree(
+  const toml::table *root_table,
+  const bool         skip_search) const
+{
+     if (root_table == nullptr)
+     {
+          return;
+     }
+
+     for (auto &&[key, val] : *root_table)
+     {
+          const auto label = std::string{ key };
+          if (val.is_table())
+          {
+               // if skip_search we already found a match.
+               if (!skip_search && !contains_key_recursive(val.as_table()))
+               {
+                    continue;
+               }
+               bool open = ImGui::TreeNode(label.c_str());
+               if (open)
+               {
+                    root_table_to_imgui_tree(val.as_table(), true);
+                    ImGui::TreePop();
+               }
+          }
+          else if (val.is_array())
+          {
+               bool open = ImGui::TreeNode(label.c_str());
+               if (open)
+               {
+                    for (auto &&item : *val.as_array())
+                    {
+                         if (item.is_string())
+                              format_imgui_bullet_text(
+                                "{}", item.value<std::string>());
+                         else if (item.is_integer())
+                              format_imgui_bullet_text(
+                                "{}", *item.value<int64_t>());
+                         else if (item.is_floating_point())
+                              format_imgui_bullet_text(
+                                "{}", *item.value<double>());
+                         else if (item.is_boolean())
+                              format_imgui_bullet_text(
+                                "{}", *item.value<bool>() ? "true" : "false");
+                         else if (item.is_table())
+                              root_table_to_imgui_tree(item.as_table(), true);
+                         else
+                              format_imgui_bullet_text("(unsupported type)");
+                    }
+                    ImGui::TreePop();
+               }
+          }
+          else
+          {
+               // Scalars inside a table → show as "key = value"
+               if (val.is_string())
+                    format_imgui_bullet_text(
+                      "{} = {}", label, val.value<std::string>().value_or(""));
+               else if (val.is_integer())
+                    format_imgui_bullet_text(
+                      "{} = {}", label, *val.value<int64_t>());
+               else if (val.is_floating_point())
+                    format_imgui_bullet_text(
+                      "{} = {}", label, *val.value<double>());
+               else if (val.is_boolean())
+                    format_imgui_bullet_text(
+                      "{} = {}", label, *val.value<bool>() ? "true" : "false");
+               else
+                    format_imgui_bullet_text("{} = (unsupported type)", label);
+          }
+     }
+}
+
+
+bool fme::filter_window::contains_key_recursive(const toml::table *tbl) const
+{
+     // Return true immediately if search field is empty
+     if (m_search_field.empty())
+          return true;
+
+     // Check current level keys
+     if (std::ranges::any_of(
+           *tbl,
+           [&](auto const &node)
+           {
+                const auto &[key, _] = node;
+                return open_viii::tools::i_find(key, m_search_field);
+           }))
+     {
+          return true;
+     }
+
+     // Recurse into nested tables
+     auto tables_view
+       = std::ranges::subrange(tbl->begin(), tbl->end())
+         | std::views::transform(
+           [](auto const &node)
+           {
+                const auto &[_, value] = node;
+                return value.as_table();
+           })
+         | std::views::filter([](const auto *t) { return t != nullptr; });
+
+     return std::ranges::any_of(
+       tables_view,
+       [&](const auto *inner_table)
+       { return contains_key_recursive(inner_table); });
 }
 
 bool fme::filter_window::begin_window(
