@@ -695,15 +695,27 @@ void fme::batch::checkmark_save_map()
           return;
      }
      bool changed = false;
-     bool forced =
+     bool forced_disable
+       = selections->get<ConfigKey::BatchOutputType>()
+           == output_types::deswizzle_generate_toml
+         || selections->get<ConfigKey::BatchOutputType>() == output_types::csv;
+     bool forced_enable =
        (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
         || selections->get<ConfigKey::BatchInputLoadMap>());
-     if (!selections->get<ConfigKey::BatchOutputSaveMap>() && forced)
+
+     if (selections->get<ConfigKey::BatchOutputSaveMap>() && forced_disable)
+     {
+          selections->get<ConfigKey::BatchOutputSaveMap>() = false;
+          changed                                          = true;
+     }
+     else if (
+       !selections->get<ConfigKey::BatchOutputSaveMap>() && forced_enable
+       && !forced_disable)
      {
           selections->get<ConfigKey::BatchOutputSaveMap>() = true;
           changed                                          = true;
      }
-     ImGui::BeginDisabled(forced);
+     ImGui::BeginDisabled(forced_disable || forced_enable);
      if (
        ImGui::Checkbox(
          gui_labels::save_map_files.data(),
@@ -1369,8 +1381,7 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
        (selections->get<ConfigKey::BatchOutputSaveMap>()
         && selections->get<ConfigKey::BatchOutputType>()
              != output_types::deswizzle_generate_toml)
-       || selections->get<ConfigKey::BatchOutputType>()
-            == output_types::swizzle_as_one_image)
+       || selections->get<ConfigKey::BatchOutputType>() != output_types::csv)
      {
           const key_value_data cpm2 = {
                .field_name = m_map_sprite.get_base_name(),
