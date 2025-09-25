@@ -26,6 +26,9 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 **Ongoing Milestone: Bugfix Release Sept-2025**
 - Associated Items: Specific issues assigned to this milestone are not detailed in the available page content. For the current list of open and closed issues, please refer to the milestone page on GitHub: https://github.com/Sebanisu/Field-Map-Editor/milestone/1. As the milestone is active, the items may include ongoing bug fixes and improvements targeted for the September 2025 release.
 
+**Related Issues & PRs:** 
+- https://github.com/Sebanisu/Field-Map-Editor/pull/182 - Add change.log from grok, and add skip_branch_with_pr: true
+
 ## [1.0.2011] - September 20, 2025
 
 ### Added
