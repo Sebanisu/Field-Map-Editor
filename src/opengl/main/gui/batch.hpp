@@ -103,6 +103,8 @@ class batch
        const std::string_view          name,
        const std::vector<std::string> &items,
        std::vector<bool>              &enabled);
+     void save_textures();
+     void save_map();
 
 
    public:

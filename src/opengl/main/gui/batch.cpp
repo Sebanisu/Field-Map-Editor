@@ -1333,8 +1333,36 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      {
           return;
      }
-     compact();
-     flatten();
+     if (
+       selections->get<ConfigKey::BatchOutputType>()
+       == output_types::swizzle_as_one_image)
+     {
+          // I think we want this so so if we have any ops that modify the map
+          // they aren't tainted by swizzle_as_one_image. Though we currently
+          // don't.
+
+          save_map();
+          compact();
+          flatten();
+          save_textures();
+     }
+     else
+     {
+          compact();
+          flatten();
+          save_textures();
+          save_map();
+     }
+}
+
+void fme::batch::save_textures()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
 
      // Choose output method based on batch output type
      const std::string &selected_string = get_selected_path(
@@ -1375,6 +1403,16 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
                  selected_string);
                break;
      }
+}
+
+void fme::batch::save_map()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
 
      // Optionally save the modified map
      if (
@@ -1383,6 +1421,9 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
              != output_types::deswizzle_generate_toml)
        || selections->get<ConfigKey::BatchOutputType>() != output_types::csv)
      {
+          const std::string &selected_string = get_selected_path(
+            selections->get<ConfigKey::BatchOutputPath>(),
+            selections->get<ConfigKey::BatchOutputRootPathType>());
           const key_value_data cpm2 = {
                .field_name = m_map_sprite.get_base_name(),
                .ext        = ".map",
