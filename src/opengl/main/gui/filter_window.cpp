@@ -155,9 +155,26 @@ void fme::filter_window::render() const
           {
                m_search_field.clear();
           }
-          if (ImGui::InputText("Filter", filter_buf.data(), filter_buf.size()))
+          const char *button_text = "Fix Name(s)";
+          const char *input_text  = "Filter";
+          float       buttonWidth = ImGui::CalcTextSize(button_text).x
+                              + ImGui::GetStyle().FramePadding.x * 2.0f;
+          float inputWidth = ImGui::GetContentRegionAvail().x - buttonWidth
+                             - ImGui::GetStyle().ItemSpacing.x
+                             - ImGui::CalcTextSize(input_text).x;
+
+          ImGui::SetNextItemWidth(inputWidth);
+          if (ImGui::InputText(
+                input_text, filter_buf.data(), filter_buf.size()))
           {
                m_search_field = filter_buf.data();
+          }
+
+          ImGui::SameLine();
+
+          if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
+          {
+               // Do your fix logic here
           }
           root_table_to_imgui_tree(root_table);
      }
