@@ -4098,6 +4098,50 @@ gui::gui(GLFWwindow *const window)
      m_history_window.update(m_map_sprite);
      m_textures_window.update(m_map_sprite);
 
+     m_filter_window.register_change_field_callback(
+       [&](const std::string &in)
+       {
+            // Get a reference to the map data (field name list)
+            const auto &maps = m_archives_group->mapdata();
+
+            const auto  it   = std::ranges::find(maps, in);
+            if (it == maps.end())
+            {
+                 return;
+            }
+            m_field_index
+              = static_cast<int>(std::ranges::distance(maps.begin(), it));
+
+            // Update the starter_field name based on the current field index
+            m_selections->get<ConfigKey::StarterField>() = *it;
+
+            // Save the selected field name to the configuration
+            m_selections->update<ConfigKey::StarterField>();
+
+            // Apply the updated field selection
+            update_field();
+       });
+
+
+     m_filter_window.register_change_coo_callback(
+       [&](const std::string &in)
+       {
+            // Get a reference to the map data (field name list)
+            open_viii::LangT lang
+              = open_viii::LangCommon::from_string_3_char(in);
+
+            if (m_selections->get<ConfigKey::Coo>() != lang)
+            {
+                 m_selections->get<ConfigKey::Coo>() = lang;
+                 // hmm this refreshes the field too bah. So could have double
+                 // work done in some cases.
+                 refresh_coo();
+            }
+       });
+
+     m_filter_window.register_is_remaster_callback(
+       [this]() -> bool { return m_field->is_remaster_from_fl_paths(); });
+
      if (m_field)
      {
           m_future_of_future_paths_consumer

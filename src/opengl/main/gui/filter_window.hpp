@@ -21,9 +21,26 @@ struct filter_window
      void               menu() const;
      void               update(std::weak_ptr<Selections>);
      void               update(std::weak_ptr<map_sprite>);
+     void               register_change_field_callback(
+       std::move_only_function<void(const std::string &)>);
+     void clear_change_field_callback();
+     void register_change_coo_callback(
+       std::move_only_function<void(const std::string &)>);
+     void clear_change_coo_callback();
+     void register_is_remaster_callback(std::move_only_function<bool()>);
+     void clear_is_remaster_callback();
 
    private:
+     [[nodiscard]] toml::table *
+       get_root_table(const std::shared_ptr<Selections> &lock_selections) const;
+     void root_table_to_imgui_tree(const toml::table *root_table) const;
+     void root_table_to_imgui_tree(
+       const toml::table                            *root_table,
+       const bool                                    skip_search,
+       const std::uint32_t                           current_depth,
+       std::vector<std::move_only_function<void()>> &callbacks) const;
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
+     [[nodiscard]] bool contains_key_recursive(const toml::table *tbl) const;
      void               handle_remove_queue(
                      const std::shared_ptr<Selections> &,
                      const std::shared_ptr<map_sprite> &) const;
@@ -147,7 +164,7 @@ struct filter_window
      std::weak_ptr<Selections> m_selections             = {};
      std::weak_ptr<map_sprite> m_map_sprite             = {};
 
-
+     mutable bool              m_search_open            = { false };
      mutable bool              m_reload_thumbnail       = { false };
      mutable bool              m_regenerate_items       = { false };
      mutable bool              m_was_focused            = { false };
@@ -169,12 +186,18 @@ struct filter_window
        = { ff_8::FilterSettings::All_Disabled };
      mutable std::vector<std::string>   m_multi_select        = {};
      mutable std::vector<std::string>   m_reload_list         = {};
+     mutable std::string                m_search_field        = {};
      mutable std::string                m_selected_file_name  = {};
      mutable std::string                m_hovered_file_name   = {};
      mutable std::optional<std::string> m_previous_file_name  = {};
      mutable std::optional<std::string> m_next_file_name      = {};
      mutable toml::table               *m_selected_toml_table = {};
      mutable std::vector<std::string>   m_remove_queue        = {};
+     mutable std::move_only_function<void(const std::string &)>
+       m_change_field_callback;
+     mutable std::move_only_function<void(const std::string &)>
+                                             m_change_coo_callback;
+     mutable std::move_only_function<bool()> m_is_remaster_callback;
      mutable std::vector<std::pair<std::string, std::string>> m_rename_queue
        = {};
      mutable std::array<char, 128> m_file_name_buffer = {};
