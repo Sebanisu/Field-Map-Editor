@@ -697,8 +697,7 @@ void fme::batch::checkmark_save_map()
      bool changed = false;
      bool forced =
        (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
-        || selections->get<ConfigKey::BatchInputLoadMap>()
-        || selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image);
+        || selections->get<ConfigKey::BatchInputLoadMap>());
      if (!selections->get<ConfigKey::BatchOutputSaveMap>() && forced)
      {
           selections->get<ConfigKey::BatchOutputSaveMap>() = true;
