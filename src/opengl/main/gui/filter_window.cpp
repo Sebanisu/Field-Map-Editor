@@ -146,19 +146,25 @@ void fme::filter_window::render() const
             "draw window.");
      }
 
-     const toml::table           *root_table = get_root_table(lock_selections);
-
-     static std::array<char, 128> filter_buf = {};
-     if (!filter_buf[0])
+     if (m_search_open)
      {
-          m_search_field.clear();
+          ImGui::Selectable(ICON_FA_CHEVRON_DOWN " Search", &m_search_open);
+          const toml::table *root_table = get_root_table(lock_selections);
+          static std::array<char, 128> filter_buf = {};
+          if (!filter_buf[0])
+          {
+               m_search_field.clear();
+          }
+          if (ImGui::InputText("Filter", filter_buf.data(), filter_buf.size()))
+          {
+               m_search_field = filter_buf.data();
+          }
+          root_table_to_imgui_tree(root_table);
      }
-     if (ImGui::InputText("Filter", filter_buf.data(), filter_buf.size()))
+     else
      {
-          m_search_field = filter_buf.data();
+          ImGui::Selectable(ICON_FA_CHEVRON_RIGHT " Search", &m_search_open);
      }
-     root_table_to_imgui_tree(root_table);
-
      handle_remove_queue(lock_selections, lock_map_sprite);
      handle_rename_queue(lock_selections, lock_map_sprite);
      handle_regenerate(lock_selections, lock_map_sprite);
@@ -235,8 +241,17 @@ toml::table *fme::filter_window::get_root_table(
 }
 
 void fme::filter_window::root_table_to_imgui_tree(
-  const toml::table *root_table,
-  const bool         skip_search) const
+  const toml::table *root_table) const
+{
+     std::vector<std::move_only_function<void()>> callbacks = {};
+     root_table_to_imgui_tree(root_table, false, 0u, callbacks);
+}
+
+void fme::filter_window::root_table_to_imgui_tree(
+  const toml::table                            *root_table,
+  const bool                                    skip_search,
+  const std::uint32_t                           current_depth,
+  std::vector<std::move_only_function<void()>> &callbacks) const
 {
      if (root_table == nullptr)
      {
@@ -256,7 +271,67 @@ void fme::filter_window::root_table_to_imgui_tree(
                bool open = ImGui::TreeNode(label.c_str());
                if (open)
                {
-                    root_table_to_imgui_tree(val.as_table(), true);
+                    bool use_goto = false;
+                    if (current_depth == 0u && m_change_field_callback)
+                    {
+                         // Push a lambda for this level
+                         callbacks.push_back(
+                           [this, label]
+                           {
+                                if (m_change_field_callback)
+                                     m_change_field_callback(label);
+                           });
+                         use_goto = true;
+                    }
+                    else if (
+                      current_depth == 1u && m_change_coo_callback
+                      && m_is_remaster_callback && m_is_remaster_callback())
+                    {
+                         // Push a lambda for this level
+                         callbacks.push_back(
+                           [this, label]
+                           {
+                                if (m_change_coo_callback)
+                                     m_change_coo_callback(label);
+                           });
+                         use_goto = true;
+                    }
+                    else if (current_depth == 2u && label != "unique_pupu_ids")
+                    {
+                         // Push a lambda for this level
+                         callbacks.push_back(
+                           [this, label]
+                           {
+                                auto lock_map_sprite = m_map_sprite.lock();
+                                if (!lock_map_sprite)
+                                {
+                                     spdlog::error(
+                                       "Failed to lock map_sprite: shared_ptr "
+                                       "is expired.");
+                                     return;
+                                }
+                                select_file(label, lock_map_sprite);
+                           });
+                         use_goto = true;
+                    }
+                    if (use_goto)
+                    {
+                         format_imgui_bullet_text("");
+                         ImGui::SameLine();
+                         if (ImGui::Button("Goto"))
+                         {
+                              m_search_open = false;
+                              for (auto &cb : callbacks)
+                                   cb();// run parent(s) first, then
+                                        // current
+                         }
+                    }
+                    root_table_to_imgui_tree(
+                      val.as_table(), true, current_depth + 1u, callbacks);
+                    if (use_goto)
+                    {
+                         callbacks.pop_back();
+                    }
                     ImGui::TreePop();
                }
           }
@@ -280,7 +355,11 @@ void fme::filter_window::root_table_to_imgui_tree(
                               format_imgui_bullet_text(
                                 "{}", *item.value<bool>() ? "true" : "false");
                          else if (item.is_table())
-                              root_table_to_imgui_tree(item.as_table(), true);
+                              root_table_to_imgui_tree(
+                                item.as_table(),
+                                true,
+                                current_depth + 1u,
+                                callbacks);
                          else
                               format_imgui_bullet_text("(unsupported type)");
                     }
@@ -434,18 +513,26 @@ void fme::filter_window::handle_regenerate(
 
 void fme::filter_window::cleanup_invalid_selections() const
 {
-     if (!m_textures_map)
+     if (!m_textures_map || m_textures_map->empty())
      {
-          m_selected_file_name.clear();
+          // m_selected_file_name.clear();
           m_last_selected.clear();
           m_multi_select.clear();
           return;
      }
-     if (
-       !m_selected_file_name.empty()
-       && !m_textures_map->contains(m_selected_file_name))
+     if (!m_selected_file_name.empty())
      {
-          m_selected_file_name = {};
+          if (!m_textures_map->contains(m_selected_file_name))
+          {
+               m_selected_file_name = {};
+          }
+          else if (
+            m_textures_map->size() > 1u && !m_previous_file_name
+            && !m_next_file_name)
+          {
+               m_previous_file_name = prev_key();
+               m_next_file_name     = next_key();
+          }
      }
      if (!m_last_selected.empty() && !m_textures_map->contains(m_last_selected))
      {
@@ -2547,4 +2634,38 @@ void fme::filter_window::process_combine(
                temp_filter.update(file_table);
           }
      }
+}
+
+
+void fme::filter_window::register_change_field_callback(
+  std::move_only_function<void(const std::string &)> in_callback)
+{
+     m_change_field_callback = std::move(in_callback);
+}
+
+void fme::filter_window::clear_change_field_callback()
+{
+     m_change_field_callback = nullptr;
+}
+
+void fme::filter_window::register_change_coo_callback(
+  std::move_only_function<void(const std::string &)> in_callback)
+{
+     m_change_coo_callback = std::move(in_callback);
+}
+
+void fme::filter_window::clear_change_coo_callback()
+{
+     m_change_coo_callback = nullptr;
+}
+
+void fme::filter_window::register_is_remaster_callback(
+  std::move_only_function<bool()> in_callback)
+{
+     m_is_remaster_callback = std::move(in_callback);
+}
+
+void fme::filter_window::clear_is_remaster_callback()
+{
+     m_is_remaster_callback = nullptr;
 }
