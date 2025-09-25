@@ -10,6 +10,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Context-sensitive help tooltips for all major UI components.
 - Support for batch export of maps to multiple formats.
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
+- Add `changelog.md`
+- Add `skip_branch_with_pr: true` to `appveyor.yml`
 
 ### Changed
 - Removed bullet for the Goto button.
