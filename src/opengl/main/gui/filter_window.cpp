@@ -316,8 +316,6 @@ void fme::filter_window::root_table_to_imgui_tree(
                     }
                     if (use_goto)
                     {
-                         format_imgui_bullet_text("");
-                         ImGui::SameLine();
                          if (ImGui::Button("Goto"))
                          {
                               m_search_open = false;
