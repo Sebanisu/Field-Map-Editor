@@ -12,6 +12,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
 - Add `changelog.md`
 - Add `skip_branch_with_pr: true` to `appveyor.yml`
+- Add button to fix name(s).
+- Add checkboxes to select which names need fixed.
 
 ### Changed
 - Removed bullet for the Goto button.
@@ -28,6 +30,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 **Related Issues & PRs:** 
 - https://github.com/Sebanisu/Field-Map-Editor/pull/182 - Add change.log from grok, and add skip_branch_with_pr: true
+- https://github.com/Sebanisu/Field-Map-Editor/pull/184 - Add button to allow fixing names in `deswizzle.toml`
 
 ## [1.0.2011] - September 20, 2025
 
