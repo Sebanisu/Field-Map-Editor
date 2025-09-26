@@ -223,11 +223,14 @@ void fme::filter_window::render() const
                       = open_viii::LangCommon::from_string_3_char(coo_3_letter);
 
 
-                    key_value_data cpm = { .field_name    = field_name,
-                                           .ext           = ".png",
-                                           .language_code = coo };
+                    key_value_data cpm
+                      = { .field_name    = field_name,
+                          .ext           = ".png",
+                          .language_code = coo == open_viii::LangT::generic
+                                             ? std::nullopt
+                                             : std::optional{ coo } };
 
-                    const auto     opt_filename
+                    const auto opt_filename
                       = [&]() -> std::optional<std::string>
                     {
                          for (const std::uint32_t raw_pupu :
@@ -254,8 +257,20 @@ void fme::filter_window::render() const
                     }();
                     if (!opt_filename)
                     {
-                         break;
+                         continue;
                     }
+                    const auto &[_, success]
+                      = coo_table->insert(*opt_filename, *file_table);
+                    if (!success)
+                    {
+                         continue;
+                    }
+                    coo_table->erase(key);
+                    // todo we need to check if filer_window is accessing key or
+                    // coo_table if so we may need to trigger a refresh of those
+                    // values.
+
+                    save_config(lock_selections);
                }
 
 
