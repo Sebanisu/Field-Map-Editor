@@ -269,9 +269,9 @@ void fme::filter_window::render() const
                     // todo we need to check if filer_window is accessing key or
                     // coo_table if so we may need to trigger a refresh of those
                     // values.
-
                     save_config(lock_selections);
                }
+               m_select_for_fix_names.clear();
 
 
                // Do your fix logic here
