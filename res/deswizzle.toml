@@ -216,6 +216,7 @@ filter_multi_pupu_enabled = true
 [bchtr1a.x.'bchtr1a_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
+old_key = 'bchtr1a_004FF000_test.png'
 
 [bchtr1a.x.unique_pupu_ids]
 003FF000 = 4190208

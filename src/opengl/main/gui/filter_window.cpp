@@ -271,7 +271,6 @@ void fme::filter_window::render() const
                          if (auto *stored_table = it->second.as_table())
                          {
                               stored_table->insert_or_assign("old_key", key);
-                              // rename logic here...
                          }
                     }
                     else
@@ -1482,8 +1481,9 @@ void fme::filter_window::draw_filename_controls(
      if (ImGui::Button("Rename"))
      {
           auto new_file_name = std::string(m_file_name_buffer.data());
-          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(
-            m_selected_file_name, new_file_name);
+          m_selected_toml_table
+            = lock_map_sprite->rename_deswizzle_combined_toml_table(
+              m_selected_file_name, new_file_name);
           m_selected_file_name = std::move(new_file_name);
           save_config(lock_selections);
      }
@@ -1501,6 +1501,43 @@ void fme::filter_window::draw_filename_controls(
      else
      {
           tool_tip(m_selected_file_name);
+     }
+     ImGui::EndDisabled();
+     bool can_undo_rename
+       = m_selected_toml_table && m_selected_toml_table->contains("old_key");
+     ImGui::SameLine();
+     ImGui::BeginDisabled(!can_undo_rename);
+     if (ImGui::Button("Undo Rename"))
+     {
+          if (const auto node_ptr = m_selected_toml_table->find("old_key");
+              node_ptr != m_selected_toml_table->end()
+              && node_ptr->second.is_string())
+          {
+               std::string new_file_name = node_ptr->second.as_string()->get();
+               m_selected_toml_table
+                 = lock_map_sprite->rename_deswizzle_combined_toml_table(
+                   m_selected_file_name, new_file_name);
+               m_selected_file_name = std::move(new_file_name);
+               save_config(lock_selections);
+
+               const auto count
+                 = (std::min)(s_max_chars, m_selected_file_name.size());
+               std::ranges::copy_n(
+                 m_selected_file_name.begin(),
+                 static_cast<std::ranges::range_difference_t<std::string>>(
+                   count),
+                 m_file_name_buffer.begin());
+               m_file_name_buffer[count] = '\0';
+          }
+     }
+     else if (m_selected_toml_table)
+     {
+          if (const auto node_ptr = m_selected_toml_table->find("old_key");
+              node_ptr != m_selected_toml_table->end()
+              && node_ptr->second.is_string())
+          {
+               tool_tip(node_ptr->second.as_string()->get());
+          }
      }
      ImGui::EndDisabled();
      ImGui::SameLine();

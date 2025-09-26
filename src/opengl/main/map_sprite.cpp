@@ -3466,6 +3466,7 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(
             new_file_name);
           return nullptr;
      }
+     it_new->second.as_table()->insert_or_assign("old_key", old_file_name);
 
      spdlog::info(
        "Renamed texture entry from '{}' to '{}'.",
