@@ -223,19 +223,39 @@ void fme::filter_window::render() const
                       = open_viii::LangCommon::from_string_3_char(coo_3_letter);
 
 
-                    const key_value_data cpm
-                      = { .field_name    = field_name,
-                          .ext           = ".png",
-                          .language_code = coo,
-                          .pupu_id       = static_cast<std::uint32_t>(
-                            multi_pupu.value().front()) };
+                    key_value_data cpm = { .field_name    = field_name,
+                                           .ext           = ".png",
+                                           .language_code = coo };
 
-                    std::filesystem::path out_path = cpm.replace_tags(
-                      lock_selections->get<ConfigKey::OutputDeswizzlePattern>(),
-                      lock_selections,
-                      {});
+                    const auto     opt_filename
+                      = [&]() -> std::optional<std::string>
+                    {
+                         for (const std::uint32_t raw_pupu :
+                              multi_pupu.value()
+                                | std::views::transform(
+                                  [](const auto &pupu_id)
+                                  { return pupu_id.raw(); }))
+                         {
+                              cpm.pupu_id                    = raw_pupu;
 
-                    const auto file_name = out_path.filename();
+                              std::filesystem::path out_path = cpm.replace_tags(
+                                lock_selections
+                                  ->get<ConfigKey::OutputDeswizzlePattern>(),
+                                lock_selections,
+                                {});
+
+                              if (!coo_table->contains(
+                                    out_path.filename().string()))
+                              {
+                                   return out_path.filename().string();
+                              }
+                         }
+                         return std::nullopt;
+                    }();
+                    if (!opt_filename)
+                    {
+                         break;
+                    }
                }
 
 
