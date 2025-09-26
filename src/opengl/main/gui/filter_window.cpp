@@ -149,7 +149,7 @@ void fme::filter_window::render() const
      if (m_search_open)
      {
           ImGui::Selectable(ICON_FA_CHEVRON_DOWN " Search", &m_search_open);
-          const toml::table *root_table = get_root_table(lock_selections);
+          toml::table *root_table = get_root_table(lock_selections);
           static std::array<char, 128> filter_buf = {};
           if (!filter_buf[0])
           {
@@ -172,10 +172,12 @@ void fme::filter_window::render() const
 
           ImGui::SameLine();
 
+          ImGui::BeginDisabled(m_select_for_fix_names.empty());
           if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
           {
                // Do your fix logic here
           }
+          ImGui::EndDisabled();
           root_table_to_imgui_tree(root_table);
      }
      else
@@ -257,15 +259,14 @@ toml::table *fme::filter_window::get_root_table(
      return &(config.operator toml::table &());
 }
 
-void fme::filter_window::root_table_to_imgui_tree(
-  const toml::table *root_table) const
+void fme::filter_window::root_table_to_imgui_tree(toml::table *root_table) const
 {
      std::vector<std::move_only_function<void()>> callbacks = {};
      root_table_to_imgui_tree(root_table, false, 0u, callbacks);
 }
 
 void fme::filter_window::root_table_to_imgui_tree(
-  const toml::table                            *root_table,
+  toml::table                                  *root_table,
   const bool                                    skip_search,
   const std::uint32_t                           current_depth,
   std::vector<std::move_only_function<void()>> &callbacks) const
@@ -280,74 +281,99 @@ void fme::filter_window::root_table_to_imgui_tree(
           const auto label = std::string{ key };
           if (val.is_table())
           {
+               const auto pop_id = PushPopID();
                // if skip_search we already found a match.
                if (!skip_search && !contains_key_recursive(val.as_table()))
                {
                     continue;
                }
-               bool open = ImGui::TreeNode(label.c_str());
-               if (open)
+               bool open = ImGui::TreeNodeEx(
+                 label.c_str(), ImGuiTreeNodeFlags_SpanLabelWidth);
+               bool use_goto = false;
+               if (current_depth == 0u && m_change_field_callback)
                {
-                    bool use_goto = false;
-                    if (current_depth == 0u && m_change_field_callback)
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           if (m_change_field_callback)
+                                m_change_field_callback(label);
+                      });
+                    use_goto = true;
+               }
+               else if (
+                 current_depth == 1u && m_change_coo_callback
+                 && m_is_remaster_callback && m_is_remaster_callback())
+               {
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           if (m_change_coo_callback)
+                                m_change_coo_callback(label);
+                      });
+                    use_goto = true;
+               }
+               else if (current_depth == 2u && label != "unique_pupu_ids")
+               {
+                    ImGui::SameLine();
+                    auto selected = m_select_for_fix_names.contains(label);
+                    if (ImGui::Checkbox("##fix_names", &selected))
                     {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                if (m_change_field_callback)
-                                     m_change_field_callback(label);
-                           });
-                         use_goto = true;
-                    }
-                    else if (
-                      current_depth == 1u && m_change_coo_callback
-                      && m_is_remaster_callback && m_is_remaster_callback())
-                    {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                if (m_change_coo_callback)
-                                     m_change_coo_callback(label);
-                           });
-                         use_goto = true;
-                    }
-                    else if (current_depth == 2u && label != "unique_pupu_ids")
-                    {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                auto lock_map_sprite = m_map_sprite.lock();
-                                if (!lock_map_sprite)
-                                {
-                                     spdlog::error(
-                                       "Failed to lock map_sprite: shared_ptr "
-                                       "is expired.");
-                                     return;
-                                }
-                                select_file(label, lock_map_sprite);
-                           });
-                         use_goto = true;
-                    }
-                    if (use_goto)
-                    {
-                         if (ImGui::Button("Goto"))
+                         if (selected)
                          {
-                              m_search_open = false;
-                              for (auto &cb : callbacks)
-                                   cb();// run parent(s) first, then
-                                        // current
+                              auto result = m_select_for_fix_names.try_emplace(
+                                label, root_table, val.as_table());
+                              if (!result.second)
+                              {
+                                   spdlog::warn(
+                                     "Failed to insert '{}' into "
+                                     "m_select_for_fix_names: key already "
+                                     "exists",
+                                     label);
+                              }
+                         }
+                         else
+                         {
+                              m_select_for_fix_names.erase(label);
                          }
                     }
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           auto lock_map_sprite = m_map_sprite.lock();
+                           if (!lock_map_sprite)
+                           {
+                                spdlog::error(
+                                  "Failed to lock map_sprite: shared_ptr "
+                                  "is expired.");
+                                return;
+                           }
+                           select_file(label, lock_map_sprite);
+                      });
+                    use_goto = true;
+               }
+               if (use_goto)
+               {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Goto"))
+                    {
+                         m_search_open = false;
+                         for (auto &cb : callbacks)
+                              cb();// run parent(s) first, then
+                                   // current
+                    }
+               }
+               if (open)
+               {
                     root_table_to_imgui_tree(
                       val.as_table(), true, current_depth + 1u, callbacks);
-                    if (use_goto)
-                    {
-                         callbacks.pop_back();
-                    }
                     ImGui::TreePop();
+               }
+               if (use_goto)
+               {
+                    callbacks.pop_back();
                }
           }
           else if (val.is_array())

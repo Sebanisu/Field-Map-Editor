@@ -6,6 +6,19 @@
 #include <memory>
 namespace fme
 {
+struct table_move
+{
+     toml::table *root;  // pointer to the root table
+     toml::table *nested;// pointer to the nested table
+
+     table_move(
+       toml::table *r,
+       toml::table *n)
+       : root(r)
+       , nested(n)
+     {
+     }
+};
 struct filter_window
 {
      using OuterFilter = std::move_only_function<
@@ -33,9 +46,9 @@ struct filter_window
    private:
      [[nodiscard]] toml::table *
        get_root_table(const std::shared_ptr<Selections> &lock_selections) const;
-     void root_table_to_imgui_tree(const toml::table *root_table) const;
+     void root_table_to_imgui_tree(toml::table *root_table) const;
      void root_table_to_imgui_tree(
-       const toml::table                            *root_table,
+       toml::table                                  *root_table,
        const bool                                    skip_search,
        const std::uint32_t                           current_depth,
        std::vector<std::move_only_function<void()>> &callbacks) const;
@@ -184,15 +197,16 @@ struct filter_window
      mutable ff_8::filter<ff_8::FilterTag::MultiAnimationId>
        m_excluded_animation_id_from_state
        = { ff_8::FilterSettings::All_Disabled };
-     mutable std::vector<std::string>   m_multi_select        = {};
-     mutable std::vector<std::string>   m_reload_list         = {};
-     mutable std::string                m_search_field        = {};
-     mutable std::string                m_selected_file_name  = {};
-     mutable std::string                m_hovered_file_name   = {};
-     mutable std::optional<std::string> m_previous_file_name  = {};
-     mutable std::optional<std::string> m_next_file_name      = {};
-     mutable toml::table               *m_selected_toml_table = {};
-     mutable std::vector<std::string>   m_remove_queue        = {};
+     mutable std::map<std::string, table_move> m_select_for_fix_names = {};
+     mutable std::vector<std::string>          m_multi_select         = {};
+     mutable std::vector<std::string>          m_reload_list          = {};
+     mutable std::string                       m_search_field         = {};
+     mutable std::string                       m_selected_file_name   = {};
+     mutable std::string                       m_hovered_file_name    = {};
+     mutable std::optional<std::string>        m_previous_file_name   = {};
+     mutable std::optional<std::string>        m_next_file_name       = {};
+     mutable toml::table                      *m_selected_toml_table  = {};
+     mutable std::vector<std::string>          m_remove_queue         = {};
      mutable std::move_only_function<void(const std::string &)>
        m_change_field_callback;
      mutable std::move_only_function<void(const std::string &)>
