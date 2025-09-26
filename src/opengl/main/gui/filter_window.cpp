@@ -171,22 +171,58 @@ void fme::filter_window::render() const
 
           ImGui::SameLine();
 
+          toml::table *root_table = get_root_table(lock_selections);
           ImGui::BeginDisabled(m_select_for_fix_names.empty());
           if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
           {
                for (auto &[key, tables] : m_select_for_fix_names)
                {
-                    auto &[root_table, nested_table] = tables;
+                    auto &[coo_table, file_table] = tables;
                     ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
                       = { ff_8::FilterSettings::All_Disabled };
-                    multi_pupu.reload(*nested_table);
+                    multi_pupu.reload(*file_table);
+                    const auto optional_field_coo = [&]()
+                      -> std::optional<std::pair<std::string, std::string>>
+                    {
+                         using namespace std::ranges;
+
+                         for (auto &&[field_name, field_val] :
+                              *root_table
+                                | views::filter(
+                                  [](auto &p) { return p.second.is_table(); }))
+                         {
+                              auto &field_tbl = *field_val.as_table();
+
+                              for (auto &&[coo, nested_val] :
+                                   field_tbl
+                                     | views::filter(
+                                       [](auto &p)
+                                       { return p.second.is_table(); }))
+                              {
+                                   if (
+                                     nested_val.as_table()
+                                     == coo_table)// pointer
+                                                  // equality
+                                   {
+                                        return std::make_pair(
+                                          std::string(field_name),
+                                          std::string(coo));
+                                   }
+                              }
+                         }
+                         return std::nullopt;
+                    }();
+                    if (!optional_field_coo)
+                    {
+                         continue;
+                    }
+                    const auto &[field_name, coo] = *optional_field_coo;
                }
 
 
                // Do your fix logic here
           }
           ImGui::EndDisabled();
-          toml::table *root_table = get_root_table(lock_selections);
           root_table_to_imgui_tree(root_table);
      }
      else
