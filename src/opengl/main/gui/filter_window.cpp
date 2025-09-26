@@ -216,7 +216,26 @@ void fme::filter_window::render() const
                     {
                          continue;
                     }
-                    const auto &[field_name, coo] = *optional_field_coo;
+                    const auto &[field_name, coo_3_letter]
+                      = *optional_field_coo;
+
+                    open_viii::LangT coo
+                      = open_viii::LangCommon::from_string_3_char(coo_3_letter);
+
+
+                    const key_value_data cpm
+                      = { .field_name    = field_name,
+                          .ext           = ".png",
+                          .language_code = coo,
+                          .pupu_id       = static_cast<std::uint32_t>(
+                            multi_pupu.value().front()) };
+
+                    std::filesystem::path out_path = cpm.replace_tags(
+                      lock_selections->get<ConfigKey::OutputDeswizzlePattern>(),
+                      lock_selections,
+                      {});
+
+                    const auto file_name = out_path.filename();
                }
 
 
