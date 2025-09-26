@@ -259,16 +259,29 @@ void fme::filter_window::render() const
                     {
                          continue;
                     }
-                    const auto &[_, success]
-                      = coo_table->insert(*opt_filename, *file_table);
-                    if (!success)
+
+
+                    auto [it, success] = coo_table->insert(
+                      *opt_filename, std::move(*file_table));
+
+                    if (success)
+                    {
+                         // Now 'file_table' is in a moved-from state,
+                         // but we don't care since it's owned by coo_table.
+                         if (auto *stored_table = it->second.as_table())
+                         {
+                              stored_table->insert_or_assign("old_key", key);
+                              // rename logic here...
+                         }
+                    }
+                    else
                     {
                          continue;
                     }
                     coo_table->erase(key);
-                    // todo we need to check if filer_window is accessing key or
-                    // coo_table if so we may need to trigger a refresh of those
-                    // values.
+                    // todo we need to check if filer_window is accessing
+                    // key or coo_table if so we may need to trigger a
+                    // refresh of those values.
                     save_config(lock_selections);
                }
                m_select_for_fix_names.clear();
@@ -749,8 +762,8 @@ void fme::filter_window::save_config(
   const std::shared_ptr<Selections> &lock_selections) const
 {
 
-     // TODO fill in common values here or else users can't use them. Like Field
-     // names and coo
+     // TODO fill in common values here or else users can't use them. Like
+     // Field names and coo
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
@@ -976,7 +989,8 @@ void fme::filter_window::render_attribute_combine_controls(
 
 
      tool_tip(
-       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join "
+       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. "
+       "Join "
        "animations of the same state because they usually don't overlap.");
 
      ImGui::NextColumn();
