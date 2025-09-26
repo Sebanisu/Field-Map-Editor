@@ -28332,7 +28332,7 @@ filter_multi_pupu_enabled = true
 00400012 = 4194322
 00400020 = 4194336
 
-[ewbrdg2.x.'ewbrdg2__004FF000.png']
+[ewbrdg2.x.'ewbrdg2_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
