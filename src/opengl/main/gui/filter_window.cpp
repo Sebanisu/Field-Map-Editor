@@ -417,6 +417,55 @@ void fme::filter_window::root_table_to_imgui_tree(
                  current_depth == 1u && m_change_coo_callback
                  && m_is_remaster_callback && m_is_remaster_callback())
                {
+                    ImGui::SameLine();
+                    bool selected = [&]()
+                    {
+                         for (auto &&[child_key, child_val] : *val.as_table())
+                         {
+                              if (
+                                child_val.is_table()
+                                && child_key != "unique_pupu_ids"
+                                && !m_select_for_fix_names.contains(
+                                  std::string{ child_key }))
+                              {
+                                   return false;
+                                   break;
+                              }
+                         }
+                         return true;
+                    }();
+                    if (ImGui::Checkbox("##fix_names_parent", &selected))
+                    {
+                         if (selected)
+                         {
+                              for (auto &&[child_key, child_val] :
+                                   *val.as_table())
+                              {
+                                   if (
+                                     child_val.is_table()
+                                     && child_key != "unique_pupu_ids")
+                                   {
+                                        (void)
+                                          m_select_for_fix_names.try_emplace(
+                                            std::string{ child_key },
+                                            val.as_table(),
+                                            child_val.as_table());
+                                   }
+                              }
+                         }
+                         else
+                         {
+                              for (auto &&[child_key, child_val] :
+                                   *val.as_table())
+                              {
+                                   if (child_val.is_table())
+                                   {
+                                        m_select_for_fix_names.erase(
+                                          std::string{ child_key });
+                                   }
+                              }
+                         }
+                    }
                     // Push a lambda for this level
                     callbacks.push_back(
                       [this, label]
