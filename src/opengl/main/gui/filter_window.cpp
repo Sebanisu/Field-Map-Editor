@@ -149,7 +149,6 @@ void fme::filter_window::render() const
      if (m_search_open)
      {
           ImGui::Selectable(ICON_FA_CHEVRON_DOWN " Search", &m_search_open);
-          toml::table *root_table = get_root_table(lock_selections);
           static std::array<char, 128> filter_buf = {};
           if (!filter_buf[0])
           {
@@ -175,9 +174,19 @@ void fme::filter_window::render() const
           ImGui::BeginDisabled(m_select_for_fix_names.empty());
           if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
           {
+               for (auto &[key, tables] : m_select_for_fix_names)
+               {
+                    auto &[root_table, nested_table] = tables;
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
+                      = { ff_8::FilterSettings::All_Disabled };
+                    multi_pupu.reload(*nested_table);
+               }
+
+
                // Do your fix logic here
           }
           ImGui::EndDisabled();
+          toml::table *root_table = get_root_table(lock_selections);
           root_table_to_imgui_tree(root_table);
      }
      else
