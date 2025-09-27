@@ -25,7 +25,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Improved async texture loading with better thread synchronization.
 - Updated shader pipeline for compatibility with newer OpenGL versions.
 - Swapped Appveyor for Github Actions
-- SWapped Conan for VCPKG
+- Swapped Conan for VCPKG
 
 ### Fixed
 - Fixed memory leaks in texture caching system.
