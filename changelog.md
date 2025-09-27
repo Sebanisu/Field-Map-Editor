@@ -24,6 +24,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Optimized gizmo rendering for smoother interactions.
 - Improved async texture loading with better thread synchronization.
 - Updated shader pipeline for compatibility with newer OpenGL versions.
+- Swapped Appveyor for Github Actions
+- SWapped Conan for VCPKG
 
 ### Fixed
 - Fixed memory leaks in texture caching system.
@@ -35,6 +37,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 **Related Issues & PRs:** 
 - https://github.com/Sebanisu/Field-Map-Editor/pull/182 - Add change.log from grok, and add skip_branch_with_pr: true
 - https://github.com/Sebanisu/Field-Map-Editor/pull/184 - Add button to allow fixing names in `deswizzle.toml`
+- https://github.com/Sebanisu/Field-Map-Editor/pull/201 - Remove appveyor and conan, Add Github Actions and VCPKG
 
 ## [1.0.2011] - September 20, 2025
 
