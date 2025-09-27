@@ -9,6 +9,7 @@
 #include "UniqueValue.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
+#include <algorithm>
 namespace glengine
 {
 class VertexArray

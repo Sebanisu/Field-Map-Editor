@@ -15,11 +15,11 @@
 #     message("IconFontCppHeaders fetch directory: ${icon_font_cpp_headers_fetch_SOURCE_DIR}")
 # endif ()
 
-if (NOT EXISTS "${CMAKE_SOURCE_DIR}/fonts/fa-solid-900.ttf")
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/fonts/fa-solid-900.ttf")
     message(STATUS "Downloading Font Awesome solid font (fa-solid-900.ttf)...")
     file(
         DOWNLOAD "https://github.com/FortAwesome/Font-Awesome/raw/refs/heads/6.x/webfonts/fa-solid-900.ttf"
-        "${CMAKE_SOURCE_DIR}/fonts/fa-solid-900.ttf"
+        "${CMAKE_BINARY_DIR}/fonts/fa-solid-900.ttf"
         EXPECTED_HASH SHA256=af19d135d3a935b3ebfbd80320716ffe1202052c5f68dc2c5f1abc57005ac605
         TLS_VERIFY ON
     )

@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_LAYERSTACK_HPP
 #define FIELD_MAP_EDITOR_LAYERSTACK_HPP
 #include "LayerItem.hpp"
+#include <algorithm>
 #include <ranges>
 #include <vector>
 namespace glengine

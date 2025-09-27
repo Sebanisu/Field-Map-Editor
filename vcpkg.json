@@ -1,0 +1,89 @@
+{
+  "name": "field-map-editor",
+  "version": "1.0",
+  "builtin-baseline": "4334d8b4c8916018600212ab4dd4bbdc343065d1",
+  "dependencies": [
+    "lz4",
+    "spdlog",
+    "glfw3",
+    "glew",
+    "glm",
+    {
+      "name": "imgui",
+      "default-features": true,
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    },
+    "bext-ut",
+    "tomlplusplus",
+    "libpng",
+    "stb",
+    "iconfontcppheaders",
+    "ctre"
+  ],
+  "overrides": [
+    {
+      "name": "lz4",
+      "version": "1.10.0",
+      "port-version": 0
+    },
+    {
+      "name": "spdlog",
+      "version": "1.15.3",
+      "port-version": 0
+    },
+    {
+      "name": "glfw3",
+      "version": "3.4",
+      "port-version": 0
+    },
+    {
+      "name": "glew",
+      "version": "2.2.0",
+      "port-version": 6
+    },
+    {
+      "name": "glm",
+      "version": "1.0.1",
+      "port-version": 3
+    },
+    {
+      "name": "imgui",
+      "version": "1.91.9",
+      "port-version": 0
+    },
+    {
+      "name": "bext-ut",
+      "version": "2.0.1",
+      "port-version": 0
+    },
+    {
+      "name": "tomlplusplus",
+      "version": "3.4.0",
+      "port-version": 1
+    },
+    {
+      "name": "libpng",
+      "version": "1.6.50",
+      "port-version": 0
+    },
+    {
+      "name": "stb",
+      "version": "2024-07-29",
+      "port-version": 1
+    },
+    {
+      "name": "iconfontcppheaders",
+      "version": "1.0.0",
+      "port-version": 0
+    },
+    {
+      "name": "ctre",
+      "version": "3.10.0",
+      "port-version": 0
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 #include "GLCheck.hpp"
 #include "Input.hpp"
 #include <imgui.h>
+#include <algorithm>
 namespace glengine
 {
 void OrthographicCameraController::check_input(float ts) const

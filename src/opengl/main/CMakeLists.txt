@@ -68,9 +68,12 @@ else()
 endif()
 
 # set_property(TARGET ${PROJECT_NAME}_MAIN PROPERTY CXX_STANDARD 20)
-find_package(tomlplusplus REQUIRED)
+find_package(tomlplusplus CONFIG REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 
@@ -86,16 +89,18 @@ target_link_libraries(
   ${PROJECT_NAME}_MAIN
   PRIVATE project_warnings
   PRIVATE project_options
-  PRIVATE imgui_glfw
+  PRIVATE imgui::imgui
+  PRIVATE GLEW::GLEW
+  PRIVATE glfw
+  PRIVATE OpenGL::GL
   PRIVATE glengine
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE Threads::Threads
   PRIVATE imgui_filebrowser
-  PRIVATE tomlplusplus::tomlplusplus
   PRIVATE spdlog::spdlog
-  PRIVATE iconfontcppheaders::iconfontcppheaders
+  PRIVATE iconfontcppheaders
   PRIVATE ctre::ctre
   PRIVATE ImGuizmo
   PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
@@ -103,8 +108,7 @@ target_link_libraries(
 target_compile_definitions(
   ${PROJECT_NAME}_MAIN
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC TOML_EXCEPTIONS=0
-  PUBLIC GLEW_STATIC)
+  PUBLIC TOML_EXCEPTIONS=0)
 
 target_compile_features(
   ${PROJECT_NAME}_MAIN
@@ -116,7 +120,10 @@ if(MSVC)
   target_compile_options(
     ${PROJECT_NAME}_MAIN
     PUBLIC "/bigobj"
-    PUBLIC "/await") # PUBLIC "/Zc:char8_t-"
+    PUBLIC "/await"
+    PUBLIC "/Qpar"
+    PUBLIC "/MP"
+  ) # PUBLIC "/Zc:char8_t-"
   target_link_options(${PROJECT_NAME}_MAIN PUBLIC "/PROFILE")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(
@@ -150,7 +157,7 @@ add_custom_command(
   TARGET ${PROJECT_NAME}_MAIN
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E echo "Copying fonts to target directory..."
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/fonts"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/fonts"
           "$<TARGET_FILE_DIR:${PROJECT_NAME}_MAIN>/fonts"
   COMMAND
     ${CMAKE_COMMAND} -E echo
