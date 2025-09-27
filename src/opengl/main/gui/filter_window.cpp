@@ -175,9 +175,18 @@ void fme::filter_window::render() const
           ImGui::BeginDisabled(m_select_for_fix_names.empty());
           if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
           {
+               toml::table *editor_coo_table
+                 = lock_map_sprite->get_deswizzle_combined_coo_table(
+                   {},
+                   lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+               bool touched_editor = false;
                for (auto &[key, tables] : m_select_for_fix_names)
                {
                     auto &[coo_table, file_table] = tables;
+                    if (editor_coo_table && coo_table == editor_coo_table)
+                    {
+                         touched_editor = true;
+                    }
                     ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
                       = { ff_8::FilterSettings::All_Disabled };
                     multi_pupu.reload(*file_table);
@@ -255,11 +264,10 @@ void fme::filter_window::render() const
                          }
                          return std::nullopt;
                     }();
-                    if (!opt_filename)
+                    if (!opt_filename && *opt_filename == key)
                     {
                          continue;
                     }
-
 
                     auto [it, success] = coo_table->insert(
                       *opt_filename, std::move(*file_table));
@@ -270,6 +278,24 @@ void fme::filter_window::render() const
                          // but we don't care since it's owned by coo_table.
                          if (auto *stored_table = it->second.as_table())
                          {
+                              if (m_selected_toml_table == file_table)
+                              {
+                                   m_selected_toml_table = stored_table;
+                                   m_selected_file_name  = it->first;
+                                   m_previous_file_name.reset();
+                                   m_next_file_name.reset();
+                                   const auto count
+                                     = (std::min)(s_max_chars,
+                                                  m_selected_file_name.size());
+                                   std::ranges::copy_n(
+                                     m_selected_file_name.begin(),
+                                     static_cast<
+                                       std::ranges::range_difference_t<
+                                         std::string>>(count),
+                                     m_file_name_buffer.begin());
+                                   m_file_name_buffer[count] = '\0';
+                              }
+
                               stored_table->insert_or_assign("old_key", key);
                          }
                     }
@@ -278,15 +304,13 @@ void fme::filter_window::render() const
                          continue;
                     }
                     coo_table->erase(key);
-                    // todo we need to check if filer_window is accessing
-                    // key or coo_table if so we may need to trigger a
-                    // refresh of those values.
-                    save_config(lock_selections);
                }
+               save_config(lock_selections);
                m_select_for_fix_names.clear();
-
-
-               // Do your fix logic here
+               if (touched_editor && m_textures_map)
+               {
+                    m_textures_map->clear();
+               }
           }
           ImGui::EndDisabled();
           root_table_to_imgui_tree(root_table);
