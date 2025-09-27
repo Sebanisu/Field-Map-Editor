@@ -157,7 +157,7 @@ add_custom_command(
   TARGET ${PROJECT_NAME}_MAIN
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E echo "Copying fonts to target directory..."
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/fonts"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/fonts"
           "$<TARGET_FILE_DIR:${PROJECT_NAME}_MAIN>/fonts"
   COMMAND
     ${CMAKE_COMMAND} -E echo

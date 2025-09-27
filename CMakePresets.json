@@ -16,7 +16,11 @@
       },
       "binaryDir": "${sourceDir}/.build",
       "installDir": "${sourceDir}/.install",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
     },
     {
       "name": "Release",
