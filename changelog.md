@@ -10,8 +10,14 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Context-sensitive help tooltips for all major UI components.
 - Support for batch export of maps to multiple formats.
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
-- Add `changelog.md`
-- Add `skip_branch_with_pr: true` to `appveyor.yml`
+- `changelog.md`
+- `skip_branch_with_pr: true` to `appveyor.yml`
+- Search to toml editor.
+- Button to fix name(s) in search.
+- Checkboxes to select which names need fixed.
+- Parent checkboxs to toggle child checkboxes.
+- Store previous name in toml.
+- Undo Rename button.
 
 ### Changed
 - Removed bullet for the Goto button.
@@ -28,6 +34,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 **Related Issues & PRs:** 
 - https://github.com/Sebanisu/Field-Map-Editor/pull/182 - Add change.log from grok, and add skip_branch_with_pr: true
+- https://github.com/Sebanisu/Field-Map-Editor/pull/184 - Add button to allow fixing names in `deswizzle.toml`
 
 ## [1.0.2011] - September 20, 2025
 

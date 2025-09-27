@@ -240,7 +240,7 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
 
      if (key == keys::ffnx_multi_texture)
           return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/"
-                 "{field_name}{_{2_letter_lang}}_{texture_page}{_{pupu_id}}{"
+                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{pupu_id}}{"
                  "ext}";
 
      if (key == keys::ffnx_single_texture)

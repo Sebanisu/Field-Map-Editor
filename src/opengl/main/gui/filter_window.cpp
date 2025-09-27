@@ -149,16 +149,176 @@ void fme::filter_window::render() const
      if (m_search_open)
      {
           ImGui::Selectable(ICON_FA_CHEVRON_DOWN " Search", &m_search_open);
-          const toml::table *root_table = get_root_table(lock_selections);
           static std::array<char, 128> filter_buf = {};
           if (!filter_buf[0])
           {
                m_search_field.clear();
           }
-          if (ImGui::InputText("Filter", filter_buf.data(), filter_buf.size()))
+          const char *button_text = "Fix Name(s)";
+          const char *input_text  = "Filter";
+          float       buttonWidth = ImGui::CalcTextSize(button_text).x
+                              + ImGui::GetStyle().FramePadding.x * 2.0f;
+          float inputWidth = ImGui::GetContentRegionAvail().x - buttonWidth
+                             - ImGui::GetStyle().ItemSpacing.x
+                             - ImGui::CalcTextSize(input_text).x;
+
+          ImGui::SetNextItemWidth(inputWidth);
+          if (ImGui::InputText(
+                input_text, filter_buf.data(), filter_buf.size()))
           {
                m_search_field = filter_buf.data();
           }
+
+          ImGui::SameLine();
+
+          toml::table *root_table = get_root_table(lock_selections);
+          ImGui::BeginDisabled(m_select_for_fix_names.empty());
+          if (ImGui::Button(button_text, ImVec2(buttonWidth, 0)))
+          {
+               toml::table *editor_coo_table
+                 = lock_map_sprite->get_deswizzle_combined_coo_table(
+                   {},
+                   lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+               bool touched_editor = false;
+               for (auto &[key, tables] : m_select_for_fix_names)
+               {
+                    auto &[coo_table, file_table] = tables;
+                    if (editor_coo_table && coo_table == editor_coo_table)
+                    {
+                         touched_editor = true;
+                    }
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
+                      = { ff_8::FilterSettings::All_Disabled };
+                    multi_pupu.reload(*file_table);
+                    const auto optional_field_coo = [&]()
+                      -> std::optional<std::pair<std::string, std::string>>
+                    {
+                         using namespace std::ranges;
+
+                         for (auto &&[field_name, field_val] :
+                              *root_table
+                                | views::filter(
+                                  [](auto &p) { return p.second.is_table(); }))
+                         {
+                              auto &field_tbl = *field_val.as_table();
+
+                              for (auto &&[coo, nested_val] :
+                                   field_tbl
+                                     | views::filter(
+                                       [](auto &p)
+                                       { return p.second.is_table(); }))
+                              {
+                                   if (
+                                     nested_val.as_table()
+                                     == coo_table)// pointer
+                                                  // equality
+                                   {
+                                        return std::make_pair(
+                                          std::string(field_name),
+                                          std::string(coo));
+                                   }
+                              }
+                         }
+                         return std::nullopt;
+                    }();
+                    if (!optional_field_coo)
+                    {
+                         continue;
+                    }
+                    const auto &[field_name, coo_3_letter]
+                      = *optional_field_coo;
+
+                    open_viii::LangT coo
+                      = open_viii::LangCommon::from_string_3_char(coo_3_letter);
+
+
+                    key_value_data cpm
+                      = { .field_name    = field_name,
+                          .ext           = ".png",
+                          .language_code = coo == open_viii::LangT::generic
+                                             ? std::nullopt
+                                             : std::optional{ coo } };
+
+                    const auto opt_filename
+                      = [&]() -> std::optional<std::string>
+                    {
+                         for (const std::uint32_t raw_pupu :
+                              multi_pupu.value()
+                                | std::views::transform(
+                                  [](const auto &pupu_id)
+                                  { return pupu_id.raw(); }))
+                         {
+                              cpm.pupu_id                    = raw_pupu;
+
+                              std::filesystem::path out_path = cpm.replace_tags(
+                                lock_selections
+                                  ->get<ConfigKey::OutputDeswizzlePattern>(),
+                                lock_selections,
+                                {});
+                              if (out_path.filename().string() == key)
+                              {
+                                   // name is already valid
+                                   return std::nullopt;
+                              }
+                              if (!coo_table->contains(
+                                    out_path.filename().string()))
+                              {
+                                   return out_path.filename().string();
+                              }
+                         }
+                         return std::nullopt;
+                    }();
+                    if (
+                      !opt_filename || *opt_filename == key
+                      || opt_filename->empty())
+                    {
+                         continue;// don't rename
+                    }
+
+                    auto [it, success] = coo_table->insert(
+                      *opt_filename, std::move(*file_table));
+
+                    if (success)
+                    {
+                         // Now 'file_table' is in a moved-from state,
+                         // but we don't care since it's owned by coo_table.
+                         if (auto *stored_table = it->second.as_table())
+                         {
+                              if (m_selected_toml_table == file_table)
+                              {
+                                   m_selected_toml_table = stored_table;
+                                   m_selected_file_name  = it->first;
+                                   m_previous_file_name.reset();
+                                   m_next_file_name.reset();
+                                   const auto count
+                                     = (std::min)(s_max_chars,
+                                                  m_selected_file_name.size());
+                                   std::ranges::copy_n(
+                                     m_selected_file_name.begin(),
+                                     static_cast<
+                                       std::ranges::range_difference_t<
+                                         std::string>>(count),
+                                     m_file_name_buffer.begin());
+                                   m_file_name_buffer[count] = '\0';
+                              }
+
+                              stored_table->insert_or_assign("old_key", key);
+                         }
+                    }
+                    else
+                    {
+                         continue;
+                    }
+                    coo_table->erase(key);
+               }
+               save_config(lock_selections);
+               m_select_for_fix_names.clear();
+               if (touched_editor && m_textures_map)
+               {
+                    m_textures_map->clear();
+               }
+          }
+          ImGui::EndDisabled();
           root_table_to_imgui_tree(root_table);
      }
      else
@@ -240,15 +400,14 @@ toml::table *fme::filter_window::get_root_table(
      return &(config.operator toml::table &());
 }
 
-void fme::filter_window::root_table_to_imgui_tree(
-  const toml::table *root_table) const
+void fme::filter_window::root_table_to_imgui_tree(toml::table *root_table) const
 {
      std::vector<std::move_only_function<void()>> callbacks = {};
      root_table_to_imgui_tree(root_table, false, 0u, callbacks);
 }
 
 void fme::filter_window::root_table_to_imgui_tree(
-  const toml::table                            *root_table,
+  toml::table                                  *root_table,
   const bool                                    skip_search,
   const std::uint32_t                           current_depth,
   std::vector<std::move_only_function<void()>> &callbacks) const
@@ -263,74 +422,148 @@ void fme::filter_window::root_table_to_imgui_tree(
           const auto label = std::string{ key };
           if (val.is_table())
           {
+               const auto pop_id = PushPopID();
                // if skip_search we already found a match.
                if (!skip_search && !contains_key_recursive(val.as_table()))
                {
                     continue;
                }
-               bool open = ImGui::TreeNode(label.c_str());
-               if (open)
+               bool open = ImGui::TreeNodeEx(
+                 label.c_str(), ImGuiTreeNodeFlags_SpanLabelWidth);
+               bool use_goto = false;
+               if (current_depth == 0u && m_change_field_callback)
                {
-                    bool use_goto = false;
-                    if (current_depth == 0u && m_change_field_callback)
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           if (m_change_field_callback)
+                                m_change_field_callback(label);
+                      });
+                    use_goto = true;
+               }
+               else if (
+                 current_depth == 1u && m_change_coo_callback
+                 && m_is_remaster_callback && m_is_remaster_callback())
+               {
+                    ImGui::SameLine();
+                    bool selected = [&]()
                     {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                if (m_change_field_callback)
-                                     m_change_field_callback(label);
-                           });
-                         use_goto = true;
-                    }
-                    else if (
-                      current_depth == 1u && m_change_coo_callback
-                      && m_is_remaster_callback && m_is_remaster_callback())
-                    {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                if (m_change_coo_callback)
-                                     m_change_coo_callback(label);
-                           });
-                         use_goto = true;
-                    }
-                    else if (current_depth == 2u && label != "unique_pupu_ids")
-                    {
-                         // Push a lambda for this level
-                         callbacks.push_back(
-                           [this, label]
-                           {
-                                auto lock_map_sprite = m_map_sprite.lock();
-                                if (!lock_map_sprite)
-                                {
-                                     spdlog::error(
-                                       "Failed to lock map_sprite: shared_ptr "
-                                       "is expired.");
-                                     return;
-                                }
-                                select_file(label, lock_map_sprite);
-                           });
-                         use_goto = true;
-                    }
-                    if (use_goto)
-                    {
-                         if (ImGui::Button("Goto"))
+                         for (auto &&[child_key, child_val] : *val.as_table())
                          {
-                              m_search_open = false;
-                              for (auto &cb : callbacks)
-                                   cb();// run parent(s) first, then
-                                        // current
+                              if (
+                                child_val.is_table()
+                                && child_key != "unique_pupu_ids"
+                                && !m_select_for_fix_names.contains(
+                                  std::string{ child_key }))
+                              {
+                                   return false;
+                                   break;
+                              }
+                         }
+                         return true;
+                    }();
+                    if (ImGui::Checkbox("##fix_names_parent", &selected))
+                    {
+                         if (selected)
+                         {
+                              for (auto &&[child_key, child_val] :
+                                   *val.as_table())
+                              {
+                                   if (
+                                     child_val.is_table()
+                                     && child_key != "unique_pupu_ids")
+                                   {
+                                        (void)
+                                          m_select_for_fix_names.try_emplace(
+                                            std::string{ child_key },
+                                            val.as_table(),
+                                            child_val.as_table());
+                                   }
+                              }
+                         }
+                         else
+                         {
+                              for (auto &&[child_key, child_val] :
+                                   *val.as_table())
+                              {
+                                   if (child_val.is_table())
+                                   {
+                                        m_select_for_fix_names.erase(
+                                          std::string{ child_key });
+                                   }
+                              }
                          }
                     }
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           if (m_change_coo_callback)
+                                m_change_coo_callback(label);
+                      });
+                    use_goto = true;
+               }
+               else if (current_depth == 2u && label != "unique_pupu_ids")
+               {
+                    ImGui::SameLine();
+                    auto selected = m_select_for_fix_names.contains(label);
+                    if (ImGui::Checkbox("##fix_names", &selected))
+                    {
+                         if (selected)
+                         {
+                              auto result = m_select_for_fix_names.try_emplace(
+                                label, root_table, val.as_table());
+                              if (!result.second)
+                              {
+                                   spdlog::warn(
+                                     "Failed to insert '{}' into "
+                                     "m_select_for_fix_names: key already "
+                                     "exists",
+                                     label);
+                              }
+                         }
+                         else
+                         {
+                              m_select_for_fix_names.erase(label);
+                         }
+                    }
+                    // Push a lambda for this level
+                    callbacks.push_back(
+                      [this, label]
+                      {
+                           auto lock_map_sprite = m_map_sprite.lock();
+                           if (!lock_map_sprite)
+                           {
+                                spdlog::error(
+                                  "Failed to lock map_sprite: shared_ptr "
+                                  "is expired.");
+                                return;
+                           }
+                           select_file(label, lock_map_sprite);
+                      });
+                    use_goto = true;
+               }
+               if (use_goto)
+               {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Goto"))
+                    {
+                         m_search_open = false;
+                         for (auto &cb : callbacks)
+                              cb();// run parent(s) first, then
+                                   // current
+                    }
+               }
+               if (open)
+               {
                     root_table_to_imgui_tree(
                       val.as_table(), true, current_depth + 1u, callbacks);
-                    if (use_goto)
-                    {
-                         callbacks.pop_back();
-                    }
                     ImGui::TreePop();
+               }
+               if (use_goto)
+               {
+                    callbacks.pop_back();
                }
           }
           else if (val.is_array())
@@ -607,8 +840,8 @@ void fme::filter_window::save_config(
   const std::shared_ptr<Selections> &lock_selections) const
 {
 
-     // TODO fill in common values here or else users can't use them. Like Field
-     // names and coo
+     // TODO fill in common values here or else users can't use them. Like
+     // Field names and coo
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
@@ -834,7 +1067,8 @@ void fme::filter_window::render_attribute_combine_controls(
 
 
      tool_tip(
-       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. Join "
+       "mask 0xFFF0'0FF0U vs PupuID and combine all of those elements. "
+       "Join "
        "animations of the same state because they usually don't overlap.");
 
      ImGui::NextColumn();
@@ -1277,8 +1511,9 @@ void fme::filter_window::draw_filename_controls(
      if (ImGui::Button("Rename"))
      {
           auto new_file_name = std::string(m_file_name_buffer.data());
-          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(
-            m_selected_file_name, new_file_name);
+          m_selected_toml_table
+            = lock_map_sprite->rename_deswizzle_combined_toml_table(
+              m_selected_file_name, new_file_name);
           m_selected_file_name = std::move(new_file_name);
           save_config(lock_selections);
      }
@@ -1296,6 +1531,43 @@ void fme::filter_window::draw_filename_controls(
      else
      {
           tool_tip(m_selected_file_name);
+     }
+     ImGui::EndDisabled();
+     bool can_undo_rename
+       = m_selected_toml_table && m_selected_toml_table->contains("old_key");
+     ImGui::SameLine();
+     ImGui::BeginDisabled(!can_undo_rename);
+     if (ImGui::Button("Undo Rename"))
+     {
+          if (const auto node_ptr = m_selected_toml_table->find("old_key");
+              node_ptr != m_selected_toml_table->end()
+              && node_ptr->second.is_string())
+          {
+               std::string new_file_name = node_ptr->second.as_string()->get();
+               m_selected_toml_table
+                 = lock_map_sprite->rename_deswizzle_combined_toml_table(
+                   m_selected_file_name, new_file_name);
+               m_selected_file_name = std::move(new_file_name);
+               save_config(lock_selections);
+
+               const auto count
+                 = (std::min)(s_max_chars, m_selected_file_name.size());
+               std::ranges::copy_n(
+                 m_selected_file_name.begin(),
+                 static_cast<std::ranges::range_difference_t<std::string>>(
+                   count),
+                 m_file_name_buffer.begin());
+               m_file_name_buffer[count] = '\0';
+          }
+     }
+     else if (m_selected_toml_table)
+     {
+          if (const auto node_ptr = m_selected_toml_table->find("old_key");
+              node_ptr != m_selected_toml_table->end()
+              && node_ptr->second.is_string())
+          {
+               tool_tip(node_ptr->second.as_string()->get());
+          }
      }
      ImGui::EndDisabled();
      ImGui::SameLine();
