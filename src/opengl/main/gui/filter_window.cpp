@@ -264,9 +264,11 @@ void fme::filter_window::render() const
                          }
                          return std::nullopt;
                     }();
-                    if (!opt_filename && *opt_filename == key)
+                    if (
+                      !opt_filename || *opt_filename == key
+                      || opt_filename->empty())
                     {
-                         continue;
+                         continue;// don't rename
                     }
 
                     auto [it, success] = coo_table->insert(
