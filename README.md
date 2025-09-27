@@ -1,6 +1,6 @@
 # Field Map Editor
 
-[![Build status](https://ci.appveyor.com/api/projects/status/v68sdv6ldtv3ll22?svg=true)](https://ci.appveyor.com/project/Sebanisu/field-map-editor) 
+[![Build](https://github.com/Sebanisu/Field-Map-Editor/actions/workflows/main-1.0.0.yaml/badge.svg)](https://github.com/Sebanisu/Field-Map-Editor/actions/workflows/main-1.0.0.yaml)
 [![C++ 23](https://img.shields.io/badge/C++%20-23-ff69b4.svg)](https://en.cppreference.com/w/cpp/23) 
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/Sebanisu/Field-Map-Editor/pulls)
 <!--![CMake](https://github.com/Sebanisu/Field-Map-Editor/workflows/CMake/badge.svg)-->
