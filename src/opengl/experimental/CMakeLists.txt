@@ -8,8 +8,8 @@ find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
-find_package(imgui REQUIRED)
-find_package(tomlplusplus REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(tomlplusplus CONFIG REQUIRED)
 add_executable(
   ${PROJECT_NAME}_EXPERIMENTAL
   Application.cpp
@@ -56,8 +56,10 @@ target_link_libraries(
   PRIVATE Threads::Threads
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
-  PRIVATE tomlplusplus::tomlplusplus
-  PRIVATE imgui_glfw)
+  PRIVATE imgui::imgui
+  PRIVATE GLEW::GLEW
+  PRIVATE glfw
+  PRIVATE OpenGL::GL)
 target_include_directories(${PROJECT_NAME}_EXPERIMENTAL
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_paths(${PROJECT_NAME}_EXPERIMENTAL)
@@ -78,6 +80,11 @@ if(MSVC)
   target_compile_definitions(
     ${PROJECT_NAME}_EXPERIMENTAL PUBLIC _CRT_SECURE_NO_WARNINGS) # required by
                                                                  # libpng
+  target_compile_options(
+    ${PROJECT_NAME}_EXPERIMENTAL
+    PUBLIC "/Qpar"
+    PUBLIC "/MP"
+  )
   # target_link_options(${PROJECT_NAME}_EXPERIMENTAL PRIVATE "/PROFILE")
 endif()
 string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)

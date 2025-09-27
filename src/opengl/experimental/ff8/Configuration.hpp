@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
+#include <fstream>
 class Configuration
 {
    public:

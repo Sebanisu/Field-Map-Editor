@@ -7,6 +7,7 @@
 #include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
 #include <Renderable.hpp>
+#include <optional>
 namespace glengine
 {
 class OrthographicCameraController

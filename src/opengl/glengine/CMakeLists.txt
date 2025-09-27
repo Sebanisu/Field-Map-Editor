@@ -55,13 +55,16 @@ target_link_libraries(
   PUBLIC GLEW::GLEW
   PUBLIC glm::glm
   PUBLIC stbi_wrapper)
-target_compile_definitions(glengine PUBLIC GLEW_STATIC)
 target_include_directories(glengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(MSVC)
   target_compile_definitions(glengine PUBLIC _CRT_SECURE_NO_WARNINGS
   )# required by libpng
-  target_compile_options(glengine PUBLIC "/bigobj")
+  target_compile_options(glengine
+    PUBLIC "/bigobj"
+    PUBLIC "/Qpar"
+    PUBLIC "/MP"
+  )
   # target_link_options(glengine PUBLIC "/PROFILE")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
