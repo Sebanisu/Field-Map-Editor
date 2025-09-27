@@ -255,7 +255,11 @@ void fme::filter_window::render() const
                                   ->get<ConfigKey::OutputDeswizzlePattern>(),
                                 lock_selections,
                                 {});
-
+                              if (out_path.filename().string() == key)
+                              {
+                                   // name is already valid
+                                   return std::nullopt;
+                              }
                               if (!coo_table->contains(
                                     out_path.filename().string()))
                               {
