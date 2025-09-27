@@ -10,10 +10,14 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Context-sensitive help tooltips for all major UI components.
 - Support for batch export of maps to multiple formats.
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
-- Add `changelog.md`
-- Add `skip_branch_with_pr: true` to `appveyor.yml`
-- Add button to fix name(s).
-- Add checkboxes to select which names need fixed.
+- `changelog.md`
+- `skip_branch_with_pr: true` to `appveyor.yml`
+- Search to toml editor.
+- Button to fix name(s) in search.
+- Checkboxes to select which names need fixed.
+- Parent checkboxs to toggle child checkboxes.
+- Store previous name in toml.
+- Undo Rename button.
 
 ### Changed
 - Removed bullet for the Goto button.
