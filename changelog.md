@@ -39,6 +39,9 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - https://github.com/Sebanisu/Field-Map-Editor/pull/184 - Add button to allow fixing names in `deswizzle.toml`
 - https://github.com/Sebanisu/Field-Map-Editor/pull/201 - Remove appveyor and conan, Add Github Actions and VCPKG
 
+### Notes
+- Switching tp Github Actions will change the versioning. Because I used Appveyor to track the version number.
+
 ## [1.0.2011] - September 20, 2025
 
 ### Added
