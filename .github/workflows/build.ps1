@@ -1,17 +1,18 @@
 #*****************************************************************************#
 #    Copyright (C) 2025 Julian Xhokaxhiu                                      #
-#                                                                             #
-#    This file is part of Field-Map-Editor                                    #
-#                                                                             #
-#    Field-Map-Editor is free software: you can redistribute it and\or modify #
-#    it under the terms of the GNU General Public License as published by     #
-#    the Free Software Foundation, either version 3 of the License            #
-#                                                                             #
-#    Field-Map-Editor is distributed in the hope that it will be useful,      #
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of           #
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            #
-#    GNU General Public License for more details.                             #
 #*****************************************************************************#
+
+#*****************************************************************************#
+#    This is free and unencumbered software released into the public domain.  #
+#                                                                             #
+#    Anyone is free to copy, modify, publish, use, compile, sell, or          #
+#    distribute this software for any purpose, commercial or non-commercial,  #
+#    and by any means.                                                        #
+#                                                                             #
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.          #
+#    For more information, please refer to <https://unlicense.org>            #
+#*****************************************************************************#
+
 
 Set-StrictMode -Version Latest
 
@@ -77,3 +78,4 @@ cmake --build --preset "${env:_RELEASE_CONFIGURATION}"
 
 # Start the packaging
 7z a ".\.dist\${env:_RELEASE_NAME}-${env:_RELEASE_VERSION}.zip" ".\$releasePath\bin\${env:_RELEASE_CONFIGURATION}\*"
+
