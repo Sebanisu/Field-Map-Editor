@@ -8,12 +8,18 @@ on:
   workflow_dispatch:
   push:
     paths-ignore:
+    - '**/*.md'
+    - '**/*.toml'
     - '.github/workflows/main-1.0.0.yaml'
     branches:
     - main
     tags:
     - "*"
   pull_request:
+    paths-ignore:
+    - '**/*.md'
+    - '**/*.toml'
+    - '.github/workflows/main-1.0.0.yaml'
     branches:
     - main
 

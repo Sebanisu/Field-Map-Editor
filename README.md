@@ -349,8 +349,9 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAK
 
 ### Step 5. Build
 ```sh
-cmake --build . --parallel
+cmake --build .
+cd ..
 ```
 
 ## Additional Notes
-- The compiled binaries can be found in the `./bin/` directory.
+- The compiled binaries can be found in the `./build/bin/` directory.
