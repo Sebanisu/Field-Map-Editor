@@ -31,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1440
     steps:
+    - name: Check Ubuntu Version
+      run: lsb_release -a    
     - name: Set Git Config
       run: |
         git config --global core.autocrlf false
@@ -46,11 +48,8 @@ jobs:
         sudo apt-get update
         sudo add-apt-repository universe -y
         sudo apt-get update
-        sudo apt-get install -y ninja-build libxmu-dev libxi-dev libgl-dev libxrandr-dev libxinerama-dev libxcursor-dev gcc-15 g++-15
-        # Fallback to GCC 14 if GCC 15 causes issues (comment out GCC 15 line above and uncomment below)
-        # sudo apt-get install -y gcc-14 g++-14
-        apt-cache policy gcc g++ gcc-15 g++-15
-        g++-15 --version  # Verify GCC 15.1
+        sudo apt-get install -y ninja-build libxmu-dev libxi-dev libgl-dev libxrandr-dev libxinerama-dev libxcursor-dev gcc-14 g++-14
+        g++-14 --version
         
     - name: Check Disk Space
       run: df -h
