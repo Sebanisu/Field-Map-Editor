@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "SubTexture.hpp"
 #include "UniqueValue.hpp"
+#include <algorithm>
 #include <variant>
 namespace glengine
 {

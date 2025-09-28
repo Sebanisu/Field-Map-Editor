@@ -7,6 +7,7 @@
 #include "Image.hpp"
 #include "Renderer.hpp"
 #include "UniqueValue.hpp"
+#include <algorithm>
 #include <concepts.hpp>
 #include <filesystem>
 #include <stb_image.h>
@@ -180,16 +181,13 @@ class Texture
        R                                       &range,
        const std::ranges::range_difference_t<R> stride)
      {
-          using std::ranges::begin;
-          using std::ranges::end;
-          using std::ranges::rotate;
-          auto b = begin(range);
-          auto e = end(range);
+          auto b = std::ranges::begin(range);
+          auto e = std::ranges::end(range);
           auto m = e;
           std::ranges::advance(m, -stride);
           while (b < m)
           {
-               rotate(b, m, e);
+               std::rotate(b, m, e);
                std::ranges::advance(b, stride);
           }
      }

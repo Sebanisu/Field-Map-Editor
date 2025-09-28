@@ -5,6 +5,13 @@
 #include "FF8LoadTextures.hpp"
 #include <stb_image.h>
 
+struct STBImageDeleter
+{
+     void operator()(unsigned char *p) const noexcept
+     {
+          stbi_image_free(p);
+     }
+};
 // static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
 glengine::DelayedTextures<ff_8::UpscaleTextureCount>
   ff_8::LoadTextures(const std::filesystem::path &swizzle_path)
@@ -22,8 +29,7 @@ glengine::DelayedTextures<ff_8::UpscaleTextureCount>
           int                  y        = {};
           [[maybe_unused]] int channels = {};
 
-          const auto deleter = [](stbi_uc *ptr) { stbi_image_free(ptr); };
-          auto       png     = std::unique_ptr<stbi_uc, decltype(deleter)>(
+          auto                 png = std::unique_ptr<stbi_uc, STBImageDeleter>(
             stbi_load(file_path.string().c_str(), &x, &y, &channels, 4));
           auto r = glengine::DelayedTexturesData{
                .path = file_path, .width = x, .height = y, .out = in_out
