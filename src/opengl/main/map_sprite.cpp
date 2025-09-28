@@ -845,16 +845,6 @@ void map_sprite::update_position(
                       return;// continue to next tile
                  }
                  if (
-                   m_filters.multi_animation_id.enabled()
-                   && std::ranges::all_of(
-                     m_filters.multi_animation_id.value(),
-                     [&](const auto &test) -> bool
-                     { return test != tile.animation_id(); }))
-                 {
-                      failures.emplace(DrawError::FilteredOut);
-                      return;
-                 }
-                 if (
                    m_filters.multi_pupu.enabled()
                    && std::ranges::all_of(
                      m_filters.multi_pupu.value(),
