@@ -1348,7 +1348,8 @@ class GenericCombo
           }
 
           // Add some padding so text isn't right up against the edge
-          width += ImGui::GetStyle().FramePadding.x * 4.0f;
+          width += ImGui::GetStyle().FramePadding.x * 4.0f
+                   * static_cast<float>(settings_.num_columns);
 
           ImGui::SetNextWindowSize(ImVec2(width, 0));
 
