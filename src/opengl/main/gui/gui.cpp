@@ -1292,6 +1292,29 @@ void gui::combo_field()
                                 || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
                               ? ""sv
                               : std::string_view(str));
+                     })
+                   | std::ranges::views::transform(
+                     [this](const std::string_view &name) -> std::string
+                     {
+                          const auto &maplist
+                            = m_archives_group->map_data_from_maplist();
+                          if (name.empty())
+                          {
+                               return {};
+                          }
+                          if (const auto it = std::ranges::find(maplist, name);
+                              it == std::ranges::end(maplist))
+                          {
+                               return fmt::format("{:<8}", name);
+                          }
+                          else
+                          {
+                               const auto maplist_index = std::ranges::distance(
+                                 std::ranges::begin(maplist), it);
+
+                               return fmt::format(
+                                 "{:<8} - {:03d}", name, maplist_index);
+                          }
                      });
        },
        m_field_index);
@@ -2471,12 +2494,47 @@ void gui::file_menu()
      using namespace std::string_view_literals;
      if (ImGui::BeginMenu(gui_labels::field.data()))
      {
+          const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           static std::array<char, 128> filter_buf = {};
+          ImGui::InputText(
+            "Filter by Name or ID", filter_buf.data(), filter_buf.size());
 
-          ImGui::InputText("Filter", filter_buf.data(), filter_buf.size());
+          const auto found_int_match
+            = [&]() -> std::optional<std::pair<int, std::string>>
+          {
+               const auto &maplist = m_archives_group->map_data_from_maplist();
+               const auto  filter  = std::string_view(filter_buf.data());
+               int         index   = -1;
+               if (
+                 !filter.empty() && filter.size() <= 3
+                 && std::ranges::all_of(filter, ::isdigit))
+               {
+                    int value{};
+                    auto [ptr, ec] = std::from_chars(
+                      filter.data(), filter.data() + filter.size(), value);
+                    if (ec == std::errc())
+                    {
+                         index = value;
+                    }
+               }
 
-          const auto        end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
-          static const auto cols      = 5;
+               if (index > 0 && index < std::ranges::ssize(maplist))
+               {
+                    const auto &name = maplist[static_cast<std::size_t>(index)];
+                    const auto &mapdata = m_archives_group->mapdata();
+                    const auto  it      = std::ranges::find(mapdata, name);
+                    if (it != std::ranges::end(mapdata))
+                    {
+                         const auto offset
+                           = static_cast<int>(std::ranges::distance(
+                             std::ranges::begin(mapdata), it));
+                         return std::make_pair(offset, name);
+                    }
+               }
+               return std::nullopt;
+          }();
+
+          static const auto cols = 5;
           if (ImGui::BeginTable("##field_table", cols))
           {
                const auto end_table1 = glengine::ScopeGuard(&ImGui::EndTable);
@@ -2486,23 +2544,8 @@ void gui::file_menu()
                std::string_view         start      = dummy;
                bool                     row_toggle = false;
                std::uint8_t             i          = 0;
-               for (const auto &[index, str] : numbered_maps)
+               const auto table_cell = [&](const auto &index, const auto &str)
                {
-                    if (
-                      filter_buf[0]
-                      && str.find(filter_buf.data()) == std::string::npos)
-                    {
-                         continue;
-                    }
-                    if (
-                      std::string_view(str) == "ec"sv
-                      || std::string_view(str) == "te"sv
-                      || std::string_view(str) == "fhdeck3a"sv
-                      || std::string_view(str) == "ggroad4"sv
-                      || std::string_view(str).starts_with("ma"sv))
-                    {
-                         continue;
-                    }
                     if (const auto temp = std::string_view(str).substr(0, 2);
                         start != temp || (i % cols == 0))
                     {
@@ -2550,6 +2593,33 @@ void gui::file_menu()
                          refresh_field();
                     }
                     ImGui::PopStyleColor(2);
+               };
+               if (found_int_match.has_value())
+               {
+                    const auto &[index, str] = found_int_match.value();
+                    table_cell(index, str);
+               }
+               else
+               {
+                    for (const auto &[index, str] : numbered_maps)
+                    {
+                         if (
+                           filter_buf[0]
+                           && str.find(filter_buf.data()) == std::string::npos)
+                         {
+                              continue;
+                         }
+                         if (
+                           std::string_view(str) == "ec"sv
+                           || std::string_view(str) == "te"sv
+                           || std::string_view(str) == "fhdeck3a"sv
+                           || std::string_view(str) == "ggroad4"sv
+                           || std::string_view(str).starts_with("ma"sv))
+                         {
+                              continue;
+                         }
+                         table_cell(index, str);
+                    }
                }
           }
      }

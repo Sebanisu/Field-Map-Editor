@@ -1335,6 +1335,23 @@ class GenericCombo
             = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
           const auto &current_item = *getNext(strings_, current_idx_);
+          auto        max_it       = std::ranges::max_element(
+            strings_,
+            {},
+            [](const auto &s)
+            { return ImGui::CalcTextSize(std::ranges::data(s)).x; });
+          float width = 0.0f;
+          if (max_it != strings_.end())
+          {
+               width = ImGui::CalcTextSize(std::data(*max_it)).x
+                       * static_cast<float>(settings_.num_columns);
+          }
+
+          // Add some padding so text isn't right up against the edge
+          width += ImGui::GetStyle().FramePadding.x * 4.0f
+                   * static_cast<float>(settings_.num_columns);
+
+          ImGui::SetNextWindowSize(ImVec2(width, 0));
 
           if (ImGui::BeginCombo(
                 "##Empty",

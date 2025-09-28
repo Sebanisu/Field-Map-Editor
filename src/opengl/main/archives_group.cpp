@@ -28,6 +28,14 @@ const open_viii::archive::FIFLFS<true> &archives_group::fields() const
 {
      return m_archives.get<open_viii::archive::ArchiveTypeT::field>();
 }
+std::vector<std::string> archives_group::get_map_list() const
+{
+     if (!m_failed)
+     {
+          return fields().map_data_from_maplist();
+     }
+     return {};
+}
 std::vector<std::string> archives_group::get_map_data() const
 {
      if (!m_failed)
@@ -63,6 +71,12 @@ const open_viii::archive::Archives &archives_group::archives() const noexcept
 bool archives_group::failed() const noexcept
 {
      return m_failed;
+}
+
+const std::vector<std::string> &
+  archives_group::map_data_from_maplist() const noexcept
+{
+     return m_maplist;
 }
 const std::vector<std::string> &archives_group::mapdata() const noexcept
 {
