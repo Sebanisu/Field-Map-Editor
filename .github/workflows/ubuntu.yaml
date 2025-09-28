@@ -49,7 +49,13 @@ jobs:
         sudo add-apt-repository universe -y
         sudo apt-get update
         sudo apt-get install -y ninja-build libxmu-dev libxi-dev libgl-dev libxrandr-dev libxinerama-dev libxcursor-dev gcc-14 g++-14
-        g++-14 --version
+        # GCC 14
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+        # GCC 13
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 50
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 50
+        g++ --version
         
     - name: Check Disk Space
       run: df -h
