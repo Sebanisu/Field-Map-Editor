@@ -7,7 +7,7 @@ on:
   push:
     paths-ignore:
     - '**/*.md'
-    - '**/*.toml'
+    #- '**/*.toml'
     - '.github/workflows/ubuntu.yaml'
     branches:
     - main
@@ -16,7 +16,7 @@ on:
   pull_request:
     paths-ignore:
     - '**/*.md'
-    - '**/*.toml'
+    #- '**/*.toml'
     - '.github/workflows/ubuntu.yaml'
     branches:
     - main
