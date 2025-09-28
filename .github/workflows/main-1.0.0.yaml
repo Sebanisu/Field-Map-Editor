@@ -5,6 +5,8 @@ run-name: 1.0.0.${{ github.run_number }}
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+    - '.github/workflows/ubuntu.yaml'
     branches:
     - main
     tags:
@@ -79,3 +81,4 @@ jobs:
         makeLatest: true
         removeArtifacts: true
         name: "${{ env._RELEASE_NAME }}-${{ env._RELEASE_VERSION }}"
+
