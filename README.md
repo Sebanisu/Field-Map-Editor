@@ -221,7 +221,7 @@ This project is based on the work of the following developers. I referenced thei
 [![CMake 3.31.6](https://img.shields.io/badge/CMake-3.31.6-blue.svg)](https://cmake.org/)
 [![Ninja 1.12.1](https://img.shields.io/badge/Ninja-1.12.1-blue.svg)](https://ninja-build.org/)
 [![Visual Studio 2022 v17.14](https://img.shields.io/badge/Visual%20Studio-2022%20v17.14-blue.svg)](https://visualstudio.microsoft.com/vs/)
-[![GCC 15.1.1](https://img.shields.io/badge/GCC-15.1.1-red.svg)](https://gcc.gnu.org/)
+[![GCC 14.2.0](https://img.shields.io/badge/GCC-14.2.0-red.svg)](https://gcc.gnu.org/)
 
 ---
 
@@ -313,7 +313,7 @@ dir /s /b bin\*.exe
 ![Running on Arch Linux](https://github.com/user-attachments/assets/7dd33451-1696-49d0-8856-12ac2e608145)
 
 # Linux Build Instructions **(WIP)**
-- Make sure you have atleast GCC 15.
+- Make sure you have atleast GCC 14.2.
 ```sh
 gcc --version
 ```

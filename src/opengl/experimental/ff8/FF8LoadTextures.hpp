@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP
 #define FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP
 #include "DelayedTextures.hpp"
+#include <Image.hpp>
 #include <open_viii/graphics/background/Mim.hpp>
-
 namespace ff_8
 {
 static const unsigned int TexturePageCount  = 13U;
