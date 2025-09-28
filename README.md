@@ -319,109 +319,37 @@ gcc --version
 ```
 
 ### Step 1. Update and install required packages
-
-Ubuntu
-```sh
-sudo apt update
-sudo apt install -y python3 python3-venv python3-pip cmake build-essential
-```p
+- Note: some of these might not be needed anymore I just keep adding as I need do.
 
 Arch
 ```sh
 pacman -Syu sudo
 sudo pacman -Syu
-sudo pacman -Syu --needed python python-virtualenv python-pip cmake base-devel python-pipx libglvnd libxcb libfontenc libice libsm libxaw libxcomposite libxcursor libxdamage libxtst libxinerama libxkbfile libxrandr libxres libxss libxv xcb-util xcb-util-cursor xcb-util-wm xcb-util-keysyms git less
-```
-
-### Step 2. Create and activate a Python virtual environment
-
-Ubuntu
-```sh
-python3 -m venv venv
-source venv/bin/activate
+sudo pacman -Syu --needed python python-virtualenv python-pip cmake base-devel python-pipx libglvnd libxcb libfontenc libice libsm libxaw libxcomposite libxcursor libxdamage libxtst libxinerama libxkbfile libxrandr libxres libxss libxv xcb-util xcb-util-cursor xcb-util-wm xcb-util-keysyms git less base-devel git curl zip unzip tar cmake ninja
 ```
 
 
-### Step 3. Install Conan package manager
-
+### Step 2. Clone the repo
 ```sh
-pip install conan
-```
-Arch
-```sh
-pipx install conan
-pipx ensurepath
-source ~/.bashrc
+git clone --recurse-submodules https://github.com/Sebanisu/Field-Map-Editor.git Field-Map-Editor
 ```
 
-### Step 3.5 Copy dev files to your home directory.
-I was getting permission errors in wsl. So I copied my files to my home directory to try again. I donno why it was happening. Below I am making the projects folder and i'm removing existing files and i'm cloning the files. The remove step is optional. I had old files in that directory.
+### Step 3. Bootstrap vcpkg
 ```sh
-mkdir -p ~/projects
-rm -rf ~/projects/Field-Map-Editor
-git clone --branch remove_sfml https://github.com/Sebanisu/Field-Map-Editor.git ~/projects/Field-Map-Editor
-cd ~/projects/Field-Map-Editor
-git status
-git pull
+cd Field-Map-Editor
+./vcpkg/bootstrap-vcpkg.sh
 ```
 
-
-### Step 4. Configure and Install dependencies using Conan
-#### Set Conan's home directory (optional, useful for CI environments)
-
+### Step 4. Configure CMAKE
 ```sh
-conan config home
+mkdir build
+cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
-#### Detect a Conan profile and name it `ubuntu24` if it doesn't already exist
-#### Replace `ubuntu24` with the appropriate profile name if necessary
-#### Redirect stdout and stderr to /dev/null and ensure the script continues regardless of errors
-
-Ubuntu
+### Step 5. Build
 ```sh
-conan profile detect --name ubuntu24 > /dev/null 2>&1 || true
-```
-
-Arch
-```sh
-conan profile detect --name arch > /dev/null 2>&1 || true
-```
-
-#### List all available Conan profiles
-```sh
-conan profile list
-```
-#### Install dependencies using Conan
-
-Ubuntu
-```sh
-conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -s compiler.cppstd=23 -of ./linux
-```
-
-Arch
-```sh
-conan install . -pr arch -pr:b arch --build=missing -s compiler.cppstd=23 -of ./archlinux -c tools.system.package_manager:mode=install
-```
-
-### Step 5. Deactivate the virtual environment
-```sh
-deactivate
-```
-
-### Step 6. Check available CMake presets (optional)
-```sh
-cmake --list-presets
-```
-
-### Step 7. Configure the build with CMake
-```sh
-rm -rf ./archlinux/build/Release/
-cmake --preset=conan_linux_release-release
-```
-
-### Step 8. Build the project
-```sh
-cmake --build ./archlinux/build/Release/
+cmake --build . --parallel
 ```
 
 ## Additional Notes
