@@ -905,7 +905,7 @@ void map_sprite::update_position(
                           texture->height()));
                       return;
                  }
-                 if (!m_settings.disable_blends)
+                 if (!m_settings.disable_blends && !m_settings.draw_swizzle)
                  {
                       auto blend_mode = tile.blend_mode();
                       if (blend_mode != last_blend_mode)
