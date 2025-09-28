@@ -1343,7 +1343,7 @@ class GenericCombo
           float width = 0.0f;
           if (max_it != strings_.end())
           {
-               width = ImGui::CalcTextSize(std::ranges::data(*max_it)).x
+               width = ImGui::CalcTextSize(std::data(*max_it)).x
                        * static_cast<float>(settings_.num_columns);
           }
 
