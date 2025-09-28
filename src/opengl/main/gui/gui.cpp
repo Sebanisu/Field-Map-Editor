@@ -1292,6 +1292,26 @@ void gui::combo_field()
                                 || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
                               ? ""sv
                               : std::string_view(str));
+                     })
+                   | std::ranges::views::transform(
+                     [this](const std::string_view &name) -> std::string
+                     {
+                          const auto &maplist
+                            = m_archives_group->map_data_from_maplist();
+
+                          if (const auto it = std::ranges::find(maplist, name);
+                              it == std::ranges::end(maplist))
+                          {
+                               return fmt::format("{}", name);
+                          }
+                          else
+                          {
+                               const auto maplist_index = std::ranges::distance(
+                                 std::ranges::begin(maplist), it);
+
+                               return fmt::format(
+                                 "{} - {:03d}", name, maplist_index);
+                          }
                      });
        },
        m_field_index);

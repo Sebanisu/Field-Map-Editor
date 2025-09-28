@@ -14,10 +14,12 @@ struct archives_group
      std::filesystem::path        m_path          = {};
      mutable bool                 m_failed        = true;
      open_viii::archive::Archives m_archives      = {};
+     std::vector<std::string>     m_maplist       = {};
      std::vector<std::string>     m_mapdata       = {};
      std::vector<const char *>    m_mapdata_c_str = {};
 
      open_viii::archive::Archives get_archives() const;
+     std::vector<std::string>     get_map_list() const;
      std::vector<std::string>     get_map_data() const;
 
    public:
@@ -30,6 +32,7 @@ struct archives_group
        : m_coo(in_coo)
        , m_path(in_path)
        , m_archives(get_archives())
+       , m_maplist(get_map_list())
        , m_mapdata(get_map_data())
        , m_mapdata_c_str(get_c_str(m_mapdata))
      {
@@ -52,6 +55,8 @@ struct archives_group
      {
           return !m_failed;
      }
+     [[nodiscard]] const std::vector<std::string> &
+       map_data_from_maplist() const noexcept;
      [[nodiscard]] const std::vector<std::string> &mapdata() const noexcept;
      [[nodiscard]] std::shared_ptr<open_viii::archive::FIFLFS<false>>
                        field(int current_map) const;
