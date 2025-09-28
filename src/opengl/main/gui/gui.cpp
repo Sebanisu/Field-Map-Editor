@@ -1298,11 +1298,14 @@ void gui::combo_field()
                      {
                           const auto &maplist
                             = m_archives_group->map_data_from_maplist();
-
+                          if (name.empty())
+                          {
+                               return {};
+                          }
                           if (const auto it = std::ranges::find(maplist, name);
                               it == std::ranges::end(maplist))
                           {
-                               return fmt::format("{}", name);
+                               return fmt::format("{:<8}", name);
                           }
                           else
                           {
@@ -1310,7 +1313,7 @@ void gui::combo_field()
                                  std::ranges::begin(maplist), it);
 
                                return fmt::format(
-                                 "{} - {:03d}", name, maplist_index);
+                                 "{:<8} - {:03d}", name, maplist_index);
                           }
                      });
        },
