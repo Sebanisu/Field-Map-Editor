@@ -5,7 +5,6 @@
 #ifndef FIELD_MAP_EDITOR_BATCH_HPP
 #define FIELD_MAP_EDITOR_BATCH_HPP
 #include "archives_group.hpp"
-#include "Configuration.hpp"
 #include "cstdint"
 #include "filebrowser.hpp"
 #include "format_imgui_text.hpp"

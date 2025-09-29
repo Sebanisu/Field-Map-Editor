@@ -4,7 +4,6 @@
 
 #include "batch.hpp"
 #include "as_string.hpp"
-#include "Configuration.hpp"
 #include "custom_paths_window.hpp"
 #include "open_file_explorer.hpp"
 #include "push_pop_id.hpp"
