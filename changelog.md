@@ -26,10 +26,12 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Updated shader pipeline for compatibility with newer OpenGL versions.
 - Swapped Appveyor for Github Actions
 - Swapped Conan for VCPKG
+- Support Searching by Map Index and show Map Index/ID in dropdown.
 
 ### Fixed
 - Fixed memory leaks in texture caching system.
 - Resolved intermittent crashes during rapid field switching.
+- Major rendering bug. Not clearing texture slots when flushing vertice buffer.
 
 **Ongoing Milestone: Bugfix Release Sept-2025**
 - Associated Items: Specific issues assigned to this milestone are not detailed in the available page content. For the current list of open and closed issues, please refer to the milestone page on GitHub: https://github.com/Sebanisu/Field-Map-Editor/milestone/1. As the milestone is active, the items may include ongoing bug fixes and improvements targeted for the September 2025 release.
@@ -38,6 +40,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - https://github.com/Sebanisu/Field-Map-Editor/pull/182 - Add change.log from grok, and add skip_branch_with_pr: true
 - https://github.com/Sebanisu/Field-Map-Editor/pull/184 - Add button to allow fixing names in `deswizzle.toml`
 - https://github.com/Sebanisu/Field-Map-Editor/pull/201 - Remove appveyor and conan, Add Github Actions and VCPKG
+- https://github.com/Sebanisu/Field-Map-Editor/pull/203 - Support Searching by Map Index and show Map Index/ID in dropdown.
+- https://github.com/Sebanisu/Field-Map-Editor/pull/204 - Major rendering bug. Not clearing texture slots when flushing vertice buffer.
 
 ### Notes
 - Switching tp Github Actions will change the versioning. Because I used Appveyor to track the version number.
