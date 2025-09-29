@@ -6,7 +6,7 @@
 namespace glengine
 {
 static_assert(Renderable<BatchRenderer>);
-static std::uint32_t draw_count = 0U;
+// static std::uint32_t draw_count = 0U;
 BatchRenderer::BatchRenderer()
   : BatchRenderer(100U)
 {
@@ -26,7 +26,7 @@ BatchRenderer::BatchRenderer(
 
 void BatchRenderer::on_update(float) const
 {
-     draw_count = 0U;
+     // draw_count = 0U;
 }
 void BatchRenderer::draw() const
 {
@@ -59,7 +59,7 @@ void BatchRenderer::draw_vertices() const
      }
      Renderer::Draw(
        index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
-     ++draw_count;
+     //++draw_count;
 }
 void BatchRenderer::clear() const
 {
@@ -138,6 +138,8 @@ void BatchRenderer::draw_quad(
                // when we reach the max amount of unique textures we go ahead
                // and empty the queue and draw to the frame buffer.
                flush_vertices();
+               m_texture_slots.clear();
+               m_texture_slots.push_back(m_blank.id());
           }
           m_texture_slots.push_back(texture.id());
           draw(CreateQuad(
