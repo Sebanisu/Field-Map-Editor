@@ -1,12 +1,12 @@
 @echo off
 REM Delete the Canary tag locally (if it exists)
-git tag -d Canary
+git tag -d canary
 
 REM Delete the Canary tag on GitHub
-git push origin :refs/tags/Canary
+git push origin :refs/tags/canary
 
 REM Create a new Canary tag on the latest commit
-git tag Canary
+REM git tag Canary
 
 REM Force push the new Canary tag to GitHub
-git push origin Canary --force
+REM git push origin Canary --force

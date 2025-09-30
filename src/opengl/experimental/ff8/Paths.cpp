@@ -51,7 +51,7 @@ ff_8::Paths::Paths(Configuration config)
                 paths_array.reserve(default_paths.size());
                 for (const auto &path : default_paths)
                 {
-                     paths_array.push_back(path);
+                     paths_array.push_back(path.u8string());
                 }
                 config->insert_or_assign(
                   ff8_directory_paths, std::move(paths_array));

@@ -56,6 +56,7 @@ target_link_libraries(
   PRIVATE Threads::Threads
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
+  PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE imgui::imgui
   PRIVATE GLEW::GLEW
   PRIVATE glfw
