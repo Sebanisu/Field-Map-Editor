@@ -178,10 +178,13 @@ struct gui_labels
      static constexpr std::string_view output_root_path_type
        = { "Output Root Path Type" };
 
-     static constexpr std::string_view input_path          = { "Input Path" };
-     static constexpr std::string_view output_path         = { "Output Path" };
-     static constexpr std::string_view select_none         = { "Select None" };
-     static constexpr std::string_view select_all          = { "Select All" };
+     static constexpr std::string_view input_path = { "Input Path" };
+     static constexpr std::string_view input_map_root_path_type
+       = { "Custom Map Root Path Type" };
+     static constexpr std::string_view input_map_path = { "Custom Map Path" };
+     static constexpr std::string_view output_path    = { "Output Path" };
+     static constexpr std::string_view select_none    = { "Select None" };
+     static constexpr std::string_view select_all     = { "Select All" };
      static constexpr std::string_view draw_window_title   = { "Draw" };
      static constexpr std::string_view display_draw_window = { "Draw" };
      static constexpr std::string_view display_control_panel_window

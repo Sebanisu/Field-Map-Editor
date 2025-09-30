@@ -116,11 +116,13 @@ void fme::batch::draw_window()
      ImGui::SameLine();
      if (ImGui::Checkbox("Toggle Force Loading", &m_force_loading))
      {
-          spdlog::info("Toggle Force loading: {}", m_force_loading);
+          spdlog::info("Toggle Force Loading: {}", m_force_loading);
      }
      tool_tip(
-       "Some operations toml might fail when force loading is disabled. But it "
-       "might be breaking other operations for on weaker hardware.");
+       "Enabling force loading ensures some TOML operations succeed by "
+       "preempting asynchronous tasks to execute immediately, but this may "
+       "disrupt operations on weaker hardware. Disabling it allows async "
+       "operations to run normally, potentially improving performance.");
      if (ImGui::SliderFloat(
            "Delay Interval (seconds)", &m_interval, 0.03F, 3.00F, "%.2f"))
      {
@@ -133,7 +135,8 @@ void fme::batch::draw_window()
      // input values
      combo_input_type();
      browse_input_path();
-     checkbox_load_map();
+     combo_load_map();
+     browse_input_map_path();
      // output values
      combo_output_type();
      browse_output_path();
@@ -485,6 +488,25 @@ void fme::batch::save_input_path()
      selections->update<ConfigKey::BatchInputPath>();
 }
 
+void fme::batch::save_input_map_path()
+{
+     if (!m_input_map_path_valid)
+     {
+          return;
+     }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     selections->get<ConfigKey::BatchInputMapPath>() = m_input_path.data();
+     spdlog::info(
+       "batch_input_map_path: {}",
+       selections->get<ConfigKey::BatchInputMapPath>());
+     selections->update<ConfigKey::BatchInputMapPath>();
+}
+
 void fme::batch::save_output_path()
 {
      if (!m_output_path_valid)
@@ -503,7 +525,7 @@ void fme::batch::save_output_path()
      selections->update<ConfigKey::BatchOutputPath>();
 }
 
-void fme::batch::checkbox_load_map()
+void fme::batch::combo_load_map()
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -647,6 +669,79 @@ void fme::batch::browse_input_path()
           return;
      }
      save_input_path();
+}
+
+void fme::batch::browse_input_map_path()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     if (
+       selections->get<ConfigKey::BatchInputLoadMap>()
+       != input_map_types::loaded_different_input_path)
+     {
+          // using embedded images from ff8.
+          return;
+     }
+
+     static constexpr auto values
+       = std::array{ root_path_types::selected_path, root_path_types::ff8_path,
+                     root_path_types::current_path };
+     static constexpr auto tooltips
+       = std::array{ gui_labels::selected_path_tooltip,
+                     gui_labels::ff8_path_tooltip,
+                     gui_labels::current_path_tooltip };
+     const auto gcc = fme::GenericCombo(
+       gui_labels::input_map_root_path_type,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       selections->get<ConfigKey::BatchInputMapRootPathType>());
+     if (gcc.render())
+     {
+          selections->update<ConfigKey::BatchInputMapRootPathType>();
+     }
+     if (
+       selections->get<ConfigKey::BatchInputMapRootPathType>()
+       == root_path_types::selected_path)
+     {
+          const float        button_size     = ImGui::GetFrameHeight();
+          const float        button_width    = button_size * 3.0F;
+          const auto         pop_id          = PushPopID();
+          const std::string &selected_string = get_selected_path(
+            selections->get<ConfigKey::BatchInputMapPath>(),
+            selections->get<ConfigKey::BatchInputMapRootPathType>());
+          std::string processed_string
+            = key_value_data::static_replace_tags(selected_string, selections);
+          if (ImGui::Button(
+                gui_labels::explore.data(),
+                ImVec2{ button_width, button_size }))
+          {
+               open_directory(processed_string);
+          }
+          else
+          {
+               tool_tip(processed_string);
+          }
+     }
+     if (
+       selections->get<ConfigKey::BatchInputMapRootPathType>()
+       != root_path_types::selected_path)
+     {
+          return;
+     }
+     // example_input_paths();
+     if (!browse_path(
+           gui_labels::input_map_path,
+           m_input_map_path_valid,
+           m_input_map_path))
+     {
+          return;
+     }
+     save_input_map_path();
 }
 
 void fme::batch::browse_output_path()
@@ -1923,6 +2018,13 @@ void fme::batch::open_directory_browser()
                m_input_path_valid
                  = safe_copy_string(selected_path, m_input_path);
                save_input_path();
+          }
+          break;
+          case directory_mode::input_map_mode:
+          {
+               m_input_map_path_valid
+                 = safe_copy_string(selected_path, m_input_map_path);
+               save_input_map_path();
           }
           break;
           case directory_mode::output_mode:
