@@ -9,6 +9,7 @@
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <optional>
+#include <span>
 namespace fme
 {
 static ImGuiTreeNodeFlags flags{};
@@ -115,11 +116,13 @@ void fme::batch::draw_window()
      ImGui::SameLine();
      if (ImGui::Checkbox("Toggle Force Loading", &m_force_loading))
      {
-          spdlog::info("Toggle Force loading: {}", m_force_loading);
+          spdlog::info("Toggle Force Loading: {}", m_force_loading);
      }
      tool_tip(
-       "Some operations toml might fail when force loading is disabled. But it "
-       "might be breaking other operations for on weaker hardware.");
+       "Enabling force loading ensures some TOML operations succeed by "
+       "preempting asynchronous tasks to execute immediately, but this may "
+       "disrupt operations on weaker hardware. Disabling it allows async "
+       "operations to run normally, potentially improving performance.");
      if (ImGui::SliderFloat(
            "Delay Interval (seconds)", &m_interval, 0.03F, 3.00F, "%.2f"))
      {
@@ -132,7 +135,8 @@ void fme::batch::draw_window()
      // input values
      combo_input_type();
      browse_input_path();
-     checkbox_load_map();
+     combo_load_map();
+     browse_input_map_path();
      // output values
      combo_output_type();
      browse_output_path();
@@ -303,6 +307,14 @@ void fme::batch::example_input_paths()
 
      // currently input and output use the same patterns this might change
      // later.
+     const std::string &map_path
+       = (selections->get<ConfigKey::BatchInputLoadMap>()
+          == input_map_types::loaded_different_input_path)
+           ? get_selected_path(
+               selections->get<ConfigKey::BatchInputMapPath>(),
+               selections->get<ConfigKey::BatchInputMapRootPathType>())
+           : selected_string;
+
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
        png_example.replace_tags(
@@ -314,7 +326,7 @@ void fme::batch::example_input_paths()
          fme::batch::get_output_map_pattern(
            selections->get<ConfigKey::BatchInputType>()),
          selections,
-         selected_string),
+         map_path),
        selections->get<ConfigKey::BatchOutputSaveMap>());
 }
 
@@ -484,6 +496,25 @@ void fme::batch::save_input_path()
      selections->update<ConfigKey::BatchInputPath>();
 }
 
+void fme::batch::save_input_map_path()
+{
+     if (!m_input_map_path_valid)
+     {
+          return;
+     }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     selections->get<ConfigKey::BatchInputMapPath>() = m_input_map_path.data();
+     spdlog::info(
+       "batch_input_map_path: {}",
+       selections->get<ConfigKey::BatchInputMapPath>());
+     selections->update<ConfigKey::BatchInputMapPath>();
+}
+
 void fme::batch::save_output_path()
 {
      if (!m_output_path_valid)
@@ -498,11 +529,11 @@ void fme::batch::save_output_path()
      }
      selections->get<ConfigKey::BatchOutputPath>() = m_output_path.data();
      spdlog::info(
-       "batch_output_path: {}", selections->get<ConfigKey::BatchInputPath>());
+       "batch_output_path: {}", selections->get<ConfigKey::BatchOutputPath>());
      selections->update<ConfigKey::BatchOutputPath>();
 }
 
-void fme::batch::checkbox_load_map()
+void fme::batch::combo_load_map()
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -510,16 +541,40 @@ void fme::batch::checkbox_load_map()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     if (!(selections->get<ConfigKey::BatchInputType>() != input_types::mim))
-     {
-          return;
-     }
+
+     static constexpr auto valuesmim
+       = std::array{ input_map_types::native,
+                     input_map_types::loaded_different_input_path };
+
+     static constexpr auto valuesrest
+       = std::array{ input_map_types::native,
+                     input_map_types::loaded_same_input_path,
+                     input_map_types::loaded_different_input_path };
+
+     const auto values
+       = selections->get<ConfigKey::BatchInputType>() == input_types::mim
+           ? std::span<const input_map_types>(
+               valuesmim.data(), valuesmim.size())
+           : std::span<const input_map_types>(
+               valuesrest.data(), valuesrest.size());
      const auto pop_id = PushPopID();
-     if (!ImGui::Checkbox(
-           gui_labels::batch_load_map.data(),
-           &selections->get<ConfigKey::BatchInputLoadMap>()))
+     const auto gcc    = fme::GenericCombo(
+       gui_labels::batch_load_map,
+       [&]() { return values; },
+       [&]() { return values | std::views::transform(AsString{}); },
+       [&]()
+       {
+            return values
+                   | std::views::transform(
+                     [](const auto &key)
+                     {
+                          return gui_labels::input_map_tooltips
+                            [std::to_underlying(key)];
+                     });
+       },
+       selections->get<ConfigKey::BatchInputLoadMap>());
+     if (!gcc.render())
      {
-          tool_tip(gui_labels::load_map_files_tooltip);
           return;
      }
      spdlog::info(
@@ -624,6 +679,79 @@ void fme::batch::browse_input_path()
      save_input_path();
 }
 
+void fme::batch::browse_input_map_path()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     if (
+       selections->get<ConfigKey::BatchInputLoadMap>()
+       != input_map_types::loaded_different_input_path)
+     {
+          // using embedded images from ff8.
+          return;
+     }
+
+     static constexpr auto values
+       = std::array{ root_path_types::selected_path, root_path_types::ff8_path,
+                     root_path_types::current_path };
+     static constexpr auto tooltips
+       = std::array{ gui_labels::selected_path_tooltip,
+                     gui_labels::ff8_path_tooltip,
+                     gui_labels::current_path_tooltip };
+     const auto gcc = fme::GenericCombo(
+       gui_labels::input_map_root_path_type,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       selections->get<ConfigKey::BatchInputMapRootPathType>());
+     if (gcc.render())
+     {
+          selections->update<ConfigKey::BatchInputMapRootPathType>();
+     }
+     if (
+       selections->get<ConfigKey::BatchInputMapRootPathType>()
+       == root_path_types::selected_path)
+     {
+          const float        button_size     = ImGui::GetFrameHeight();
+          const float        button_width    = button_size * 3.0F;
+          const auto         pop_id          = PushPopID();
+          const std::string &selected_string = get_selected_path(
+            selections->get<ConfigKey::BatchInputMapPath>(),
+            selections->get<ConfigKey::BatchInputMapRootPathType>());
+          std::string processed_string
+            = key_value_data::static_replace_tags(selected_string, selections);
+          if (ImGui::Button(
+                gui_labels::explore.data(),
+                ImVec2{ button_width, button_size }))
+          {
+               open_directory(processed_string);
+          }
+          else
+          {
+               tool_tip(processed_string);
+          }
+     }
+     if (
+       selections->get<ConfigKey::BatchInputMapRootPathType>()
+       != root_path_types::selected_path)
+     {
+          return;
+     }
+     // example_input_paths();
+     if (!browse_path(
+           gui_labels::input_map_path,
+           m_input_map_path_valid,
+           m_input_map_path))
+     {
+          return;
+     }
+     save_input_map_path();
+}
+
 void fme::batch::browse_output_path()
 {
      const auto selections = m_selections.lock();
@@ -700,7 +828,7 @@ void fme::batch::checkmark_save_map()
          || selections->get<ConfigKey::BatchOutputType>() == output_types::csv;
      bool forced_enable =
        (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
-        || selections->get<ConfigKey::BatchInputLoadMap>());
+        || (selections->get<ConfigKey::BatchInputLoadMap>() != input_map_types::native));
 
      if (selections->get<ConfigKey::BatchOutputSaveMap>() && forced_disable)
      {
@@ -1508,12 +1636,15 @@ void fme::batch::generate_map_sprite()
      const std::string &selected_string = get_selected_path(
        selections->get<ConfigKey::BatchInputPath>(),
        selections->get<ConfigKey::BatchInputRootPathType>());
+
+     const std::string &selected_map_string = get_selected_path(
+       selections->get<ConfigKey::BatchInputMapPath>(),
+       selections->get<ConfigKey::BatchInputMapRootPathType>());
      switch (selections->get<ConfigKey::BatchInputType>())
      {
           case input_types::mim:
           {
-               // No filters applied for MIM input and no .map files are loaded
-               // automaticly.
+               // No filters applied for MIM input
                break;
           }
 
@@ -1522,9 +1653,6 @@ void fme::batch::generate_map_sprite()
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1533,9 +1661,6 @@ void fme::batch::generate_map_sprite()
                // Enable swizzle filter using the input path
                filters.swizzle.update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1545,9 +1670,6 @@ void fme::batch::generate_map_sprite()
                filters.swizzle_as_one_image
                  .update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1556,11 +1678,29 @@ void fme::batch::generate_map_sprite()
                filters.full_filename
                  .update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
+
                break;
           }
+          default:
+          {
+               spdlog::warn("input_types is not yet handled");
+               break;
+          }
+     }
+
+     switch (selections->get<ConfigKey::BatchInputLoadMap>())
+     {
+          case input_map_types::native:
+               // do nothing.
+               break;
+          case input_map_types::loaded_same_input_path:
+               filters.map.update(std::filesystem::path(selected_string))
+                 .enable();
+               break;
+          case input_map_types::loaded_different_input_path:
+               filters.map.update(std::filesystem::path(selected_map_string))
+                 .enable();
+               break;
           default:
           {
                spdlog::warn("input_types is not yet handled");
@@ -1885,6 +2025,13 @@ void fme::batch::open_directory_browser()
                m_input_path_valid
                  = safe_copy_string(selected_path, m_input_path);
                save_input_path();
+          }
+          break;
+          case directory_mode::input_map_mode:
+          {
+               m_input_map_path_valid
+                 = safe_copy_string(selected_path, m_input_map_path);
+               save_input_map_path();
           }
           break;
           case directory_mode::output_mode:

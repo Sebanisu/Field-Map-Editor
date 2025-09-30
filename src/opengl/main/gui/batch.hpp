@@ -23,14 +23,17 @@ class batch
      enum struct directory_mode
      {
           input_mode,
+          input_map_mode,
           output_mode,
      };
      std::weak_ptr<Selections>       m_selections             = {};
      std::weak_ptr<archives_group>   m_archives_group         = {};
      bool                            m_input_path_valid       = { false };
+     bool                            m_input_map_path_valid   = { false };
      bool                            m_output_path_valid      = { false };
      static constexpr std::size_t    m_buffer_size            = { 256U };
      std::array<char, m_buffer_size> m_input_path             = {};
+     std::array<char, m_buffer_size> m_input_map_path         = {};
      std::array<char, m_buffer_size> m_output_path            = {};
      std::optional<open_viii::LangT> m_coo                    = {};
      std::string                     m_status                 = {};
@@ -65,10 +68,11 @@ class batch
      void               combo_flatten_type_bpp();
      void               combo_flatten_type();
      void               browse_input_path();
+     void               browse_input_map_path();
      void               browse_output_path();
      void               button_start();
      void               button_stop();
-     void               checkbox_load_map();
+     void               combo_load_map();
      void               choose_field_and_coo();
      void               reset_for_next();
      void               generate_map_sprite();
@@ -86,6 +90,7 @@ class batch
      const std::string &get_output_map_pattern(fme::input_types type);
      const std::string &get_output_map_pattern(fme::output_types type);
      void               save_input_path();
+     void               save_input_map_path();
      void               save_output_path();
      //[[nodiscard]] std::filesystem::path append_file_structure(const
      // std::filesystem::path &path) const;

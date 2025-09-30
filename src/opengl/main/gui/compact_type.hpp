@@ -8,7 +8,7 @@
 #include <optional>
 namespace fme
 {
-enum struct compact_type
+enum struct compact_type : std::uint8_t
 {
      rows,
      all,
@@ -16,7 +16,7 @@ enum struct compact_type
      map_order,
      map_order_ffnx
 };
-enum struct input_types
+enum struct input_types : std::uint8_t
 {
      mim,
      deswizzle,
@@ -26,7 +26,14 @@ enum struct input_types
      deswizzle_full_filename,// only have one combined step for input that takes
                              // images and toml
 };
-enum struct output_types
+enum struct input_map_types : std::uint8_t
+{
+     native,                     // .map in game files
+     loaded_same_input_path,     // load from input_path
+     loaded_different_input_path,// display another input path selection but for
+                                 // maps.
+};
+enum struct output_types : std::uint8_t
 {
      deswizzle,
      swizzle,
