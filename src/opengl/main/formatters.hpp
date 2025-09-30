@@ -705,8 +705,8 @@ struct fmt::formatter<fme::input_map_types> : fmt::formatter<std::string_view>
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(
-       fme::input_types in_input_type,
-       FormatContext   &ctx) const
+       fme::input_map_types in_input_type,
+       FormatContext       &ctx) const
      {
           using namespace std::string_view_literals;
           std::string_view name = {};
