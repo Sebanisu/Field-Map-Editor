@@ -700,6 +700,38 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 };
 
 template<>
+struct fmt::formatter<fme::input_map_types> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       fme::input_types in_input_type,
+       FormatContext   &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_input_type)
+          {
+               case fme::input_map_types::native:
+                    name = fme::gui_labels::input_map_short_strings
+                      [std::to_underlying(fme::input_map_types::native)];
+                    break;
+               case fme::input_map_types::loaded_same_input_path:
+                    name = fme::gui_labels::input_map_short_strings
+                      [std::to_underlying(
+                        fme::input_map_types::loaded_same_input_path)];
+                    break;
+               case fme::input_map_types::loaded_different_input_path:
+                    name = fme::gui_labels::input_map_short_strings
+                      [std::to_underlying(
+                        fme::input_map_types::loaded_different_input_path)];
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
 struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
 {// parse is inherited from formatter<string_view>.
      template<typename FormatContext>

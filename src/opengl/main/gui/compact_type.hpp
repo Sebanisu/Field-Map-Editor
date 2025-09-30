@@ -26,6 +26,13 @@ enum struct input_types
      deswizzle_full_filename,// only have one combined step for input that takes
                              // images and toml
 };
+enum struct input_map_types
+{
+     native,                     // .map in game files
+     loaded_same_input_path,     // load from input_path
+     loaded_different_input_path,// display another input path selection but for
+                                 // maps.
+};
 enum struct output_types
 {
      deswizzle,

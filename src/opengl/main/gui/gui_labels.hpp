@@ -401,6 +401,26 @@ struct gui_labels
        = { "The root directory where Final Fantasy VIII is installed." };
      static constexpr std::string_view current_path_tooltip
        = { "The current working directory." };
+     // Short strings as constexpr std::array of string_views
+     static const constexpr std::array<std::string_view, 3>
+       input_map_short_strings = {
+            "Native Map",    // native
+            "Same Path Map", // loaded_same_input_path
+            "Custom Path Map"// loaded_different_input_path
+       };
+
+     // Tooltips as constexpr std::array of string_views
+     static const constexpr std::array<std::string_view, 3> input_map_tooltips
+       = {
+              "Refers to a .map file stored directly in the game's file "
+              "system, used as the default map source.",// native
+              "Loads a map from the same input path specified for other "
+              "resources, ensuring consistency with the current input "
+              "configuration.",// loaded_same_input_path
+              "Allows selection of a map from a different input path, "
+              "providing flexibility to load maps from an alternative "
+              "directory or source."// loaded_different_input_path
+         };
      gui_labels() = delete;
 };
 }// namespace fme
