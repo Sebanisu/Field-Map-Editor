@@ -1415,10 +1415,10 @@ void fme::batch::save_map()
 
      // Optionally save the modified map
      if (
-       (selections->get<ConfigKey::BatchOutputSaveMap>()
-        && selections->get<ConfigKey::BatchOutputType>()
-             != output_types::deswizzle_generate_toml)
-       || selections->get<ConfigKey::BatchOutputType>() != output_types::csv)
+       selections->get<ConfigKey::BatchOutputSaveMap>()
+       && selections->get<ConfigKey::BatchOutputType>()
+            != output_types::deswizzle_generate_toml
+       && selections->get<ConfigKey::BatchOutputType>() != output_types::csv)
      {
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchOutputPath>(),
