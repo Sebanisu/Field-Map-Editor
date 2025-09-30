@@ -9,6 +9,7 @@
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <optional>
+#include <span>
 namespace fme
 {
 static ImGuiTreeNodeFlags flags{};
@@ -510,16 +511,40 @@ void fme::batch::checkbox_load_map()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     if (!(selections->get<ConfigKey::BatchInputType>() != input_types::mim))
-     {
-          return;
-     }
+
+     static constexpr auto valuesmim
+       = std::array{ input_map_types::native,
+                     input_map_types::loaded_different_input_path };
+
+     static constexpr auto valuesrest
+       = std::array{ input_map_types::native,
+                     input_map_types::loaded_same_input_path,
+                     input_map_types::loaded_different_input_path };
+
+     const auto values
+       = selections->get<ConfigKey::BatchInputType>() == input_types::mim
+           ? std::span<const input_map_types>(
+               valuesmim.data(), valuesmim.size())
+           : std::span<const input_map_types>(
+               valuesrest.data(), valuesrest.size());
      const auto pop_id = PushPopID();
-     if (!ImGui::Checkbox(
-           gui_labels::batch_load_map.data(),
-           &selections->get<ConfigKey::BatchInputLoadMap>()))
+     const auto gcc    = fme::GenericCombo(
+       gui_labels::batch_load_map,
+       [&]() { return values; },
+       [&]() { return values | std::views::transform(AsString{}); },
+       [&]()
+       {
+            return values
+                   | std::views::transform(
+                     [](const auto &key)
+                     {
+                          return gui_labels::input_map_tooltips
+                            [std::to_underlying(key)];
+                     });
+       },
+       selections->get<ConfigKey::BatchInputLoadMap>());
+     if (!gcc.render())
      {
-          tool_tip(gui_labels::load_map_files_tooltip);
           return;
      }
      spdlog::info(
@@ -700,7 +725,7 @@ void fme::batch::checkmark_save_map()
          || selections->get<ConfigKey::BatchOutputType>() == output_types::csv;
      bool forced_enable =
        (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
-        || selections->get<ConfigKey::BatchInputLoadMap>());
+        || (selections->get<ConfigKey::BatchInputLoadMap>() != input_map_types::native));
 
      if (selections->get<ConfigKey::BatchOutputSaveMap>() && forced_disable)
      {
@@ -1508,6 +1533,10 @@ void fme::batch::generate_map_sprite()
      const std::string &selected_string = get_selected_path(
        selections->get<ConfigKey::BatchInputPath>(),
        selections->get<ConfigKey::BatchInputRootPathType>());
+
+     const std::string &selected_map_string = get_selected_path(
+       selections->get<ConfigKey::BatchInputMapPath>(),
+       selections->get<ConfigKey::BatchInputMapRootPathType>());
      switch (selections->get<ConfigKey::BatchInputType>())
      {
           case input_types::mim:
@@ -1522,9 +1551,6 @@ void fme::batch::generate_map_sprite()
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1533,9 +1559,6 @@ void fme::batch::generate_map_sprite()
                // Enable swizzle filter using the input path
                filters.swizzle.update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1545,9 +1568,6 @@ void fme::batch::generate_map_sprite()
                filters.swizzle_as_one_image
                  .update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
                break;
           }
 
@@ -1556,11 +1576,29 @@ void fme::batch::generate_map_sprite()
                filters.full_filename
                  .update(std::filesystem::path(selected_string))
                  .enable();
-               if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.map.update(std::filesystem::path(selected_string))
-                      .enable();
+
                break;
           }
+          default:
+          {
+               spdlog::warn("input_types is not yet handled");
+               break;
+          }
+     }
+
+     switch (selections->get<ConfigKey::BatchInputLoadMap>())
+     {
+          case input_map_types::native:
+               // do nothing.
+               break;
+          case input_map_types::loaded_same_input_path:
+               filters.map.update(std::filesystem::path(selected_string))
+                 .enable();
+               break;
+          case input_map_types::loaded_different_input_path:
+               filters.map.update(std::filesystem::path(selected_map_string))
+                 .enable();
+               break;
           default:
           {
                spdlog::warn("input_types is not yet handled");

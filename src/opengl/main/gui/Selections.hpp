@@ -8,6 +8,7 @@
 #include "Configuration.hpp"
 #include "draw_mode.hpp"
 #include "filter.hpp"
+#include "formatters.hpp"
 #include "tile_sizes.hpp"
 #include "utilities.hpp"
 #include <filesystem>
@@ -70,6 +71,7 @@ enum class ConfigKey
      CurrentPatternIndex,
      BatchInputType,
      BatchInputRootPathType,
+     BatchInputMapRootPathType,
      BatchOutputType,
      BatchOutputRootPathType,
      BatchMapListEnabled,
@@ -78,6 +80,7 @@ enum class ConfigKey
      BackgroundColor2,
      BackgroundSettings,
      BatchInputPath,
+     BatchInputMapPath,
      BatchOutputPath,
      BatchInputLoadMap,
      BatchOutputSaveMap,
@@ -611,6 +614,12 @@ struct SelectionInfo<ConfigKey::BatchInputRootPathType>
      static constexpr std::string_view id = "BatchInputRootPathType";
 };
 template<>
+struct SelectionInfo<ConfigKey::BatchInputMapRootPathType>
+{
+     using value_type                     = root_path_types;
+     static constexpr std::string_view id = "BatchInputMapRootPathType";
+};
+template<>
 struct SelectionInfo<ConfigKey::BatchOutputType>
 {
      using value_type                     = output_types;
@@ -675,6 +684,12 @@ struct SelectionInfo<ConfigKey::BatchInputPath>
      static constexpr std::string_view id = "BatchInputPath";
 };
 template<>
+struct SelectionInfo<ConfigKey::BatchInputMapPath>
+{// todo make these paths std::filesystem::paths
+     using value_type                     = std::string;
+     static constexpr std::string_view id = "BatchInputMapPath";
+};
+template<>
 struct SelectionInfo<ConfigKey::BatchOutputPath>
 {
      using value_type                     = std::string;
@@ -683,7 +698,7 @@ struct SelectionInfo<ConfigKey::BatchOutputPath>
 template<>
 struct SelectionInfo<ConfigKey::BatchInputLoadMap>
 {
-     using value_type                     = bool;
+     using value_type                     = input_map_types;
      static constexpr std::string_view id = "BatchInputLoadMap";
 };
 template<>

@@ -404,9 +404,9 @@ struct gui_labels
      // Short strings as constexpr std::array of string_views
      static const constexpr std::array<std::string_view, 3>
        input_map_short_strings = {
-            "Native Map",    // native
-            "Same Path Map", // loaded_same_input_path
-            "Custom Path Map"// loaded_different_input_path
+            "Native Map",             // native
+            "Same Path as Input Path",// loaded_same_input_path
+            "Custom Path"             // loaded_different_input_path
        };
 
      // Tooltips as constexpr std::array of string_views
