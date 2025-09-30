@@ -307,6 +307,14 @@ void fme::batch::example_input_paths()
 
      // currently input and output use the same patterns this might change
      // later.
+     const std::string &map_path
+       = (selections->get<ConfigKey::BatchInputLoadMap>()
+          == input_map_types::loaded_different_input_path)
+           ? get_selected_path(
+               selections->get<ConfigKey::BatchInputMapPath>(),
+               selections->get<ConfigKey::BatchInputMapRootPathType>())
+           : selected_string;
+
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
        png_example.replace_tags(
@@ -318,7 +326,7 @@ void fme::batch::example_input_paths()
          fme::batch::get_output_map_pattern(
            selections->get<ConfigKey::BatchInputType>()),
          selections,
-         selected_string),
+         map_path),
        selections->get<ConfigKey::BatchOutputSaveMap>());
 }
 
@@ -500,7 +508,7 @@ void fme::batch::save_input_map_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     selections->get<ConfigKey::BatchInputMapPath>() = m_input_path.data();
+     selections->get<ConfigKey::BatchInputMapPath>() = m_input_map_path.data();
      spdlog::info(
        "batch_input_map_path: {}",
        selections->get<ConfigKey::BatchInputMapPath>());
@@ -521,7 +529,7 @@ void fme::batch::save_output_path()
      }
      selections->get<ConfigKey::BatchOutputPath>() = m_output_path.data();
      spdlog::info(
-       "batch_output_path: {}", selections->get<ConfigKey::BatchInputPath>());
+       "batch_output_path: {}", selections->get<ConfigKey::BatchOutputPath>());
      selections->update<ConfigKey::BatchOutputPath>();
 }
 
@@ -1636,8 +1644,7 @@ void fme::batch::generate_map_sprite()
      {
           case input_types::mim:
           {
-               // No filters applied for MIM input and no .map files are loaded
-               // automaticly.
+               // No filters applied for MIM input
                break;
           }
 
