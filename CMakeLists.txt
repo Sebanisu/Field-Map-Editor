@@ -23,7 +23,7 @@ endif()
 
 project(
   Field-Map-Editor
-  VERSION 1.0.0
+  VERSION 1.0.3
   LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD "23")
