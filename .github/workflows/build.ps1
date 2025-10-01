@@ -81,13 +81,16 @@ foreach ($entry in $logEntries) {
     $message = $parts[1]
     $author = $parts[2]
 
+    # Remove any newlines in the message
+    $messageSafe = $message -replace "`r", " " -replace "`n", " "
+
     # Check for PR in the message
-    if ($message -match "Merge pull request #(\d+)") {
+    if ($messageSafe -match "Merge pull request #(\d+)") {
         $prNumber = $matches[1]
-        $formattedNotes += "* $message by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber (`https://github.com/Sebanisu/Field-Map-Editor/commit/$sha`)" + "`n"
+        $formattedNotes += "* $messageSafe by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber https://github.com/Sebanisu/Field-Map-Editor/commit/$sha`n"
     } else {
-        # Just link the commit
-        $formattedNotes += "* $message by @$author ([`$sha`](https://github.com/Sebanisu/Field-Map-Editor/commit/$sha))`n"
+        # Plain commit link
+        $formattedNotes += "* $messageSafe by @$author https://github.com/Sebanisu/Field-Map-Editor/commit/$sha`n"
     }
 }
 
@@ -96,6 +99,7 @@ $formattedNotes += "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Edit
 # Set output for GitHub Actions
 Add-Content -Path $env:GITHUB_OUTPUT -Value "prev_tag=$prevTag"
 Add-Content -Path $env:GITHUB_OUTPUT -Value "release_notes=$formattedNotes"
+
 
 Write-Host "Generated release notes:"
 Write-Host $formattedNotes
