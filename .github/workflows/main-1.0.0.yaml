@@ -77,7 +77,7 @@ jobs:
         prerelease: true
         removeArtifacts: true
         tag: canary
-        name: "${{ env._RELEASE_VERSION }}"
+        name: "${{ env._RELEASE_VERSION }}-canary"
         body: |
           This is a canary build. Please be aware it may be prone to crashing and is NOT tested by anyone. Use this build AT YOUR OWN RISK!
     - name: Publish Stable release
