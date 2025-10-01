@@ -129,7 +129,9 @@ enum class FilterTag : std::uint8_t
      Bpp,
      MultiBpp,
      Compact,
-     Flatten
+     Flatten,
+     CompactOnLoadOriginal,
+     FlattenOnLoadOriginal
 };
 
 template<FilterTag Tag>
@@ -429,6 +431,24 @@ struct ConfigKeys<FilterTag::Flatten>
      static constexpr std::string_view key_name = "batch_flatten_type";
      static constexpr std::string_view enabled_key_name
        = "batch_flatten_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::CompactOnLoadOriginal>
+{
+     using value_type                           = fme::compact_type;
+     static constexpr std::string_view key_name = "CompactOnLoad";
+     static constexpr std::string_view enabled_key_name
+       = "CompactOnLoadEnabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::FlattenOnLoadOriginal>
+{
+     using value_type                           = fme::flatten_type;
+     static constexpr std::string_view key_name = "FlattenOnLoad";
+     static constexpr std::string_view enabled_key_name
+       = "FlattenOnLoadEnabled";
 };
 
 
@@ -1250,32 +1270,34 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<FilterTag::Pupu>              pupu;
-     filter_old<FilterTag::MultiPupu>         multi_pupu;
-     filter_old<FilterTag::Swizzle>           swizzle;
-     filter_old<FilterTag::Deswizzle>         deswizzle;
-     filter_old<FilterTag::SwizzleAsOneImage> swizzle_as_one_image;
-     filter_old<FilterTag::FullFileName>      full_filename;
-     filter_old<FilterTag::Map>               map;
-     filter<FilterTag::DrawBit>               draw_bit;
-     filter<FilterTag::Z>                     z;
-     filter<FilterTag::MultiZ>                multi_z;
-     filter<FilterTag::Palette>               palette;
-     filter<FilterTag::MultiPalette>          multi_palette;
-     filter<FilterTag::AnimationId>           animation_id;
-     filter<FilterTag::MultiAnimationId>      multi_animation_id;
-     filter<FilterTag::AnimationFrame>        animation_state;
-     filter<FilterTag::MultiAnimationFrame>   multi_animation_state;
-     filter<FilterTag::LayerId>               layer_id;
-     filter<FilterTag::MultiLayerId>          multi_layer_id;
-     filter<FilterTag::TexturePageId>         texture_page_id;
-     filter<FilterTag::MultiTexturePageId>    multi_texture_page_id;
-     filter<FilterTag::BlendMode>             blend_mode;
-     filter<FilterTag::MultiBlendMode>        multi_blend_mode;
-     filter<FilterTag::BlendOther>            blend_other;
-     filter<FilterTag::MultiBlendOther>       multi_blend_other;
-     filter<FilterTag::Bpp>                   bpp;
-     filter<FilterTag::MultiBpp>              multi_bpp;
+     filter_old<FilterTag::Pupu>                  pupu;
+     filter_old<FilterTag::MultiPupu>             multi_pupu;
+     filter_old<FilterTag::Swizzle>               swizzle;
+     filter_old<FilterTag::Deswizzle>             deswizzle;
+     filter_old<FilterTag::SwizzleAsOneImage>     swizzle_as_one_image;
+     filter_old<FilterTag::FullFileName>          full_filename;
+     filter_old<FilterTag::Map>                   map;
+     filter_old<FilterTag::CompactOnLoadOriginal> compact_on_load_original;
+     filter_old<FilterTag::FlattenOnLoadOriginal> flatten_on_load_original;
+     filter<FilterTag::DrawBit>                   draw_bit;
+     filter<FilterTag::Z>                         z;
+     filter<FilterTag::MultiZ>                    multi_z;
+     filter<FilterTag::Palette>                   palette;
+     filter<FilterTag::MultiPalette>              multi_palette;
+     filter<FilterTag::AnimationId>               animation_id;
+     filter<FilterTag::MultiAnimationId>          multi_animation_id;
+     filter<FilterTag::AnimationFrame>            animation_state;
+     filter<FilterTag::MultiAnimationFrame>       multi_animation_state;
+     filter<FilterTag::LayerId>                   layer_id;
+     filter<FilterTag::MultiLayerId>              multi_layer_id;
+     filter<FilterTag::TexturePageId>             texture_page_id;
+     filter<FilterTag::MultiTexturePageId>        multi_texture_page_id;
+     filter<FilterTag::BlendMode>                 blend_mode;
+     filter<FilterTag::MultiBlendMode>            multi_blend_mode;
+     filter<FilterTag::BlendOther>                blend_other;
+     filter<FilterTag::MultiBlendOther>           multi_blend_other;
+     filter<FilterTag::Bpp>                       bpp;
+     filter<FilterTag::MultiBpp>                  multi_bpp;
 
      filters(
        bool                     load_config,
@@ -1299,6 +1321,12 @@ struct filters
            load_config,
            config)
        , map(
+           load_config,
+           config)
+       , compact_on_load_original(
+           load_config,
+           config)
+       , flatten_on_load_original(
            load_config,
            config)
        , draw_bit(
