@@ -80,17 +80,17 @@ foreach ($entry in $logEntries) {
     $sha = $parts[0]
     $message = $parts[1]
     $author = $parts[2]
-    $refs = $parts[3]
 
-    if ($refs -match "pull/(\d+)") {
+    # Check for PR in the message
+    if ($message -match "Merge pull request #(\d+)") {
         $prNumber = $matches[1]
-        $formattedNotes += "* $message by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber`n"
+        $formattedNotes += "* $message by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber (`https://github.com/Sebanisu/Field-Map-Editor/commit/$sha`)" + "`n"
     } else {
-        $formattedNotes += "* $message by @$author`n"
+        # Just link the commit
+        $formattedNotes += "* $message by @$author ([`$sha`](https://github.com/Sebanisu/Field-Map-Editor/commit/$sha))`n"
     }
 }
 
-# Append full changelog link
 $formattedNotes += "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...canary`n"
 
 # Set output for GitHub Actions
