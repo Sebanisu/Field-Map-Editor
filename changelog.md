@@ -4,7 +4,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 ## [canary]
 
-## [1.0.3.62] - HotFix
+## [1.0.3] - HotFix
 
 ### Added
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
