@@ -68,6 +68,7 @@ jobs:
         path: ".dist/*.zip"
     - name: Publish Canary release
       uses: ncipollo/release-action@v1
+      if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'true' && success()
       with:
         artifacts: ".dist/*.zip"
         allowUpdates: true
@@ -81,6 +82,7 @@ jobs:
           This is a canary build. Please be aware it may be prone to crashing and is NOT tested by anyone. Use this build AT YOUR OWN RISK!
     - name: Publish Stable release
       uses: ncipollo/release-action@v1
+      if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'false' && success()
       with:
         artifacts: ".dist/*.zip"
         generateReleaseNotes: true
