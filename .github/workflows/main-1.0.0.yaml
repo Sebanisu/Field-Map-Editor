@@ -47,7 +47,8 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Build
+    - name: Build   
+      id: build_step
       run: ".github/workflows/build.ps1"
       shell: pwsh
       env:
@@ -79,7 +80,7 @@ jobs:
         body: |
           This is a canary build. Please be aware it may be prone to crashing and is NOT tested by anyone. Use this build AT YOUR OWN RISK!
           
-          ${{ steps.build.outputs.release_notes }}
+          ${{ steps.build_step.outputs.release_notes }}
     - name: Publish Stable release
       uses: ncipollo/release-action@v1
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'false' && success()
@@ -89,4 +90,4 @@ jobs:
         makeLatest: true
         removeArtifacts: true
         name: "${{ env._RELEASE_VERSION }}"
-        body: "${{ steps.build.outputs.release_notes }}"
+        body: "${{ steps.build_step.outputs.release_notes }}"
