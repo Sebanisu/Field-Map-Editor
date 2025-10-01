@@ -2839,6 +2839,8 @@ void gui::menu_swizzle_as_one_image_paths()
                                      m_map_sprite->filter().deswizzle,
                                      m_map_sprite->filter().full_filename),
                                    mmps };
+
+
      mmp.render(
        [&]()
        {
@@ -2846,7 +2848,16 @@ void gui::menu_swizzle_as_one_image_paths()
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]()
+       {
+            if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+            {
+                 m_map_sprite->filter().compact_on_load_original.update(
+                   compact_type::map_order_ffnx);
+                 m_map_sprite->toggle_filter_compact_on_load_original(true);
+            }
+            refresh_render_texture(true);
+       },
        [&]()
        {
             m_directory_browser.Open();
@@ -2887,6 +2898,7 @@ void gui::menu_swizzle_paths()
      mmp.render(
        [&]()
        {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
@@ -2932,6 +2944,7 @@ void gui::menu_deswizzle_paths()
      mmp.render(
        [&]()
        {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
@@ -2979,6 +2992,7 @@ void gui::menu_full_filename_paths()
      mmp.render(
        [&]()
        {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
@@ -3277,13 +3291,15 @@ void gui::directory_browser_display()
                  = selected_path;
                m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                ensure_directory(selected_path);
+               save_map_with_pattern
+                 .template operator()<ConfigKey::OutputMapPatternForSwizzle>();
+               m_map_sprite->compact_map_order_ffnx();
                m_future_consumer
                  += m_map_sprite->save_swizzle_as_one_image_textures(
                    m_selections
                      ->get<ConfigKey::OutputSwizzleAsOneImagePattern>(),
                    selected_path);
-               save_map_with_pattern
-                 .template operator()<ConfigKey::OutputMapPatternForSwizzle>();
+               m_map_sprite->undo();
                open_directory(selected_path);
           }
           break;
@@ -3329,6 +3345,7 @@ void gui::directory_browser_display()
                update_path();
                if (changed)
                {
+                    m_map_sprite->toggle_filter_compact_on_load_original(false);
                     refresh_render_texture(true);
                }
           }
@@ -3353,6 +3370,13 @@ void gui::directory_browser_display()
                update_path();
                if (changed)
                {
+                    if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+                    {
+                         m_map_sprite->filter().compact_on_load_original.update(
+                           compact_type::map_order_ffnx);
+                         m_map_sprite->toggle_filter_compact_on_load_original(
+                           true);
+                    }
                     refresh_render_texture(true);
                }
           }
@@ -3374,6 +3398,7 @@ void gui::directory_browser_display()
                update_path();
                if (changed)
                {
+                    m_map_sprite->toggle_filter_compact_on_load_original(false);
                     refresh_render_texture(true);
                }
           }
@@ -3395,6 +3420,7 @@ void gui::directory_browser_display()
                update_path();
                if (changed)
                {
+                    m_map_sprite->toggle_filter_compact_on_load_original(false);
                     refresh_render_texture(true);
                }
           }
@@ -3498,7 +3524,7 @@ void gui::file_browser_display()
                     break;
                     case file_dialog_mode::save_unmodified_map_file:
                     {
-                         m_map_sprite->map_save(selected_path);
+                         m_map_sprite->save_map(selected_path);
                          m_selections->get<ConfigKey::OutputMapPath>()
                            = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
@@ -4372,6 +4398,7 @@ void gui::combo_swizzle_path()
           m_map_sprite->filter().deswizzle.disable();
           m_map_sprite->filter().swizzle_as_one_image.disable();
           m_map_sprite->filter().full_filename.disable();
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
      refresh_render_texture(true);
@@ -4412,6 +4439,7 @@ void gui::combo_full_filename_path()
           m_map_sprite->filter().swizzle.disable();
           m_map_sprite->filter().swizzle_as_one_image.disable();
           m_map_sprite->filter().deswizzle.disable();
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
      refresh_render_texture(true);
@@ -4433,6 +4461,9 @@ void gui::combo_swizzle_as_one_image_path()
           m_map_sprite->filter().swizzle.disable();
           m_map_sprite->filter().deswizzle.disable();
           m_map_sprite->filter().full_filename.disable();
+          m_map_sprite->filter().compact_on_load_original.update(
+            compact_type::map_order_ffnx);
+          m_map_sprite->toggle_filter_compact_on_load_original(true);
      }
 
      refresh_render_texture(true);
