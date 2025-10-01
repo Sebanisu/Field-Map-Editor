@@ -51,7 +51,7 @@ Write-Output "_IS_GITHUB_RELEASE=${env:_IS_GITHUB_RELEASE}" >> ${env:GITHUB_ENV}
 Write-Output "_CHANGELOG_VERSION=${env:_CHANGELOG_VERSION}" >> ${env:GITHUB_ENV}
 
 # Use ASCII Unit Separator as delimiter
-$delimiter = "`u001F"
+$delimiter = "`u{001F}"
 
 # Get logs with the delimiter
 $logEntries = git log "$prevTag..HEAD" --pretty=format:"%h$delimiter%s$delimiter%an$delimiter%d"
