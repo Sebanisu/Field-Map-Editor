@@ -50,6 +50,23 @@ Write-Output "_IS_BUILD_CANARY=${env:_IS_BUILD_CANARY}" >> ${env:GITHUB_ENV}
 Write-Output "_IS_GITHUB_RELEASE=${env:_IS_GITHUB_RELEASE}" >> ${env:GITHUB_ENV}
 Write-Output "_CHANGELOG_VERSION=${env:_CHANGELOG_VERSION}" >> ${env:GITHUB_ENV}
 
+# --- Detect previous release tag ---
+# Get all tags matching numeric 4-part versioning (e.g., 1.0.3.34)
+$validTags = git tag | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' }
+
+if (-not $validTags) {
+    Write-Host "No valid previous tags found, using fallback 0.0.0.0"
+    $prevTag = "0.0.0.0"
+    } else {
+    # Sort numerically by splitting on dots
+    $prevTag = $validTags | Sort-Object { 
+        [version]($_) 
+    } -Descending | Select-Object -First 1
+}
+
+Write-Host "Detected previous tag: $prevTag"
+
+# --- Generate release notes ---
 # Use ASCII Unit Separator as delimiter
 $delimiter = "`u{001F}"
 
