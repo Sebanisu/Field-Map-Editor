@@ -1670,6 +1670,9 @@ void fme::batch::generate_map_sprite()
                filters.swizzle_as_one_image
                  .update(std::filesystem::path(selected_string))
                  .enable();
+               filters.compact_on_load_original
+                 .update(compact_type::map_order_ffnx)
+                 .enable();
                break;
           }
 

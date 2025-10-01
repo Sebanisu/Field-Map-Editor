@@ -559,7 +559,7 @@ struct [[nodiscard]] map_sprite// final
 
      void save_modified_map(const std::filesystem::path &path) const;
      void save(const std::filesystem::path &path) const;
-     void map_save(const std::filesystem::path &dest_path) const;
+     void save_map(const std::filesystem::path &dest_path) const;
      void test_map(const std::filesystem::path &saved_path) const;
      void set_uniforms(
        const glengine::FrameBuffer &fbo,
@@ -572,10 +572,7 @@ struct [[nodiscard]] map_sprite// final
      void enable_disable_blends();
      void disable_disable_blends();
      // void        enable_square(glm::uvec2 position);
-     void compact_move_conflicts_only();
-     void compact_map_order();
-     void compact_map_order_ffnx();
-     void first_to_working_and_original();
+     void first_to_working_and_original(const bool skip_update = false);
      void begin_multi_frame_working(std::string description);
      void end_multi_frame_working(std::string description = {});
      void undo();
@@ -586,8 +583,22 @@ struct [[nodiscard]] map_sprite// final
      void update_render_texture(bool reload_textures = false) const;
      void compact_rows();
      void compact_all();
+     void compact_move_conflicts_only();
+     void compact_map_order();
+     void compact_map_order_ffnx();
      void flatten_bpp();
      void flatten_palette();
+     void compact_rows_original(const bool skip_update);
+     void compact_all_original(const bool skip_update);
+     void compact_move_conflicts_only_original(const bool skip_update);
+     void compact_map_order_original(const bool skip_update);
+     void compact_map_order_ffnx_original(const bool skip_update);
+     void flatten_bpp_original(const bool skip_update);
+     void flatten_palette_original(const bool skip_update);
+     void toggle_filter_compact_on_load_original(
+       const std::optional<bool> state = std::nullopt);
+     void toggle_filter_flatten_on_load_original(
+       const std::optional<bool> state = std::nullopt);
      void load_map(
        const std::filesystem::path &dest_path,
        const bool                   skip_update = false);
@@ -603,62 +614,62 @@ struct [[nodiscard]] map_sprite// final
        const glm::ivec2               &pixel_pos,
        const glm::ivec2               &down_pixel_pos,
        const std::vector<std::size_t> &saved_indices);
-     bool                         consume_one_future() const;
-     void                         consume_now(const bool update = true) const;
-     bool                         all_futures_done() const;
+     bool consume_one_future() const;
+     void consume_now(const bool update = true) const;
+     bool all_futures_done() const;
 
-     static std::filesystem::path save_path_coo(
-       fmt::format_string<
-         std::string_view,
-         std::string_view,
-         uint8_t>                   pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       const uint8_t                texture_page,
-       const open_viii::LangT       coo);
-     static std::filesystem::path save_path_coo(
-       fmt::format_string<
-         std::string_view,
-         std::string_view,
-         uint8_t,
-         uint8_t>                   pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       const uint8_t                texture_page,
-       const uint8_t                palette,
-       const open_viii::LangT       coo);
-     static std::filesystem::path save_path_coo(
-       fmt::format_string<
-         std::string_view,
-         std::string_view,
-         ff_8::PupuID>              pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       const ff_8::PupuID           pupu,
-       const open_viii::LangT       coo);
-     static std::filesystem::path save_path(
-       fmt::format_string<
-         std::string_view,
-         uint8_t>                   pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       uint8_t                      texture_page);
-     static std::filesystem::path save_path(
-       fmt::format_string<
-         std::string_view,
-         uint8_t,
-         uint8_t>                   pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       uint8_t                      texture_page,
-       uint8_t                      palette);
-     static std::filesystem::path save_path(
-       fmt::format_string<
-         std::string_view,
-         ff_8::PupuID>              pattern,
-       const std::filesystem::path &path,
-       const std::string_view      &field_name,
-       ff_8::PupuID                 pupu);
+     //  static std::filesystem::path save_path_coo(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      std::string_view,
+     //      uint8_t>                   pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    const uint8_t                texture_page,
+     //    const open_viii::LangT       coo);
+     //  static std::filesystem::path save_path_coo(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      std::string_view,
+     //      uint8_t,
+     //      uint8_t>                   pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    const uint8_t                texture_page,
+     //    const uint8_t                palette,
+     //    const open_viii::LangT       coo);
+     //  static std::filesystem::path save_path_coo(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      std::string_view,
+     //      ff_8::PupuID>              pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    const ff_8::PupuID           pupu,
+     //    const open_viii::LangT       coo);
+     //  static std::filesystem::path save_path(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      uint8_t>                   pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    uint8_t                      texture_page);
+     //  static std::filesystem::path save_path(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      uint8_t,
+     //      uint8_t>                   pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    uint8_t                      texture_page,
+     //    uint8_t                      palette);
+     //  static std::filesystem::path save_path(
+     //    fmt::format_string<
+     //      std::string_view,
+     //      ff_8::PupuID>              pattern,
+     //    const std::filesystem::path &path,
+     //    const std::string_view      &field_name,
+     //    ff_8::PupuID                 pupu);
 
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const open_viii::graphics::background::Map &map,

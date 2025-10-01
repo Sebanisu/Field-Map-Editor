@@ -27,7 +27,7 @@ elseif ($env:_BUILD_BRANCH -like "refs/tags/*")
   $env:_BUILD_VERSION = $env:_BUILD_VERSION.Substring(0,$env:_BUILD_VERSION.LastIndexOf('.')) + ".0"
   $env:_IS_GITHUB_RELEASE = "true"
 }
-$env:_RELEASE_VERSION = "v${env:_BUILD_VERSION}"
+$env:_RELEASE_VERSION = "${env:_BUILD_VERSION}"
 
 $vcpkgRoot = ".\vcpkg"
 $vcpkgBaseline = [string](jq --arg baseline "builtin-baseline" -r '.[$baseline]' vcpkg.json)
