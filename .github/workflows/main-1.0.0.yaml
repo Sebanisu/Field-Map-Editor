@@ -85,6 +85,7 @@ jobs:
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'false' && success()
       with:
         artifacts: ".dist/*.zip"
+        allowUpdates: true
         generateReleaseNotes: true
         generateReleaseNotesPreviousTag: ${{ steps.build_step.outputs.prev_tag }}
         makeLatest: true
