@@ -2,6 +2,19 @@
 
 All notable changes to the Field-Map-Editor project will be documented in this file, based on the available tags from the GitHub repository. Versions are sorted from the largest to the smallest number, with Canary representing the unreleased changes.
 
+## [canary]
+
+### Changed
+- Path scanning on Windows will now lookup you FF8 2000 install from the registry. And it'll look up you FF8 and FF8 Remastered from Steam. This only happens on the initial startup. Path scanning for Steam installs might be possible on Linux as well but needs more research. [7 commits](https://github.com/Sebanisu/OpenVIII_CPP_WIP/compare/67eb15fa8c648a1b5ccd98be569041d5ec9b814d…16db74cb4e68e41dfc3ff8d5fd918fd5196ffd0d)
+- Allow seperate input and `.map` paths. [#206](https://github.com/Sebanisu/Field-Map-Editor/pull/206)
+
+### Fixed
+- Saving `.map` files even if disabled. [#205](https://github.com/Sebanisu/Field-Map-Editor/pull/205)
+- Allow loading of Swizzle as one Image textures without `.map` files. [#207](https://github.com/Sebanisu/Field-Map-Editor/pull/207)
+
+**Ongoing Milestone: Bugfix Release Sept-2025**
+- Associated Items: Specific issues assigned to this milestone are not detailed in the available page content. For the current list of open and closed issues, please refer to the milestone page on GitHub: https://github.com/Sebanisu/Field-Map-Editor/milestone/1. As the milestone is active, the items may include ongoing bug fixes and improvements targeted for the September 2025 release.
+
 ## [1.0.0.34] - HotFix
 
 ### Added
