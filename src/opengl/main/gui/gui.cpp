@@ -2898,12 +2898,15 @@ void gui::menu_swizzle_paths()
      mmp.render(
        [&]()
        {
-            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]()
+       {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
+            refresh_render_texture(true);
+       },
        [&]()
        {
             m_directory_browser.Open();
@@ -2944,12 +2947,15 @@ void gui::menu_deswizzle_paths()
      mmp.render(
        [&]()
        {
-            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]()
+       {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
+            refresh_render_texture(true);
+       },
        [&]()
        {
             m_directory_browser.Open();
@@ -2992,12 +2998,15 @@ void gui::menu_full_filename_paths()
      mmp.render(
        [&]()
        {
-            m_map_sprite->toggle_filter_compact_on_load_original(false);
             m_selections
               ->update<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
             m_future_of_future_paths_consumer += generate_external_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]()
+       {
+            m_map_sprite->toggle_filter_compact_on_load_original(false);
+            refresh_render_texture(true);
+       },
        [&]()
        {
             m_directory_browser.Open();
