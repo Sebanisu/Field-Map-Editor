@@ -2,7 +2,7 @@
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
 name: Field-Map-Editor-linux
 
-run-name: 1.0.0.${{ github.run_number }}
+run-name: 1.0.3.${{ github.run_number }}
 
 on:
   workflow_dispatch:
