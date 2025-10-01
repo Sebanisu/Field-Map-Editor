@@ -385,6 +385,13 @@ class [[nodiscard]] MapHistory
       */
      const map_t &original() const;
 
+
+     /**
+      * @brief Retrieves the current original map.
+      * @return A constant reference to the original map.
+      */
+     map_t       &original_mutable();
+
      /**
       * @brief Retrieves the current working map as a constant reference.
       * @return A constant reference to the working map.
@@ -423,6 +430,25 @@ class [[nodiscard]] MapHistory
      map_t       &copy_working(std::string description);
 
      /**
+      * @brief Creates a copy of the current original map and logs the planned
+      * change.
+      *
+      * If a multi-frame operation is in progress (m_in_multi_frame_operation is
+      * true), this function returns a reference to the current original map
+      * without creating a new copy. Otherwise, it captures the current state of
+      * the original map for undo purposes and associates it with a description
+      * of the change being planned. The original map is used as the source for
+      * reading image data.
+      *
+      * @param description A string describing the planned change to the
+      * original map. This description is logged and stored for use in the undo
+      * history UI.
+      * @return A mutable reference to the original map (either the current one
+      * or a new copy).
+      */
+     map_t       &copy_original(std::string description);
+
+     /**
       * @brief Begins a multi-frame operation, creating a single copy of the
       * working map.
       *
@@ -431,10 +457,12 @@ class [[nodiscard]] MapHistory
       * `end_multi_frame_working` is called. The provided description is used
       * for the undo history.
       *
-      * @param description A string describing the upcoming multi-frame change.
+      * @param description A string describing the upcoming multi-frame
+      * change.
       * @return A mutable reference to the working map copy.
       * @note Subsequent calls to `copy_working` during the multi-frame
-      * operation will return the same working map without creating new copies.
+      * operation will return the same working map without creating new
+      * copies.
       */
      map_t       &begin_multi_frame_working(std::string description);
 

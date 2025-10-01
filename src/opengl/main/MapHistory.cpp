@@ -510,6 +510,11 @@ const map_t &ff_8::MapHistory::original() const
      return m_original;
 }
 
+map_t &ff_8::MapHistory::original_mutable()
+{
+     return m_original;
+}
+
 map_t &ff_8::MapHistory::working()
 {
      return m_working;
@@ -518,6 +523,22 @@ map_t &ff_8::MapHistory::working()
 const map_t &ff_8::MapHistory::working() const
 {
      return m_working;
+}
+
+
+map_t &ff_8::MapHistory::copy_original(std::string description)
+{
+     if (m_in_multi_frame_operation)
+     {
+          return original_mutable();
+     }
+     (void)debug_count_print();
+     clear_redo();
+     m_undo_original_or_working.push_back(pushed::original);
+     m_undo_history.push_back(original());
+     m_undo_change_descriptions.push_back(std::move(description));
+     m_original_changed = true;
+     return original_mutable();
 }
 
 map_t &ff_8::MapHistory::copy_working(std::string description)
