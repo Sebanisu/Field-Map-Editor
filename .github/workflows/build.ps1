@@ -51,17 +51,23 @@ Write-Output "_IS_GITHUB_RELEASE=${env:_IS_GITHUB_RELEASE}" >> ${env:GITHUB_ENV}
 Write-Output "_CHANGELOG_VERSION=${env:_CHANGELOG_VERSION}" >> ${env:GITHUB_ENV}
 
 # --- Detect previous release tag ---
-# Get all tags matching numeric 4-part versioning (e.g., 1.0.3.34)
-$validTags = git tag | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' }
+$allTags = git tag
+$currentTag = $env:_BUILD_BRANCH -replace '^refs/tags/', ''
 
-if (-not $validTags) {
-    Write-Host "No valid previous tags found, using fallback 0.0.0.0"
+# Separate new and legacy tags
+$newTags = $allTags | Where-Object { $_ -match '^\d+\.\d+\.\d+\.?\d*$' }
+$legacyTags = $allTags | Where-Object { $_ -match '^1\.0\.\d{4}$' }
+
+# Combine, sort descending numerically
+$allValidTags = @($newTags + $legacyTags) | Sort-Object { [version]($_) } -Descending
+
+# Pick the newest tag that is NOT the current tag
+$prevTag = $allValidTags | Where-Object { $_ -ne $currentTag } | Select-Object -First 1
+
+# Fallback if nothing found
+if (-not $prevTag) {
+    Write-Host "No valid previous tag found, using fallback 0.0.0.0"
     $prevTag = "0.0.0.0"
-    } else {
-    # Sort numerically by splitting on dots
-    $prevTag = $validTags | Sort-Object { 
-        [version]($_) 
-    } -Descending | Select-Object -First 1
 }
 
 Write-Host "Detected previous tag: $prevTag"
@@ -75,8 +81,6 @@ git log "$prevTag..HEAD" --pretty=format:"* %s by %an (%h)%n"
 if ($env:_IS_BUILD_CANARY -eq "true") {
     Write-Host "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...canary`n"
 } else {
-    # Get the actual tag name (strip refs/tags/)
-    $currentTag = $env:_BUILD_BRANCH -replace '^refs/tags/', ''
     Write-Host "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...$currentTag`n"
 }
 
