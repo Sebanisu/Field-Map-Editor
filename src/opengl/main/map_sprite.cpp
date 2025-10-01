@@ -337,6 +337,7 @@ const glengine::Texture *map_sprite::get_texture(
             static_cast<int>(bpp),
             palette,
             texture_page);
+          return nullptr;
      }
      return &m_texture->at(index);
 }
