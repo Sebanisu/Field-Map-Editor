@@ -3949,102 +3949,102 @@ uint32_t map_sprite::get_max_texture_height() const
        tex_height);
      return tex_height;
 }
-std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<
-    std::string_view,
-    std::string_view,
-    uint8_t>                   pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  const uint8_t                texture_page,
-  const open_viii::LangT       coo)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(
-                field_name,
-                open_viii::LangCommon::to_string(coo),
-                texture_page));
-}
-std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<
-    std::string_view,
-    std::string_view,
-    uint8_t,
-    uint8_t>                   pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  const uint8_t                texture_page,
-  const uint8_t                palette,
-  const open_viii::LangT       coo)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(
-                field_name,
-                open_viii::LangCommon::to_string(coo),
-                texture_page,
-                palette));
-}
-std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<
-    std::string_view,
-    std::string_view,
-    ff_8::PupuID>              pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  const ff_8::PupuID           pupu,
-  const open_viii::LangT       coo)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(
-                field_name, open_viii::LangCommon::to_string(coo), pupu));
-}
-std::filesystem::path map_sprite::save_path(
-  fmt::format_string<
-    std::string_view,
-    std::uint8_t>              pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  const std::uint8_t           texture_page)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(field_name, texture_page));
-}
-std::filesystem::path map_sprite::save_path(
-  fmt::format_string<
-    std::string_view,
-    std::uint8_t,
-    std::uint8_t>              pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  std::uint8_t                 texture_page,
-  std::uint8_t                 palette)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(field_name, texture_page, palette));
-}
-std::filesystem::path map_sprite::save_path(
-  fmt::format_string<
-    std::string_view,
-    ff_8::PupuID>              pattern,
-  const std::filesystem::path &path,
-  const std::string_view      &field_name,
-  ff_8::PupuID                 pupu)
-{
-     return path
-            / fmt::vformat(
-              fmt::string_view(pattern),
-              fmt::make_format_args(field_name, pupu));
-}
+// std::filesystem::path map_sprite::save_path_coo(
+//   fmt::format_string<
+//     std::string_view,
+//     std::string_view,
+//     uint8_t>                   pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   const uint8_t                texture_page,
+//   const open_viii::LangT       coo)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(
+//                 field_name,
+//                 open_viii::LangCommon::to_string(coo),
+//                 texture_page));
+// }
+// std::filesystem::path map_sprite::save_path_coo(
+//   fmt::format_string<
+//     std::string_view,
+//     std::string_view,
+//     uint8_t,
+//     uint8_t>                   pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   const uint8_t                texture_page,
+//   const uint8_t                palette,
+//   const open_viii::LangT       coo)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(
+//                 field_name,
+//                 open_viii::LangCommon::to_string(coo),
+//                 texture_page,
+//                 palette));
+// }
+// std::filesystem::path map_sprite::save_path_coo(
+//   fmt::format_string<
+//     std::string_view,
+//     std::string_view,
+//     ff_8::PupuID>              pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   const ff_8::PupuID           pupu,
+//   const open_viii::LangT       coo)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(
+//                 field_name, open_viii::LangCommon::to_string(coo), pupu));
+// }
+// std::filesystem::path map_sprite::save_path(
+//   fmt::format_string<
+//     std::string_view,
+//     std::uint8_t>              pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   const std::uint8_t           texture_page)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(field_name, texture_page));
+// }
+// std::filesystem::path map_sprite::save_path(
+//   fmt::format_string<
+//     std::string_view,
+//     std::uint8_t,
+//     std::uint8_t>              pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   std::uint8_t                 texture_page,
+//   std::uint8_t                 palette)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(field_name, texture_page, palette));
+// }
+// std::filesystem::path map_sprite::save_path(
+//   fmt::format_string<
+//     std::string_view,
+//     ff_8::PupuID>              pattern,
+//   const std::filesystem::path &path,
+//   const std::string_view      &field_name,
+//   ff_8::PupuID                 pupu)
+// {
+//      return path
+//             / fmt::vformat(
+//               fmt::string_view(pattern),
+//               fmt::make_format_args(field_name, pupu));
+// }
 
 
 std::expected<
