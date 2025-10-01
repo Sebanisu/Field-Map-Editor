@@ -50,33 +50,39 @@ Write-Output "_IS_BUILD_CANARY=${env:_IS_BUILD_CANARY}" >> ${env:GITHUB_ENV}
 Write-Output "_IS_GITHUB_RELEASE=${env:_IS_GITHUB_RELEASE}" >> ${env:GITHUB_ENV}
 Write-Output "_CHANGELOG_VERSION=${env:_CHANGELOG_VERSION}" >> ${env:GITHUB_ENV}
 
-# --- Detect previous release tag ---
-# Get all tags matching numeric 4-part versioning (e.g., 1.0.3.34)
-$validTags = git tag | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' }
+# Use ASCII Unit Separator as delimiter
+$delimiter = "`u001F"
 
-if (-not $validTags) {
-    Write-Host "No valid previous tags found, using fallback 0.0.0.0"
-    $prevTag = "0.0.0.0"
-} else {
-    # Sort numerically by splitting on dots
-    $prevTag = $validTags | Sort-Object { 
-        [version]($_) 
-    } -Descending | Select-Object -First 1
+# Get logs with the delimiter
+$logEntries = git log "$prevTag..HEAD" --pretty=format:"%h$delimiter%s$delimiter%an$delimiter%d"
+
+$formattedNotes = "## What's Changed`n"
+
+foreach ($entry in $logEntries) {
+    $parts = $entry -split $delimiter
+    $sha = $parts[0]
+    $message = $parts[1]
+    $author = $parts[2]
+    $refs = $parts[3]
+
+    if ($refs -match "pull/(\d+)") {
+        $prNumber = $matches[1]
+        $formattedNotes += "* $message by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber`n"
+    } else {
+        $formattedNotes += "* $message by @$author`n"
+    }
 }
 
-Write-Host "Detected previous tag: $prevTag"
+# Append full changelog link
+$formattedNotes += "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...canary`n"
 
-# --- Generate release notes ---
-$curTag = $env:_RELEASE_VERSION
-$notes = git log "$prevTag..HEAD" --pretty=format:"- %s"
-
-# Set output variables for GitHub Actions
-# GitHub Actions PowerShell requires writing to $env:GITHUB_OUTPUT
+# Set output for GitHub Actions
 Add-Content -Path $env:GITHUB_OUTPUT -Value "prev_tag=$prevTag"
-Add-Content -Path $env:GITHUB_OUTPUT -Value "release_notes=$notes"
+Add-Content -Path $env:GITHUB_OUTPUT -Value "release_notes=$formattedNotes"
 
 Write-Host "Generated release notes:"
-Write-Host $notes
+Write-Host $formattedNotes
+
 
 # Load vcvarsall environment for x86
 $vcvarspath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -prerelease -latest -property InstallationPath
