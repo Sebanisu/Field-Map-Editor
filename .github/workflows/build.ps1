@@ -65,40 +65,20 @@ if (-not $validTags) {
 }
 
 Write-Host "Detected previous tag: $prevTag"
-
-# --- Generate release notes ---
-# Use ASCII Unit Separator as delimiter
-$delimiter = "`u{001F}"
-
-# Get logs with the delimiter
-$logEntries = git log "$prevTag..HEAD" --pretty=format:"%h$delimiter%s$delimiter%an$delimiter%d"
-
-$formattedNotes = "## What's Changed`n"
-
-foreach ($entry in $logEntries) {
-    $parts = $entry -split $delimiter
-    $sha = $parts[0]
-    $message = $parts[1]
-    $author = $parts[2]
-
-    # Check for PR in the message
-    if ($message -match "Merge pull request #(\d+)") {
-        $prNumber = $matches[1]
-        $formattedNotes += "* $message by @$author in https://github.com/Sebanisu/Field-Map-Editor/pull/$prNumber (`https://github.com/Sebanisu/Field-Map-Editor/commit/$sha`)" + "`n"
-    } else {
-        # Just link the commit
-        $formattedNotes += "* $message by @$author ([`$sha`](https://github.com/Sebanisu/Field-Map-Editor/commit/$sha))`n"
-    }
-}
-
-$formattedNotes += "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...canary`n"
-
 # Set output for GitHub Actions
 Add-Content -Path $env:GITHUB_OUTPUT -Value "prev_tag=$prevTag"
-Add-Content -Path $env:GITHUB_OUTPUT -Value "release_notes=$formattedNotes"
 
-Write-Host "Generated release notes:"
-Write-Host $formattedNotes
+# --- Generate release notes ---
+Write-Host "## What's Changed"
+git log "$prevTag..HEAD" --pretty=format:"* %s by %an (%h)%n"
+
+if ($env:_IS_BUILD_CANARY -eq "true") {
+    Write-Host "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...canary`n"
+} else {
+    # Get the actual tag name (strip refs/tags/)
+    $currentTag = $env:_BUILD_BRANCH -replace '^refs/tags/', ''
+    Write-Host "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...$currentTag`n"
+}
 
 
 # Load vcvarsall environment for x86
