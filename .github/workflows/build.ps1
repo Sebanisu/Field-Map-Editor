@@ -55,7 +55,7 @@ $allTags = git tag
 $currentTag = $env:_BUILD_BRANCH -replace '^refs/tags/', ''
 
 # Get only new-style tags
-$newTags = $allTags | Where-Object { $_ -match '^\d+\.\d+\.\d+\.?\d*$' }
+$newTags = $allTags | Where-Object { $_ -match '^\d+\.\d{1,3}\.\d{1,3}\.?\d*$' }
 
 # Pick the newest tag that is NOT the current tag
 $prevTag = $newTags | Sort-Object { [version]($_) } -Descending |
