@@ -559,7 +559,7 @@ struct [[nodiscard]] map_sprite// final
 
      void save_modified_map(const std::filesystem::path &path) const;
      void save(const std::filesystem::path &path) const;
-     void map_save(const std::filesystem::path &dest_path) const;
+     void save_map(const std::filesystem::path &dest_path) const;
      void test_map(const std::filesystem::path &saved_path) const;
      void set_uniforms(
        const glengine::FrameBuffer &fbo,
@@ -572,10 +572,7 @@ struct [[nodiscard]] map_sprite// final
      void enable_disable_blends();
      void disable_disable_blends();
      // void        enable_square(glm::uvec2 position);
-     void compact_move_conflicts_only();
-     void compact_map_order();
-     void compact_map_order_ffnx();
-     void first_to_working_and_original();
+     void first_to_working_and_original(const bool skip_update = false);
      void begin_multi_frame_working(std::string description);
      void end_multi_frame_working(std::string description = {});
      void undo();
@@ -586,8 +583,22 @@ struct [[nodiscard]] map_sprite// final
      void update_render_texture(bool reload_textures = false) const;
      void compact_rows();
      void compact_all();
+     void compact_move_conflicts_only();
+     void compact_map_order();
+     void compact_map_order_ffnx();
      void flatten_bpp();
      void flatten_palette();
+     void compact_rows_original(const bool skip_update);
+     void compact_all_original(const bool skip_update);
+     void compact_move_conflicts_only_original(const bool skip_update);
+     void compact_map_order_original(const bool skip_update);
+     void compact_map_order_ffnx_original(const bool skip_update);
+     void flatten_bpp_original(const bool skip_update);
+     void flatten_palette_original(const bool skip_update);
+     void toggle_filter_compact_on_load_original(
+       const std::optional<bool> state = std::nullopt);
+     void toggle_filter_flatten_on_load_original(
+       const std::optional<bool> state = std::nullopt);
      void load_map(
        const std::filesystem::path &dest_path,
        const bool                   skip_update = false);

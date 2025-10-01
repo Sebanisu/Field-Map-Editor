@@ -89,7 +89,104 @@ map_sprite::map_sprite(
                m_filters.map.disable();
           }
      }
+     toggle_filter_compact_on_load_original();
+     toggle_filter_flatten_on_load_original();
+
      update_render_texture(true);
+}
+
+
+void map_sprite::toggle_filter_compact_on_load_original(
+  const std::optional<bool> state)
+{
+     const bool skip_update = true;//! state.has_value();
+     if (state.has_value())
+     {
+          if (*state)
+          {
+               m_filters.compact_on_load_original.enable();
+          }
+          else if (m_filters.compact_on_load_original.enabled())
+          {
+               m_filters.compact_on_load_original.disable();
+               first_to_working_and_original(skip_update);
+          }
+     }
+
+
+     if (m_filters.compact_on_load_original.enabled())
+     {
+          switch (m_filters.compact_on_load_original.value())
+          {
+               case compact_type::rows:
+                    compact_rows_original(skip_update);
+                    break;
+               case compact_type::all:
+                    compact_all_original(skip_update);
+                    break;
+               case compact_type::move_only_conflicts:
+               {
+                    compact_move_conflicts_only_original(skip_update);
+                    break;
+               }
+               case compact_type::map_order:
+                    compact_map_order_original(skip_update);
+                    break;
+               case compact_type::map_order_ffnx:
+                    compact_map_order_ffnx_original(skip_update);
+                    break;
+          }
+     }
+}
+
+void map_sprite::toggle_filter_flatten_on_load_original(
+  const std::optional<bool> state)
+{
+     const bool skip_update = true;//! state.has_value();
+     if (state.has_value())
+     {
+          if (*state)
+          {
+               m_filters.flatten_on_load_original.enable();
+          }
+          else if (m_filters.flatten_on_load_original.enabled())
+          {
+               m_filters.flatten_on_load_original.disable();
+               first_to_working_and_original(skip_update);
+          }
+     }
+
+     if (m_filters.flatten_on_load_original.enabled())
+     {
+          switch (m_filters.flatten_on_load_original.value())
+          {
+               case flatten_type::bpp:
+                    // Only flatten BPP if compact type isn't using map
+                    // order
+                    if (
+                 !m_filters.compact_on_load_original.enabled()
+                 || (m_filters.compact_on_load_original.value() != compact_type::map_order && m_filters.compact_on_load_original.value() != compact_type::map_order_ffnx))
+                    {
+                         flatten_bpp_original(skip_update);
+                    }
+                    break;
+
+               case flatten_type::palette:
+                    flatten_palette_original(skip_update);
+                    break;
+
+               case flatten_type::both:
+                    // Only flatten BPP if not using map order
+                    if (
+                 !m_filters.compact_on_load_original.enabled()
+                 || (m_filters.compact_on_load_original.value() != compact_type::map_order && m_filters.compact_on_load_original.value() != compact_type::map_order_ffnx))
+                    {
+                         flatten_bpp_original(skip_update);
+                    }
+                    flatten_palette_original(skip_update);
+                    break;
+          }
+     }
 }
 
 map_sprite::operator ff_8::path_search() const
@@ -691,7 +788,6 @@ static constexpr std::underlying_type_t<texture_page_width>
      return static_cast<std::underlying_type_t<texture_page_width>>(input);
 }
 
-
 void map_sprite::compact_rows()
 {
      ff_8::compact_rows(m_map_group.maps.copy_working(
@@ -702,6 +798,31 @@ void map_sprite::compact_all()
 {
      ff_8::compact_all(m_map_group.maps.copy_working(
        fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
+     update_render_texture();
+}
+void map_sprite::compact_move_conflicts_only()
+{
+     const auto &conflicts = m_map_group.maps.original_conflicts();
+     ff_8::compact_move_conflicts_only(
+       m_map_group.maps.copy_working(
+         fmt::format(
+           "{} {}", gui_labels::compact, gui_labels::move_conflicts_only)),
+       conflicts);
+     update_render_texture();
+}
+void map_sprite::compact_map_order()
+{
+     ff_8::compact_map_order(m_map_group.maps.copy_working(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
+     update_render_texture();
+}
+void map_sprite::compact_map_order_ffnx()
+{
+     spdlog::debug(
+       "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2);
+     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(
+       fmt::format(
+         "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
      update_render_texture();
 }
 void map_sprite::flatten_bpp()
@@ -715,6 +836,78 @@ void map_sprite::flatten_palette()
      ff_8::flatten_palette(m_map_group.maps.copy_working(
        fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
      update_render_texture();
+}
+
+
+void map_sprite::compact_rows_original(const bool skip_update)
+{
+     ff_8::compact_rows(m_map_group.maps.copy_original(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::rows)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::compact_all_original(const bool skip_update)
+{
+     ff_8::compact_all(m_map_group.maps.copy_original(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::compact_move_conflicts_only_original(const bool skip_update)
+{
+     const auto &conflicts = m_map_group.maps.working_conflicts();
+     ff_8::compact_move_conflicts_only(
+       m_map_group.maps.copy_original(
+         fmt::format(
+           "{} {}", gui_labels::compact, gui_labels::move_conflicts_only)),
+       conflicts);
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::compact_map_order_original(const bool skip_update)
+{
+     ff_8::compact_map_order(m_map_group.maps.copy_original(
+       fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::compact_map_order_ffnx_original(const bool skip_update)
+{
+     spdlog::debug(
+       "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2);
+     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_original(
+       fmt::format(
+         "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::flatten_bpp_original(const bool skip_update)
+{
+     ff_8::flatten_bpp(m_map_group.maps.copy_original(
+       fmt::format("{} {}", gui_labels::flatten, gui_labels::bpp)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
+}
+void map_sprite::flatten_palette_original(const bool skip_update)
+{
+     ff_8::flatten_palette(m_map_group.maps.copy_original(
+       fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
 }
 
 void map_sprite::update_position(
@@ -1851,7 +2044,7 @@ bool map_sprite::fail() const
      once = true;
      return false;
 }
-void map_sprite::map_save(const std::filesystem::path &dest_path) const
+void map_sprite::save_map(const std::filesystem::path &dest_path) const
 {
      ff_8::map_group::OptCoo coo
        = m_map_group.opt_coo;// copy because coo is modified
@@ -4001,37 +4194,15 @@ void map_sprite::disable_disable_blends()
      m_settings.disable_blends = false;
      update_render_texture();
 }
-void map_sprite::compact_move_conflicts_only()
-{
-     const auto &conflicts = m_map_group.maps.working_conflicts();
-     ff_8::compact_move_conflicts_only(
-       m_map_group.maps.copy_working(
-         fmt::format(
-           "{} {}", gui_labels::compact, gui_labels::move_conflicts_only)),
-       conflicts);
-     update_render_texture();
-}
-void map_sprite::compact_map_order()
-{
-     ff_8::compact_map_order(m_map_group.maps.copy_working(
-       fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
-     update_render_texture();
-}
-void map_sprite::compact_map_order_ffnx()
-{
-     spdlog::debug(
-       "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2);
-     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(
-       fmt::format(
-         "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
-     update_render_texture();
-}
-void map_sprite::first_to_working_and_original()
+void map_sprite::first_to_working_and_original(const bool skip_update)
 {
      const std::string message = "restore .map from FF8";
      (void)m_map_group.maps.first_to_working(message);
      (void)m_map_group.maps.first_to_original(message);
-     update_render_texture();
+     if (!skip_update)
+     {
+          update_render_texture();
+     }
 }
 std::string map_sprite::str_to_lower(std::string input)
 {
