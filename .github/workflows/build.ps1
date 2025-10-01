@@ -54,25 +54,31 @@ Write-Output "_CHANGELOG_VERSION=${env:_CHANGELOG_VERSION}" >> ${env:GITHUB_ENV}
 $allTags = git tag
 $currentTag = $env:_BUILD_BRANCH -replace '^refs/tags/', ''
 
-# Separate new and legacy tags
+# Get only new-style tags
 $newTags = $allTags | Where-Object { $_ -match '^\d+\.\d+\.\d+\.?\d*$' }
-$legacyTags = $allTags | Where-Object { $_ -match '^1\.0\.\d{4}$' }
-
-# Combine, sort descending numerically
-$allValidTags = @($newTags + $legacyTags) | Sort-Object { [version]($_) } -Descending
 
 # Pick the newest tag that is NOT the current tag
-$prevTag = $allValidTags | Where-Object { $_ -ne $currentTag } | Select-Object -First 1
+$prevTag = $newTags | Sort-Object { [version]($_) } -Descending |
+           Where-Object { $_ -ne $currentTag } |
+           Select-Object -First 1
 
-# Fallback if nothing found
+# Fallback to legacy if no valid new tag found
+if (-not $prevTag) {
+    Write-Host "No valid new tags found, using legacy tags if available"
+    $legacyTags = $allTags | Where-Object { $_ -match '^1\.0\.\d{4}$' }
+    $prevTag = $legacyTags | Sort-Object { [version]($_) } -Descending |
+               Select-Object -First 1
+}
+
+# If still nothing, fallback to 0.0.0.0
 if (-not $prevTag) {
     Write-Host "No valid previous tag found, using fallback 0.0.0.0"
     $prevTag = "0.0.0.0"
 }
 
 Write-Host "Detected previous tag: $prevTag"
-# Set output for GitHub Actions
 Add-Content -Path $env:GITHUB_OUTPUT -Value "prev_tag=$prevTag"
+
 
 # --- Generate release notes ---
 Write-Host "## What's Changed"
@@ -83,7 +89,6 @@ if ($env:_IS_BUILD_CANARY -eq "true") {
 } else {
     Write-Host "`nFull Changelog: https://github.com/Sebanisu/Field-Map-Editor/compare/$prevTag...$currentTag`n"
 }
-
 
 # Load vcvarsall environment for x86
 $vcvarspath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -prerelease -latest -property InstallationPath
