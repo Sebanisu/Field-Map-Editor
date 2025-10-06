@@ -192,7 +192,7 @@ struct filter_window
      mutable float             m_aspect_ratio           = { 1.f };
      float                     m_tool_button_size_width = { 152.f };
      mutable float             m_thumb_size_width       = { 96.f };
-     mutable ff_8::filter_old<ff_8::FilterTag::MultiPupu> m_multi_select_filter
+     mutable ff_8::filter<ff_8::FilterTag::MultiPupu> m_multi_select_filter
        = { ff_8::FilterSettings::All_Disabled };
      mutable ff_8::filter<ff_8::FilterTag::MultiAnimationId>
        m_excluded_animation_id_from_state

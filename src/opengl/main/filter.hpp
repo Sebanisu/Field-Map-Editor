@@ -101,7 +101,6 @@ inline void SetFlag(
 
 enum class FilterTag : std::uint8_t
 {
-     None,
      Pupu,
      MultiPupu,
      Swizzle,
@@ -117,7 +116,7 @@ enum class FilterTag : std::uint8_t
      AnimationId,
      MultiAnimationId,
      AnimationFrame,
-     MultiAnimationFrame,
+     MultiAnimationState,
      LayerId,
      MultiLayerId,
      TexturePageId,
@@ -131,7 +130,9 @@ enum class FilterTag : std::uint8_t
      Compact,
      Flatten,
      CompactOnLoadOriginal,
-     FlattenOnLoadOriginal
+     FlattenOnLoadOriginal,
+     All,
+     None,
 };
 
 template<FilterTag Tag>
@@ -291,7 +292,7 @@ struct ConfigKeys<FilterTag::AnimationFrame>
 
 
 template<>
-struct ConfigKeys<FilterTag::MultiAnimationFrame>
+struct ConfigKeys<FilterTag::MultiAnimationState>
 {
      using TileT = open_viii::graphics::background::Tile1;
      using value_type
@@ -645,8 +646,14 @@ template<FilterTag tag>
 concept HasOperationType
   = requires { typename ConfigKeys<tag>::operation_type; };
 
+struct FilterBase
+{
+     virtual ~FilterBase()                             = default;
+     virtual std::unique_ptr<FilterBase> clone() const = 0;
+};
+
 template<FilterTag Tag>
-struct filter_old
+struct filter : FilterBase
 {
    public:
      using value_type                            = ConfigKeys<Tag>::value_type;
@@ -657,17 +664,17 @@ struct filter_old
      FilterSettings m_settings = {};
 
    public:
-     filter_old(
+     filter(
        value_type     value,
        FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter_old(
+     filter(
        bool                      load_config,
        const fme::Configuration &config)
-       : filter_old(
+       : filter(
            FilterLoadStrategy<value_type>::load_value(
              load_config,
              config,
@@ -678,8 +685,8 @@ struct filter_old
              ConfigKeys<Tag>::enabled_key_name))
      {
      }
-     filter_old(FilterSettings settings)
-       : filter_old(
+     filter(FilterSettings settings)
+       : filter(
            HasFlag(
              settings,
              FilterSettings::Config_Enabled),
@@ -687,7 +694,12 @@ struct filter_old
      {
      }
 
-     filter_old &reload(const toml::table &table)
+     std::unique_ptr<FilterBase> clone() const override
+     {
+          return std::make_unique<filter<Tag>>(*this);// calls copy ctor
+     }
+
+     filter &reload(const toml::table &table)
      {
           m_value = FilterLoadStrategy<value_type>::load_value(
             table, ConfigKeys<Tag>::key_name);
@@ -696,7 +708,7 @@ struct filter_old
           return *this;
      }
 
-     filter_old &reload()
+     filter &reload()
      {
           if (HasFlag(m_settings, FilterSettings::Config_Enabled))
           {
@@ -706,7 +718,7 @@ struct filter_old
           return *this;
      }
 
-     filter_old &combine(const toml::table &table)
+     filter &combine(const toml::table &table)
      {
           // Load temporary values
           const auto tmp_settings
@@ -742,7 +754,7 @@ struct filter_old
 
 
      template<typename U>
-     const filter_old &update([[maybe_unused]] U &&value) const
+     const filter &update([[maybe_unused]] U &&value) const
           requires(std::same_as<
                    std::remove_cvref_t<U>,
                    toml::table>)
@@ -766,7 +778,7 @@ struct filter_old
           requires std::same_as<
             std::remove_cvref_t<U>,
             toml::table>
-     filter_old &update(U &&value)
+     filter &update(U &&value)
      {
           if (enabled())
           {
@@ -793,7 +805,7 @@ struct filter_old
             && std::indirectly_movable<
               std::ranges::iterator_t<std::remove_cvref_t<U>>,
               std::back_insert_iterator<value_type>>)
-     filter_old &update(U &&value)
+     filter &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
           {
@@ -822,7 +834,7 @@ struct filter_old
               value_type &,
               U>)
 
-     filter_old &update(U &&value)
+     filter &update(U &&value)
      {
           const bool not_same = [&]()
           {
@@ -856,11 +868,15 @@ struct filter_old
      {
           return m_value;
      }
+     [[nodiscard]] value_type &value()
+     {
+          return m_value;
+     }
      [[nodiscard]] bool enabled() const
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
      }
-     filter_old &enable()
+     filter &enable()
      {
           if (HasFlag(m_settings, FilterSettings::Toggle_Enabled))
           {
@@ -882,7 +898,7 @@ struct filter_old
           }
           return *this;
      }
-     filter_old &disable()
+     filter &disable()
      {
           if (!HasFlag(m_settings, FilterSettings::Toggle_Enabled))
           {
@@ -935,7 +951,8 @@ struct filter_old
      }
 };
 template<FilterTag Tag>
-struct filter
+     requires(HasOperationType<Tag>)
+struct filter<Tag> : FilterBase
 {
    public:
      using value_type     = ConfigKeys<Tag>::value_type;
@@ -976,6 +993,12 @@ struct filter
              FilterSettings::Config_Enabled),
            fme::Configuration{})
      {
+     }
+
+
+     std::unique_ptr<FilterBase> clone() const override
+     {
+          return std::make_unique<filter<Tag>>(*this);// calls copy ctor
      }
 
      filter &reload(const toml::table &table)
@@ -1154,6 +1177,10 @@ struct filter
      {
           return m_value;
      }
+     [[nodiscard]] value_type &value()
+     {
+          return m_value;
+     }
      [[nodiscard]] bool enabled() const
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
@@ -1257,9 +1284,6 @@ concept IsFilterOld = requires(T obj) {
      } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type>;
 };
 
-template<FilterTag tag>
-using selected_filter_t
-  = std::conditional_t<HasOperationType<tag>, filter<tag>, filter_old<tag>>;
 
 template<typename T, typename TileT>
 concept IsFilter
@@ -1277,251 +1301,328 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     selected_filter_t<FilterTag::Pupu>              pupu;
-     selected_filter_t<FilterTag::MultiPupu>         multi_pupu;
-     selected_filter_t<FilterTag::Swizzle>           swizzle;
-     selected_filter_t<FilterTag::Deswizzle>         deswizzle;
-     selected_filter_t<FilterTag::SwizzleAsOneImage> swizzle_as_one_image;
-     selected_filter_t<FilterTag::FullFileName>      full_filename;
-     selected_filter_t<FilterTag::Map>               map;
-     selected_filter_t<FilterTag::CompactOnLoadOriginal>
-       compact_on_load_original;
-     selected_filter_t<FilterTag::FlattenOnLoadOriginal>
-                                                       flatten_on_load_original;
-     selected_filter_t<FilterTag::DrawBit>             draw_bit;
-     selected_filter_t<FilterTag::Z>                   z;
-     selected_filter_t<FilterTag::MultiZ>              multi_z;
-     selected_filter_t<FilterTag::Palette>             palette;
-     selected_filter_t<FilterTag::MultiPalette>        multi_palette;
-     selected_filter_t<FilterTag::AnimationId>         animation_id;
-     selected_filter_t<FilterTag::MultiAnimationId>    multi_animation_id;
-     selected_filter_t<FilterTag::AnimationFrame>      animation_state;
-     selected_filter_t<FilterTag::MultiAnimationFrame> multi_animation_state;
-     selected_filter_t<FilterTag::LayerId>             layer_id;
-     selected_filter_t<FilterTag::MultiLayerId>        multi_layer_id;
-     selected_filter_t<FilterTag::TexturePageId>       texture_page_id;
-     selected_filter_t<FilterTag::MultiTexturePageId>  multi_texture_page_id;
-     selected_filter_t<FilterTag::BlendMode>           blend_mode;
-     selected_filter_t<FilterTag::MultiBlendMode>      multi_blend_mode;
-     selected_filter_t<FilterTag::BlendOther>          blend_other;
-     selected_filter_t<FilterTag::MultiBlendOther>     multi_blend_other;
-     selected_filter_t<FilterTag::Bpp>                 bpp;
-     selected_filter_t<FilterTag::MultiBpp>            multi_bpp;
+
+     static constexpr std::size_t FiltersSizeT
+       = static_cast<std::size_t>(FilterTag::All);
+     using FiltersArrayT
+       = std::array<std::unique_ptr<FilterBase>, FiltersSizeT>;
+
+     FiltersArrayT m_filters_array;
+
+     FiltersArrayT load_filters_array(
+       const bool                load_config,
+       const fme::Configuration &config)
+     {
+          return
+            [&]<std::size_t... Is>(std::index_sequence<Is...>) -> FiltersArrayT
+          {
+               FiltersArrayT result{};
+
+               ((result[Is] = [&]<FilterTag Key>()
+                   -> std::unique_ptr<filter<Key>>
+                      {
+                           return std::make_unique<filter<Key>>(
+                             load_config, config);
+                      }.template operator()<static_cast<FilterTag>(Is)>()),
+                ...);
+               return result;
+          }(std::make_index_sequence<FiltersSizeT>{});
+     }
+
+
+     // Deep copy constructor
+     filters(const filters &input)
+     {
+          for (auto &&[self, other] :
+               std::views::zip(m_filters_array, input.m_filters_array))
+          {
+               if (other)
+               {
+                    self = other->clone();
+               }
+          }
+     }
+
+     // Deep copy assignment
+     filters &operator=(const filters &input)
+     {
+          if (this != &input)
+          {
+
+               for (auto &&[self, other] :
+                    std::views::zip(m_filters_array, input.m_filters_array))
+               {
+                    if (other)
+                    {
+                         self = other->clone();
+                    }
+                    else
+                    {
+                         self.reset();
+                    }
+               }
+          }
+          return *this;
+     }
+
+     filters(filters &&) noexcept            = default;
+     filters &operator=(filters &&) noexcept = default;
 
      filters(
        bool                     load_config,
        fme::Configuration const config = {})
-       : pupu(
+       : m_filters_array(load_filters_array(
            load_config,
-           config)
-       , multi_pupu(
-           load_config,
-           config)
-       , swizzle(
-           load_config,
-           config)
-       , deswizzle(
-           load_config,
-           config)
-       , swizzle_as_one_image(
-           load_config,
-           config)
-       , full_filename(
-           load_config,
-           config)
-       , map(
-           load_config,
-           config)
-       , compact_on_load_original(
-           load_config,
-           config)
-       , flatten_on_load_original(
-           load_config,
-           config)
-       , draw_bit(
-           load_config,
-           config)
-       , z(load_config,
-           config)
-       , multi_z(
-           load_config,
-           config)
-       , palette(
-           load_config,
-           config)
-       , multi_palette(
-           load_config,
-           config)
-       , animation_id(
-           load_config,
-           config)
-       , multi_animation_id(
-           load_config,
-           config)
-       , animation_state(
-           load_config,
-           config)
-       , multi_animation_state(
-           load_config,
-           config)
-       , layer_id(
-           load_config,
-           config)
-       , multi_layer_id(
-           load_config,
-           config)
-       , texture_page_id(
-           load_config,
-           config)
-       , multi_texture_page_id(
-           load_config,
-           config)
-       , blend_mode(
-           load_config,
-           config)
-       , multi_blend_mode(
-           load_config,
-           config)
-       , blend_other(
-           load_config,
-           config)
-       , multi_blend_other(
-           load_config,
-           config)
-       , bpp(
-           load_config,
-           config)
-       , multi_bpp(
-           load_config,
-           config)
+           config))
      {
+     }
+
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     filter<Tag> &get()
+     {
+          static constexpr std::size_t index = static_cast<std::size_t>(Tag);
+          using ValueT = typename ConfigKeys<Tag>::value_type;
+
+          if (!m_filters_array[index])
+          {
+               if constexpr (std::default_initializable<ValueT>)
+               {
+                    throw std::runtime_error(
+                      "Mutable access to default-initialized value is not "
+                      "supported");
+               }
+               else
+               {
+                    throw std::runtime_error(
+                      "Filter not initialized and not "
+                      "default-initializable");
+               }
+          }
+          filter<Tag> *current
+            = static_cast<filter<Tag> *>(m_filters_array[index].get());
+          return *current;
+     }
+
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     const filter<Tag> &get() const
+     {
+          static constexpr std::size_t index = static_cast<std::size_t>(Tag);
+          using ValueT = typename ConfigKeys<Tag>::value_type;
+
+          if (!m_filters_array[index])
+          {
+               if constexpr (std::default_initializable<ValueT>)
+               {
+                    throw std::runtime_error(
+                      "Mutable access to default-initialized value is not "
+                      "supported");
+               }
+               else
+               {
+                    throw std::runtime_error(
+                      "Filter not initialized and not "
+                      "default-initializable");
+               }
+          }
+          const filter<Tag> *current
+            = static_cast<const filter<Tag> *>(m_filters_array[index].get());
+          return *current;
+     }
+
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     ConfigKeys<Tag>::value_type &value()
+     {
+
+          return get<Tag>().value();
+     }
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     const ConfigKeys<Tag>::value_type &value() const
+     {
+
+          return get<Tag>().value();
+     }
+
+
+     template<
+       FilterTag Tag,
+       typename TypeT>
+          requires(
+            FiltersSizeT > static_cast<std::size_t>(Tag)
+            && !std::same_as<
+               std::remove_cvref_t<TypeT>,
+               toml::table>)
+     filter<Tag> &update(TypeT &&input)
+     {
+          return get<Tag>().update(std::forward<TypeT>(input));
+     }
+
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     bool enabled() const
+     {
+
+          return get<Tag>().enabled();
+     }
+
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     filter<Tag> &enable()
+     {
+          return get<Tag>().enable();
+     }
+
+     template<FilterTag Tag>
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+     filter<Tag> &disable()
+     {
+          return get<Tag>().disable();
      }
 
      void reload(const toml::table &table)
      {
-          [&table](auto &...operations) { (operations.reload(table), ...); }(
-            pupu,
-            multi_pupu,
-            // these 4 filters control drawing with external textures. reloading
-            // them from a toml table. is not desired currently. swizzle,
-            // deswizzle,
-            // swizzle_as_one_image,
-            // full_filename,
-            // map,
-            draw_bit,
-            z,
-            multi_z,
-            palette,
-            multi_palette,
-            animation_id,
-            multi_animation_id,
-            animation_state,
-            multi_animation_state,
-            layer_id,
-            multi_layer_id,
-            texture_page_id,
-            multi_texture_page_id,
-            blend_mode,
-            multi_blend_mode,
-            blend_other,
-            multi_blend_other,
-            bpp,
-            multi_bpp);
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               ((
+                  [&]
+                  {
+                       using ValueT =
+                         typename ConfigKeys<static_cast<FilterTag>(
+                           Is)>::value_type;
+
+                       // Skip std::filesystem::path
+                       if constexpr (!std::
+                                       is_same_v<ValueT, std::filesystem::path>)
+                       {
+                            if (!m_filters_array[Is])
+                            {
+                                 throw std::runtime_error(
+                                   "Filter not initialized");
+                            }
+
+                            auto *current = static_cast<
+                              filter<static_cast<FilterTag>(Is)> *>(
+                              m_filters_array[Is].get());
+
+                            current->reload(table);
+                       }
+                  }()),
+                ...);
+          }(std::make_index_sequence<static_cast<std::size_t>(
+              FilterTag::All)>{});
      }
 
 
      void combine(const toml::table &table)
      {
-          [&table](auto &...operations) { (operations.combine(table), ...); }(
-            pupu,
-            multi_pupu,
-            // these filters control drawing with external textures. reloading
-            // them from a toml table. is not desired currently. swizzle,
-            // deswizzle,
-            // swizzle_as_one_image,
-            // full_filename,
-            // map,
-            draw_bit,
-            z,
-            multi_z,
-            palette,
-            multi_palette,
-            animation_id,
-            multi_animation_id,
-            animation_state,
-            multi_animation_state,
-            layer_id,
-            multi_layer_id,
-            texture_page_id,
-            multi_texture_page_id,
-            blend_mode,
-            multi_blend_mode,
-            blend_other,
-            multi_blend_other,
-            bpp,
-            multi_bpp);
-     }
-
-     void update(toml::table &table) const
-     {
-          [&table](const auto &...operations)
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
           {
-               (operations.update(table), ...);
-          }(pupu,
-            multi_pupu,
-            // these filters control drawing with external textures. reloading
-            // them from a toml table. is not desired currently. swizzle,
-            // deswizzle,
-            // swizzle_as_one_image,
-            // full_filename,
-            // map,
-            draw_bit,
-            z,
-            multi_z,
-            palette,
-            multi_palette,
-            animation_id,
-            multi_animation_id,
-            animation_state,
-            multi_animation_state,
-            layer_id,
-            multi_layer_id,
-            texture_page_id,
-            multi_texture_page_id,
-            blend_mode,
-            multi_blend_mode,
-            blend_other,
-            multi_blend_other,
-            bpp,
-            multi_bpp);
+               ((
+                  [&]
+                  {
+                       using ValueT =
+                         typename ConfigKeys<static_cast<FilterTag>(
+                           Is)>::value_type;
+
+                       // Skip std::filesystem::path
+                       if constexpr (!std::
+                                       is_same_v<ValueT, std::filesystem::path>)
+                       {
+                            if (!m_filters_array[Is])
+                            {
+                                 throw std::runtime_error(
+                                   "Filter not initialized");
+                            }
+
+                            auto *current = static_cast<
+                              filter<static_cast<FilterTag>(Is)> *>(
+                              m_filters_array[Is].get());
+
+                            current->combine(table);
+                       }
+                  }()),
+                ...);
+          }(std::make_index_sequence<static_cast<std::size_t>(
+              FilterTag::All)>{});
      }
 
+
+     void update_table(toml::table &table)
+     {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               ((
+                  [&]
+                  {
+                       using ValueT =
+                         typename ConfigKeys<static_cast<FilterTag>(
+                           Is)>::value_type;
+
+                       // Skip std::filesystem::path
+                       if constexpr (!std::
+                                       is_same_v<ValueT, std::filesystem::path>)
+                       {
+                            if (!m_filters_array[Is])
+                            {
+                                 throw std::runtime_error(
+                                   "Filter not initialized");
+                            }
+
+                            auto *current = static_cast<
+                              filter<static_cast<FilterTag>(Is)> *>(
+                              m_filters_array[Is].get());
+
+                            current->update(table);
+                       }
+                  }()),
+                ...);
+          }(std::make_index_sequence<static_cast<std::size_t>(
+              FilterTag::All)>{});
+     }
 
      template<open_viii::graphics::background::is_tile ThisTileT>
      bool operator()(const ThisTileT &tile) const
      {
-          return [&tile](const auto &...operations) -> bool
+          std::bitset<static_cast<std::size_t>(FilterTag::All)> results;
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
           {
-               return (std::invoke(operations, tile) && ...);
-          }(draw_bit,
-            z,
-            multi_z,
-            palette,
-            multi_palette,
-            animation_id,
-            multi_animation_id,
-            animation_state,
-            multi_animation_state,
-            layer_id,
-            multi_layer_id,
-            texture_page_id,
-            multi_texture_page_id,
-            blend_mode,
-            multi_blend_mode,
-            blend_other,
-            multi_blend_other,
-            bpp,
-            multi_bpp);
+               ((
+                  [&]
+                  {
+                       // Skip std::filesystem::path
+                       if constexpr (HasOperationType<static_cast<FilterTag>(
+                                       Is)>)
+                       {
+                            if (!m_filters_array[Is])
+                            {
+                                 throw std::runtime_error(
+                                   "Filter not initialized");
+                            }
+
+                            const auto *current = static_cast<
+                              const filter<static_cast<FilterTag>(Is)> *>(
+                              m_filters_array[Is].get());
+
+                            results.set(Is, std::invoke(*current, tile));
+                       }
+                       else
+                       {
+                            results.set(Is, true);
+                       }
+                  }()),
+                ...);
+          }(std::make_index_sequence<static_cast<std::size_t>(
+              FilterTag::All)>{});
+          return results.all();
      }
 };
 namespace tile_operations

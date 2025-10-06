@@ -187,7 +187,7 @@ void fme::filter_window::render() const
                     {
                          touched_editor = true;
                     }
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
+                    ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
                       = { ff_8::FilterSettings::All_Disabled };
                     multi_pupu.reload(*file_table);
                     const auto optional_field_coo = [&]()
@@ -1462,7 +1462,7 @@ void fme::filter_window::render_detail_view(
      if (m_changed)
      {
           m_reload_thumbnail = true;
-          lock_map_sprite->filter().update(*m_selected_toml_table);
+          lock_map_sprite->filter().update_table(*m_selected_toml_table);
           save_config(lock_selections);
      }
 }
@@ -1771,7 +1771,8 @@ void fme::filter_window::combo_filtered_pupu(
                      [](const ff_8::PupuID &pupu_id) -> decltype(auto)
                      { return pupu_id.create_summary(); });
        },
-       [&]() -> auto & { return lock_map_sprite->filter().multi_pupu; },
+       [&]() -> auto &
+       { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiPupu>(); },
        generic_combo_settings{ .num_columns = 3 });
 
      if (!gcc.render())
@@ -1791,7 +1792,8 @@ void fme::filter_window::combo_filtered_bpps(
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_bpp; });
+       [&]() -> auto   &
+     { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiBpp>(); });
      if (!gcc.render())
      {
           return;
@@ -1803,9 +1805,10 @@ void fme::filter_window::combo_filtered_bpps(
 void fme::filter_window::combo_filtered_palettes(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map         = lock_map_sprite->uniques().palette();
-     const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
-     const auto  join_vector = [](auto &&pairs)
+     const auto &map = lock_map_sprite->uniques().palette();
+     const auto &keys
+       = lock_map_sprite->filter().value<ff_8::FilterTag::MultiBpp>();
+     const auto join_vector = [](auto &&pairs)
      {
           auto transform_pairs = pairs
                                  | std::views::transform(
@@ -1816,7 +1819,9 @@ void fme::filter_window::combo_filtered_palettes(
 
      auto value_string_pairs = [&]()
      {
-          if (keys.empty() || !lock_map_sprite->filter().multi_bpp.enabled())
+          if (
+            keys.empty()
+            || !lock_map_sprite->filter().enabled<ff_8::FilterTag::MultiBpp>())
           {
                return join_vector(map | std::views::values);
           }
@@ -1861,7 +1866,11 @@ void fme::filter_window::combo_filtered_palettes(
        [&values]() { return values; },
        [&strings]() { return strings; },
        [&strings]() { return strings; },
-       [&]() -> auto & { return lock_map_sprite->filter().multi_palette; });
+       [&]() -> auto &
+       {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiPalette>();
+       });
 
      if (!gcc.render())
      {
@@ -1882,7 +1891,11 @@ void fme::filter_window::combo_filtered_blend_modes(
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_blend_mode; });
+       [&]() -> auto   &
+     {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiBlendMode>();
+       });
      if (!gcc.render())
      {
           return;
@@ -1900,7 +1913,11 @@ void fme::filter_window::combo_filtered_blend_other(
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_blend_other; });
+       [&]() -> auto   &
+     {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiBlendOther>();
+       });
      if (!gcc.render())
      {
           return;
@@ -1918,7 +1935,11 @@ void fme::filter_window::combo_filtered_layers(
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_layer_id; });
+       [&]() -> auto   &
+     {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiLayerId>();
+       });
      if (!gcc.render())
      {
           return;
@@ -1937,7 +1958,10 @@ void fme::filter_window::combo_filtered_texture_pages(
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
        [&]() -> auto   &
-     { return lock_map_sprite->filter().multi_texture_page_id; });
+     {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiTexturePageId>();
+       });
      if (!gcc.render())
      {
           return;
@@ -1979,7 +2003,10 @@ void fme::filter_window::combo_filtered_animation_ids(
        [&pair]() { return pair.strings(); },
        //       filter<FilterTag::MultiAnimationId> multi_animation_id;
        [&]() -> auto   &
-     { return lock_map_sprite->filter().multi_animation_id; });
+     {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiAnimationId>();
+       });
      if (!gcc.render())
      {
           return;
@@ -1991,9 +2018,10 @@ void fme::filter_window::combo_filtered_animation_ids(
 void fme::filter_window::combo_filtered_animation_states(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map  = lock_map_sprite->uniques().animation_state();
-     const auto &keys = lock_map_sprite->filter().multi_animation_id.value();
-     const auto  join_vector = [](auto &&pairs)
+     const auto &map = lock_map_sprite->uniques().animation_state();
+     const auto &keys
+       = lock_map_sprite->filter().value<ff_8::FilterTag::MultiAnimationId>();
+     const auto join_vector = [](auto &&pairs)
      {
           auto transform_pairs = pairs
                                  | std::views::transform(
@@ -2006,7 +2034,8 @@ void fme::filter_window::combo_filtered_animation_states(
      {
           if (
             keys.empty()
-            || !lock_map_sprite->filter().multi_animation_id.enabled())
+            || !lock_map_sprite->filter()
+                  .enabled<ff_8::FilterTag::MultiAnimationId>())
           {
                return join_vector(map | std::views::values);
           }
@@ -2048,7 +2077,10 @@ void fme::filter_window::combo_filtered_animation_states(
        [&strings]() { return strings; },
        [&strings]() { return strings; },
        [&]() -> auto &
-       { return lock_map_sprite->filter().multi_animation_state; });
+       {
+            return lock_map_sprite->filter()
+              .get<ff_8::FilterTag::MultiAnimationState>();
+       });
      if (!gcc.render())
      {
           return;
@@ -2066,7 +2098,8 @@ void fme::filter_window::combo_filtered_z(
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return lock_map_sprite->filter().multi_z; });
+       [&]() -> auto   &
+     { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiZ>(); });
      if (!gcc.render())
      {
           return;
@@ -2092,7 +2125,8 @@ void fme::filter_window::combo_filtered_draw_bit(
                                gui_labels::draw_bit_enabled_tooltip,
                                gui_labels::draw_bit_disabled_tooltip };
        },
-       [&]() -> auto & { return lock_map_sprite->filter().draw_bit; });
+       [&]() -> auto &
+       { return lock_map_sprite->filter().get<ff_8::FilterTag::DrawBit>(); });
      if (!gcc.render())
           return;
      lock_map_sprite->update_render_texture();
@@ -2130,7 +2164,7 @@ void fme::filter_window::menu_filtered_pupu(
      GenericMenuWithMultiFilter(
        gui_labels::pupu_id,
        map_pupu_id{ lock_map_sprite },
-       lock_map_sprite->filter().multi_pupu,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiPupu>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2144,7 +2178,7 @@ void fme::filter_window::menu_filtered_bpps(
      GenericMenuWithMultiFilter(
        gui_labels::bpp,
        lock_map_sprite->uniques().bpp(),
-       lock_map_sprite->filter().multi_bpp,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBpp>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2155,10 +2189,11 @@ void fme::filter_window::menu_filtered_bpps(
 void fme::filter_window::menu_filtered_palettes(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map         = lock_map_sprite->uniques().palette();
-     const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
+     const auto &map = lock_map_sprite->uniques().palette();
+     const auto &keys
+       = lock_map_sprite->filter().value<ff_8::FilterTag::MultiBpp>();
 
-     const auto  join_vector = [](auto &&pairs)
+     const auto join_vector = [](auto &&pairs)
      {
           auto transform_pairs = pairs
                                  | std::views::transform(
@@ -2169,7 +2204,9 @@ void fme::filter_window::menu_filtered_palettes(
 
      auto value_string_pairs = [&]()
      {
-          if (keys.empty() || !lock_map_sprite->filter().multi_bpp.enabled())
+          if (
+            keys.empty()
+            || !lock_map_sprite->filter().enabled<ff_8::FilterTag::MultiBpp>())
           {
                return join_vector(map | std::views::values);
           }
@@ -2212,7 +2249,7 @@ void fme::filter_window::menu_filtered_palettes(
      GenericMenuWithMultiFilter(
        gui_labels::palette,
        unique_palettes,
-       lock_map_sprite->filter().multi_palette,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiPalette>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2226,7 +2263,7 @@ void fme::filter_window::menu_filtered_blend_modes(
      GenericMenuWithMultiFilter(
        gui_labels::blend_mode,
        lock_map_sprite->uniques().blend_mode(),
-       lock_map_sprite->filter().multi_blend_mode,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBlendMode>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2240,7 +2277,7 @@ void fme::filter_window::menu_filtered_blend_other(
      GenericMenuWithMultiFilter(
        gui_labels::blend_other,
        lock_map_sprite->uniques().blend_other(),
-       lock_map_sprite->filter().multi_blend_other,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBlendOther>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2254,7 +2291,7 @@ void fme::filter_window::menu_filtered_layers(
      GenericMenuWithMultiFilter(
        gui_labels::layer_id,
        lock_map_sprite->uniques().layer_id(),
-       lock_map_sprite->filter().multi_layer_id,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiLayerId>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2268,7 +2305,7 @@ void fme::filter_window::menu_filtered_texture_pages(
      GenericMenuWithMultiFilter(
        gui_labels::texture_page,
        lock_map_sprite->uniques().texture_page_id(),
-       lock_map_sprite->filter().multi_texture_page_id,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiTexturePageId>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2282,7 +2319,7 @@ void fme::filter_window::menu_filtered_animation_ids(
      GenericMenuWithMultiFilter(
        gui_labels::animation_id,
        lock_map_sprite->uniques().animation_id(),
-       lock_map_sprite->filter().multi_animation_id,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiAnimationId>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2294,9 +2331,11 @@ void fme::filter_window::menu_filtered_animation_states(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map  = lock_map_sprite->uniques().animation_state();
-     const auto &keys = lock_map_sprite->filter().multi_animation_id.value();
+     const auto &keys = lock_map_sprite->filter()
+                          .get<ff_8::FilterTag::MultiAnimationId>()
+                          .value();
 
-     const auto  join_vector = [](auto &&pairs)
+     const auto join_vector = [](auto &&pairs)
      {
           auto transform_pairs = pairs
                                  | std::views::transform(
@@ -2309,7 +2348,9 @@ void fme::filter_window::menu_filtered_animation_states(
      {
           if (
             keys.empty()
-            || !lock_map_sprite->filter().multi_animation_id.enabled())
+            || !lock_map_sprite->filter()
+                  .get<ff_8::FilterTag::MultiAnimationId>()
+                  .enabled())
           {
                return join_vector(map | std::views::values);
           }
@@ -2353,7 +2394,7 @@ void fme::filter_window::menu_filtered_animation_states(
      GenericMenuWithMultiFilter(
        gui_labels::animation_state,
        unique_animation_state,
-       lock_map_sprite->filter().multi_animation_state,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiAnimationState>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2367,7 +2408,7 @@ void fme::filter_window::menu_filtered_z(
      GenericMenuWithMultiFilter(
        gui_labels::z,
        lock_map_sprite->uniques().z(),
-       lock_map_sprite->filter().multi_z,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiZ>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2411,7 +2452,7 @@ void fme::filter_window::menu_filtered_draw_bit(
      GenericMenuWithFilter(
        gui_labels::draw_bit,
        map_draw_bit{},
-       lock_map_sprite->filter().draw_bit,
+       lock_map_sprite->filter().get<ff_8::FilterTag::DrawBit>(),
        [&]()
        {
             lock_map_sprite->update_render_texture();
@@ -2538,7 +2579,7 @@ void fme::filter_window::render_thumbnail_popup(
            nullptr,
            !m_multi_select.empty()))
      {
-          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
             = { ff_8::FilterSettings::All_Disabled };
           const toml::table *const file_table
             = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
@@ -2563,7 +2604,7 @@ void fme::filter_window::render_thumbnail_popup(
            nullptr,
            !m_multi_select.empty()))
      {
-          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter
+          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
             = { ff_8::FilterSettings::All_Disabled };
           const toml::table *const file_table
             = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
@@ -2770,8 +2811,8 @@ void fme::filter_window::process_combine(
                {
                     if (value.is_table())
                     {
-                         ff_8::filter_old<ff_8::FilterTag::MultiPupu>
-                           temp_filter = { ff_8::FilterSettings::All_Disabled };
+                         ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
+                           = { ff_8::FilterSettings::All_Disabled };
                          toml::table &file_table = *value.as_table();
                          temp_filter.reload(file_table);
 
@@ -2827,7 +2868,7 @@ void fme::filter_window::process_combine(
                continue;
           }
 
-          ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter{
+          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter{
                ff_8::FilterSettings::All_Disabled
           };
           toml::table &file_table = *value.as_table();

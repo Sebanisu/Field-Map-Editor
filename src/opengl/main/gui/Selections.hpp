@@ -743,7 +743,7 @@ struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactType>
 {
-     using value_type = ff_8::filter_old<ff_8::FilterTag::Compact>;
+     using value_type = ff_8::filter<ff_8::FilterTag::Compact>;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
      static inline value_type default_value(const Configuration &config)
@@ -761,7 +761,7 @@ struct SelectionInfo<ConfigKey::BatchFlattenEnabled>
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenType>
 {
-     using value_type = ff_8::filter_old<ff_8::FilterTag::Flatten>;
+     using value_type = ff_8::filter<ff_8::FilterTag::Flatten>;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
      static inline value_type default_value(const Configuration &config)
@@ -1259,7 +1259,7 @@ struct SelectionLoadStrategy
 // For filters that are constructed with full context and do not support default
 // init
 template<ff_8::FilterTag Tag>
-struct SelectionLoadStrategy<ff_8::filter_old<Tag>>
+struct SelectionLoadStrategy<ff_8::filter<Tag>>
 {
      // No loading: object is fully initialized elsewhere
      static bool load(auto &&...) noexcept
@@ -1328,7 +1328,7 @@ struct SelectionUpdateStrategy
 
 // Skip updating for filters — they update themselves
 template<ff_8::FilterTag Tag>
-struct SelectionUpdateStrategy<ff_8::filter_old<Tag>>
+struct SelectionUpdateStrategy<ff_8::filter<Tag>>
 {
      static void update(auto &&...) noexcept
      {

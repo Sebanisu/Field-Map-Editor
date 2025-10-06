@@ -937,12 +937,11 @@ void fme::batch::combo_compact_type_ffnx()
        = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
      static auto filter = []()
      {
-          ff_8::filter_old<ff_8::FilterTag::Compact> f{
+          ff_8::filter<ff_8::FilterTag::Compact> tmp_filter{
                ff_8::FilterSettings::All_Disabled
           };
-          f.update(compact_type::map_order_ffnx);
-          f.enable();
-          return f;
+          tmp_filter.update(compact_type::map_order_ffnx).enable();
+          return tmp_filter;
      }();
 
      const auto gcc = fme::GenericComboWithFilter(
@@ -1651,7 +1650,9 @@ void fme::batch::generate_map_sprite()
           case input_types::deswizzle:
           {
                // Enable deswizzle filter using the input path
-               filters.deswizzle.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Deswizzle>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           }
@@ -1659,7 +1660,9 @@ void fme::batch::generate_map_sprite()
           case input_types::swizzle:
           {
                // Enable swizzle filter using the input path
-               filters.swizzle.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Swizzle>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           }
@@ -1667,19 +1670,22 @@ void fme::batch::generate_map_sprite()
           case input_types::swizzle_as_one_image:
           {
                // Enable swizzle as one image filter using the input path
-               filters.swizzle_as_one_image
-                 .update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::SwizzleAsOneImage>(
+                   std::filesystem::path(selected_string))
                  .enable();
-               filters.compact_on_load_original
-                 .update(compact_type::map_order_ffnx)
+               filters
+                 .update<ff_8::FilterTag::CompactOnLoadOriginal>(
+                   compact_type::map_order_ffnx)
                  .enable();
                break;
           }
 
           case input_types::deswizzle_full_filename:
           {
-               filters.full_filename
-                 .update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::FullFileName>(
+                   std::filesystem::path(selected_string))
                  .enable();
 
                break;
@@ -1697,11 +1703,15 @@ void fme::batch::generate_map_sprite()
                // do nothing.
                break;
           case input_map_types::loaded_same_input_path:
-               filters.map.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Map>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           case input_map_types::loaded_different_input_path:
-               filters.map.update(std::filesystem::path(selected_map_string))
+               filters
+                 .update<ff_8::FilterTag::Map>(
+                   std::filesystem::path(selected_map_string))
                  .enable();
                break;
           default:

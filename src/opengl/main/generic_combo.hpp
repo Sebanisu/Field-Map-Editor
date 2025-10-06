@@ -556,6 +556,12 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  tool_tip_lambda_t,
   returns_filter_concept filter_lambdaT>
+     requires requires(
+       std::remove_reference_t<std::invoke_result_t<filter_lambdaT>> &f,
+       std::vector<std::ranges::range_value_t<
+         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>>>    v) {
+          f.update(v);
+     }
 class GenericComboWithMultiFilter
 {
    public:
