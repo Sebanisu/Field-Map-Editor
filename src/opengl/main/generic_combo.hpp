@@ -52,6 +52,12 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  tool_tip_lambda_t,
   returns_filter_concept filter_lambdaT>
+     requires requires(
+       std::remove_reference_t<std::invoke_result_t<filter_lambdaT>> &f,
+       std::ranges::range_value_t<
+         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>> v) {
+          f.update(v);
+     }
 class GenericComboWithFilter
 {
    public:
@@ -351,6 +357,14 @@ template<
   ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
   ff_8::IsFilterOld               IsFilterOldT,
   std::invocable                  invocableT>
+     requires(requires(IsFilterOldT &filter, HasValuesAndStringsAndZipT &pair) {
+          typename std::remove_cvref_t<
+            std::ranges::range_value_t<decltype(pair.values())>>;
+
+          filter.update(
+            std::declval<std::remove_cvref_t<
+              std::ranges::range_value_t<decltype(pair.values())>>>());
+     })
 struct GenericMenuWithFilter
 {
    private:
@@ -858,6 +872,12 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  ToolTipLambdaT,
   returns_filter_concept FilterLambdaT>
+     requires requires(
+       std::remove_reference_t<std::invoke_result_t<FilterLambdaT>> &f,
+       std::ranges::range_value_t<
+         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>> v) {
+          f.update(v);
+     }
 class GenericComboWithFilterAndFixedToggles
 {
    public:
