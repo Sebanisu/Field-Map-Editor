@@ -1417,8 +1417,8 @@ class GenericCombo
                for (const auto &[index, string] : std::views::zip(
                       std::views::iota(
                         decltype(current_idx_){},
-                        static_cast<decltype(current_idx_)> std::ranges::size(
-                          strings_)),
+                        static_cast<decltype(current_idx_)>(
+                          std::ranges::size(strings_))),
                       strings_))
                {
                     const bool is_selected = (index == current_idx_);
