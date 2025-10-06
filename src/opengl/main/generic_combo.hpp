@@ -1415,7 +1415,11 @@ class GenericCombo
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
                for (const auto &[index, string] : std::views::zip(
-                      std::views::iota(decltype(current_idx_){}), strings_))
+                      std::views::iota(
+                        decltype(current_idx_){},
+                        static_cast<decltype(current_idx_)> std::ranges::size(
+                          strings_)),
+                      strings_))
                {
                     const bool is_selected = (index == current_idx_);
                     // You can store your selection however you
