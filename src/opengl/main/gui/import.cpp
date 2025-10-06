@@ -510,10 +510,12 @@ bool import::combo_tile_size() const
        = std::array{ tile_sizes::default_size, tile_sizes::x_2_size,
                      tile_sizes::x_4_size, tile_sizes::x_8_size,
                      tile_sizes::x_16_size };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      const auto gcc = GenericCombo(
        gui_labels::tile_size,
        []() -> decltype(auto) { return values; },
-       []() { return values | std::views::transform(AsString{}); },
+       []() -> decltype(auto) { return strings; },
        selections->get<ConfigKey::TileSizeValue>());
      if (!gcc.render())
      {

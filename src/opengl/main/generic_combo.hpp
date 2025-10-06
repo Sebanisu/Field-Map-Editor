@@ -32,9 +32,12 @@ struct generic_combo_settings
 };
 
 template<typename T>
-concept returns_range_concept = requires(std::remove_cvref_t<T> callable) {
-     { callable() } -> std::ranges::range;
-};
+concept returns_range_concept
+  = std::invocable<T> &&                          // T must be callable
+    std::ranges::range<std::invoke_result_t<T>> &&// result of T() is a range
+    std::ranges::viewable_range<std::invoke_result_t<T>>;// result is viewable
+
+
 template<typename T>
 concept filter_concept = requires(std::remove_cvref_t<T> filter) {
      { filter.enabled() } -> std::convertible_to<bool>;
@@ -910,7 +913,7 @@ class GenericComboWithFilterAndFixedToggles
           if (values_.empty() || strings_.empty())
           {
                return false;
-          }
+          }// namespace fme
 
           updateCurrentIndex();
 

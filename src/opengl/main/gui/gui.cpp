@@ -1559,12 +1559,7 @@ void gui::combo_mim_bpp()
      const auto gcc = GenericCombo(
        gui_labels::bpp,
        [&]() { return Mim::bpp_selections(); },
-       [&]()
-       {
-            return Mim::bpp_selections_c_str()
-                   | std::ranges::views::transform([](std::string_view sv)
-                                                   { return sv; });
-       },
+       [&]() { return Mim::bpp_selections_c_str(); },
        m_selections->get<ConfigKey::Bpp>());
 
      if (!gcc.render())
