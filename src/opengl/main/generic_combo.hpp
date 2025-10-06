@@ -439,13 +439,14 @@ template<
   ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
   ff_8::IsFilterOld               IsFilterOldT,
   std::invocable                  invocableT>
-     requires requires(
-       IsFilterOldT                     &filter,
-       const HasValuesAndStringsAndZipT &pair) {
-          using value_type = std::remove_cvref_t<
+     requires(requires(IsFilterOldT &filter, HasValuesAndStringsAndZipT &pair) {
+          typename std::remove_cvref_t<
             std::ranges::range_value_t<decltype(pair.values())>>;
-          filter.update(std::declval<std::vector<value_type>>());
-     }
+
+          filter.update(
+            std::declval<std::vector<std::remove_cvref_t<
+              std::ranges::range_value_t<decltype(pair.values())>>>>());
+     })
 struct GenericMenuWithMultiFilter
 {
    private:
