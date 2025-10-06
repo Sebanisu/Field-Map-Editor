@@ -203,58 +203,60 @@ class GenericComboWithFilter
           const auto pop_item_width
             = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
-          const auto &current_item = *getNext(strings_, current_idx_);
+          const char *current_item_cstr = [&]() -> const char *
+          {
+               if (
+                 std::ranges::empty(strings_)
+                 || !std::cmp_less(current_idx_, std::ranges::size(strings_)))
+               {
+                    return "N/A";
+               }
+               return std::data(*getNext(strings_, current_idx_));
+          }();
 
           if (ImGui::BeginCombo(
-                "##Empty",
-                std::ranges::data(current_item),
-                ImGuiComboFlags_HeightLarge))
+                "##Empty", current_item_cstr, ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
-
-               std::ranges::for_each(
-                 strings_,
-                 [&,
-                  index = decltype(current_idx_){}](const auto &string) mutable
-                 {
-                      const bool  is_selected = (current_item == string);
-                      // You can store your selection however you
-                      // want, outside or inside your objects
-                      const char *c_str_value = std::ranges::data(string);
-                      {
-                           const auto pop_id = PushPopID();
-                           const auto pop_column
-                             = glengine::ScopeGuard{ &ImGui::NextColumn };
-                           if (ImGui::Selectable(c_str_value, is_selected))
-                           {
-                                for (current_idx_ = 0;
-                                     const auto &temp : strings_)
-                                {
-                                     if (std::ranges::equal(temp, string))
-                                     {
-                                          changed_ = true;
-                                          filter_.get().enable();
-                                          break;
-                                     }
-                                     ++current_idx_;
-                                }
-                                //            current_idx =
-                                //            std::distance(std::ranges::data(strings),
-                                //            &string); changed     = true;
-                           }
-                      }
-                      if (is_selected)
-                      {
-                           ImGui::SetItemDefaultFocus();
-                           // You may set the initial focus when
-                           // opening the combo (scrolling + for
-                           // keyboard navigation support)
-                      }
-                      renderToolTip(index);
-                      ++index;
-                 });
+               for (const auto &[index_raw, string] :
+                    std::views::enumerate(strings_))
+               {
+                    const auto index
+                      = static_cast<decltype(current_idx_)>(index_raw);
+                    const bool  is_selected = (index == current_idx_);
+                    // You can store your selection however you
+                    // want, outside or inside your objects
+                    const char *c_str_value = std::ranges::data(string);
+                    {
+                         const auto pop_id = PushPopID();
+                         const auto pop_column
+                           = glengine::ScopeGuard{ &ImGui::NextColumn };
+                         if (ImGui::Selectable(c_str_value, is_selected))
+                         {
+                              for (current_idx_ = 0;
+                                   const auto &temp : strings_)
+                              {
+                                   if (std::ranges::equal(temp, string))
+                                   {
+                                        changed_ = true;
+                                        filter_.get().enable();
+                                        break;
+                                   }
+                                   ++current_idx_;
+                              }
+                         }
+                    }
+                    if (is_selected)
+                    {
+                         ImGui::SetItemDefaultFocus();
+                         // You may set the initial focus when
+                         // opening the combo (scrolling + for
+                         // keyboard navigation support)
+                    }
+                    renderToolTip(index);
+               }
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
@@ -365,7 +367,7 @@ template<
             std::declval<std::remove_cvref_t<
               std::ranges::range_value_t<decltype(pair.values())>>>());
      })
-struct GenericMenuWithFilter
+class GenericMenuWithFilter
 {
    private:
      std::string_view             m_label;
@@ -461,7 +463,7 @@ template<
             std::declval<std::vector<std::remove_cvref_t<
               std::ranges::range_value_t<decltype(pair.values())>>>>());
      })
-struct GenericMenuWithMultiFilter
+class GenericMenuWithMultiFilter
 {
    private:
      std::string_view                  m_label;
@@ -943,11 +945,11 @@ class GenericComboWithFilterAndFixedToggles
      }
 
    private:
-     std::string_view                          name_;
-     std::invoke_result_t<ValueLambdaT>        values_;
-     std::invoke_result_t<FixedTogglesLambdaT> fixed_toggles_;
-     std::invoke_result_t<StringLambdaT>       strings_;
-     std::invoke_result_t<ToolTipLambdaT>      tool_tips_;
+     std::string_view                            name_;
+     std::invoke_result_t<ValueLambdaT>          values_;
+     std::invoke_result_t<FixedTogglesLambdaT>   fixed_toggles_;
+     mutable std::invoke_result_t<StringLambdaT> strings_;
+     std::invoke_result_t<ToolTipLambdaT>        tool_tips_;
      std::reference_wrapper<
        std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>>
                                                                 filter_;
@@ -1032,14 +1034,20 @@ class GenericComboWithFilterAndFixedToggles
           const auto pop_item_width
             = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
-          // Get the current item
-          const auto &current_item = *getNext(strings_, current_idx_);
+          const char *current_item_cstr = [&]() -> const char *
+          {
+               if (
+                 std::ranges::empty(strings_)
+                 || !std::cmp_less(current_idx_, std::ranges::size(strings_)))
+               {
+                    return "N/A";
+               }
+               return std::data(*getNext(strings_, current_idx_));
+          }();
 
           // Begin combo box with preview of current item
           if (ImGui::BeginCombo(
-                "##Empty",
-                std::ranges::data(current_item),
-                ImGuiComboFlags_HeightLarge))
+                "##Empty", current_item_cstr, ImGuiComboFlags_HeightLarge))
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
                for (const auto &[index_raw, string] :
@@ -1047,9 +1055,8 @@ class GenericComboWithFilterAndFixedToggles
                {
                     const auto index
                       = static_cast<decltype(current_idx_)>(index_raw);
-                    const bool is_selected
-                      = std::ranges::equal(current_item, string);
-                    const auto pop_id = PushPopID();
+                    const bool is_selected = current_idx_ == index;
+                    const auto pop_id      = PushPopID();
                     const auto pop_column
                       = glengine::ScopeGuard{ &ImGui::NextColumn };
 
@@ -1236,6 +1243,10 @@ template<
   returns_range_concept StringLambdaT,
   typename ValueT,
   returns_range_concept tool_tip_lambda_t = StringLambdaT>
+     requires std::assignable_from<
+       std::remove_reference_t<ValueT> &,
+       std::ranges::range_value_t<
+         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>>>
 class GenericCombo
 {
    public:
@@ -1309,7 +1320,7 @@ class GenericCombo
    private:
      std::string_view                                           name_;
      std::invoke_result_t<ValueLambdaT>                         values_;
-     std::invoke_result_t<StringLambdaT>                        strings_;
+     mutable std::invoke_result_t<StringLambdaT>                strings_;
      std::invoke_result_t<tool_tip_lambda_t>                    tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
      generic_combo_settings                                     settings_;
@@ -1368,8 +1379,18 @@ class GenericCombo
           const auto pop_item_width
             = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
-          const auto &current_item = *getNext(strings_, current_idx_);
-          auto        max_it       = std::ranges::max_element(
+          const auto current_item_cstr = [&]() -> const char *
+          {
+               if (
+                 std::ranges::empty(strings_)
+                 || !std::cmp_less(current_idx_, std::ranges::size(strings_)))
+               {
+                    return "N/A";
+               }
+               return std::data(*getNext(strings_, current_idx_));
+          }();
+
+          auto max_it = std::ranges::max_element(
             strings_,
             {},
             [](const auto &s)
@@ -1388,57 +1409,50 @@ class GenericCombo
           ImGui::SetNextWindowSize(ImVec2(width, 0));
 
           if (ImGui::BeginCombo(
-                "##Empty",
-                std::ranges::data(current_item),
-                ImGuiComboFlags_HeightLarge))
+                "##Empty", current_item_cstr, ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
                ImGui::Columns(settings_.num_columns, "##columns", false);
-               std::ranges::for_each(
-                 strings_,
-                 [&,
-                  index = decltype(current_idx_){}](const auto &string) mutable
-                 {
-                      const bool is_selected = (current_item == string);
-                      // You can store your selection however you
-                      // want, outside or inside your objects
-                      if (std::ranges::empty(string))
-                      {
-                           return;
-                      }
-                      const char *c_str_value = std::ranges::data(string);
-                      {
-                           const auto pop_id2 = PushPopID();
-                           const auto pop_column
-                             = glengine::ScopeGuard{ &ImGui::NextColumn };
+               for (const auto &[index, string] : std::views::zip(
+                      std::views::iota(decltype(current_idx_){}), strings_))
+               {
+                    const bool is_selected = (index == current_idx_);
+                    // You can store your selection however you
+                    // want, outside or inside your objects
+                    if (std::ranges::empty(string))
+                    {
+                         return;
+                    }
+                    const char *c_str_value = std::ranges::data(string);
+                    {
+                         const auto pop_id2 = PushPopID();
+                         const auto pop_column
+                           = glengine::ScopeGuard{ &ImGui::NextColumn };
 
-                           if (ImGui::Selectable(c_str_value, is_selected))
-                           {
-                                for (current_idx_ = 0;
-                                     const auto &temp : strings_)
-                                {
-                                     if (std::ranges::equal(temp, string))
-                                     {
-                                          changed_ = true;
-                                          break;
-                                     }
-                                     ++current_idx_;
-                                }
-                                //            current_idx =
-                                //            std::distance(std::ranges::data(strings),
-                                //            &string); changed     = true;
-                           }
-                      }
-                      if (is_selected)
-                      {
-                           ImGui::SetItemDefaultFocus();
-                           // You may set the initial focus when
-                           // opening the combo (scrolling + for
-                           // keyboard navigation support)
-                      }
-                      renderToolTip(index++);
-                 });
+                         if (ImGui::Selectable(c_str_value, is_selected))
+                         {
+                              for (current_idx_ = 0;
+                                   const auto &temp : strings_)
+                              {
+                                   if (std::ranges::equal(temp, string))
+                                   {
+                                        changed_ = true;
+                                        break;
+                                   }
+                                   ++current_idx_;
+                              }
+                         }
+                    }
+                    if (is_selected)
+                    {
+                         ImGui::SetItemDefaultFocus();
+                         // You may set the initial focus when
+                         // opening the combo (scrolling + for
+                         // keyboard navigation support)
+                    }
+                    renderToolTip(index);
+               }
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
@@ -1452,10 +1466,6 @@ class GenericCombo
                return;
           }
           tool_tip(*getNext(tool_tips_, index));
-          if (!ImGui::IsItemHovered())
-          {
-               return;
-          }
      }
 
      void renderLeftButton() const
