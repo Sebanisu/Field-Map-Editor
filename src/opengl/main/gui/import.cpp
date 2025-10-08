@@ -514,8 +514,8 @@ bool import::combo_tile_size() const
                                  | std::ranges::to<std::vector>();
      const auto gcc = GenericCombo(
        gui_labels::tile_size,
-       []() -> decltype(auto) { return values; },
-       []() -> decltype(auto) { return strings; },
+       []() -> const auto & { return values; },
+       []() -> const auto & { return strings; },
        selections->get<ConfigKey::TileSizeValue>());
      if (!gcc.render())
      {

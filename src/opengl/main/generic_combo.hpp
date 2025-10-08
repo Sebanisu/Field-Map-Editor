@@ -948,11 +948,11 @@ class GenericComboWithFilterAndFixedToggles
      }
 
    private:
-     std::string_view                            name_;
-     std::invoke_result_t<ValueLambdaT>          values_;
-     std::invoke_result_t<FixedTogglesLambdaT>   fixed_toggles_;
-     mutable std::invoke_result_t<StringLambdaT> strings_;
-     std::invoke_result_t<ToolTipLambdaT>        tool_tips_;
+     std::string_view                          name_;
+     std::invoke_result_t<ValueLambdaT>        values_;
+     std::invoke_result_t<FixedTogglesLambdaT> fixed_toggles_;
+     std::invoke_result_t<StringLambdaT>       strings_;
+     std::invoke_result_t<ToolTipLambdaT>      tool_tips_;
      std::reference_wrapper<
        std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>>
                                                                 filter_;
@@ -1323,7 +1323,7 @@ class GenericCombo
    private:
      std::string_view                                           name_;
      std::invoke_result_t<ValueLambdaT>                         values_;
-     mutable std::invoke_result_t<StringLambdaT>                strings_;
+     std::invoke_result_t<StringLambdaT>                        strings_;
      std::invoke_result_t<tool_tip_lambda_t>                    tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
      generic_combo_settings                                     settings_;
