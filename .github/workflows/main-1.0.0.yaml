@@ -66,6 +66,14 @@ jobs:
       with:
         name: "${{ env._RELEASE_NAME }}-${{ env._RELEASE_VERSION }}"
         path: ".dist/*.zip"
+    - name: Delete existing canary tag if it exists
+      if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'true' && success()
+      run: |
+        git fetch origin +refs/tags/*:refs/tags/*
+        if git rev-parse -q --verify refs/tags/canary >/dev/null; then
+          echo "Deleting existing 'canary' tag"
+          git push origin :refs/tags/canary
+        fi
     - name: Publish Canary release
       uses: ncipollo/release-action@v1
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'true' && success()
@@ -91,4 +99,5 @@ jobs:
         makeLatest: true
         removeArtifacts: true
         name: "${{ env._RELEASE_VERSION }}"
+
 
