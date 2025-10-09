@@ -903,11 +903,13 @@ void fme::filter_window::combo_failover(
           std::ranges::copy(range, arr.begin());
           return arr;
      }();
+     static const auto strings = FailOverLevelsArray
+                                 | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      const auto gcc = GenericCombo(
        "Fail Over",
-       [&]() { return FailOverLevelsArray; },
-       [&]()
-       { return FailOverLevelsArray | std::views::transform(AsString{}); },
+       FailOverLevelsArray,
+       strings,
        lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (gcc.render())
      {
@@ -1706,22 +1708,21 @@ void fme::filter_window::popup_combo_filtered_pupu(
      if (ImGui::BeginPopupModal(
            "Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
      {
+          const auto strings = lock_map_sprite->working_unique_pupu()
+                               | std::views::transform(AsString{})
+                               | std::ranges::to<std::vector>();
+          const auto tooltips
+            = lock_map_sprite->working_unique_pupu()
+              | std::views::transform(
+                [](const ff_8::PupuID &pupu_id) -> decltype(auto)
+                { return pupu_id.create_summary(); })
+              | std::ranges::to<std::vector>();
           const auto gcc = GenericComboWithMultiFilter(
             gui_labels::pupu_id,
-            [&]() { return lock_map_sprite->working_unique_pupu(); },
-            [&]()
-            {
-                 return lock_map_sprite->working_unique_pupu()
-                        | std::views::transform(AsString{});
-            },
-            [&]()
-            {
-                 return lock_map_sprite->working_unique_pupu()
-                        | std::views::transform(
-                          [](const ff_8::PupuID &pupu_id) -> decltype(auto)
-                          { return pupu_id.create_summary(); });
-            },
-            [&]() -> auto & { return m_multi_select_filter; },
+            lock_map_sprite->working_unique_pupu(),
+            strings,
+            tooltips,
+            m_multi_select_filter,
             generic_combo_settings{ .num_columns = 2 });
           (void)gcc.render();
           format_imgui_wrapped_text(
@@ -1756,23 +1757,20 @@ void fme::filter_window::popup_combo_filtered_pupu(
 void fme::filter_window::combo_filtered_pupu(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     const auto strings = lock_map_sprite->working_unique_pupu()
+                          | std::views::transform(AsString{})
+                          | std::ranges::to<std::vector>();
+     const auto tooltips = lock_map_sprite->working_unique_pupu()
+                           | std::views::transform(
+                             [](const ff_8::PupuID &pupu_id) -> decltype(auto)
+                             { return pupu_id.create_summary(); })
+                           | std::ranges::to<std::vector>();
      const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
-       [&]() { return lock_map_sprite->working_unique_pupu(); },
-       [&]()
-       {
-            return lock_map_sprite->working_unique_pupu()
-                   | std::views::transform(AsString{});
-       },
-       [&]()
-       {
-            return lock_map_sprite->working_unique_pupu()
-                   | std::views::transform(
-                     [](const ff_8::PupuID &pupu_id) -> decltype(auto)
-                     { return pupu_id.create_summary(); });
-       },
-       [&]() -> auto &
-       { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiPupu>(); },
+       lock_map_sprite->working_unique_pupu(),
+       strings,
+       tooltips,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiPupu>(),
        generic_combo_settings{ .num_columns = 3 });
 
      if (!gcc.render())
@@ -1789,11 +1787,10 @@ void fme::filter_window::combo_filtered_bpps(
      const auto &pair = lock_map_sprite->uniques().bpp();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::bpp,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiBpp>(); });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBpp>());
      if (!gcc.render())
      {
           return;
@@ -1854,23 +1851,21 @@ void fme::filter_window::combo_filtered_palettes(
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      // Extract values and strings into separate views
-     auto values = value_string_pairs
-                   | std::views::transform([](const auto &pair)
-                                           { return std::get<0>(pair); });
-     auto strings = value_string_pairs
-                    | std::views::transform([](const auto &pair)
-                                            { return std::get<1>(pair); });
+     const auto values = value_string_pairs
+                         | std::views::transform([](const auto &pair)
+                                                 { return std::get<0>(pair); })
+                         | std::ranges::to<std::vector>();
+     const auto strings = value_string_pairs
+                          | std::views::transform([](const auto &pair)
+                                                  { return std::get<1>(pair); })
+                          | std::ranges::to<std::vector>();
 
      const auto gcc = fme::GenericComboWithMultiFilter(
        gui_labels::palette,
-       [&values]() { return values; },
-       [&strings]() { return strings; },
-       [&strings]() { return strings; },
-       [&]() -> auto &
-       {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiPalette>();
-       });
+       values,
+       strings,
+       strings,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiPalette>());
 
      if (!gcc.render())
      {
@@ -1887,15 +1882,9 @@ void fme::filter_window::combo_filtered_blend_modes(
 {
      const auto &pair = lock_map_sprite->uniques().blend_mode();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::blend_mode,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiBlendMode>();
-       });
+       gui_labels::blend_mode, pair.values(), pair.strings(), pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBlendMode>());
+
      if (!gcc.render())
      {
           return;
@@ -1910,14 +1899,10 @@ void fme::filter_window::combo_filtered_blend_other(
      const auto &pair = lock_map_sprite->uniques().blend_other();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::blend_other,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiBlendOther>();
-       });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiBlendOther>());
      if (!gcc.render())
      {
           return;
@@ -1931,15 +1916,8 @@ void fme::filter_window::combo_filtered_layers(
 {
      const auto &pair = lock_map_sprite->uniques().layer_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::layer_id,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiLayerId>();
-       });
+       gui_labels::layer_id, pair.values(), pair.strings(), pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiLayerId>());
      if (!gcc.render())
      {
           return;
@@ -1954,14 +1932,10 @@ void fme::filter_window::combo_filtered_texture_pages(
      const auto &pair = lock_map_sprite->uniques().texture_page_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::texture_page,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiTexturePageId>();
-       });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiTexturePageId>());
      if (!gcc.render())
      {
           return;
@@ -1980,10 +1954,10 @@ void fme::filter_window::combo_exclude_animation_id_from_state(
      // glengine::ScopeGuard(&ImGui::EndDisabled);
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        "Exclude",
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto  &{ return m_excluded_animation_id_from_state; });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       m_excluded_animation_id_from_state);
      if (!gcc.render())
      {
           return;
@@ -1998,15 +1972,10 @@ void fme::filter_window::combo_filtered_animation_ids(
      const auto &pair = lock_map_sprite->uniques().animation_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::animation_id,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       //       filter<FilterTag::MultiAnimationId> multi_animation_id;
-       [&]() -> auto   &
-     {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiAnimationId>();
-       });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiAnimationId>());
      if (!gcc.render())
      {
           return;
@@ -2065,22 +2034,20 @@ void fme::filter_window::combo_filtered_animation_states(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     auto values = value_string_pairs
-                   | std::views::transform([&](const auto &pair)
-                                           { return std::get<0>(pair); });
-     auto strings = value_string_pairs
-                    | std::views::transform([&](const auto &pair)
-                                            { return std::get<1>(pair); });
+     const auto values = value_string_pairs
+                         | std::views::transform([&](const auto &pair)
+                                                 { return std::get<0>(pair); })
+                         | std::ranges::to<std::vector>();
+     const auto strings = value_string_pairs
+                          | std::views::transform([&](const auto &pair)
+                                                  { return std::get<1>(pair); })
+                          | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithMultiFilter(
        gui_labels::animation_state,
-       [&values]() { return values; },
-       [&strings]() { return strings; },
-       [&strings]() { return strings; },
-       [&]() -> auto &
-       {
-            return lock_map_sprite->filter()
-              .get<ff_8::FilterTag::MultiAnimationState>();
-       });
+       values,
+       strings,
+       strings,
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiAnimationState>());
      if (!gcc.render())
      {
           return;
@@ -2095,11 +2062,10 @@ void fme::filter_window::combo_filtered_z(
      const auto &pair = lock_map_sprite->uniques().z();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::z,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [&]() -> auto   &
-     { return lock_map_sprite->filter().get<ff_8::FilterTag::MultiZ>(); });
+       pair.values(),
+       pair.strings(),
+       pair.strings(),
+       lock_map_sprite->filter().get<ff_8::FilterTag::MultiZ>());
      if (!gcc.render())
      {
           return;
@@ -2115,18 +2081,18 @@ void fme::filter_window::combo_filtered_draw_bit(
      static constexpr auto values
        = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
                      ff_8::draw_bitT::disabled };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
+     static constexpr auto tooltips
+       = std::array{ gui_labels::draw_bit_all_tooltip,
+                     gui_labels::draw_bit_enabled_tooltip,
+                     gui_labels::draw_bit_disabled_tooltip };
      const auto gcc = fme::GenericComboWithFilter(
        gui_labels::draw_bit,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []()
-       {
-            return std::array{ gui_labels::draw_bit_all_tooltip,
-                               gui_labels::draw_bit_enabled_tooltip,
-                               gui_labels::draw_bit_disabled_tooltip };
-       },
-       [&]() -> auto &
-       { return lock_map_sprite->filter().get<ff_8::FilterTag::DrawBit>(); });
+       values,
+       strings,
+       tooltips,
+       lock_map_sprite->filter().get<ff_8::FilterTag::DrawBit>());
      if (!gcc.render())
           return;
      lock_map_sprite->update_render_texture();

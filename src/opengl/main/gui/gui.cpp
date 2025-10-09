@@ -1216,11 +1216,13 @@ void gui::combo_coo()
      {
           return;
      }
-     constexpr static auto values = open_viii::LangCommon::to_array();
-     const auto            gcc    = GenericCombo(
+     constexpr static auto values  = open_viii::LangCommon::to_array();
+     static const auto     strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
+     const auto gcc = GenericCombo(
        gui_labels::language,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
+       values,
+       strings,
        m_selections->get<ConfigKey::Coo>());
      if (gcc.render())
      {
@@ -1271,53 +1273,49 @@ void gui::refresh_field()
 void gui::combo_field()
 {
 
-     const auto gcc = GenericCombo(
-       gui_labels::field,
-       [this]()
-       {
-            return std::views::iota(
-              0,
-              static_cast<int>(
-                std::ranges::ssize(m_archives_group->mapdata())));
-       },
-       [this]()
-       {
-            return m_archives_group->mapdata()
-                   | std::ranges::views::transform(
-                     [](const std::string &str) -> std::string_view
-                     {
-                          using namespace std::string_view_literals;
-                          return (
-                            std::string_view(str).starts_with("ma"sv)
-                                || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
-                              ? ""sv
-                              : std::string_view(str));
-                     })
-                   | std::ranges::views::transform(
-                     [this](const std::string_view &name) -> std::string
-                     {
-                          const auto &maplist
-                            = m_archives_group->map_data_from_maplist();
-                          if (name.empty())
-                          {
-                               return {};
-                          }
-                          if (const auto it = std::ranges::find(maplist, name);
-                              it == std::ranges::end(maplist))
-                          {
-                               return fmt::format("{:<8}", name);
-                          }
-                          else
-                          {
-                               const auto maplist_index = std::ranges::distance(
-                                 std::ranges::begin(maplist), it);
+     const auto values
+       = std::views::iota(
+           int{},
+           static_cast<int>(std::ranges::ssize(m_archives_group->mapdata())))
+         | std::ranges::to<std::vector>();
+     const auto strings
+       = m_archives_group->mapdata()
+         | std::ranges::views::transform(
+           [](const std::string &str) -> std::string_view
+           {
+                using namespace std::string_view_literals;
+                return (
+                  std::string_view(str).starts_with("ma"sv)
+                      || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
+                    ? ""sv
+                    : std::string_view(str));
+           })
+         | std::ranges::views::transform(
+           [this](const std::string_view &name) -> std::string
+           {
+                const auto &maplist = m_archives_group->map_data_from_maplist();
+                if (name.empty())
+                {
+                     return {};
+                }
+                if (const auto it = std::ranges::find(maplist, name);
+                    it == std::ranges::end(maplist))
+                {
+                     return fmt::format("{:<8}", name);
+                }
+                else
+                {
+                     const auto maplist_index
+                       = std::ranges::distance(std::ranges::begin(maplist), it);
 
-                               return fmt::format(
-                                 "{:<8} - {:03d}", name, maplist_index);
-                          }
-                     });
-       },
-       m_field_index);
+                     return fmt::format("{:<8} - {:03d}", name, maplist_index);
+                }
+           })
+         | std::ranges::to<std::vector>();
+
+
+     const auto gcc
+       = GenericCombo(gui_labels::field, values, strings, m_field_index);
 
      if (gcc.render())
      {
@@ -1558,8 +1556,8 @@ void gui::combo_mim_bpp()
 {
      const auto gcc = GenericCombo(
        gui_labels::bpp,
-       [&]() { return Mim::bpp_selections(); },
-       [&]() { return Mim::bpp_selections_c_str(); },
+       Mim::bpp_selections(),
+       Mim::bpp_selections_c_str(),
        m_selections->get<ConfigKey::Bpp>());
 
      if (!gcc.render())
@@ -1590,22 +1588,21 @@ void gui::combo_mim_palette()
      if (m_selections->get<ConfigKey::Bpp>() != BPPT::BPP16_CONST())
      {
           static constexpr auto palette_values = Mim::palette_selections();
+          static const auto     values
+            = palette_values
+              | std::ranges::views::transform(
+                [](auto i) { return static_cast<uint8_t>(i); })
+              | std::ranges::to<std::vector>();
           static constexpr auto palette_strings
             = Mim::palette_selections_c_str();
+          static const auto strings = palette_strings
+                                      | std::ranges::views::transform(
+                                        [](std::string_view sv) { return sv; })
+                                      | std::ranges::to<std::vector>();
           const auto gcc = GenericCombo(
             gui_labels::palette,
-            []()
-            {
-                 return palette_values
-                        | std::ranges::views::transform(
-                          [](auto i) { return static_cast<uint8_t>(i); });
-            },
-            []()
-            {
-                 return palette_strings
-                        | std::ranges::views::transform([](std::string_view sv)
-                                                        { return sv; });
-            },
+            values,
+            strings,
             m_selections->get<ConfigKey::Palette>());
           if (gcc.render())
           {
@@ -3210,9 +3207,7 @@ void gui::directory_browser_display()
                 ps.has_map_path(selected_path, ".map"))));
 
           m_selections->update<
-            Key,
-            Keys...,
-            ConfigKey::CacheTextureAndMapPaths,
+            Key, Keys..., ConfigKey::CacheTextureAndMapPaths,
             ConfigKey::CacheSwizzlePathsEnabled,
             ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
             ConfigKey::CacheDeswizzlePathsEnabled,
@@ -3818,19 +3813,21 @@ void gui::refresh_draw_mode()
 }
 void gui::combo_draw()
 {
-     static const constinit auto iota_draw_mode
+     static const auto iota_draw_mode
        = std::views::iota(0, 2)
          | std::views::transform([](const int mode)
-                                 { return static_cast<draw_mode>(mode); });
+                                 { return static_cast<draw_mode>(mode); })
+         | std::ranges::to<std::vector>();
      static const auto str_draw_mode
        = iota_draw_mode
          | std::views::transform([](draw_mode in_draw_mode)
-                                 { return fmt::format("{}", in_draw_mode); });
+                                 { return fmt::format("{}", in_draw_mode); })
+         | std::ranges::to<std::vector>();
 
      const auto gcc = GenericCombo(
        gui_labels::draw,
-       [=]() { return iota_draw_mode; },
-       [=]() { return str_draw_mode; },
+       iota_draw_mode,
+       str_draw_mode,
        m_selections->get<ConfigKey::DrawMode>());
 
      if (!gcc.render())
@@ -3842,16 +3839,15 @@ void gui::combo_draw()
 bool gui::combo_path()
 {
      const auto pop_buttons = glengine::ScopeGuard([&]() { browse_buttons(); });
-     const auto gcc         = GenericCombo(
+     const auto strings
+       = m_selections->get<ConfigKey::FF8DirectoryPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
+     const auto gcc = GenericCombo(
        gui_labels::path,
-       [&]() { return m_selections->get<ConfigKey::FF8DirectoryPaths>(); },
-       [&]()
-       {
-            return m_selections->get<ConfigKey::FF8DirectoryPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
+       m_selections->get<ConfigKey::FF8DirectoryPaths>(),
+       strings,
        m_selections->get<ConfigKey::FF8Path>(),
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      if (
@@ -4696,22 +4692,16 @@ std::future<std::future<gui::PathsAndEnabled>>
 bool gui::combo_swizzle_path(
   ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }

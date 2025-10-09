@@ -32,58 +32,44 @@ struct generic_combo_settings
 };
 
 template<typename T>
-concept returns_range_concept
-  = std::invocable<T> &&                          // T must be callable
-    std::ranges::range<std::invoke_result_t<T>> &&// result of T() is a range
-    std::ranges::viewable_range<std::invoke_result_t<T>>;// result is viewable
-
-
-template<typename T>
 concept filter_concept = requires(std::remove_cvref_t<T> filter) {
      { filter.enabled() } -> std::convertible_to<bool>;
      { filter.update(filter.value()) } -> std::convertible_to<T>;
      { filter.enable() } -> std::convertible_to<T>;
      { filter.disable() } -> std::convertible_to<T>;
 };
-template<typename T>
-concept returns_filter_concept = requires(std::remove_cvref_t<T> callable) {
-     { callable() } -> filter_concept;
-};
+
+template<typename R>
+concept compatible_range = std::ranges::contiguous_range<R>;
+// std::ranges::sized_range<R> && std::ranges::forward_range<R>;
 
 template<
-  returns_range_concept  ValueLambdaT,
-  returns_range_concept  StringLambdaT,
-  returns_range_concept  tool_tip_lambda_t,
-  returns_filter_concept filter_lambdaT>
-     requires requires(
-       std::remove_reference_t<std::invoke_result_t<filter_lambdaT>> &f,
-       std::ranges::range_value_t<
-         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>> v) {
-          f.update(v);
-     }
+  typename InputValueT,
+  typename StringT,
+  typename ToolTipT,
+  typename FilterT>
+     requires requires(FilterT &f, InputValueT v) { f.update(v); }
 class GenericComboWithFilter
 {
    public:
      GenericComboWithFilter(
-       std::string_view       name,
-       ValueLambdaT         &&value_lambda,
-       StringLambdaT        &&string_lambda,
-       tool_tip_lambda_t    &&tool_tip_lambda,
-       filter_lambdaT       &&filter_lambda,
-       generic_combo_settings settings = {})
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       std::span<const StringT>     string_range,
+       std::span<const ToolTipT>    tooltip_range,
+       FilterT                     &filter,
+       generic_combo_settings       settings = {})
        : name_(name)
-       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(
-           std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
-       , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
+       , values_(value_range)
+       , strings_(string_range)
+       , tool_tips_(tooltip_range)
+       , filter_(filter)
        , settings_(settings)
        , current_idx_(0)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
      {
      }
-
      bool render() const
      {
           if (values_.empty() || strings_.empty())
@@ -117,19 +103,17 @@ class GenericComboWithFilter
      }
 
    private:
-     std::string_view                        name_;
-     std::invoke_result_t<ValueLambdaT>      values_;
-     std::invoke_result_t<StringLambdaT>     strings_;
-     std::invoke_result_t<tool_tip_lambda_t> tool_tips_;
-     std::reference_wrapper<
-       std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>>
-                                                                filter_;
-     generic_combo_settings                                     settings_;
-     mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
-     mutable bool                                               changed_;
-     const float                                                spacing_;
+     std::string_view                name_;
+     std::span<const InputValueT>    values_;
+     std::span<const StringT>        strings_;
+     std::span<const ToolTipT>       tool_tips_;
+     std::reference_wrapper<FilterT> filter_;
+     generic_combo_settings          settings_;
+     mutable int                     current_idx_;
+     mutable bool                    changed_;
+     float                           spacing_;
 
-     void updateCurrentIndex() const
+     void                            updateCurrentIndex() const
      {
           const auto found = std::find_if(
             std::ranges::begin(values_),
@@ -359,6 +343,29 @@ class GenericComboWithFilter
 };
 
 template<
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  std::ranges::contiguous_range ToolTipRangeT,
+  typename FilterT>
+     requires requires(
+       FilterT                                &f,
+       std::ranges::range_value_t<ValueRangeT> v) { f.update(v); }
+GenericComboWithFilter(
+  std::string_view,
+  ValueRangeT &&,
+  StringRangeT &&,
+  ToolTipRangeT &&,
+  FilterT &,
+  generic_combo_settings = {})
+  -> GenericComboWithFilter<
+    std::ranges::range_value_t<ValueRangeT>,  // InputValueT
+    std::ranges::range_value_t<StringRangeT>, // StringT
+    std::ranges::range_value_t<ToolTipRangeT>,// ToolTipT
+    FilterT                                   // FilterT
+    >;
+
+
+template<
   ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
   ff_8::IsFilterOld               IsFilterOldT,
   std::invocable                  invocableT>
@@ -577,37 +584,30 @@ class GenericMenuWithMultiFilter
      }
 };
 
-
 template<
-  returns_range_concept  ValueLambdaT,
-  returns_range_concept  StringLambdaT,
-  returns_range_concept  tool_tip_lambda_t,
-  returns_filter_concept filter_lambdaT>
-     requires requires(
-       std::remove_reference_t<std::invoke_result_t<filter_lambdaT>> &f,
-       std::vector<std::ranges::range_value_t<
-         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>>>    v) {
-          f.update(v);
-     }
+  typename InputValueT,
+  typename StringT,
+  typename ToolTipT,
+  typename FilterT>
+     requires requires(FilterT &f, std::vector<InputValueT> v) { f.update(v); }
 class GenericComboWithMultiFilter
 {
    public:
      GenericComboWithMultiFilter(
-       std::string_view       name,
-       ValueLambdaT         &&value_lambda,
-       StringLambdaT        &&string_lambda,
-       tool_tip_lambda_t    &&tool_tip_lambda,
-       filter_lambdaT       &&filter_lambda,
-       generic_combo_settings settings = {})
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       std::span<const StringT>     string_range,
+       std::span<const ToolTipT>    tooltip_range,
+       FilterT                     &filter,
+       generic_combo_settings       settings = {})
        : name_(name)
-       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(
-           std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
-       , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
+       , values_(value_range)
+       , strings_(string_range)
+       , tool_tips_(tooltip_range)
+       , filter_(filter)
        , settings_(settings)
        , current_idx_(
-           std::ranges::size(values_),
+           std::ranges::size(value_range),
            false)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
@@ -662,19 +662,17 @@ class GenericComboWithMultiFilter
      }
 
    private:
-     std::string_view                        name_;
-     std::invoke_result_t<ValueLambdaT>      values_;
-     std::invoke_result_t<StringLambdaT>     strings_;
-     std::invoke_result_t<tool_tip_lambda_t> tool_tips_;
-     std::reference_wrapper<
-       std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>>
-                               filter_;
-     generic_combo_settings    settings_;
-     mutable std::vector<bool> current_idx_;
-     mutable bool              changed_;
-     const float               spacing_;
+     std::string_view                name_;
+     std::span<const InputValueT>    values_;
+     std::span<const StringT>        strings_;
+     std::span<const ToolTipT>       tool_tips_;
+     std::reference_wrapper<FilterT> filter_;
+     generic_combo_settings          settings_;
+     mutable std::vector<bool>       current_idx_;
+     mutable bool                    changed_;
+     float                           spacing_;
 
-     void                      updateCurrentIndex() const
+     void                            updateCurrentIndex() const
      {
           const auto &filter_value = filter_.get().value();
           for (auto &&[value, enabled] : std::views::zip(values_, current_idx_))
@@ -870,37 +868,54 @@ class GenericComboWithMultiFilter
      }
 };
 
+template<
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  std::ranges::contiguous_range ToolTipRangeT,
+  typename FilterT>
+     requires requires(
+       FilterT                                             &f,
+       std::vector<std::ranges::range_value_t<ValueRangeT>> v) { f.update(v); }
+GenericComboWithMultiFilter(
+  std::string_view,
+  ValueRangeT &&,
+  StringRangeT &&,
+  ToolTipRangeT &&,
+  FilterT &,
+  generic_combo_settings = {})
+  -> GenericComboWithMultiFilter<
+    std::ranges::range_value_t<ValueRangeT>,  // InputValueT
+    std::ranges::range_value_t<StringRangeT>, // StringT
+    std::ranges::range_value_t<ToolTipRangeT>,// ToolTipT
+    FilterT                                   // FilterT
+    >;
+
 
 template<
-  returns_range_concept  ValueLambdaT,
-  returns_range_concept  FixedTogglesLambdaT,
-  returns_range_concept  StringLambdaT,
-  returns_range_concept  ToolTipLambdaT,
-  returns_filter_concept FilterLambdaT>
+  typename InputValueT,
+  typename StringT,
+  typename ToolTipT,
+  typename FilterT>
      requires requires(
-       std::remove_reference_t<std::invoke_result_t<FilterLambdaT>> &f,
-       std::ranges::range_value_t<
-         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>> v) {
-          f.update(v);
-     }
+       std::remove_reference_t<FilterT> &f,
+       std::remove_cvref_t<ValueRangeT>  v) { f.update(v); }
 class GenericComboWithFilterAndFixedToggles
 {
    public:
      GenericComboWithFilterAndFixedToggles(
-       std::string_view       name,
-       ValueLambdaT         &&value_lambda,
-       FixedTogglesLambdaT  &&fixed_toggles_lambda,
-       StringLambdaT        &&string_lambda,
-       ToolTipLambdaT       &&tool_tip_lambda,
-       FilterLambdaT        &&filter_lambda,
-       generic_combo_settings settings = {})
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       const std::vector<bool>     &fixed_toggles_range,
+       std::span<const StringT>     string_range,
+       std::span<const ToolTipT>    tooltip_range,
+       FilterT                     &filter,
+       generic_combo_settings       settings = {})
        : name_(name)
-       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , fixed_toggles_(
-           std::invoke(std::forward<FixedTogglesLambdaT>(fixed_toggles_lambda)))
-       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(std::invoke(std::forward<ToolTipLambdaT>(tool_tip_lambda)))
-       , filter_(std::invoke(std::forward<FilterLambdaT>(filter_lambda)))
+       , values_(value_range)
+       , fixed_toggles_(fixed_toggles_range)
+       , strings_(string_range)
+       , tool_tips_(tooltip_range)
+       , filter_(filter)
        , settings_(settings)
        , current_idx_(0)
        , changed_(false)
@@ -948,20 +963,18 @@ class GenericComboWithFilterAndFixedToggles
      }
 
    private:
-     std::string_view                          name_;
-     std::invoke_result_t<ValueLambdaT>        values_;
-     std::invoke_result_t<FixedTogglesLambdaT> fixed_toggles_;
-     std::invoke_result_t<StringLambdaT>       strings_;
-     std::invoke_result_t<ToolTipLambdaT>      tool_tips_;
-     std::reference_wrapper<
-       std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>>
-                                                                filter_;
-     generic_combo_settings                                     settings_;
-     mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
-     mutable bool                                               changed_;
-     const float                                                spacing_;
+     std::string_view                                name_;
+     std::span<const InputValueT>                    values_;
+     std::reference_wrapper<const std::vector<bool>> fixed_toggles_;
+     std::span<const StringT>                        strings_;
+     std::span<const ToolTipT>                       tool_tips_;
+     std::reference_wrapper<FilterT>                 filter_;
+     generic_combo_settings                          settings_;
+     mutable int                                     current_idx_;
+     mutable bool                                    changed_;
+     float                                           spacing_;
 
-     void updateCurrentIndex() const
+     void                                            updateCurrentIndex() const
      {
           const auto found = std::find(
             std::ranges::begin(values_),
@@ -1242,27 +1255,47 @@ class GenericComboWithFilterAndFixedToggles
 };
 
 template<
-  returns_range_concept ValueLambdaT,
-  returns_range_concept StringLambdaT,
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  std::ranges::contiguous_range ToolTipRangeT,
+  typename FilterT>
+GenericComboWithFilterAndFixedToggles(
+  std::string_view,
+  ValueRangeT &&,
+  const std::vector<bool> &,
+  StringRangeT &&,
+  ToolTipRangeT &&,
+  FilterT &,
+  generic_combo_settings = {})
+  -> GenericComboWithFilterAndFixedToggles<
+    std::ranges::range_value_t<ValueRangeT>,  // InputValueT
+    std::ranges::range_value_t<StringRangeT>, // StringT
+    std::ranges::range_value_t<ToolTipRangeT>,// ToolTipT
+    FilterT                                   // FilterT
+    >;
+
+
+template<
+  typename InputValueT,
+  typename StringT,
   typename ValueT,
-  returns_range_concept tool_tip_lambda_t = StringLambdaT>
+  typename ToolTipT = StringT>
      requires std::assignable_from<
        std::remove_reference_t<ValueT> &,
-       std::ranges::range_value_t<
-         std::remove_cvref_t<std::invoke_result_t<ValueLambdaT>>>>
+       std::remove_cvref_t<InputValueT>>
 class GenericCombo
 {
    public:
      GenericCombo(
-       std::string_view       name,
-       ValueLambdaT         &&value_lambda,
-       StringLambdaT        &&string_lambda,
-       ValueT                &value,
-       generic_combo_settings settings = {})
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       std::span<const StringT>     string_range,
+       ValueT                      &value,
+       generic_combo_settings       settings = {})
        : name_(name)
-       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , values_(value_range)
+       , strings_(string_range)
+       , tool_tips_(string_range)
        , value_(value)
        , settings_(settings)
        , current_idx_(0)
@@ -1272,16 +1305,16 @@ class GenericCombo
      }
 
      GenericCombo(
-       std::string_view       name,
-       ValueLambdaT         &&value_lambda,
-       StringLambdaT        &&string_lambda,
-       tool_tip_lambda_t    &&tooltip_lamda,
-       ValueT                &value,
-       generic_combo_settings settings = {})
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       std::span<const StringT>     string_range,
+       std::span<const ToolTipT>    tooltip_range,
+       ValueT                      &value,
+       generic_combo_settings       settings = {})
        : name_(name)
-       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
-       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tooltip_lamda)))
+       , values_(value_range)
+       , strings_(string_range)
+       , tool_tips_(tooltip_range)
        , value_(value)
        , settings_(settings)
        , current_idx_(0)
@@ -1322,9 +1355,9 @@ class GenericCombo
 
    private:
      std::string_view                                           name_;
-     std::invoke_result_t<ValueLambdaT>                         values_;
-     std::invoke_result_t<StringLambdaT>                        strings_;
-     std::invoke_result_t<tool_tip_lambda_t>                    tool_tips_;
+     std::span<const InputValueT>                               values_;
+     std::span<const StringT>                                   strings_;
+     std::span<const ToolTipT>                                  tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
      generic_combo_settings                                     settings_;
      mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
@@ -1553,6 +1586,47 @@ class GenericCombo
           format_imgui_text("{}", name_);
      }
 };
+
+// Deduction guide
+template<
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  std::ranges::contiguous_range ToolTipRangeT,
+  typename ValueT>
+GenericCombo(
+  std::string_view,
+  ValueRangeT &&,
+  StringRangeT &&,
+  ToolTipRangeT &&,
+  ValueT &,
+  generic_combo_settings = {})
+  -> GenericCombo<
+    std::ranges::range_value_t<ValueRangeT>, // InputValueT
+    std::ranges::range_value_t<StringRangeT>,// StringT
+    ValueT,                                  // ValueT
+    std::ranges::range_value_t<ToolTipRangeT>// ToolTipT
+    >;
+
+template<
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  typename ValueT>
+GenericCombo(
+  std::string_view,
+  ValueRangeT &&,
+  StringRangeT &&,
+  ValueT &,
+  generic_combo_settings = {})
+  -> GenericCombo<
+    std::ranges::range_value_t<ValueRangeT>, // InputValueT
+    std::ranges::range_value_t<StringRangeT>,// StringT
+    ValueT,                                  // ValueT
+    std::ranges::range_value_t<StringRangeT> // ToolTipT = StringT
+    >;
+
+
+// typename InputValueT, typename StringT, typename ValueT,
+//   typename ToolTipT = StringT >
 
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
