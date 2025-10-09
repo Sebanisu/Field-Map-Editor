@@ -30,17 +30,13 @@ using namespace std::string_literals;
 
 struct mim_palette
 {
-     auto values() const
+     const auto &values() const
      {
-          return Mim::palette_selections()
-                 | std::ranges::views::transform(
-                   [](auto i) { return static_cast<std::uint8_t>(i); });
+          return Mim::palette_selections();
      }
-     auto strings() const
+     const auto &strings() const
      {
-          return Mim::palette_selections_c_str()
-                 | std::ranges::views::transform([](std::string_view sv)
-                                                 { return sv; });
+          return Mim::palette_selections_c_str();
      }
      auto zip() const
      {
@@ -49,11 +45,11 @@ struct mim_palette
 };
 struct mim_bpp
 {
-     auto values() const
+     const auto &values() const
      {
           return Mim::bpp_selections();
      }
-     auto strings() const
+     const auto &strings() const
      {
           return Mim::bpp_selections_c_str();
      }
