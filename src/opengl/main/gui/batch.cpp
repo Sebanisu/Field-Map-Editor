@@ -211,6 +211,8 @@ void fme::batch::combo_input_type()
        = std::array{ input_types::mim, input_types::deswizzle,
                      input_types::swizzle, input_types::swizzle_as_one_image,
                      input_types::deswizzle_full_filename };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tooltips
        = std::array{ gui_labels::input_mim_tooltip,
                      gui_labels::input_deswizzle_tooltip,
@@ -219,9 +221,9 @@ void fme::batch::combo_input_type()
                      gui_labels::input_full_filename_image_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::input_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tooltips; },
+       values,
+       strings,
+       tooltips,
        selections->get<ConfigKey::BatchInputType>());
      if (gcc.render())
      {
@@ -557,21 +559,17 @@ void fme::batch::combo_load_map()
                valuesmim.data(), valuesmim.size())
            : std::span<const input_map_types>(
                valuesrest.data(), valuesrest.size());
+     const auto strings = values | std::views::transform(AsString{})
+                          | std::ranges::to<std::vector>();
+     const auto tooltips
+       = values
+         | std::views::transform(
+           [](const auto &key)
+           { return gui_labels::input_map_tooltips[std::to_underlying(key)]; })
+         | std::ranges::to<std::vector>();
      const auto pop_id = PushPopID();
      const auto gcc    = fme::GenericCombo(
-       gui_labels::batch_load_map,
-       [&]() { return values; },
-       [&]() { return values | std::views::transform(AsString{}); },
-       [&]()
-       {
-            return values
-                   | std::views::transform(
-                     [](const auto &key)
-                     {
-                          return gui_labels::input_map_tooltips
-                            [std::to_underlying(key)];
-                     });
-       },
+       gui_labels::batch_load_map, values, strings, tooltips,
        selections->get<ConfigKey::BatchInputLoadMap>());
      if (!gcc.render())
      {
@@ -598,10 +596,12 @@ void fme::batch::combo_output_type()
                      output_types::deswizzle_generate_toml,
                      output_types::deswizzle_full_filename,
                      output_types::csv };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericCombo(
        gui_labels::output_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
+       values,
+       strings,
        selections->get<ConfigKey::BatchOutputType>());
      if (!gcc.render())
      {
@@ -628,15 +628,15 @@ void fme::batch::browse_input_path()
      static constexpr auto values
        = std::array{ root_path_types::selected_path, root_path_types::ff8_path,
                      root_path_types::current_path };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
+
      static constexpr auto tooltips
        = std::array{ gui_labels::selected_path_tooltip,
                      gui_labels::ff8_path_tooltip,
                      gui_labels::current_path_tooltip };
      const auto gcc = fme::GenericCombo(
-       gui_labels::input_root_path_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tooltips; },
+       gui_labels::input_root_path_type, values, strings, tooltips,
        selections->get<ConfigKey::BatchInputRootPathType>());
      if (gcc.render())
      {
@@ -698,15 +698,17 @@ void fme::batch::browse_input_map_path()
      static constexpr auto values
        = std::array{ root_path_types::selected_path, root_path_types::ff8_path,
                      root_path_types::current_path };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tooltips
        = std::array{ gui_labels::selected_path_tooltip,
                      gui_labels::ff8_path_tooltip,
                      gui_labels::current_path_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::input_map_root_path_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tooltips; },
+       values,
+       strings,
+       tooltips,
        selections->get<ConfigKey::BatchInputMapRootPathType>());
      if (gcc.render())
      {
@@ -763,15 +765,17 @@ void fme::batch::browse_output_path()
      static constexpr auto values
        = std::array{ root_path_types::selected_path, root_path_types::ff8_path,
                      root_path_types::current_path };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tooltips
        = std::array{ gui_labels::selected_path_tooltip,
                      gui_labels::ff8_path_tooltip,
                      gui_labels::current_path_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::output_root_path_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tooltips; },
+       values,
+       strings,
+       tooltips,
        selections->get<ConfigKey::BatchOutputRootPathType>());
      if (gcc.render())
      {
@@ -932,25 +936,22 @@ void fme::batch::combo_compact_type_ffnx()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::compact_tooltip); } };
-     static constexpr auto values = std::array{ compact_type::map_order_ffnx };
+     static constexpr auto values  = std::array{ compact_type::map_order_ffnx };
+     static const auto     strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
        = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
      static auto filter = []()
      {
-          ff_8::filter_old<ff_8::FilterTag::Compact> f{
+          ff_8::filter<ff_8::FilterTag::Compact> tmp_filter{
                ff_8::FilterSettings::All_Disabled
           };
-          f.update(compact_type::map_order_ffnx);
-          f.enable();
-          return f;
+          tmp_filter.update(compact_type::map_order_ffnx).enable();
+          return tmp_filter;
      }();
 
      const auto gcc = fme::GenericComboWithFilter(
-       gui_labels::compact,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tool_tips; },
-       [&]() -> auto & { return filter; });
+       gui_labels::compact, values, strings, tool_tips, filter);
 
      (void)gcc.render();
 }
@@ -972,6 +973,8 @@ void fme::batch::combo_compact_type()
        = std::array{ compact_type::rows, compact_type::all,
                      compact_type::move_only_conflicts, compact_type::map_order,
                      compact_type::map_order_ffnx };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static const auto tool_tips
        = std::array{ gui_labels::compact_rows_tooltip,
                      gui_labels::compact_all_tooltip,
@@ -980,12 +983,8 @@ void fme::batch::combo_compact_type()
                      gui_labels::compact_map_order_ffnx_tooltip };
 
      const auto gcc = fme::GenericComboWithFilter(
-       gui_labels::compact,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tool_tips; },
-       [&]() -> auto &
-       { return selections->get<ConfigKey::BatchCompactType>(); });
+       gui_labels::compact, values, strings, tool_tips,
+       selections->get<ConfigKey::BatchCompactType>());
 
      (void)gcc.render();
 }
@@ -1000,17 +999,15 @@ void fme::batch::combo_flatten_type_bpp()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::flatten_tooltip); } };
-     static constexpr auto values = std::array{ flatten_type::bpp };
+     static constexpr auto values  = std::array{ flatten_type::bpp };
+     static const auto     strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
        = std::array{ gui_labels::flatten_bpp_tooltip };
 
      const auto gcc = fme::GenericComboWithFilter(
-       gui_labels::compact,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tool_tips; },
-       [&]() -> auto &
-       { return selections->get<ConfigKey::BatchFlattenType>(); });
+       gui_labels::compact, values, strings, tool_tips,
+       selections->get<ConfigKey::BatchFlattenType>());
 
      (void)gcc.render();
 }
@@ -1032,23 +1029,24 @@ void fme::batch::combo_flatten_type()
      static constexpr auto values
        = std::array{ flatten_type::bpp, flatten_type::palette,
                      flatten_type::both };
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
        = std::array{ gui_labels::flatten_bpp_tooltip,
                      gui_labels::flatten_palette_tooltip,
                      gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette
        = std::array{ flatten_type::palette };
+     static const auto strings_only_palette
+       = values_only_palette | std::views::transform(AsString{})
+         | std::ranges::to<std::vector>();
      static constexpr auto tool_tips_only_palette
        = std::array{ gui_labels::flatten_palette_tooltip };
      if (all_or_only_palette)
      {
           const auto gcc = fme::GenericComboWithFilter(
-            gui_labels::flatten,
-            [&]() { return values; },
-            [&]() { return values | std::views::transform(AsString{}); },
-            [&]() { return tool_tips; },
-            [&]() -> auto &
-            { return selections->get<ConfigKey::BatchFlattenType>(); });
+            gui_labels::flatten, values, strings, tool_tips,
+            selections->get<ConfigKey::BatchFlattenType>());
           if (!gcc.render())
           {
                return;
@@ -1058,12 +1056,10 @@ void fme::batch::combo_flatten_type()
      {
           const auto gcc = fme::GenericComboWithFilter(
             gui_labels::flatten,
-            [&]() { return values_only_palette; },
-            [&]()
-            { return values_only_palette | std::views::transform(AsString{}); },
-            [&]() { return tool_tips_only_palette; },
-            [&]() -> auto &
-            { return selections->get<ConfigKey::BatchFlattenType>(); });
+            values_only_palette,
+            strings_only_palette,
+            tool_tips_only_palette,
+            selections->get<ConfigKey::BatchFlattenType>());
           if (!gcc.render())
           {
                return;
@@ -1651,7 +1647,9 @@ void fme::batch::generate_map_sprite()
           case input_types::deswizzle:
           {
                // Enable deswizzle filter using the input path
-               filters.deswizzle.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Deswizzle>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           }
@@ -1659,7 +1657,9 @@ void fme::batch::generate_map_sprite()
           case input_types::swizzle:
           {
                // Enable swizzle filter using the input path
-               filters.swizzle.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Swizzle>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           }
@@ -1667,19 +1667,22 @@ void fme::batch::generate_map_sprite()
           case input_types::swizzle_as_one_image:
           {
                // Enable swizzle as one image filter using the input path
-               filters.swizzle_as_one_image
-                 .update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::SwizzleAsOneImage>(
+                   std::filesystem::path(selected_string))
                  .enable();
-               filters.compact_on_load_original
-                 .update(compact_type::map_order_ffnx)
+               filters
+                 .update<ff_8::FilterTag::CompactOnLoadOriginal>(
+                   compact_type::map_order_ffnx)
                  .enable();
                break;
           }
 
           case input_types::deswizzle_full_filename:
           {
-               filters.full_filename
-                 .update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::FullFileName>(
+                   std::filesystem::path(selected_string))
                  .enable();
 
                break;
@@ -1697,11 +1700,15 @@ void fme::batch::generate_map_sprite()
                // do nothing.
                break;
           case input_map_types::loaded_same_input_path:
-               filters.map.update(std::filesystem::path(selected_string))
+               filters
+                 .update<ff_8::FilterTag::Map>(
+                   std::filesystem::path(selected_string))
                  .enable();
                break;
           case input_map_types::loaded_different_input_path:
-               filters.map.update(std::filesystem::path(selected_map_string))
+               filters
+                 .update<ff_8::FilterTag::Map>(
+                   std::filesystem::path(selected_map_string))
                  .enable();
                break;
           default:

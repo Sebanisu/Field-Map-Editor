@@ -22,8 +22,8 @@ template<is_tile tileT>
      const auto src_x             = [&]() -> std::uint32_t
      {
           if (
-            map->filter().deswizzle.enabled()
-            || map->filter().full_filename.enabled())
+            map->filter().enabled<ff_8::FilterTag::Deswizzle>()
+            || map->filter().enabled<ff_8::FilterTag::FullFileName>())
           {
                return static_cast<std::uint32_t>(tile.x());
           }
@@ -31,7 +31,7 @@ template<is_tile tileT>
             = tileT::texture_page_width(tile.depth());
           const auto texture_page_x_offset = [&]() -> std::uint32_t
           {
-               if (map->filter().swizzle.enabled())
+               if (map->filter().enabled<ff_8::FilterTag::Swizzle>())
                {
                     return 0;
                }
@@ -42,8 +42,8 @@ template<is_tile tileT>
      const auto src_y = [&]() -> std::uint32_t
      {
           if (
-            map->filter().deswizzle.enabled()
-            || map->filter().full_filename.enabled())
+            map->filter().enabled<ff_8::FilterTag::Deswizzle>()
+            || map->filter().enabled<ff_8::FilterTag::FullFileName>())
           {
                return static_cast<std::uint32_t>(tile.y());
           }

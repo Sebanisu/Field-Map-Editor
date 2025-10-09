@@ -528,8 +528,8 @@ struct [[nodiscard]] map_sprite// final
        add_deswizzle_combined_toml_table(const std::string &);
      void refresh_tooltip(const std::string &);
      void apply_multi_pupu_filter_deswizzle_combined_toml_table(
-       const std::string                                  &file_name_key,
-       const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
+       const std::string                              &file_name_key,
+       const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(
        const std::vector<std::string> &,
        const std::string &);
@@ -726,8 +726,8 @@ struct [[nodiscard]] map_sprite// final
      {
 
           if (
-            !m_filters.deswizzle.enabled()
-            && !m_filters.full_filename.enabled())
+            !m_filters.enabled<ff_8::FilterTag::Deswizzle>()
+            && !m_filters.enabled<ff_8::FilterTag::FullFileName>())
           {
                return get_texture(
                  tile.depth(), tile.palette_id(), tile.texture_id());
@@ -784,14 +784,14 @@ struct [[nodiscard]] map_sprite// final
      //      const auto x       = [&tile, &src_tpw]() -> std::uint32_t { return
      //      tile.texture_id() * src_tpw; }(); const auto src_x   = [&tile, &x,
      //      this]() -> std::uint32_t {
-     //           if (!m_filters.deswizzle.enabled())
+     //           if (!m_filters.enabled<ff_8::FilterTag::Deswizzle>())
      //           {
      //                return static_cast<std::uint32_t>(tile.x());
      //           }
      //           return tile.source_x() + x;
      //      }();
      //      const auto src_y = [&tile, this]() -> std::uint32_t {
-     //           if (!m_filters.deswizzle.enabled())
+     //           if (!m_filters.enabled<ff_8::FilterTag::Deswizzle>())
      //           {
      //                return static_cast<std::uint32_t>(tile.y());
      //           }
@@ -1007,7 +1007,7 @@ struct [[nodiscard]] map_sprite// final
                     return to_vec2(
                       ff_8::source_coords_for_imported(tile_const));
                }
-               if (m_filters.swizzle_as_one_image.enabled())
+               if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                {
                     // Calculate UVs for single texture
                     // Source X adjusted by texture_page * texture_page_width
@@ -1015,13 +1015,13 @@ struct [[nodiscard]] map_sprite// final
                     return to_vec2(
                       ff_8::source_coords_for_single_swizzle(tile_const));
                }
-               if (m_filters.swizzle.enabled())
+               if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
                {
                     return to_vec2(ff_8::source_coords_for_swizzle(tile_const));
                }
                if (
-                 m_filters.deswizzle.enabled()
-                 || m_filters.full_filename.enabled())
+                 m_filters.enabled<ff_8::FilterTag::Deswizzle>()
+                 || m_filters.enabled<ff_8::FilterTag::FullFileName>())
                {
                     return to_vec2(
                       ff_8::source_coords_for_deswizzle(tile_const));

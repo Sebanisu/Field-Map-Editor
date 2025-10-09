@@ -474,13 +474,11 @@ bool fme::custom_paths_window::combo_selected_pattern() const
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      using namespace std::string_view_literals;
 
-     static const auto  values = load_pattern_selector_array();
-
-
+     static const auto values  = load_pattern_selector_array();
+     static const auto strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
      const GenericCombo gcc
-       = { ""sv, []() { return values; },
-           []() { return values | std::views::transform(AsString{}); },
-           selections->get<ConfigKey::CurrentPattern>(),
+       = { ""sv, values, strings, selections->get<ConfigKey::CurrentPattern>(),
            generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {

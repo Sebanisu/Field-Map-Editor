@@ -55,9 +55,7 @@ struct mim_bpp
      }
      auto strings() const
      {
-          return Mim::bpp_selections_c_str()
-                 | std::ranges::views::transform([](std::string_view sv)
-                                                 { return sv; });
+          return Mim::bpp_selections_c_str();
      }
      auto zip() const
      {
@@ -1216,11 +1214,13 @@ void gui::combo_coo()
      {
           return;
      }
-     constexpr static auto values = open_viii::LangCommon::to_array();
-     const auto            gcc    = GenericCombo(
+     constexpr static auto values  = open_viii::LangCommon::to_array();
+     static const auto     strings = values | std::views::transform(AsString{})
+                                 | std::ranges::to<std::vector>();
+     const auto gcc = GenericCombo(
        gui_labels::language,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
+       values,
+       strings,
        m_selections->get<ConfigKey::Coo>());
      if (gcc.render())
      {
@@ -1271,53 +1271,49 @@ void gui::refresh_field()
 void gui::combo_field()
 {
 
-     const auto gcc = GenericCombo(
-       gui_labels::field,
-       [this]()
-       {
-            return std::views::iota(
-              0,
-              static_cast<int>(
-                std::ranges::ssize(m_archives_group->mapdata())));
-       },
-       [this]()
-       {
-            return m_archives_group->mapdata()
-                   | std::ranges::views::transform(
-                     [](const std::string &str) -> std::string_view
-                     {
-                          using namespace std::string_view_literals;
-                          return (
-                            std::string_view(str).starts_with("ma"sv)
-                                || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
-                              ? ""sv
-                              : std::string_view(str));
-                     })
-                   | std::ranges::views::transform(
-                     [this](const std::string_view &name) -> std::string
-                     {
-                          const auto &maplist
-                            = m_archives_group->map_data_from_maplist();
-                          if (name.empty())
-                          {
-                               return {};
-                          }
-                          if (const auto it = std::ranges::find(maplist, name);
-                              it == std::ranges::end(maplist))
-                          {
-                               return fmt::format("{:<8}", name);
-                          }
-                          else
-                          {
-                               const auto maplist_index = std::ranges::distance(
-                                 std::ranges::begin(maplist), it);
+     const auto values
+       = std::views::iota(
+           int{},
+           static_cast<int>(std::ranges::ssize(m_archives_group->mapdata())))
+         | std::ranges::to<std::vector>();
+     const auto strings
+       = m_archives_group->mapdata()
+         | std::ranges::views::transform(
+           [](const std::string &str) -> std::string_view
+           {
+                using namespace std::string_view_literals;
+                return (
+                  std::string_view(str).starts_with("ma"sv)
+                      || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
+                    ? ""sv
+                    : std::string_view(str));
+           })
+         | std::ranges::views::transform(
+           [this](const std::string_view &name) -> std::string
+           {
+                const auto &maplist = m_archives_group->map_data_from_maplist();
+                if (name.empty())
+                {
+                     return {};
+                }
+                if (const auto it = std::ranges::find(maplist, name);
+                    it == std::ranges::end(maplist))
+                {
+                     return fmt::format("{:<8}", name);
+                }
+                else
+                {
+                     const auto maplist_index
+                       = std::ranges::distance(std::ranges::begin(maplist), it);
 
-                               return fmt::format(
-                                 "{:<8} - {:03d}", name, maplist_index);
-                          }
-                     });
-       },
-       m_field_index);
+                     return fmt::format("{:<8} - {:03d}", name, maplist_index);
+                }
+           })
+         | std::ranges::to<std::vector>();
+
+
+     const auto gcc
+       = GenericCombo(gui_labels::field, values, strings, m_field_index);
 
      if (gcc.render())
      {
@@ -1538,7 +1534,7 @@ void gui::refresh_bpp(BPPT in_bpp)
      m_selections->get<ConfigKey::Bpp>() = in_bpp;
      if (m_map_sprite)
      {
-          m_map_sprite->filter().bpp.update(in_bpp);
+          m_map_sprite->filter().update<ff_8::FilterTag::Bpp>(in_bpp);
      }
      else
      {
@@ -1557,14 +1553,7 @@ void gui::refresh_bpp(BPPT in_bpp)
 void gui::combo_mim_bpp()
 {
      const auto gcc = GenericCombo(
-       gui_labels::bpp,
-       [&]() { return Mim::bpp_selections(); },
-       [&]()
-       {
-            return Mim::bpp_selections_c_str()
-                   | std::ranges::views::transform([](std::string_view sv)
-                                                   { return sv; });
-       },
+       gui_labels::bpp, Mim::bpp_selections(), Mim::bpp_selections_c_str(),
        m_selections->get<ConfigKey::Bpp>());
 
      if (!gcc.render())
@@ -1575,8 +1564,8 @@ void gui::combo_mim_bpp()
 }
 std::uint8_t gui::palette() const
 {
-     return static_cast<uint8_t>(Mim::palette_selections().at(
-       static_cast<size_t>(m_selections->get<ConfigKey::Palette>())));
+     return Mim::palette_selections().at(
+       static_cast<size_t>(m_selections->get<ConfigKey::Palette>()));
 }
 static void update_palette(
   mim_sprite &sprite,
@@ -1594,23 +1583,10 @@ void gui::combo_mim_palette()
 {
      if (m_selections->get<ConfigKey::Bpp>() != BPPT::BPP16_CONST())
      {
-          static constexpr auto palette_values = Mim::palette_selections();
-          static constexpr auto palette_strings
-            = Mim::palette_selections_c_str();
           const auto gcc = GenericCombo(
             gui_labels::palette,
-            []()
-            {
-                 return palette_values
-                        | std::ranges::views::transform(
-                          [](auto i) { return static_cast<uint8_t>(i); });
-            },
-            []()
-            {
-                 return palette_strings
-                        | std::ranges::views::transform([](std::string_view sv)
-                                                        { return sv; });
-            },
+            Mim::palette_selections(),
+            Mim::palette_selections_c_str(),
             m_selections->get<ConfigKey::Palette>());
           if (gcc.render())
           {
@@ -2264,7 +2240,8 @@ void gui::edit_menu()
                if (mim_test())
                {
                     auto tmp_bpp = std::remove_cvref_t<
-                      decltype(m_map_sprite->filter().bpp)>{
+                      decltype(m_map_sprite->filter()
+                                 .get<ff_8::FilterTag::Bpp>())>{
                          m_selections->get<ConfigKey::Bpp>(),
                          ff_8::WithFlag(
                            ff_8::FilterSettings::Default,
@@ -2272,7 +2249,8 @@ void gui::edit_menu()
                            true)
                     };
                     auto tmp_palette = std::remove_cvref_t<
-                      decltype(m_map_sprite->filter().palette)>{
+                      decltype(m_map_sprite->filter()
+                                 .get<ff_8::FilterTag::Palette>())>{
                          static_cast<std::uint8_t>(
                            m_selections->get<ConfigKey::Palette>()),
                          ff_8::WithFlag(
@@ -2833,12 +2811,13 @@ void gui::menu_swizzle_as_one_image_paths()
           .browse_tooltip
           = "Browse for a directory containing swizzle as one image textures."
      };
-     const main_menu_paths mmp = { m_map_sprite->filter().swizzle_as_one_image,
-                                   std::forward_as_tuple(
-                                     m_map_sprite->filter().swizzle,
-                                     m_map_sprite->filter().deswizzle,
-                                     m_map_sprite->filter().full_filename),
-                                   mmps };
+     const main_menu_paths mmp
+       = { m_map_sprite->filter().get<ff_8::FilterTag::SwizzleAsOneImage>(),
+           std::forward_as_tuple(
+             m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>()),
+           mmps };
 
 
      mmp.render(
@@ -2850,10 +2829,12 @@ void gui::menu_swizzle_as_one_image_paths()
        },
        [&]()
        {
-            if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+            if (m_map_sprite->filter()
+                  .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
             {
-                 m_map_sprite->filter().compact_on_load_original.update(
-                   compact_type::map_order_ffnx);
+                 m_map_sprite->filter()
+                   .update<ff_8::FilterTag::CompactOnLoadOriginal>(
+                     compact_type::map_order_ffnx);
                  m_map_sprite->toggle_filter_compact_on_load_original(true);
             }
             refresh_render_texture(true);
@@ -2889,11 +2870,11 @@ void gui::menu_swizzle_paths()
            .browse_tooltip
            = "Browse for a directory containing swizzle textures." };
      const main_menu_paths mmp
-       = { m_map_sprite->filter().swizzle,
+       = { m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
            std::forward_as_tuple(
-             m_map_sprite->filter().full_filename,
-             m_map_sprite->filter().swizzle_as_one_image,
-             m_map_sprite->filter().deswizzle),
+             m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::SwizzleAsOneImage>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>()),
            mmps };
      mmp.render(
        [&]()
@@ -2938,11 +2919,11 @@ void gui::menu_deswizzle_paths()
            .browse_tooltip
            = "Browse for a directory containing deswizzle textures." };
      const main_menu_paths mmp
-       = { m_map_sprite->filter().deswizzle,
+       = { m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
            std::forward_as_tuple(
-             m_map_sprite->filter().full_filename,
-             m_map_sprite->filter().swizzle_as_one_image,
-             m_map_sprite->filter().swizzle),
+             m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::SwizzleAsOneImage>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>()),
            mmps };
      mmp.render(
        [&]()
@@ -2989,11 +2970,11 @@ void gui::menu_full_filename_paths()
           = "Browse for a directory containing full filename textures. (.toml)"
      };
      const main_menu_paths mmp
-       = { m_map_sprite->filter().full_filename,
+       = { m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>(),
            std::forward_as_tuple(
-             m_map_sprite->filter().swizzle_as_one_image,
-             m_map_sprite->filter().swizzle,
-             m_map_sprite->filter().deswizzle),
+             m_map_sprite->filter().get<ff_8::FilterTag::SwizzleAsOneImage>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
+             m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>()),
            mmps };
      mmp.render(
        [&]()
@@ -3036,7 +3017,8 @@ void gui::menu_map_paths()
            = m_selections->get<ConfigKey::CacheMapPathsEnabled>(),
            .main_label     = gui_labels::map_path,
            .browse_tooltip = "Browse for a directory containing .map files." };
-     const main_menu_paths mmp = { m_map_sprite->filter().map, {}, mmps };
+     const main_menu_paths mmp
+       = { m_map_sprite->filter().get<ff_8::FilterTag::Map>(), {}, mmps };
      mmp.render(
        [&]()
        {
@@ -3046,7 +3028,7 @@ void gui::menu_map_paths()
        },
        [&]()
        {
-            if (m_map_sprite->filter().map.enabled())
+            if (m_map_sprite->filter().enabled<ff_8::FilterTag::Map>())
             {
                  if (const auto paths
                      = fme::generate_map_paths(m_selections, *m_map_sprite)();
@@ -3057,7 +3039,7 @@ void gui::menu_map_paths()
                  }
                  else
                  {
-                      m_map_sprite->filter().map.disable();
+                      m_map_sprite->filter().disable<ff_8::FilterTag::Map>();
                  }
             }
             else
@@ -3209,9 +3191,7 @@ void gui::directory_browser_display()
                 ps.has_map_path(selected_path, ".map"))));
 
           m_selections->update<
-            Key,
-            Keys...,
-            ConfigKey::CacheTextureAndMapPaths,
+            Key, Keys..., ConfigKey::CacheTextureAndMapPaths,
             ConfigKey::CacheSwizzlePathsEnabled,
             ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
             ConfigKey::CacheDeswizzlePathsEnabled,
@@ -3236,7 +3216,9 @@ void gui::directory_browser_display()
      {
           if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
           {
-               m_map_sprite->filter().map.update(selected_path).enable();
+               m_map_sprite->filter()
+                 .update<ff_8::FilterTag::Map>(selected_path)
+                 .enable();
                return true;
           }
           return false;
@@ -3342,13 +3324,13 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzlePath>();
                add_path_to_config();
-               changed
-                 |= try_enable_filter
-                      .template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
-                        m_map_sprite->filter().swizzle,
-                        m_map_sprite->filter().swizzle_as_one_image,
-                        m_map_sprite->filter().deswizzle,
-                        m_map_sprite->filter().full_filename);
+               changed |= try_enable_filter.template operator()<
+                 ConfigKey::CacheSwizzlePathsEnabled>(
+                 m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
+                 m_map_sprite->filter()
+                   .get<ff_8::FilterTag::SwizzleAsOneImage>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>());
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
@@ -3367,22 +3349,24 @@ void gui::directory_browser_display()
                  = selected_path;
                m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                add_path_to_config();
-               changed
-                 |= try_enable_filter.template
-                    operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
-                      m_map_sprite->filter().swizzle_as_one_image,
-                      m_map_sprite->filter().swizzle,
-                      m_map_sprite->filter().deswizzle,
-                      m_map_sprite->filter().full_filename);
+               changed |= try_enable_filter.template operator()<
+                 ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
+                 m_map_sprite->filter()
+                   .get<ff_8::FilterTag::SwizzleAsOneImage>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>());
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
                if (changed)
                {
-                    if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+                    if (m_map_sprite->filter()
+                          .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                     {
-                         m_map_sprite->filter().compact_on_load_original.update(
-                           compact_type::map_order_ffnx);
+                         m_map_sprite->filter()
+                           .get<ff_8::FilterTag::CompactOnLoadOriginal>()
+                           .update(compact_type::map_order_ffnx);
                          m_map_sprite->toggle_filter_compact_on_load_original(
                            true);
                     }
@@ -3396,12 +3380,13 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
                m_selections->update<ConfigKey::DeswizzlePath>();
                add_path_to_config();
-               changed |= try_enable_filter.template
-                          operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
-                            m_map_sprite->filter().deswizzle,
-                            m_map_sprite->filter().swizzle_as_one_image,
-                            m_map_sprite->filter().swizzle,
-                            m_map_sprite->filter().full_filename);
+               changed |= try_enable_filter.template operator()<
+                 ConfigKey::CacheDeswizzlePathsEnabled>(
+                 m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
+                 m_map_sprite->filter()
+                   .get<ff_8::FilterTag::SwizzleAsOneImage>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>());
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
@@ -3418,12 +3403,13 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::FullFileNamePath>() = selected_path;
                m_selections->update<ConfigKey::FullFileNamePath>();
                add_path_to_config();
-               changed |= try_enable_filter.template
-                          operator()<ConfigKey::CacheFullFileNamePathsEnabled>(
-                            m_map_sprite->filter().full_filename,
-                            m_map_sprite->filter().deswizzle,
-                            m_map_sprite->filter().swizzle_as_one_image,
-                            m_map_sprite->filter().swizzle);
+               changed |= try_enable_filter.template operator()<
+                 ConfigKey::CacheFullFileNamePathsEnabled>(
+                 m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>(),
+                 m_map_sprite->filter()
+                   .get<ff_8::FilterTag::SwizzleAsOneImage>(),
+                 m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>());
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
@@ -3545,8 +3531,8 @@ void gui::file_browser_display()
                          /// TODO load in as a filter? or leave as is... For now
                          /// we'll disable the filter and just load the selected
                          /// file.
-                         m_map_sprite->filter().map.disable();
-                         m_map_sprite->filter().map.disable();
+                         m_map_sprite->filter().disable<ff_8::FilterTag::Map>();
+                         m_map_sprite->filter().disable<ff_8::FilterTag::Map>();
                          m_map_sprite->load_map(selected_path);
                          m_selections->get<ConfigKey::OutputMapPath>()
                            = selected_directory;
@@ -3811,19 +3797,21 @@ void gui::refresh_draw_mode()
 }
 void gui::combo_draw()
 {
-     static const constinit auto iota_draw_mode
+     static const auto iota_draw_mode
        = std::views::iota(0, 2)
          | std::views::transform([](const int mode)
-                                 { return static_cast<draw_mode>(mode); });
+                                 { return static_cast<draw_mode>(mode); })
+         | std::ranges::to<std::vector>();
      static const auto str_draw_mode
        = iota_draw_mode
          | std::views::transform([](draw_mode in_draw_mode)
-                                 { return fmt::format("{}", in_draw_mode); });
+                                 { return fmt::format("{}", in_draw_mode); })
+         | std::ranges::to<std::vector>();
 
      const auto gcc = GenericCombo(
        gui_labels::draw,
-       [=]() { return iota_draw_mode; },
-       [=]() { return str_draw_mode; },
+       iota_draw_mode,
+       str_draw_mode,
        m_selections->get<ConfigKey::DrawMode>());
 
      if (!gcc.render())
@@ -3835,16 +3823,15 @@ void gui::combo_draw()
 bool gui::combo_path()
 {
      const auto pop_buttons = glengine::ScopeGuard([&]() { browse_buttons(); });
-     const auto gcc         = GenericCombo(
+     const auto strings
+       = m_selections->get<ConfigKey::FF8DirectoryPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
+     const auto gcc = GenericCombo(
        gui_labels::path,
-       [&]() { return m_selections->get<ConfigKey::FF8DirectoryPaths>(); },
-       [&]()
-       {
-            return m_selections->get<ConfigKey::FF8DirectoryPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
+       m_selections->get<ConfigKey::FF8DirectoryPaths>(),
+       strings,
        m_selections->get<ConfigKey::FF8Path>(),
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      if (
@@ -4132,8 +4119,8 @@ std::shared_ptr<mim_sprite> gui::get_mim_sprite() const
      return std::make_shared<mim_sprite>(
        m_field,
        m_selections->get<ConfigKey::Bpp>(),
-       static_cast<std::uint8_t>(Mim::palette_selections().at(
-         static_cast<std::size_t>(m_selections->get<ConfigKey::Palette>()))),
+       Mim::palette_selections().at(
+         static_cast<std::size_t>(m_selections->get<ConfigKey::Palette>())),
        get_coo(),
        m_selections->get<ConfigKey::DrawPalette>());
 }
@@ -4361,7 +4348,7 @@ void gui::refresh_palette(std::uint8_t palette)
      m_selections->get<ConfigKey::Palette>() = palette;
      if (m_map_sprite)
      {
-          m_map_sprite->filter().palette.update(palette);
+          m_map_sprite->filter().update<ff_8::FilterTag::Palette>(palette);
      }
      else
      {
@@ -4398,15 +4385,16 @@ void gui::combo_swizzle_path()
      {
           return;
      }
-     if (!combo_swizzle_path(m_map_sprite->filter().swizzle))
+     if (!combo_swizzle_path(
+           m_map_sprite->filter().get<ff_8::FilterTag::Swizzle>()))
      {
           return;
      }
-     if (m_map_sprite->filter().swizzle.enabled())
+     if (m_map_sprite->filter().enabled<ff_8::FilterTag::Swizzle>())
      {
-          m_map_sprite->filter().deswizzle.disable();
-          m_map_sprite->filter().swizzle_as_one_image.disable();
-          m_map_sprite->filter().full_filename.disable();
+          m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
           m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
@@ -4419,15 +4407,16 @@ void gui::combo_deswizzle_path()
      {
           return;
      }
-     if (!combo_deswizzle_path(m_map_sprite->filter().deswizzle))
+     if (!combo_deswizzle_path(
+           m_map_sprite->filter().get<ff_8::FilterTag::Deswizzle>()))
      {
           return;
      }
-     if (m_map_sprite->filter().deswizzle.enabled())
+     if (m_map_sprite->filter().enabled<ff_8::FilterTag::Deswizzle>())
      {
-          m_map_sprite->filter().swizzle.disable();
-          m_map_sprite->filter().swizzle_as_one_image.disable();
-          m_map_sprite->filter().full_filename.disable();
+          m_map_sprite->filter().disable<ff_8::FilterTag::Swizzle>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
      }
 
      refresh_render_texture(true);
@@ -4439,15 +4428,16 @@ void gui::combo_full_filename_path()
      {
           return;
      }
-     if (!combo_full_filename_path(m_map_sprite->filter().full_filename))
+     if (!combo_full_filename_path(
+           m_map_sprite->filter().get<ff_8::FilterTag::FullFileName>()))
      {
           return;
      }
-     if (m_map_sprite->filter().full_filename.enabled())
+     if (m_map_sprite->filter().enabled<ff_8::FilterTag::FullFileName>())
      {
-          m_map_sprite->filter().swizzle.disable();
-          m_map_sprite->filter().swizzle_as_one_image.disable();
-          m_map_sprite->filter().deswizzle.disable();
+          m_map_sprite->filter().disable<ff_8::FilterTag::Swizzle>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
           m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
@@ -4461,16 +4451,16 @@ void gui::combo_swizzle_as_one_image_path()
           return;
      }
      if (!combo_swizzle_as_one_image_path(
-           m_map_sprite->filter().swizzle_as_one_image))
+           m_map_sprite->filter().get<ff_8::FilterTag::SwizzleAsOneImage>()))
      {
           return;
      }
-     if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+     if (m_map_sprite->filter().enabled<ff_8::FilterTag::SwizzleAsOneImage>())
      {
-          m_map_sprite->filter().swizzle.disable();
-          m_map_sprite->filter().deswizzle.disable();
-          m_map_sprite->filter().full_filename.disable();
-          m_map_sprite->filter().compact_on_load_original.update(
+          m_map_sprite->filter().disable<ff_8::FilterTag::Swizzle>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
+          m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
+          m_map_sprite->filter().update<ff_8::FilterTag::CompactOnLoadOriginal>(
             compact_type::map_order_ffnx);
           m_map_sprite->toggle_filter_compact_on_load_original(true);
      }
@@ -4484,12 +4474,12 @@ void gui::combo_map_path()
      {
           return;
      }
-     if (!combo_map_path(m_map_sprite->filter().map))
+     if (!combo_map_path(m_map_sprite->filter().get<ff_8::FilterTag::Map>()))
      {
           return;
      }
      // below if changed
-     if (m_map_sprite->filter().map.enabled())
+     if (m_map_sprite->filter().enabled<ff_8::FilterTag::Map>())
      {
           if (const auto paths
               = fme::generate_map_paths(m_selections, *m_map_sprite)();
@@ -4500,7 +4490,7 @@ void gui::combo_map_path()
           else
           {
                //.map was not found.
-               m_map_sprite->filter().map.disable();
+               m_map_sprite->filter().disable<ff_8::FilterTag::Map>();
           }
      }
      else
@@ -4684,122 +4674,87 @@ std::future<std::future<gui::PathsAndEnabled>>
 }
 
 bool gui::combo_swizzle_path(
-  ff_8::filter_old<ff_8::FilterTag::Swizzle> &filter) const
+  ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
 
 bool gui::combo_swizzle_as_one_image_path(
-  ff_8::filter_old<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
+  ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_as_one_image_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       {
-            return m_selections
-              ->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>();
-       },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
+       strings, strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
 bool gui::combo_deswizzle_path(
-  ff_8::filter_old<ff_8::FilterTag::Deswizzle> &filter) const
+  ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
 bool gui::combo_full_filename_path(
-  ff_8::filter_old<ff_8::FilterTag::FullFileName> &filter) const
+  ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::full_filename_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       {
-            return m_selections
-              ->get<ConfigKey::CacheFullFileNamePathsEnabled>();
-       },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
+
      return m_field && gcc.render();
 }
 
-bool gui::combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const
+bool gui::combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::map_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheMapPathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheMapPathsEnabled>(), strings, strings,
+       filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }

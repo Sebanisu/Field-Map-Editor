@@ -2,7 +2,7 @@
 #include "source_tile_conflicts.hpp"
 #include <boost/ut.hpp>// single header
 #include <ranges>
-constexpr auto sum(auto... args)
+static constexpr auto sum(auto... args)
 {
      return (args + ...);
 }
@@ -11,21 +11,28 @@ int main()
      using namespace boost::ut;
 
      static constexpr auto t_range = std::ranges::views::iota(
-       std::uint8_t{ 0 }, std::uint8_t{ ff_8::source_tile_conflicts::T_SIZE });
+       std::uint8_t{},
+       static_cast<std::uint8_t>(ff_8::source_tile_conflicts::T_SIZE));
      static constexpr auto x_range
        = std::ranges::views::iota(
-           std::uint8_t{ 0 },
-           std::uint8_t{ ff_8::source_tile_conflicts::X_SIZE })
+           std::uint8_t{},
+           static_cast<std::uint8_t>(ff_8::source_tile_conflicts::X_SIZE))
          | std::ranges::views::transform(
-           [](const auto i)
-           { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
+           [](const std::uint8_t i)
+           {
+                return static_cast<std::uint8_t>(
+                  i * ff_8::source_tile_conflicts::X_SIZE);
+           });
      static constexpr auto y_range
        = std::ranges::views::iota(
-           std::uint8_t{ 0 },
-           std::uint8_t{ ff_8::source_tile_conflicts::Y_SIZE })
+           std::uint8_t{},
+           static_cast<std::uint8_t>(ff_8::source_tile_conflicts::Y_SIZE))
          | std::ranges::views::transform(
-           [](const auto i)
-           { return std::uint8_t{ i * ff_8::source_tile_conflicts::X_SIZE }; });
+           [](const std::uint8_t i)
+           {
+                return static_cast<std::uint8_t>(
+                  i * ff_8::source_tile_conflicts::Y_SIZE);
+           });
      // Test case to validate the reverse mapping
      test("Reverse index validation") = [&]
      {

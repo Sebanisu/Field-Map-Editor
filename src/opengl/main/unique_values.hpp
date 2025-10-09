@@ -120,18 +120,28 @@ struct unique_values_and_strings
           return ret;
      }
 };
-// Concept to check for values(), strings(), and zip()
+
 template<typename T>
 concept HasValuesAndStringsAndZip = requires(T obj) {
-     {
-          obj.values()
-     } -> std::ranges::range;// std::convertible_to<const std::vector<typename
-                             // std::remove_cvref_t<T>::value_type> &>;
-     {
-          obj.strings()
-     } -> std::ranges::range;// std::convertible_to<const
-                             // std::vector<std::string> &>;
+     { obj.values() } -> std::ranges::range;
+     { obj.strings() } -> std::ranges::range;
      { obj.zip() } -> std::ranges::range;
+
+     // Extract element types
+     typename std::ranges::range_value_t<decltype(obj.values())>;
+     typename std::ranges::range_value_t<decltype(obj.strings())>;
+
+     // Check that we can std::get<0> and std::get<1> from a zip element
+     requires requires(std::ranges::range_value_t<decltype(obj.zip())> elem) {
+          {
+               std::get<0>(elem)
+          } -> std::convertible_to<
+            std::ranges::range_value_t<decltype(obj.values())>>;
+          {
+               std::get<1>(elem)
+          } -> std::convertible_to<
+            std::ranges::range_value_t<decltype(obj.strings())>>;
+     };
 };
 
 struct all_unique_values_and_strings

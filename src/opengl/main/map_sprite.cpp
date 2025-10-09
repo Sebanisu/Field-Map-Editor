@@ -62,13 +62,15 @@ map_sprite::map_sprite(
           .opt_coo    = m_map_group.opt_coo,
           .field_name = get_base_name(),
           .filters_deswizzle_value_string
-          = m_filters.deswizzle.value().string(),
+          = m_filters.value<ff_8::FilterTag::Deswizzle>().string(),
           .filters_full_filename_value_string
-          = m_filters.full_filename.value().string(),
-          .filters_swizzle_value_string = m_filters.swizzle.value().string(),
+          = m_filters.value<ff_8::FilterTag::FullFileName>().string(),
+          .filters_swizzle_value_string
+          = m_filters.value<ff_8::FilterTag::Swizzle>().string(),
           .filters_swizzle_as_one_image_string
-          = m_filters.swizzle_as_one_image.value().string(),
-          .filters_map_value_string = m_filters.map.value().string()
+          = m_filters.value<ff_8::FilterTag::SwizzleAsOneImage>().string(),
+          .filters_map_value_string
+          = m_filters.value<ff_8::FilterTag::Map>().string()
           //.working_unique_pupu                = working_unique_pupu(),
           //.current_filenames                  = toml_filenames(),
           //.bpp_palette                        = uniques().palette(),
@@ -76,7 +78,7 @@ map_sprite::map_sprite(
      };
 
 
-     if (m_filters.map.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::Map>())
      {
           if (const auto paths = ps.generate_map_paths(".map");
               !std::ranges::empty(paths))
@@ -86,7 +88,7 @@ map_sprite::map_sprite(
           else
           {
                //.map was not found.
-               m_filters.map.disable();
+               m_filters.disable<ff_8::FilterTag::Map>();
           }
      }
      toggle_filter_compact_on_load_original();
@@ -104,19 +106,19 @@ void map_sprite::toggle_filter_compact_on_load_original(
      {
           if (*state)
           {
-               m_filters.compact_on_load_original.enable();
+               m_filters.enable<ff_8::FilterTag::CompactOnLoadOriginal>();
           }
-          else if (m_filters.compact_on_load_original.enabled())
+          else if (m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>())
           {
-               m_filters.compact_on_load_original.disable();
+               m_filters.disable<ff_8::FilterTag::CompactOnLoadOriginal>();
                first_to_working_and_original(skip_update);
           }
      }
 
 
-     if (m_filters.compact_on_load_original.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>())
      {
-          switch (m_filters.compact_on_load_original.value())
+          switch (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>())
           {
                case compact_type::rows:
                     compact_rows_original(skip_update);
@@ -147,25 +149,25 @@ void map_sprite::toggle_filter_flatten_on_load_original(
      {
           if (*state)
           {
-               m_filters.flatten_on_load_original.enable();
+               m_filters.enable<ff_8::FilterTag::FlattenOnLoadOriginal>();
           }
-          else if (m_filters.flatten_on_load_original.enabled())
+          else if (m_filters.enabled<ff_8::FilterTag::FlattenOnLoadOriginal>())
           {
-               m_filters.flatten_on_load_original.disable();
+               m_filters.disable<ff_8::FilterTag::FlattenOnLoadOriginal>();
                first_to_working_and_original(skip_update);
           }
      }
 
-     if (m_filters.flatten_on_load_original.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::FlattenOnLoadOriginal>())
      {
-          switch (m_filters.flatten_on_load_original.value())
+          switch (m_filters.value<ff_8::FilterTag::FlattenOnLoadOriginal>())
           {
                case flatten_type::bpp:
                     // Only flatten BPP if compact type isn't using map
                     // order
                     if (
-                 !m_filters.compact_on_load_original.enabled()
-                 || (m_filters.compact_on_load_original.value() != compact_type::map_order && m_filters.compact_on_load_original.value() != compact_type::map_order_ffnx))
+                 !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
@@ -178,8 +180,8 @@ void map_sprite::toggle_filter_flatten_on_load_original(
                case flatten_type::both:
                     // Only flatten BPP if not using map order
                     if (
-                 !m_filters.compact_on_load_original.enabled()
-                 || (m_filters.compact_on_load_original.value() != compact_type::map_order && m_filters.compact_on_load_original.value() != compact_type::map_order_ffnx))
+                 !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
@@ -201,18 +203,19 @@ map_sprite::operator ff_8::path_search() const
               .opt_coo    = m_map_group.opt_coo,
               .field_name = get_base_name(),
               .filters_deswizzle_value_string
-              = m_filters.deswizzle.value().string(),
+              = m_filters.value<ff_8::FilterTag::Deswizzle>().string(),
               .filters_full_filename_value_string
-              = m_filters.full_filename.value().string(),
+              = m_filters.value<ff_8::FilterTag::FullFileName>().string(),
               .filters_swizzle_value_string
-              = m_filters.swizzle.value().string(),
+              = m_filters.value<ff_8::FilterTag::Swizzle>().string(),
               .filters_swizzle_as_one_image_string
-              = m_filters.swizzle_as_one_image.value().string(),
-              .filters_map_value_string = m_filters.map.value().string(),
-              .working_unique_pupu      = working_unique_pupu(),
-              .current_filenames        = toml_filenames(),
-              .bpp_palette              = uniques().palette(),
-              .texture_page_id          = uniques().texture_page_id() };
+              = m_filters.value<ff_8::FilterTag::SwizzleAsOneImage>().string(),
+              .filters_map_value_string
+              = m_filters.value<ff_8::FilterTag::Map>().string(),
+              .working_unique_pupu = working_unique_pupu(),
+              .current_filenames   = toml_filenames(),
+              .bpp_palette         = uniques().palette(),
+              .texture_page_id     = uniques().texture_page_id() };
 }
 
 
@@ -263,9 +266,9 @@ std::size_t map_sprite::get_texture_pos(
   const std::uint8_t              palette,
   const std::uint8_t              texture_page) const
 {
-     if (!m_filters.swizzle_as_one_image.enabled())
+     if (!m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
      {
-          if (!m_filters.swizzle.enabled())
+          if (!m_filters.enabled<ff_8::FilterTag::Swizzle>())
           {
                if (bpp.bpp4())
                {
@@ -414,7 +417,7 @@ void map_sprite::queue_texture_loading() const
      };
 
      // Check if the deswizzle filter is enabled
-     if (m_filters.deswizzle.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::Deswizzle>())
      {
           // Deswizzling is enabled; load textures based on PupuIDs in order
           std::ranges::for_each(
@@ -428,7 +431,7 @@ void map_sprite::queue_texture_loading() const
           return;
      }
 
-     if (m_filters.full_filename.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::FullFileName>())
      {
           // m_child_map_sprite.reset();
           m_child_textures_map.clear();
@@ -481,12 +484,12 @@ void map_sprite::queue_texture_loading() const
           }
           for (const auto &palette : palette_set.values())
           {
-               if (m_filters.swizzle_as_one_image.enabled())
+               if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                {
                     future_of_futures.push_back(
                       load_swizzle_as_one_image_textures(palette));
                }
-               else if (m_filters.swizzle.enabled())
+               else if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
                {
                     // Schedule upscale texture loads for each texture page
                     for (const auto &texture_page :
@@ -508,11 +511,11 @@ void map_sprite::queue_texture_loading() const
 
 
      // Additional upscale loading for non-palette based textures
-     if (m_filters.swizzle_as_one_image.enabled())
+     if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
      {
           future_of_futures.push_back(load_swizzle_as_one_image_textures());
      }
-     else if (m_filters.swizzle.enabled())
+     else if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
      {
           for (const auto &texture_page :
                m_all_unique_values_and_strings.texture_page_id().values())
@@ -569,27 +572,27 @@ bool map_sprite::fallback_textures() const
                 return size.x == 0 || size.y == 0;
            }))
      {
-          if (m_filters.swizzle.enabled())
+          if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
           {
-               m_filters.swizzle.disable();
+               m_filters.disable<ff_8::FilterTag::Swizzle>();
                queue_texture_loading();
                return true;
           }
-          else if (m_filters.deswizzle.enabled())
+          else if (m_filters.enabled<ff_8::FilterTag::Deswizzle>())
           {
-               m_filters.deswizzle.disable();
+               m_filters.disable<ff_8::FilterTag::Deswizzle>();
                queue_texture_loading();
                return true;
           }
-          else if (m_filters.swizzle_as_one_image.enabled())
+          else if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
           {
-               m_filters.swizzle_as_one_image.disable();
+               m_filters.disable<ff_8::FilterTag::SwizzleAsOneImage>();
                queue_texture_loading();
                return true;
           }
-          else if (m_filters.full_filename.enabled())
+          else if (m_filters.enabled<ff_8::FilterTag::FullFileName>())
           {
-               m_filters.full_filename.disable();
+               m_filters.disable<ff_8::FilterTag::FullFileName>();
                queue_texture_loading();
                return true;
           }
@@ -1042,15 +1045,17 @@ void map_sprite::update_position(
                return;// continue to next tile
           }
           if (
-            m_filters.multi_pupu.enabled()
+            m_filters.enabled<ff_8::FilterTag::MultiPupu>()
             && std::ranges::all_of(
-              m_filters.multi_pupu.value(),
+              m_filters.value<ff_8::FilterTag::MultiPupu>(),
               [&](const auto &test) -> bool { return test != pupu_id; }))
           {
                failures.emplace(DrawError::FilteredOut);
                return;
           }
-          if (m_filters.pupu.enabled() && m_filters.pupu.value() != pupu_id)
+          if (
+            m_filters.enabled<ff_8::FilterTag::Pupu>()
+            && m_filters.value<ff_8::FilterTag::Pupu>() != pupu_id)
           {
                failures.emplace(DrawError::FilteredOut);
                return;
@@ -1064,8 +1069,8 @@ void map_sprite::update_position(
           const auto *texture = [&]()
           {
                if (
-                 m_filters.deswizzle.enabled()
-                 || m_filters.full_filename.enabled())
+                 m_filters.enabled<ff_8::FilterTag::Deswizzle>()
+                 || m_filters.enabled<ff_8::FilterTag::FullFileName>())
                {
                     return get_texture(pupu_id);
                }
@@ -1331,7 +1336,9 @@ glm::uvec2 map_sprite::get_tile_texture_size(
   const glengine::Texture *const texture) const
 {
      const auto raw_texture_size = texture->get_size();
-     if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
+     if (
+       m_filters.enabled<ff_8::FilterTag::Deswizzle>()
+       || m_filters.enabled<ff_8::FilterTag::FullFileName>())
      {
           const auto local_scale
             = static_cast<std::uint32_t>(raw_texture_size.y)
@@ -1686,7 +1693,7 @@ std::pair<
 
           const toml::table *file_table
             = get_deswizzle_combined_toml_table(filename);
-          ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu
+          ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
             = { ff_8::FilterSettings::All_Disabled };
           multi_pupu.reload(*file_table);
           if (!multi_pupu.enabled())
@@ -1698,11 +1705,12 @@ std::pair<
                continue;
           }
 
-          // if (std::cmp_equal(multi_pupu.value().size(), 1))
+          // if (std::cmp_equal(value<ff_8::FilterTag::MultiPupu>().size(), 1))
           // {
           //      // Only one pupu.
           //      glengine::Texture *target_texture
-          //        = get_texture_mutable(multi_pupu.value().front());
+          //        =
+          //        get_texture_mutable(value<ff_8::FilterTag::MultiPupu>().front());
           //      if (!target_texture)
           //      {
           //           continue;
@@ -1914,7 +1922,8 @@ void map_sprite::post_op_full_filename_texture() const
 void map_sprite::process_full_filename_textures() const
 {
      if (
-       !all_futures_done() || !m_filters.full_filename.enabled()
+       !all_futures_done()
+       || !m_filters.enabled<ff_8::FilterTag::FullFileName>()
        || m_full_filename_textures->empty()
        || m_full_filename_to_mask_name.empty())
      {
@@ -2130,8 +2139,8 @@ void map_sprite::resize_render_texture() const
           static constexpr std::int16_t mim_texture_height = 256U;
 
           if (
-            m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
-            [[unlikely]]
+            m_filters.enabled<ff_8::FilterTag::Deswizzle>()
+            || m_filters.enabled<ff_8::FilterTag::FullFileName>()) [[unlikely]]
           {
                m_render_framebuffer->set_scale(
                  max_height / static_cast<std::int32_t>(m_canvas.height()));
@@ -2445,7 +2454,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value()
-            .texture_page_id.update(texture_page)
+            .update<ff_8::FilterTag::TexturePageId>(texture_page)
             .enable();
           const bool contains_conflicts
             = conflicting_palettes_map.contains(texture_page);
@@ -2477,9 +2486,11 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     for (const auto &palette : filter_palette)
                     {
                          settings.filters.value()
-                           .palette.update(palette)
+                           .update<ff_8::FilterTag::Palette>(palette)
                            .enable();
-                         settings.filters.value().bpp.update(bpp).enable();
+                         settings.filters.value()
+                           .update<ff_8::FilterTag::Bpp>(bpp)
+                           .enable();
 
                          auto out_framebuffer
                            = glengine::FrameBuffer{ specification };
@@ -2513,8 +2524,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           }
 
           // No conflicting palettes — save the texture page normally.
-          settings.filters.value().palette.disable();
-          settings.filters.value().bpp.disable();
+          settings.filters.value().disable<ff_8::FilterTag::Palette>();
+          settings.filters.value().disable<ff_8::FilterTag::Bpp>();
 
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
@@ -2666,8 +2677,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
                for (const auto &palette : filter_palette)
                {
-                    backup.filters.value().palette.update(palette).enable();
-                    backup.filters.value().bpp.update(bpp).enable();
+                    backup.filters.value()
+                      .update<ff_8::FilterTag::Palette>(palette)
+                      .enable();
+                    backup.filters.value()
+                      .update<ff_8::FilterTag::Bpp>(bpp)
+                      .enable();
 
                     // Generate the texture.
                     auto out_framebuffer
@@ -2697,8 +2712,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
 
      // No conflicting palettes — save the texture page normally.
-     backup.filters.value().palette.disable();
-     backup.filters.value().bpp.disable();
+     backup.filters.value().disable<ff_8::FilterTag::Palette>();
+     backup.filters.value().disable<ff_8::FilterTag::Bpp>();
 
      auto out_framebuffer = glengine::FrameBuffer{ specification };
      if (generate_texture(out_framebuffer))
@@ -2841,7 +2856,7 @@ std::string map_sprite::get_base_name() const
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value()
-            .pupu.update(pupu)
+            .update<ff_8::FilterTag::Pupu>(pupu)
             .enable();// Enable this specific Pupu ID
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
@@ -2950,7 +2965,8 @@ void map_sprite::save_deswizzle_generate_toml(
      {
           auto &filters         = settings.filters.value();
           auto  updated_filters = std::forward_as_tuple(
-            filters.multi_pupu.update(std::vector{ pupu }).enable());
+            filters.update<ff_8::FilterTag::MultiPupu>(std::vector{ pupu })
+              .enable());
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(
                 out_framebuffer))// todo make a if would pass filter with
@@ -3011,14 +3027,17 @@ void map_sprite::save_deswizzle_generate_toml(
           m_filters, m_settings
           //, m_render_framebuffer.mutable_scale()
      };
-     backup.filters                 = ff_8::filters{ false };
-     backup.filters.value().swizzle = backup.filters.backup().swizzle;
-     backup.filters.value().swizzle_as_one_image
-       = backup.filters.backup().swizzle_as_one_image;
-     backup.filters.value().deswizzle = backup.filters.backup().deswizzle;
-     backup.filters.value().full_filename
-       = backup.filters.backup().full_filename;
-     backup.filters.value().map    = backup.filters.backup().map;
+     backup.filters = ff_8::filters{ false };
+     backup.filters.value().get<ff_8::FilterTag::Swizzle>()
+       = backup.filters.backup().get<ff_8::FilterTag::Swizzle>();
+     backup.filters.value().get<ff_8::FilterTag::SwizzleAsOneImage>()
+       = backup.filters.backup().get<ff_8::FilterTag::SwizzleAsOneImage>();
+     backup.filters.value().get<ff_8::FilterTag::Deswizzle>()
+       = backup.filters.backup().get<ff_8::FilterTag::Deswizzle>();
+     backup.filters.value().get<ff_8::FilterTag::FullFileName>()
+       = backup.filters.backup().get<ff_8::FilterTag::FullFileName>();
+     backup.filters.value().get<ff_8::FilterTag::Map>()
+       = backup.filters.backup().get<ff_8::FilterTag::Map>();
      backup.settings->draw_swizzle = draw_swizzle;// No swizzling when saving
      backup.settings->disable_texture_page_shift
        = true;                              // Disable texture page shifts
@@ -3287,22 +3306,24 @@ void map_sprite::cache_pupuids(
   const std::string   &file_name_str,
   const ff_8::filters &filters) const
 {
-     if (filters.multi_pupu.enabled() && filters.pupu.enabled())
+     if (
+       filters.enabled<ff_8::FilterTag::MultiPupu>()
+       && filters.enabled<ff_8::FilterTag::Pupu>())
      {
           m_cache_framebuffer_pupuids[file_name_str]
-            = filters.multi_pupu.value();
+            = filters.value<ff_8::FilterTag::MultiPupu>();
           m_cache_framebuffer_pupuids[file_name_str].push_back(
-            filters.pupu.value());
+            filters.value<ff_8::FilterTag::Pupu>());
      }
-     else if (filters.multi_pupu.enabled())
+     else if (filters.enabled<ff_8::FilterTag::MultiPupu>())
      {
           m_cache_framebuffer_pupuids[file_name_str]
-            = filters.multi_pupu.value();
+            = filters.value<ff_8::FilterTag::MultiPupu>();
      }
-     else if (filters.pupu.enabled())
+     else if (filters.enabled<ff_8::FilterTag::Pupu>())
      {
           m_cache_framebuffer_pupuids[file_name_str].push_back(
-            filters.pupu.value());
+            filters.value<ff_8::FilterTag::Pupu>());
      }
 }
 // m_cache_framebuffer_pupuids
@@ -3749,7 +3770,7 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(
 
      // Create and populate new entry
      toml::table new_table{};
-     filter().update(new_table);// This mutates new_table directly
+     filter().update_table(new_table);// This mutates new_table directly
 
      // Insert into coo_table
      auto [it, inserted]
@@ -3781,15 +3802,15 @@ void map_sprite::refresh_tooltip(const std::string &file_name)
 }
 
 void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
-  const std::string                                  &file_name_key,
-  const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter)
+  const std::string                              &file_name_key,
+  const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter)
 {
      if (auto *table = get_deswizzle_combined_toml_table(file_name_key))
      {
           if (new_filter.enabled())
           {
                // Update in-memory filter state from the table
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
 
                copy_filter.combine(*table);
@@ -3797,10 +3818,10 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
           }
           else
           {
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = (ff_8::FilterSettings::Toggle_Enabled);
                copy_filter.reload(*table);
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu>::value_type tempvec
+               ff_8::filter<ff_8::FilterTag::MultiPupu>::value_type tempvec
                  = {};
 
                std::ranges::remove_copy_if(
@@ -3845,7 +3866,7 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
      }
 
      toml::table new_table{};
-     tmp_filters.update(new_table);// This mutates new_table directly
+     tmp_filters.update_table(new_table);// This mutates new_table directly
      auto [it, inserted]
        = coo_table->insert(new_file_name, std::move(new_table));
      if (!inserted)
@@ -4375,7 +4396,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 .field_name = in_map_sprite.get_base_name(),
                                 .filters_swizzle_value_string
                                 = in_map_sprite.filter()
-                                    .swizzle.value()
+                                    .value<ff_8::FilterTag::Swizzle>()
                                     .string() },
         texture_page]() -> std::vector<std::filesystem::path>
      {
@@ -4404,7 +4425,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 .field_name = in_map_sprite.get_base_name(),
                                 .filters_swizzle_as_one_image_string
                                 = in_map_sprite.filter()
-                                    .swizzle_as_one_image.value()
+                                    .value<ff_8::FilterTag::SwizzleAsOneImage>()
                                     .string() },
         palette]() -> std::vector<std::filesystem::path>
      {
@@ -4442,7 +4463,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 .field_name = in_map_sprite.get_base_name(),
                                 .filters_swizzle_value_string
                                 = in_map_sprite.filter()
-                                    .swizzle.value()
+                                    .value<ff_8::FilterTag::Swizzle>()
                                     .string() },
         texture_page, palette]() -> std::vector<std::filesystem::path>
      {
@@ -4471,7 +4492,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 .field_name = in_map_sprite.get_base_name(),
                                 .filters_deswizzle_value_string
                                 = in_map_sprite.filter()
-                                    .deswizzle.value()
+                                    .value<ff_8::FilterTag::Deswizzle>()
                                     .string() },
         pupu_id]() -> std::vector<std::filesystem::path>
      {
@@ -4499,7 +4520,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                 .field_name = in_map_sprite.get_base_name(),
                                 .filters_full_filename_value_string
                                 = in_map_sprite.filter()
-                                    .full_filename.value()
+                                    .value<ff_8::FilterTag::FullFileName>()
                                     .string() },
         filename]() -> std::vector<std::filesystem::path>
      {
@@ -4521,12 +4542,13 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      // assert(in_map_sprite && "generate_map_paths: in_map_sprite is
      // null");
      return
-       [ps
-        = ff_8::path_search{ .selections = std::move(in_selections),
-                             .opt_coo    = in_map_sprite.get_opt_coo(),
-                             .field_name = in_map_sprite.get_base_name(),
-                             .filters_map_value_string
-                             = in_map_sprite.filter().map.value().string() }]()
+       [ps = ff_8::path_search{ .selections = std::move(in_selections),
+                                .opt_coo    = in_map_sprite.get_opt_coo(),
+                                .field_name = in_map_sprite.get_base_name(),
+                                .filters_map_value_string
+                                = in_map_sprite.filter()
+                                    .value<ff_8::FilterTag::Map>()
+                                    .string() }]()
          -> std::vector<std::filesystem::path>
      {
           spdlog::debug("Generating map paths for field: '{}'", ps.field_name);

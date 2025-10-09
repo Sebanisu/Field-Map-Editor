@@ -189,19 +189,19 @@ struct gui
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void text_mouse_position() const;
      void combo_swizzle_path();
-     bool combo_swizzle_path(
-       ff_8::filter_old<ff_8::FilterTag::Swizzle> &filter) const;
+     bool
+       combo_swizzle_path(ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const;
      void combo_swizzle_as_one_image_path();
      bool combo_swizzle_as_one_image_path(
-       ff_8::filter_old<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
+       ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
      void combo_deswizzle_path();
      bool combo_deswizzle_path(
-       ff_8::filter_old<ff_8::FilterTag::Deswizzle> &filter) const;
+       ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const;
      void combo_full_filename_path();
      bool combo_full_filename_path(
-       ff_8::filter_old<ff_8::FilterTag::FullFileName> &filter) const;
+       ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const;
      void combo_map_path();
-     bool combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const;
+     bool combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const;
      const open_viii::LangT &get_coo() const;
      file_dialog_mode        m_file_dialog_mode       = {};
      map_directory_mode      m_modified_directory_map = {};
@@ -209,7 +209,7 @@ struct gui
      std::filesystem::path   m_loaded_deswizzle_texture_path{};
      //     void popup_batch_reswizzle(); void popup_batch_deswizzle();
      // static void              popup_batch_common_filter_start(
-     //                ff_8::filter_old<std::filesystem::path> &filter,
+     //                ff_8::filter<std::filesystem::path> &filter,
      //                std::string_view                         prefix,
      //                std::string_view                         base_name);
      // void popup_batch_embed();
