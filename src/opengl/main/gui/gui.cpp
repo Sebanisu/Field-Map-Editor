@@ -55,9 +55,7 @@ struct mim_bpp
      }
      auto strings() const
      {
-          return Mim::bpp_selections_c_str()
-                 | std::ranges::views::transform([](std::string_view sv)
-                                                 { return sv; });
+          return Mim::bpp_selections_c_str();
      }
      auto zip() const
      {
@@ -1554,14 +1552,8 @@ void gui::refresh_bpp(BPPT in_bpp)
 }
 void gui::combo_mim_bpp()
 {
-     static const auto strings
-       = Mim::bpp_selections_c_str()
-         | std::views::transform([](std::string_view sv) { return sv; })
-         | std::ranges::to<std::vector>();
      const auto gcc = GenericCombo(
-       gui_labels::bpp,
-       Mim::bpp_selections(),
-       strings,
+       gui_labels::bpp, Mim::bpp_selections(), Mim::bpp_selections_c_str(),
        m_selections->get<ConfigKey::Bpp>());
 
      if (!gcc.render())
@@ -1572,8 +1564,8 @@ void gui::combo_mim_bpp()
 }
 std::uint8_t gui::palette() const
 {
-     return static_cast<uint8_t>(Mim::palette_selections().at(
-       static_cast<size_t>(m_selections->get<ConfigKey::Palette>())));
+     return Mim::palette_selections().at(
+       static_cast<size_t>(m_selections->get<ConfigKey::Palette>()));
 }
 static void update_palette(
   mim_sprite &sprite,
@@ -1591,22 +1583,10 @@ void gui::combo_mim_palette()
 {
      if (m_selections->get<ConfigKey::Bpp>() != BPPT::BPP16_CONST())
      {
-          static constexpr auto palette_values = Mim::palette_selections();
-          static const auto     values
-            = palette_values
-              | std::ranges::views::transform(
-                [](auto i) { return static_cast<uint8_t>(i); })
-              | std::ranges::to<std::vector>();
-          static constexpr auto palette_strings
-            = Mim::palette_selections_c_str();
-          static const auto strings = palette_strings
-                                      | std::ranges::views::transform(
-                                        [](std::string_view sv) { return sv; })
-                                      | std::ranges::to<std::vector>();
           const auto gcc = GenericCombo(
             gui_labels::palette,
-            values,
-            strings,
+            Mim::palette_selections(),
+            Mim::palette_selections_c_str(),
             m_selections->get<ConfigKey::Palette>());
           if (gcc.render())
           {
@@ -4139,8 +4119,8 @@ std::shared_ptr<mim_sprite> gui::get_mim_sprite() const
      return std::make_shared<mim_sprite>(
        m_field,
        m_selections->get<ConfigKey::Bpp>(),
-       static_cast<std::uint8_t>(Mim::palette_selections().at(
-         static_cast<std::size_t>(m_selections->get<ConfigKey::Palette>()))),
+       Mim::palette_selections().at(
+         static_cast<std::size_t>(m_selections->get<ConfigKey::Palette>())),
        get_coo(),
        m_selections->get<ConfigKey::DrawPalette>());
 }
