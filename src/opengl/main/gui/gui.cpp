@@ -1554,10 +1554,14 @@ void gui::refresh_bpp(BPPT in_bpp)
 }
 void gui::combo_mim_bpp()
 {
+     static const auto strings
+       = Mim::bpp_selections_c_str()
+         | std::views::transform([](std::string_view sv) { return sv; })
+         | std::ranges::to<std::vector>();
      const auto gcc = GenericCombo(
        gui_labels::bpp,
        Mim::bpp_selections(),
-       Mim::bpp_selections_c_str(),
+       strings,
        m_selections->get<ConfigKey::Bpp>());
 
      if (!gcc.render())
@@ -4710,25 +4714,16 @@ bool gui::combo_swizzle_path(
 bool gui::combo_swizzle_as_one_image_path(
   ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_as_one_image_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       {
-            return m_selections
-              ->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>();
-       },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
+       strings, strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
@@ -4736,22 +4731,16 @@ bool gui::combo_swizzle_as_one_image_path(
 bool gui::combo_deswizzle_path(
   ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
@@ -4759,47 +4748,33 @@ bool gui::combo_deswizzle_path(
 bool gui::combo_full_filename_path(
   ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::full_filename_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       {
-            return m_selections
-              ->get<ConfigKey::CacheFullFileNamePathsEnabled>();
-       },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheFullFileNamePathsEnabled>(), strings,
+       strings, filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
+
      return m_field && gcc.render();
 }
 
 bool gui::combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const
 {
+     const auto strings
+       = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
+         | std::ranges::views::transform([](const std::filesystem::path &path)
+                                         { return path.string(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::map_path,
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheMapPathsEnabled>(); },
-       [this]()
-       {
-            return m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
-                   | std::ranges::views::transform(
-                     [](const std::filesystem::path &path)
-                     { return path.string(); });
-       },
-       [this]()
-       { return m_selections->get<ConfigKey::CacheTextureAndMapPaths>(); },
-       [&filter]() -> auto & { return filter; },
+       m_selections->get<ConfigKey::CacheTextureAndMapPaths>(),
+       m_selections->get<ConfigKey::CacheMapPathsEnabled>(), strings, strings,
+       filter,
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
