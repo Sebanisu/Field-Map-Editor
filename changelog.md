@@ -10,8 +10,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Refactor Filters and Generic Combo: https://github.com/Sebanisu/Field-Map-Editor/pull/208
 - Changed upstream way of storing the BPP and Palette strings [commits 2dfa9c5 → 6214118](https://github.com/Sebanisu/OpenVIII_CPP_WIP/compare/2dfa9c59e73949b38cfdd0c57cde0f6b145dbc44...6214118d32b9314e28dcf2f46446d4be4afecb8f) & [commit 6214118](https://github.com/Sebanisu/Field-Map-Editor/commit/564c82924669eedd8b651623ab3848a76e3e691f)
 - Tweaks to canary building: deletes the previous build before adding a new one [commits ded5c38 → 63777d5](https://github.com/Sebanisu/Field-Map-Editor/compare/ded5c382d03ca6c1dfe05856c0dfcf774a2181df...63777d5552dae42d62ae6e4caa61298d9d8b2f13)
-
-
+- Add Context Menu to Textures Window https://github.com/Sebanisu/Field-Map-Editor/pull/213
 
 ## [1.0.3] - HotFix
 
