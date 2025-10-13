@@ -484,8 +484,10 @@ void map_sprite::queue_texture_loading() const
           {
                if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                {
-                    future_of_futures.push_back(
-                      load_swizzle_as_one_image_textures(palette));
+                    break;// disabled beacause it loaded the wrong swizzle
+                          // textures.
+                    // future_of_futures.push_back(
+                    //   load_swizzle_as_one_image_textures(palette));
                }
                else if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
                {
