@@ -16,6 +16,7 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 ### Fixed
 - Fix not disabling compact filter in all the needed places https://github.com/Sebanisu/Field-Map-Editor/pull/212
 - Fix Add and Remove from Selection in Toml editor Context Menu and update Readme.md https://github.com/Sebanisu/Field-Map-Editor/pull/214
+- Fix Swizzle and Swizzle As One Image loaded at the same time. https://github.com/Sebanisu/Field-Map-Editor/pull/216
 
 ## [1.0.3] - HotFix
 
