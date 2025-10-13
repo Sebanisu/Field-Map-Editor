@@ -70,9 +70,9 @@ void fme::textures_window::render() const
           render_thumbnail_button(title, texture, false, []() {});
           tool_tip(
             fmt::format(
-              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}", index,
-              static_cast<std::uint32_t>(texture.id()), texture.width(),
-              texture.height()));
+              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}\nPath: {}",
+              index, static_cast<std::uint32_t>(texture.id()), texture.width(),
+              texture.height(), texture.path()));
           draw_thumbnail_label(title);
           ImGui::NextColumn();
      }
