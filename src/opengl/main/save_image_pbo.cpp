@@ -396,7 +396,6 @@ std::future<void> save_image_texture_pbo(
               path.string().c_str(),
               w,
               h,
-              channels,
               pixels.get(),
               static_cast<int>(row_bytes));
 
