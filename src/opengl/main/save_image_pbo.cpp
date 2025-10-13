@@ -311,12 +311,10 @@ std::future<void> save_image_texture_pbo(
   std::filesystem::path       in_path,
   const glengine::SubTexture &texture)
 {
-     const auto       tex_id   = texture.id();
-     const auto       w        = static_cast<GLsizei>(texture.width());
-     const auto       h        = static_cast<GLsizei>(texture.height());
-     const GLint      channels = 4;
-     const GLsizeiptr buffer_size
-       = static_cast<GLsizeiptr>(w) * static_cast<GLsizeiptr>(h) * channels;
+     static constexpr const GLint channels = 4;
+     const GLsizeiptr buffer_size = static_cast<GLsizeiptr>(texture.width())
+                                    * static_cast<GLsizeiptr>(texture.height())
+                                    * channels;
 
      // Create PBO
      GLuint pbo_id = 0;
@@ -350,7 +348,12 @@ std::future<void> save_image_texture_pbo(
      // Async CPU-side save
      return std::async(
        std::launch::deferred,
-       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path)]()
+       [pbo_id,
+        buffer_size,
+        w = texture.width(),
+        h = texture.height(),
+        channels,
+        path = std::move(in_path)]()
        {
             // Ensure directory exists
             if (path.has_parent_path())
