@@ -8,6 +8,7 @@
     "glfw3",
     "glew",
     "glm",
+    "dacap-clip",
     {
       "name": "imgui",
       "default-features": true,
@@ -83,6 +84,11 @@
     {
       "name": "ctre",
       "version": "3.10.0",
+      "port-version": 0
+    },
+    {
+      "name": "dacap-clip",
+      "version": "1.11",
       "port-version": 0
     }
   ]
