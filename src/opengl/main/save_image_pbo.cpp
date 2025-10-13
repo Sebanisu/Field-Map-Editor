@@ -11,6 +11,8 @@
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
 #include <version>
+namespace fme
+{
 struct Vec4Less
 {
      bool operator()(
@@ -304,3 +306,101 @@ std::future<void> save_image_pbo(
             }
        });
 }
+
+std::future<void> save_image_texture_pbo(
+  std::filesystem::path       in_path,
+  const glengine::SubTexture &texture)
+{
+     const auto       tex_id   = texture.id();
+     const auto       w        = static_cast<GLsizei>(texture.width());
+     const auto       h        = static_cast<GLsizei>(texture.height());
+     const GLint      channels = 4;
+     const GLsizeiptr buffer_size
+       = static_cast<GLsizeiptr>(w) * static_cast<GLsizeiptr>(h) * channels;
+
+     // Create PBO
+     GLuint pbo_id = 0;
+     glengine::GlCall{}(glGenBuffers, 1, &pbo_id);
+     glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
+     glengine::GlCall{}(
+       glBufferData,
+       GL_PIXEL_PACK_BUFFER,
+       buffer_size,
+       nullptr,
+       GL_STREAM_READ);
+
+     // Bind texture for readback
+     texture.bind();
+
+     // Read texture data into PBO (RGBA8 expected)
+     glengine::GlCall{}(
+       glGetTexImage, GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+     if (GLenum err = glGetError(); err != GL_NO_ERROR)
+     {
+          spdlog::error(
+            "save_image_texture_pbo: glGetTexImage error: 0x{:X}",
+            static_cast<unsigned>(err));
+     }
+
+     // Unbind
+     texture.unbind();
+     glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
+
+     // Async CPU-side save
+     return std::async(
+       std::launch::deferred,
+       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path)]()
+       {
+            // Ensure directory exists
+            if (path.has_parent_path())
+            {
+                 std::error_code ec;
+                 std::filesystem::create_directories(path.parent_path(), ec);
+                 if (ec)
+                 {
+                      spdlog::error(
+                        "Failed to create directories for '{}': {}",
+                        path.string(),
+                        ec.message());
+                 }
+            }
+
+#ifdef __cpp_lib_smart_ptr_for_overwrite
+            auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(
+              static_cast<std::size_t>(buffer_size));
+#else
+            auto pixels = std::make_unique<std::uint8_t[]>(
+              static_cast<std::size_t>(buffer_size));
+#endif
+
+            // Retrieve from PBO
+            glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
+            glengine::GlCall{}(
+              glGetBufferSubData,
+              GL_PIXEL_PACK_BUFFER,
+              0,
+              buffer_size,
+              pixels.get());
+            glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
+            glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
+
+            const std::size_t row_bytes = static_cast<std::size_t>(w)
+                                          * static_cast<std::size_t>(channels);
+
+            // Save PNG
+            int ok = stbi_write_png(
+              path.string().c_str(),
+              w,
+              h,
+              channels,
+              pixels.get(),
+              static_cast<int>(row_bytes));
+
+            if (!ok)
+                 spdlog::error("stbi_write_png failed for '{}'", path.string());
+            else
+                 spdlog::debug("Saved texture to '{}'", path.string());
+       });
+}
+}// namespace fme

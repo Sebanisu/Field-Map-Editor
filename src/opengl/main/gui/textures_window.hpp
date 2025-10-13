@@ -1,5 +1,6 @@
 #ifndef D606CA11_FB30_432B_BF0C_B3184209EE6E
 #define D606CA11_FB30_432B_BF0C_B3184209EE6E
+#include "filebrowser.hpp"
 #include "map_sprite.hpp"
 #include "Selections.hpp"
 #include <functional>
@@ -14,6 +15,25 @@ class [[nodiscard]] textures_window
      mutable std::weak_ptr<Selections> m_selections       = {};
      mutable float                     m_thumb_size_width = { 96.f };
      mutable float                     m_aspect_ratio     = { 1.f };
+     mutable const glengine::Texture  *m_selected_texture = { nullptr };
+     mutable ImGui::FileBrowser        m_save_dialog{
+          ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_EnterNewFilename
+     };
+     mutable std::filesystem::path m_save_directory = []()
+     {
+          try
+          {
+               return std::filesystem::current_path();
+          }
+          catch (std::filesystem::filesystem_error &e)
+          {
+               spdlog::error(
+                 "{}:{} - Failed to get current path: {}", __FILE__, __LINE__,
+                 e.what());
+               return std::filesystem::path{};
+          }
+     }();
 
    public:
      textures_window() = default;

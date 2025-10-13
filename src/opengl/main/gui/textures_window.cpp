@@ -1,6 +1,7 @@
 #include "textures_window.hpp"
 #include "gui/fa_icons.hpp"
 #include "open_file_explorer.hpp"
+#include "save_image_pbo.hpp"
 #include "tool_tip.hpp"
 #include <ranges>
 
@@ -50,11 +51,42 @@ void fme::textures_window::render() const
           return;
      }
      handle_thumbnail_size_adjustment();
+     if (m_selected_texture)
+     {
+          m_save_dialog.Display();
 
+          if (m_save_dialog.HasSelected())
+          {
+               const auto save_path = m_save_dialog.GetSelected();
+               spdlog::info("Saving texture to '{}'", save_path.string());
+
+               auto future
+                 = save_image_texture_pbo(save_path, *m_selected_texture);
+               // For first version: just wait immediately
+               future.wait();
+
+               m_save_dialog.ClearSelected();
+               m_selected_texture = nullptr;
+               // Update save directory to the parent path of the saved file
+               try
+               {
+                    m_save_directory = save_path.parent_path();
+               }
+               catch (const std::filesystem::filesystem_error &e)
+               {
+                    spdlog::error(
+                      "{}:{} - Failed to get parent path of '{}', '{}'",
+                      __FILE__, __LINE__, save_path, e.what());
+               }
+               open_directory(m_save_directory);
+          }
+     }
      ImGui::BeginChild(
        "##ScrollingTextures",
-       ImVec2(0, 0),// full remaining size
-       false,       // no border
+       ImVec2(
+         0,
+         0), // full remaining size
+       false,// no border
        ImGuiWindowFlags_HorizontalScrollbar);
      format_imgui_text("map_sprite->get_textures()");
      ImGui::Columns(
@@ -71,7 +103,7 @@ void fme::textures_window::render() const
           std::string title = fmt::format("{}", index);
           render_thumbnail_button(title, texture, false, []() {});
           // Right-click context menu
-
+          const auto pop_id = PushPopID();
           if (!std::ranges::empty(texture.path()))
           {
                if (ImGui::BeginPopupContextItem(
@@ -95,6 +127,27 @@ void fme::textures_window::render() const
                          ImGui::SetClipboardText(
                            texture.path().string().c_str());
                     }
+                    if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK "  Save As..."))
+                    {
+                         m_selected_texture = &texture;
+                         m_save_dialog.SetTitle("Save Texture As...");
+                         m_save_dialog.SetTypeFilters({ ".png" });
+                         m_save_dialog.SetDirectory(m_save_directory);
+                         try
+                         {
+                              m_save_dialog.SetInputName(
+                                texture.path().filename().string());
+                         }
+                         catch (const std::exception &e)
+                         {
+                              spdlog::error(
+                                "{}:{} - Failed to get filename from path: {}",
+                                __FILE__, __LINE__, e.what());
+                              m_save_dialog.SetInputName(
+                                fmt::format("texture_{}.png", index));
+                         }
+                         m_save_dialog.Open();
+                    }
                     ImGui::EndPopup();
                }
                else
@@ -109,11 +162,29 @@ void fme::textures_window::render() const
           }
           else
           {
-               tool_tip(
-                 fmt::format(
-                   "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}", index,
-                   static_cast<std::uint32_t>(texture.id()), texture.width(),
-                   texture.height()));
+               const std::string default_filename
+                 = fmt::format("texture_{}.png", index);
+               if (ImGui::BeginPopupContextItem(default_filename.c_str()))
+               {
+                    if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK "  Save As..."))
+                    {
+                         m_selected_texture = &texture;
+                         m_save_dialog.SetTitle("Save Texture As...");
+                         m_save_dialog.SetTypeFilters({ ".png" });
+                         m_save_dialog.SetDirectory(m_save_directory);
+                         m_save_dialog.SetInputName(default_filename);
+                         m_save_dialog.Open();
+                    }
+                    ImGui::EndPopup();
+               }
+               else
+               {
+                    tool_tip(
+                      fmt::format(
+                        "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}",
+                        index, static_cast<std::uint32_t>(texture.id()),
+                        texture.width(), texture.height()));
+               }
           }
           draw_thumbnail_label(title);
           ImGui::NextColumn();
