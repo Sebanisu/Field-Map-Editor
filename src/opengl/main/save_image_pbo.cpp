@@ -350,9 +350,8 @@ std::future<void> save_image_texture_pbo(
        std::launch::deferred,
        [pbo_id,
         buffer_size,
-        w = texture.width(),
-        h = texture.height(),
-        channels,
+        w    = texture.width(),
+        h    = texture.height(),
         path = std::move(in_path)]()
        {
             // Ensure directory exists
@@ -396,6 +395,7 @@ std::future<void> save_image_texture_pbo(
               path.string().c_str(),
               w,
               h,
+              channels,
               pixels.get(),
               static_cast<int>(row_bytes));
 
