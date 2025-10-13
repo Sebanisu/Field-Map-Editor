@@ -297,6 +297,10 @@ class Texture
      {
           return m_height;
      }
+     const std::filesystem::path &path() const
+     {
+          return m_path;
+     }
 };
 #undef FME_NOT_CONSTEVAL
 template<
