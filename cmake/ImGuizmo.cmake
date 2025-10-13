@@ -11,7 +11,7 @@ FetchContent_Populate(
     imguizmo_fetch
     QUIET
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
-    GIT_TAG eb90849
+    GIT_TAG 770ca52940fddc1ed8c9e48829e9525bfedd0ef4
     #GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
     #GIT_SHALLOW FALSE
     SOURCE_DIR "${CMAKE_BINARY_DIR}/_deps/imguizmo_src"
