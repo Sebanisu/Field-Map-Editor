@@ -2833,6 +2833,10 @@ void gui::menu_swizzle_as_one_image_paths()
                      compact_type::map_order_ffnx);
                  m_map_sprite->toggle_filter_compact_on_load_original(true);
             }
+            else
+            {
+                 m_map_sprite->toggle_filter_compact_on_load_original(false);
+            }
             refresh_render_texture(true);
        },
        [&]()
@@ -3365,6 +3369,11 @@ void gui::directory_browser_display()
                            .update(compact_type::map_order_ffnx);
                          m_map_sprite->toggle_filter_compact_on_load_original(
                            true);
+                    }
+                    else
+                    {
+                         m_map_sprite->toggle_filter_compact_on_load_original(
+                           false);
                     }
                     refresh_render_texture(true);
                }
@@ -4388,10 +4397,10 @@ void gui::combo_swizzle_path()
      }
      if (m_map_sprite->filter().enabled<ff_8::FilterTag::Swizzle>())
      {
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
           m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
           m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
           m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
-          m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
      refresh_render_texture(true);
@@ -4410,6 +4419,7 @@ void gui::combo_deswizzle_path()
      }
      if (m_map_sprite->filter().enabled<ff_8::FilterTag::Deswizzle>())
      {
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
           m_map_sprite->filter().disable<ff_8::FilterTag::Swizzle>();
           m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
           m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
@@ -4431,10 +4441,10 @@ void gui::combo_full_filename_path()
      }
      if (m_map_sprite->filter().enabled<ff_8::FilterTag::FullFileName>())
      {
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
           m_map_sprite->filter().disable<ff_8::FilterTag::Swizzle>();
           m_map_sprite->filter().disable<ff_8::FilterTag::SwizzleAsOneImage>();
           m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
-          m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
      refresh_render_texture(true);
@@ -4459,6 +4469,10 @@ void gui::combo_swizzle_as_one_image_path()
           m_map_sprite->filter().update<ff_8::FilterTag::CompactOnLoadOriginal>(
             compact_type::map_order_ffnx);
           m_map_sprite->toggle_filter_compact_on_load_original(true);
+     }
+     else
+     {
+          m_map_sprite->toggle_filter_compact_on_load_original(false);
      }
 
      refresh_render_texture(true);
