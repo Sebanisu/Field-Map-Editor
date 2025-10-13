@@ -1,4 +1,6 @@
 #include "textures_window.hpp"
+#include "gui/fa_icons.hpp"
+#include "open_file_explorer.hpp"
 #include "tool_tip.hpp"
 #include <ranges>
 
@@ -68,11 +70,51 @@ void fme::textures_window::render() const
           }
           std::string title = fmt::format("{}", index);
           render_thumbnail_button(title, texture, false, []() {});
-          tool_tip(
-            fmt::format(
-              "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}\nPath: {}",
-              index, static_cast<std::uint32_t>(texture.id()), texture.width(),
-              texture.height(), texture.path()));
+          // Right-click context menu
+
+          if (!std::ranges::empty(texture.path()))
+          {
+               if (ImGui::BeginPopupContextItem(
+                     texture.path().string().c_str()))
+               {
+                    if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN "  Explore"))
+                    {
+                         try
+                         {
+                              open_directory(texture.path().parent_path());
+                         }
+                         catch (const std::exception &e)
+                         {
+                              spdlog::error(
+                                "{}:{} - Failed to open directory: {}",
+                                __FILE__, __LINE__, e.what());
+                         }
+                    }
+                    if (ImGui::MenuItem(ICON_FA_COPY "  Copy Path"))
+                    {
+                         ImGui::SetClipboardText(
+                           texture.path().string().c_str());
+                    }
+                    ImGui::EndPopup();
+               }
+               else
+               {
+                    tool_tip(
+                      fmt::format(
+                        "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: "
+                        "{}\nPath: {}",
+                        index, static_cast<std::uint32_t>(texture.id()),
+                        texture.width(), texture.height(), texture.path()));
+               }
+          }
+          else
+          {
+               tool_tip(
+                 fmt::format(
+                   "Index: {}\nOpenGL ID: {}\nWidth: {}\nHeight: {}", index,
+                   static_cast<std::uint32_t>(texture.id()), texture.width(),
+                   texture.height()));
+          }
           draw_thumbnail_label(title);
           ImGui::NextColumn();
      }
