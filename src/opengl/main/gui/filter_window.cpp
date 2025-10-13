@@ -2550,7 +2550,7 @@ void fme::filter_window::render_thumbnail_popup(
           std::ranges::sort(m_multi_select);
           m_last_selected = file_name;
      }
-     tool_tip("Add hovered values to selected items.");
+     tool_tip("Add hovered item to selected.");
      if (ImGui::MenuItem(
            ICON_FA_SQUARE_MINUS " Remove from selected",
            nullptr,
@@ -2566,7 +2566,7 @@ void fme::filter_window::render_thumbnail_popup(
                m_last_selected = {};
           }
      }
-     tool_tip("Remove hovered values from selected items.");
+     tool_tip("Remove hovered item from selected.");
      ImGui::Separator();
      if (ImGui::MenuItem(
            ICON_FA_LAYER_GROUP " Combine (New)",
