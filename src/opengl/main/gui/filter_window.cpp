@@ -2535,7 +2535,7 @@ void fme::filter_window::render_thumbnail_popup(
 {
      const auto pop_id = PushPopID();
      if (!ImGui::BeginPopupContextItem(
-           "FilterOptions"))// right-click menu for this button
+           file_name.c_str()))// right-click menu for this button
      {
           return;
      }
@@ -2543,52 +2543,30 @@ void fme::filter_window::render_thumbnail_popup(
            ICON_FA_SQUARE_PLUS " Add to selected",
            nullptr,
            nullptr,
-           !m_multi_select.empty()))
+           std::ranges::find(m_multi_select, file_name)
+             == m_multi_select.end()))
      {
-          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
-            = { ff_8::FilterSettings::All_Disabled };
-          const toml::table *const file_table
-            = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
-          if (file_table)
-          {
-               temp_filter.reload(*file_table);
-               temp_filter.enable();
-               for (const std::string &update_file_name : m_multi_select)
-               {
-                    lock_map_sprite
-                      ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                        update_file_name, temp_filter);
-               }
-               m_reload_thumbnail = true;
-               save_config(lock_selections);
-          }
+          m_multi_select.push_back(file_name);
+          std::ranges::sort(m_multi_select);
+          m_last_selected = file_name;
      }
-     tool_tip("Add hovered values to selected items.");
+     tool_tip("Add hovered item to selected.");
      if (ImGui::MenuItem(
            ICON_FA_SQUARE_MINUS " Remove from selected",
            nullptr,
            nullptr,
-           !m_multi_select.empty()))
+           std::ranges::find(m_multi_select, file_name)
+             != m_multi_select.end()))
      {
-          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
-            = { ff_8::FilterSettings::All_Disabled };
-          const toml::table *const file_table
-            = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
-          if (file_table)
+          const auto remove_range
+            = std::ranges::remove(m_multi_select, file_name);
+          m_multi_select.erase(remove_range.begin(), remove_range.end());
+          if (m_last_selected == file_name)
           {
-               temp_filter.reload(*file_table);
-               temp_filter.disable();
-               for (const std::string &update_file_name : m_multi_select)
-               {
-                    lock_map_sprite
-                      ->apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                        update_file_name, temp_filter);
-               }
-               m_reload_thumbnail = true;
-               save_config(lock_selections);
+               m_last_selected = {};
           }
      }
-     tool_tip("Remove hovered values to selected items.");
+     tool_tip("Remove hovered item from selected.");
      ImGui::Separator();
      if (ImGui::MenuItem(
            ICON_FA_LAYER_GROUP " Combine (New)",
