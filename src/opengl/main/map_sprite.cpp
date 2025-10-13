@@ -99,7 +99,7 @@ map_sprite::map_sprite(
 
 
 void map_sprite::toggle_filter_compact_on_load_original(
-  const std::optional<bool> state)
+  const std::optional<bool> state) const
 {
      const bool skip_update = true;//! state.has_value();
      if (state.has_value())
@@ -127,10 +127,8 @@ void map_sprite::toggle_filter_compact_on_load_original(
                     compact_all_original(skip_update);
                     break;
                case compact_type::move_only_conflicts:
-               {
                     compact_move_conflicts_only_original(skip_update);
                     break;
-               }
                case compact_type::map_order:
                     compact_map_order_original(skip_update);
                     break;
@@ -142,7 +140,7 @@ void map_sprite::toggle_filter_compact_on_load_original(
 }
 
 void map_sprite::toggle_filter_flatten_on_load_original(
-  const std::optional<bool> state)
+  const std::optional<bool> state) const
 {
      const bool skip_update = true;//! state.has_value();
      if (state.has_value())
@@ -587,6 +585,7 @@ bool map_sprite::fallback_textures() const
           else if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
           {
                m_filters.disable<ff_8::FilterTag::SwizzleAsOneImage>();
+               toggle_filter_compact_on_load_original(false);
                queue_texture_loading();
                return true;
           }
@@ -843,7 +842,7 @@ void map_sprite::flatten_palette()
 }
 
 
-void map_sprite::compact_rows_original(const bool skip_update)
+void map_sprite::compact_rows_original(const bool skip_update) const
 {
      ff_8::compact_rows(m_map_group.maps.copy_original(
        fmt::format("{} {}", gui_labels::compact, gui_labels::rows)));
@@ -852,7 +851,7 @@ void map_sprite::compact_rows_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::compact_all_original(const bool skip_update)
+void map_sprite::compact_all_original(const bool skip_update) const
 {
      ff_8::compact_all(m_map_group.maps.copy_original(
        fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
@@ -861,7 +860,8 @@ void map_sprite::compact_all_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::compact_move_conflicts_only_original(const bool skip_update)
+void map_sprite::compact_move_conflicts_only_original(
+  const bool skip_update) const
 {
      const auto &conflicts = m_map_group.maps.working_conflicts();
      ff_8::compact_move_conflicts_only(
@@ -874,7 +874,7 @@ void map_sprite::compact_move_conflicts_only_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::compact_map_order_original(const bool skip_update)
+void map_sprite::compact_map_order_original(const bool skip_update) const
 {
      ff_8::compact_map_order(m_map_group.maps.copy_original(
        fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
@@ -883,7 +883,7 @@ void map_sprite::compact_map_order_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::compact_map_order_ffnx_original(const bool skip_update)
+void map_sprite::compact_map_order_ffnx_original(const bool skip_update) const
 {
      spdlog::debug(
        "{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2);
@@ -895,7 +895,8 @@ void map_sprite::compact_map_order_ffnx_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::flatten_bpp_original(const bool skip_update)
+
+void map_sprite::flatten_bpp_original(const bool skip_update) const
 {
      ff_8::flatten_bpp(m_map_group.maps.copy_original(
        fmt::format("{} {}", gui_labels::flatten, gui_labels::bpp)));
@@ -904,7 +905,7 @@ void map_sprite::flatten_bpp_original(const bool skip_update)
           update_render_texture();
      }
 }
-void map_sprite::flatten_palette_original(const bool skip_update)
+void map_sprite::flatten_palette_original(const bool skip_update) const
 {
      ff_8::flatten_palette(m_map_group.maps.copy_original(
        fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
@@ -1241,7 +1242,8 @@ void map_sprite::update_position(
 
      // if (
      //   !m_using_imported_texture || m_imported_texture == nullptr ||
-     //   m_imported_texture->width() == 0 || m_imported_texture->height() == 0)
+     //   m_imported_texture->width() == 0 || m_imported_texture->height()
+     //   == 0)
      // {
      //      return false;
      // }
@@ -1252,7 +1254,8 @@ void map_sprite::update_position(
      // &target_framebuffer](
      //                                   const std::integral auto
      //                                   current_index, const is_tile auto
-     //                                   &tile_const, const is_tile auto &tile)
+     //                                   &tile_const, const is_tile auto
+     //                                   &tile)
      //                                   {
      //      if (!m_saved_imported_indices.empty())
      //      {
@@ -1274,10 +1277,12 @@ void map_sprite::update_position(
      //      get_tile_texture_size_for_import(); const auto
      //      destination_tile_size = glm::uvec2{ TILE_SIZE, TILE_SIZE } *
      //      static_cast<std::uint32_t>(target_framebuffer.scale()); const
-     //      glm::uvec2 source_texture_size = { m_imported_texture->width(),
-     //      m_imported_texture->height() }; ff_8::QuadStrip  quad =
+     //      glm::uvec2 source_texture_size = {
+     //      m_imported_texture->width(), m_imported_texture->height() };
+     //      ff_8::QuadStrip  quad =
      //        get_triangle_strip_for_imported(source_tile_size,
-     //        destination_tile_size, source_texture_size, tile_const, tile);
+     //        destination_tile_size, source_texture_size, tile_const,
+     //        tile);
      //      /// TODO fix blend mode
      //      //   states.blendMode        = sf::BlendAlpha;
      //      //   if (!m_disable_blends)
@@ -1290,23 +1295,27 @@ void map_sprite::update_position(
      //      // target.draw(quad.data(), quad.size(), sf::TriangleStrip,
      //      states); drew = true;
      // };
-     // m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
-     //      m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
+     // m_imported_tile_map_front.visit_tiles([&](const auto
+     // &unchanged_tiles) {
+     //      m_imported_tile_map.visit_tiles([&](const auto &changed_tiles)
+     //      {
      //           for (const auto &z_axis :
      //           m_all_unique_values_and_strings.z().values())
      //           {
-     //                const auto z_test = [&]([[maybe_unused]] const is_tile
-     //                auto &tile_const, const is_tile auto &tile) {
+     //                const auto z_test = [&]([[maybe_unused]] const
+     //                is_tile auto &tile_const, const is_tile auto &tile)
+     //                {
      //                     return std::cmp_equal(z_axis, tile.z());
      //                };
 
      //                auto zipped_range = v::zip(unchanged_tiles,
      //                changed_tiles)
-     //                                    | v::filter([&](const auto &current)
-     //                                    { return
+     //                                    | v::filter([&](const auto
+     //                                    &current) { return
      //                                    std::apply(Map::filter_invalid(),
-     //                                    current); }) | v::filter([&](const
-     //                                    auto &current) { return
+     //                                    current); }) |
+     //                                    v::filter([&](const auto
+     //                                    &current) { return
      //                                    std::apply(z_test, current); });
      //                for (decltype(auto) current : zipped_range)
      //                {
@@ -1664,7 +1673,8 @@ std::pair<
                }
 
                spdlog::debug(
-                 "{}:{} Mask chosen generated map id: {}, toml_filename: {}",
+                 "{}:{} Mask chosen generated map id: {}, toml_filename: "
+                 "{}",
                  __FILE__, __LINE__,
                  static_cast<std::uint32_t>(
                    map_it->second->color_attachment_id(in_color_attachment_id)),
@@ -1705,7 +1715,8 @@ std::pair<
                continue;
           }
 
-          // if (std::cmp_equal(value<ff_8::FilterTag::MultiPupu>().size(), 1))
+          // if (std::cmp_equal(value<ff_8::FilterTag::MultiPupu>().size(),
+          // 1))
           // {
           //      // Only one pupu.
           //      glengine::Texture *target_texture
@@ -3032,6 +3043,10 @@ void map_sprite::save_deswizzle_generate_toml(
        = backup.filters.backup().get<ff_8::FilterTag::Swizzle>();
      backup.filters.value().get<ff_8::FilterTag::SwizzleAsOneImage>()
        = backup.filters.backup().get<ff_8::FilterTag::SwizzleAsOneImage>();
+     backup.filters.value().get<ff_8::FilterTag::CompactOnLoadOriginal>()
+       = backup.filters.backup().get<ff_8::FilterTag::CompactOnLoadOriginal>();
+     backup.filters.value().get<ff_8::FilterTag::FlattenOnLoadOriginal>()
+       = backup.filters.backup().get<ff_8::FilterTag::FlattenOnLoadOriginal>();
      backup.filters.value().get<ff_8::FilterTag::Deswizzle>()
        = backup.filters.backup().get<ff_8::FilterTag::Deswizzle>();
      backup.filters.value().get<ff_8::FilterTag::FullFileName>()
@@ -3289,7 +3304,8 @@ void map_sprite::save_deswizzle_generate_toml(
      {
           m_future_consumer += std::move(futures);
           spdlog::trace(
-            "{}:{} Framebuffer generation queued up. Currently framebuffer "
+            "{}:{} Framebuffer generation queued up. Currently "
+            "framebuffer "
             "placeholders empty.",
             __FILE__, __LINE__);
      }
@@ -4023,7 +4039,8 @@ uint32_t map_sprite::get_max_texture_height() const
 //             / fmt::vformat(
 //               fmt::string_view(pattern),
 //               fmt::make_format_args(
-//                 field_name, open_viii::LangCommon::to_string(coo), pupu));
+//                 field_name, open_viii::LangCommon::to_string(coo),
+//                 pupu));
 // }
 // std::filesystem::path map_sprite::save_path(
 //   fmt::format_string<
@@ -4216,7 +4233,7 @@ void map_sprite::disable_disable_blends()
      m_settings.disable_blends = false;
      update_render_texture();
 }
-void map_sprite::first_to_working_and_original(const bool skip_update)
+void map_sprite::first_to_working_and_original(const bool skip_update) const
 {
      const std::string message = "restore .map from FF8";
      (void)m_map_group.maps.first_to_working(message);

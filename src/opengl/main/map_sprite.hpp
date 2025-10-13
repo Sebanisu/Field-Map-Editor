@@ -221,7 +221,7 @@ struct [[nodiscard]] map_sprite// final
        = {};
      mutable std::map<std::string, std::vector<ff_8::PupuID>>
                                          m_cache_framebuffer_pupuids = {};
-     ff_8::map_group                     m_map_group                 = {};
+     mutable ff_8::map_group             m_map_group                 = {};
      map_sprite_settings                 m_settings                  = {};
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
@@ -572,7 +572,7 @@ struct [[nodiscard]] map_sprite// final
      void enable_disable_blends();
      void disable_disable_blends();
      // void        enable_square(glm::uvec2 position);
-     void first_to_working_and_original(const bool skip_update = false);
+     void first_to_working_and_original(const bool skip_update = false) const;
      void begin_multi_frame_working(std::string description);
      void end_multi_frame_working(std::string description = {});
      void undo();
@@ -588,17 +588,17 @@ struct [[nodiscard]] map_sprite// final
      void compact_map_order_ffnx();
      void flatten_bpp();
      void flatten_palette();
-     void compact_rows_original(const bool skip_update);
-     void compact_all_original(const bool skip_update);
-     void compact_move_conflicts_only_original(const bool skip_update);
-     void compact_map_order_original(const bool skip_update);
-     void compact_map_order_ffnx_original(const bool skip_update);
-     void flatten_bpp_original(const bool skip_update);
-     void flatten_palette_original(const bool skip_update);
+     void compact_rows_original(const bool skip_update) const;
+     void compact_all_original(const bool skip_update) const;
+     void compact_move_conflicts_only_original(const bool skip_update) const;
+     void compact_map_order_original(const bool skip_update) const;
+     void compact_map_order_ffnx_original(const bool skip_update) const;
+     void flatten_bpp_original(const bool skip_update) const;
+     void flatten_palette_original(const bool skip_update) const;
      void toggle_filter_compact_on_load_original(
-       const std::optional<bool> state = std::nullopt);
+       const std::optional<bool> state = std::nullopt) const;
      void toggle_filter_flatten_on_load_original(
-       const std::optional<bool> state = std::nullopt);
+       const std::optional<bool> state = std::nullopt) const;
      void load_map(
        const std::filesystem::path &dest_path,
        const bool                   skip_update = false);
