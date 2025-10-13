@@ -4,6 +4,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 ## [canary] - To be 1.0.4
 
+[Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/canary)
+
 ### Changed
 - Refactor Filters and Generic Combo: https://github.com/Sebanisu/Field-Map-Editor/pull/208
 - Changed upstream way of storing the BPP and Palette strings [commits 2dfa9c5 → 6214118](https://github.com/Sebanisu/OpenVIII_CPP_WIP/compare/2dfa9c59e73949b38cfdd0c57cde0f6b145dbc44...6214118d32b9314e28dcf2f46446d4be4afecb8f)
@@ -12,6 +14,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 
 ## [1.0.3] - HotFix
+
+[Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/1.0.3)
 
 ### Added
 - Integration with GitHub milestones for release tracking (inspired by FFNX project).
@@ -56,6 +60,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - Switching tp Github Actions will change the versioning. Because I used Appveyor to track the version number.
 
 ## [1.0.2011] - September 20, 2025
+
+[Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/1.0.2011)
 
 ### Added
 - TOML editor for Pupu Texture Combinations.
@@ -115,6 +121,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 
 ## [1.0.1365] - July 8, 2025
 
+[Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/1.0.1365)
+
 ### Added
 - Custom path parsing with regex for FFNX config.
 - Pupu ID support in custom paths window.
@@ -165,6 +173,8 @@ All notable changes to the Field-Map-Editor project will be documented in this f
 - [#144](https://github.com/Sebanisu/Field-Map-Editor/pull/144) - Configure output paths need to diffs.
 
 ## [1.0.1129] - June 5, 2025
+
+[Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/1.0.1129)
 
 ### Added
 - Support for configuring output paths with diff handling.
