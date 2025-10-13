@@ -39,7 +39,7 @@ namespace fme
   = {});
 
 /*
- *  @brief Asynchronously saves an OpenGL texture to an sf::Image using a Pixel
+ *  @brief Asynchronously saves an OpenGL texture to an PNG file using a Pixel
  *  Buffer Object (PBO).
  *  This function uses a PBO to asynchronously retrieve texture pixel data from
  *  GPU memory, allowing the CPU to continue processing without blocking while
@@ -53,5 +53,15 @@ namespace fme
 [[nodiscard]] std::future<void> save_image_texture_pbo(
   std::filesystem::path       in_path,
   const glengine::SubTexture &texture);
+/*
+ *  @brief Asynchronously copies an OpenGL texture to an clipboard using a Pixel
+ *  Buffer Object (PBO).
+ *  This function uses a PBO to asynchronously retrieve texture pixel data from
+ *  GPU memory, allowing the CPU to continue processing without blocking while
+ *  the data is being transferred. The returned future will complete once the
+ *  pixel data is ready.
+ *  @param texture The glengine::Texture to be saved into a PNG file.
+ */
+void copy_image_texture_pbo(const glengine::SubTexture &texture);
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP

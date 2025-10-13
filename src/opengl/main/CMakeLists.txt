@@ -76,6 +76,7 @@ find_package(OpenGL REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
+find_package(clip CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}_MAIN_COMMON INTERFACE)
 target_include_directories(${PROJECT_NAME}_MAIN_COMMON
@@ -103,6 +104,7 @@ target_link_libraries(
   PRIVATE iconfontcppheaders
   PRIVATE ctre::ctre
   PRIVATE ImGuizmo
+  PRIVATE clip::clip
   PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 
 target_compile_definitions(

@@ -4,6 +4,7 @@
 #include "save_image_pbo.hpp"
 #include "formatters.hpp"
 #include "PupuID.hpp"
+#include <clip.h>
 #include <map>
 #include <ranges>
 #include <ScopeGuard.hpp>
@@ -104,14 +105,8 @@ std::future<void> save_image_pbo(
      // Return deferred CPU-side save
      return std::async(
        std::launch::deferred,
-       [pbo_id,
-        buffer_size,
-        w,
-        h,
-        channels,
-        path      = std::move(in_path),
-        fbo       = std::move(in_fbo),
-        color_ids = std::move(in_color_ids)]()
+       [pbo_id, buffer_size, w, h, channels, path = std::move(in_path),
+        fbo = std::move(in_fbo), color_ids = std::move(in_color_ids)]()
        {
             // Ensure directory exists
             if (!path.parent_path().empty())
@@ -328,7 +323,7 @@ std::future<void> save_image_texture_pbo(
        GL_STREAM_READ);
 
      // Bind texture for readback
-     texture.bind();
+     glengine::GlCall{}(glBindTexture, GL_TEXTURE_2D, texture.id());
 
      // Read texture data into PBO (RGBA8 expected)
      glengine::GlCall{}(
@@ -342,16 +337,13 @@ std::future<void> save_image_texture_pbo(
      }
 
      // Unbind
-     texture.unbind();
+     glengine::GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
      glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
 
      // Async CPU-side save
      return std::async(
        std::launch::deferred,
-       [pbo_id,
-        buffer_size,
-        w    = texture.width(),
-        h    = texture.height(),
+       [pbo_id, buffer_size, w = texture.width(), h = texture.height(),
         path = std::move(in_path)]()
        {
             // Ensure directory exists
@@ -405,4 +397,101 @@ std::future<void> save_image_texture_pbo(
                  spdlog::debug("Saved texture to '{}'", path.string());
        });
 }
+
+void copy_image_texture_pbo(const glengine::SubTexture &texture)
+{
+     static constexpr const GLint channels = 4;
+     const GLsizeiptr buffer_size = static_cast<GLsizeiptr>(texture.width())
+                                    * static_cast<GLsizeiptr>(texture.height())
+                                    * channels;
+
+     // Create PBO
+     GLuint pbo_id = 0;
+     glengine::GlCall{}(glGenBuffers, 1, &pbo_id);
+     glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
+     glengine::GlCall{}(
+       glBufferData,
+       GL_PIXEL_PACK_BUFFER,
+       buffer_size,
+       nullptr,
+       GL_STREAM_READ);
+
+     // Bind texture for readback
+     glengine::GlCall{}(glBindTexture, GL_TEXTURE_2D, texture.id());
+
+     // Read texture data into PBO (RGBA8 expected)
+     glengine::GlCall{}(
+       glGetTexImage, GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+     if (GLenum err = glGetError(); err != GL_NO_ERROR)
+     {
+          spdlog::error(
+            "copy_image_texture_pbo: glGetTexImage error: 0x{:X}",
+            static_cast<unsigned>(err));
+     }
+
+     // Unbind
+     glengine::GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+
+     // Allocate buffer for pixel data
+#ifdef __cpp_lib_smart_ptr_for_overwrite
+     std::unique_ptr<std::uint8_t[]> pixels
+       = std::make_unique_for_overwrite<std::uint8_t[]>(
+         static_cast<std::size_t>(buffer_size));
+#else
+     std::unique_ptr<std::uint8_t[]> pixels = std::make_unique<std::uint8_t[]>(
+       static_cast<std::size_t>(buffer_size));
+#endif
+
+     // Retrieve from PBO
+     glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
+     glengine::GlCall{}(
+       glGetBufferSubData, GL_PIXEL_PACK_BUFFER, 0, buffer_size, pixels.get());
+     glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
+     glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
+
+     // Debug: Log first few bytes to verify pixel data
+     spdlog::debug(
+       "First 4 bytes of pixel data: {:02X} {:02X} {:02X} {:02X}", pixels[0],
+       pixels[1], pixels[2], pixels[3]);
+
+     // Copy to clipboard
+     clip::image_spec spec{
+          .width          = static_cast<unsigned long>(texture.width()),
+          .height         = static_cast<unsigned long>(texture.height()),
+          .bits_per_pixel = static_cast<unsigned long>(8 * channels),
+          .bytes_per_row
+          = static_cast<unsigned long>(texture.width() * channels),
+
+          // .red_mask    = 0xFF000000U,
+          // .green_mask  = 0x00FF0000U,
+          // .blue_mask   = 0x0000FF00U,
+          // .alpha_mask  = 0x000000FFU,
+          // .red_shift   = 24,
+          // .green_shift = 16,
+          // .blue_shift  = 8,
+          // .alpha_shift = 0
+          .red_mask    = 0x000000FFU,
+          .green_mask  = 0x0000FF00U,
+          .blue_mask   = 0x00FF0000U,
+          .alpha_mask  = 0xFF000000U,
+          .red_shift   = 0,
+          .green_shift = 8,
+          .blue_shift  = 16,
+          .alpha_shift = 24
+     };
+     clip::image img(pixels.get(), spec);
+
+     if (clip::set_image(img))
+     {
+          spdlog::info("Copied texture to clipboard.");
+     }
+     else
+     {
+          spdlog::warn(
+            "Failed to copy texture to clipboard — image clipboard may "
+            "not be supported on this platform.");
+     }
+}
+
 }// namespace fme

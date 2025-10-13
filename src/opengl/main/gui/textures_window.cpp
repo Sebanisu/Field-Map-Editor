@@ -148,6 +148,10 @@ void fme::textures_window::render() const
                          }
                          m_save_dialog.Open();
                     }
+                    if (ImGui::MenuItem(ICON_FA_IMAGE "  Copy Image"))
+                    {
+                         copy_image_texture_pbo(texture);
+                    }
                     ImGui::EndPopup();
                }
                else
@@ -174,6 +178,10 @@ void fme::textures_window::render() const
                          m_save_dialog.SetDirectory(m_save_directory);
                          m_save_dialog.SetInputName(default_filename);
                          m_save_dialog.Open();
+                    }
+                    if (ImGui::MenuItem(ICON_FA_IMAGE "  Copy Image"))
+                    {
+                         copy_image_texture_pbo(texture);
                     }
                     ImGui::EndPopup();
                }
