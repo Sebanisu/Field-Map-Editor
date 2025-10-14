@@ -1382,7 +1382,7 @@ template<typename ValueT>
 struct SelectionUpdateStrategy
 {
      static void update(
-       Configuration   &config,
+       toml::table     &config,
        std::string_view id,
        const ValueT    &value)
      {
@@ -1395,23 +1395,22 @@ struct SelectionUpdateStrategy
                  "selection<{}>: \"{}\"",
                  id,
                  std::filesystem::path(str_val).string());
-               config->insert_or_assign(id, str_val);
+               config.insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(
-                 id, std::bit_cast<std::uint32_t>(value));
+               config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value.raw());
+               config.insert_or_assign(id, value.raw());
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, std::to_underlying(value));
+               config.insert_or_assign(id, std::to_underlying(value));
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
           {
@@ -1430,7 +1429,7 @@ struct SelectionUpdateStrategy
           else
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value);
+               config.insert_or_assign(id, value);
           }
      }
 };
