@@ -19,7 +19,7 @@
 #include <spdlog/spdlog.h>
 namespace fme
 {
-enum class ConfigKey
+enum class ConfigKey : std::uint32_t
 {
      StarterField,
      FF8DirectoryPaths,
@@ -69,23 +69,10 @@ enum class ConfigKey
      OutputMapPatternForFullFileName,
      CurrentPattern,
      CurrentPatternIndex,
-     BatchInputType,
-     BatchInputRootPathType,
-     BatchInputMapRootPathType,
-     BatchOutputType,
-     BatchOutputRootPathType,
-     BatchMapListEnabled,
      BackgroundCheckerboardScale,
      BackgroundColor,
      BackgroundColor2,
      BackgroundSettings,
-     BatchInputPath,
-     BatchInputMapPath,
-     BatchOutputPath,
-     BatchInputLoadMap,
-     BatchOutputSaveMap,
-     BatchGenerateColorfulMask,
-     BatchGenerateWhiteOnBlackMask,
      PathPatternsWithPaletteAndTexturePage,
      PathPatternsWithPalette,
      PathPatternsWithTexturePage,
@@ -117,17 +104,51 @@ enum class ConfigKey
      FFNXOverridePath,
      FFNXDirectPath,
 
-     // Filters not required by update or load.
+     BatchInputType,
+     BatchInputRootPathType,
+     BatchInputMapRootPathType,
+     BatchOutputType,
+     BatchOutputRootPathType,
+     BatchMapListEnabled,
+     BatchInputPath,
+     BatchInputMapPath,
+     BatchOutputPath,
+     BatchInputLoadMap,
+     BatchOutputSaveMap,
+     BatchGenerateColorfulMask,
+     BatchGenerateWhiteOnBlackMask,
      BatchCompactType,
      BatchFlattenType,
+     BatchCompactEnabled,
+     BatchFlattenEnabled,
      // All is used to map all values less than All.
      All,
 
-     // Filters not required by update or load.
-     BatchCompactEnabled,
-     BatchFlattenEnabled,
-
 };
+
+struct SelectionBase
+{
+     virtual ~SelectionBase() = default;
+};
+
+static inline const constexpr auto BatchConfigKeys
+  = std::array{ ConfigKey::BatchInputType,
+                ConfigKey::BatchInputRootPathType,
+                ConfigKey::BatchInputMapRootPathType,
+                ConfigKey::BatchOutputType,
+                ConfigKey::BatchOutputRootPathType,
+                ConfigKey::BatchMapListEnabled,
+                ConfigKey::BatchInputPath,
+                ConfigKey::BatchInputMapPath,
+                ConfigKey::BatchOutputPath,
+                ConfigKey::BatchInputLoadMap,
+                ConfigKey::BatchOutputSaveMap,
+                ConfigKey::BatchGenerateColorfulMask,
+                ConfigKey::BatchGenerateWhiteOnBlackMask,
+                ConfigKey::BatchCompactType,
+                ConfigKey::BatchFlattenType };
+using BatchConfigKeyArrayT = std::
+  array<std::unique_ptr<SelectionBase>, std::ranges::size(BatchConfigKeys)>;
 
 template<ConfigKey... Keys>
 consteval bool has_duplicate_keys()
@@ -737,37 +758,31 @@ struct SelectionInfo<ConfigKey::BatchGenerateWhiteOnBlackMask>
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 {
+     using value_type = bool;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactType>
 {
-     using value_type = ff_8::filter<ff_8::FilterTag::Compact>;
+     using value_type = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::value_type;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
-     static inline value_type default_value(const Configuration &config)
-     {
-          return { true, config };
-     }
 };
 
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenEnabled>
 {
+     using value_type = bool;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenType>
 {
-     using value_type = ff_8::filter<ff_8::FilterTag::Flatten>;
+     using value_type = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::value_type;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
-     static inline value_type default_value(const Configuration &config)
-     {
-          return { true, config };
-     }
 };
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
@@ -1336,10 +1351,6 @@ struct SelectionUpdateStrategy<ff_8::filter<Tag>>
      }
 };
 
-struct SelectionBase
-{
-     virtual ~SelectionBase() = default;
-};
 
 template<ConfigKey Key>
 struct Selection : SelectionBase
@@ -1347,6 +1358,13 @@ struct Selection : SelectionBase
      using value_type = typename SelectionInfo<Key>::value_type;
 
      value_type value;
+     Selection([[maybe_unused]] const Configuration &config)
+       : Selection(
+           config,
+           std::nullopt)
+     {
+     }
+
      Selection(
        [[maybe_unused]] const Configuration                &config,
        [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
@@ -1518,7 +1536,7 @@ struct Selection : SelectionBase
           }
      }
 };
-;
+
 consteval inline auto load_selections_id_array()
 {
      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
@@ -1627,6 +1645,54 @@ struct Selections
           Selection<Key> *selection
             = static_cast<Selection<Key> *>(m_selections_array[index].get());
           return selection->value;
+     }
+
+     BatchConfigKeyArrayT generate_batch_config_key_array() const
+     {
+          return generate_batch_config_key_array(Configuration{});
+     }
+
+     BatchConfigKeyArrayT
+       generate_batch_config_key_array(const Configuration &config) const
+     {
+          return [&]<std::size_t... Is>(
+                   std::index_sequence<Is...>) -> BatchConfigKeyArrayT
+          {
+               BatchConfigKeyArrayT result{};
+
+               ((result[Is] = [&]<ConfigKey Key>()
+                   -> std::unique_ptr<Selection<Key>>
+                      {
+                           return std::make_unique<Selection<Key>>(config);
+                      }.template operator()<BatchConfigKeys[Is]>()),
+                ...);
+               return result;
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
+     void apply_batch_config_key_array(const BatchConfigKeyArrayT &input)
+     {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               // Assign input elements
+               (
+                 // For each index Is...
+                 [&]
+                 {
+                      auto       &dst = m_selections_array[std::to_underlying(
+                        BatchConfigKeys[Is])];
+                      const auto &src = input[Is];
+
+                      if (dst && src)
+                      {
+                           *dst = *src;
+                      }
+                 }(),
+                 ...);
+
+               // Call update() for each key
+               update<BatchConfigKeys[Is]...>();
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
      }
 
      template<ConfigKey Key>

@@ -831,7 +831,7 @@ void fme::batch::checkmark_save_map()
            == output_types::deswizzle_generate_toml
          || selections->get<ConfigKey::BatchOutputType>() == output_types::csv;
      bool forced_enable =
-       (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
+       (selections->get<ConfigKey::BatchCompactEnabled>() || selections->get<ConfigKey::BatchFlattenEnabled>()
         || (selections->get<ConfigKey::BatchInputLoadMap>() != input_map_types::native));
 
      if (selections->get<ConfigKey::BatchOutputSaveMap>() && forced_disable)
@@ -982,11 +982,16 @@ void fme::batch::combo_compact_type()
                      gui_labels::compact_map_order_tooltip,
                      gui_labels::compact_map_order_ffnx_tooltip };
 
-     const auto gcc = fme::GenericComboWithFilter(
+     const auto gcc = fme::GenericComboWithToggle(
        gui_labels::compact, values, strings, tool_tips,
-       selections->get<ConfigKey::BatchCompactType>());
+       selections->get<ConfigKey::BatchCompactType>(),
+       selections->get<ConfigKey::BatchCompactEnabled>());
 
-     (void)gcc.render();
+     if (gcc.render())
+     {
+          selections->update<
+            ConfigKey::BatchCompactType, ConfigKey::BatchCompactEnabled>();
+     }
 }
 void fme::batch::combo_flatten_type_bpp()
 {
@@ -1005,11 +1010,16 @@ void fme::batch::combo_flatten_type_bpp()
      static constexpr auto tool_tips
        = std::array{ gui_labels::flatten_bpp_tooltip };
 
-     const auto gcc = fme::GenericComboWithFilter(
+     const auto gcc = fme::GenericComboWithToggle(
        gui_labels::compact, values, strings, tool_tips,
-       selections->get<ConfigKey::BatchFlattenType>());
+       selections->get<ConfigKey::BatchFlattenType>(),
+       selections->get<ConfigKey::BatchFlattenEnabled>());
 
-     (void)gcc.render();
+     if (gcc.render())
+     {
+          selections->update<
+            ConfigKey::BatchFlattenType, ConfigKey::BatchFlattenEnabled>();
+     }
 }
 void fme::batch::combo_flatten_type()
 {
@@ -1023,9 +1033,9 @@ void fme::batch::combo_flatten_type()
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::flatten_tooltip); } };
      const bool all_or_only_palette
-       = !selections->get<ConfigKey::BatchCompactType>().enabled()
-         || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order)
-         || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx);
+       = !selections->get<ConfigKey::BatchCompactEnabled>()
+         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order)
+         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx);
      static constexpr auto values
        = std::array{ flatten_type::bpp, flatten_type::palette,
                      flatten_type::both };
@@ -1044,25 +1054,37 @@ void fme::batch::combo_flatten_type()
        = std::array{ gui_labels::flatten_palette_tooltip };
      if (all_or_only_palette)
      {
-          const auto gcc = fme::GenericComboWithFilter(
+          const auto gcc = fme::GenericComboWithToggle(
             gui_labels::flatten, values, strings, tool_tips,
-            selections->get<ConfigKey::BatchFlattenType>());
+            selections->get<ConfigKey::BatchFlattenType>(),
+            selections->get<ConfigKey::BatchFlattenEnabled>());
           if (!gcc.render())
           {
                return;
           }
+          else
+          {
+               selections->update<
+                 ConfigKey::BatchFlattenType, ConfigKey::BatchFlattenEnabled>();
+          }
      }
      else
      {
-          const auto gcc = fme::GenericComboWithFilter(
+          const auto gcc = fme::GenericComboWithToggle(
             gui_labels::flatten,
             values_only_palette,
             strings_only_palette,
             tool_tips_only_palette,
-            selections->get<ConfigKey::BatchFlattenType>());
+            selections->get<ConfigKey::BatchFlattenType>(),
+            selections->get<ConfigKey::BatchFlattenEnabled>());
           if (!gcc.render())
           {
                return;
+          }
+          else
+          {
+               selections->update<
+                 ConfigKey::BatchFlattenType, ConfigKey::BatchFlattenEnabled>();
           }
      }
      // selections->update<ConfigKey::BatchFlatten>();
@@ -1793,13 +1815,13 @@ void fme::batch::compact()
      }
      else
      {
-          if (!selections->get<ConfigKey::BatchCompactType>().enabled())
+          if (!selections->get<ConfigKey::BatchCompactEnabled>())
           {
                return;
           }
           // Apply the appropriate compaction strategy based on the selected
           // type
-          switch (selections->get<ConfigKey::BatchCompactType>().value())
+          switch (selections->get<ConfigKey::BatchCompactType>())
           {
                case compact_type::rows:
                     m_map_sprite.compact_rows();
@@ -1841,7 +1863,7 @@ void fme::batch::flatten()
      }
 
      // Skip if flattening is not enabled
-     if (!selections->get<ConfigKey::BatchFlattenType>().enabled())
+     if (!selections->get<ConfigKey::BatchFlattenEnabled>())
      {
           return;
      }
@@ -1851,13 +1873,13 @@ void fme::batch::flatten()
        selections->get<ConfigKey::BatchOutputType>()
        != output_types::swizzle_as_one_image)
      {
-          switch (selections->get<ConfigKey::BatchFlattenType>().value())
+          switch (selections->get<ConfigKey::BatchFlattenType>())
           {
                case flatten_type::bpp:
                     // Only flatten BPP if compact type isn't using map order
                     if (
-                 !selections->get<ConfigKey::BatchCompactType>().enabled()
-                 || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
+                 !selections->get<ConfigKey::BatchCompactEnabled>()
+                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
@@ -1870,8 +1892,8 @@ void fme::batch::flatten()
                case flatten_type::both:
                     // Only flatten BPP if not using map order
                     if (
-                 !selections->get<ConfigKey::BatchCompactType>().enabled()
-                 || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
+                 !selections->get<ConfigKey::BatchCompactEnabled>()
+                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
@@ -1882,9 +1904,9 @@ void fme::batch::flatten()
 
           // If the compact strategy is not map-order-based, re-apply compaction
           if (
-            selections->get<ConfigKey::BatchCompactType>().value()
+            selections->get<ConfigKey::BatchCompactType>()
               != compact_type::map_order
-            && selections->get<ConfigKey::BatchCompactType>().value()
+            && selections->get<ConfigKey::BatchCompactType>()
                  != compact_type::map_order_ffnx)
           {
                compact();
@@ -2118,8 +2140,8 @@ fme::batch::batch(
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     flags = selections->get<ConfigKey::BatchCompactType>().enabled()
-                 || selections->get<ConfigKey::BatchFlattenType>().enabled()
+     flags = selections->get<ConfigKey::BatchCompactEnabled>()
+                 || selections->get<ConfigKey::BatchFlattenEnabled>()
                ? ImGuiTreeNodeFlags_DefaultOpen
                : ImGuiTreeNodeFlags{};
 }
