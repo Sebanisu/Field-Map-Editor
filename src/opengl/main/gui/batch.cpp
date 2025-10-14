@@ -325,6 +325,18 @@ void fme::batch::draw_queue()
                     m_output_path_valid = safe_copy_string(
                       selections->get<ConfigKey::BatchOutputPath>(),
                       m_output_path);
+                    (void)safe_copy_string(name, m_new_batch_name);
+
+                    if (
+                      archives_group
+                      && archives_group->mapdata().size()
+                           != selections->get<ConfigKey::BatchMapListEnabled>()
+                                .size())
+                    {
+                         selections->get<ConfigKey::BatchMapListEnabled>()
+                           .resize(archives_group->mapdata().size(), true);
+                         selections->update<ConfigKey::BatchMapListEnabled>();
+                    }
                }
 
                ImGui::TableNextColumn();
