@@ -1446,22 +1446,18 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
      {
           toml::array updated_array;
 
-          for (const auto &[entry_name, batch_array] :
-               value)// structured bindings
+          for (const auto &[entry_name, batch_array] : value)
           {
                toml::table entry_table;
                entry_table.insert_or_assign("name", entry_name);
 
-               // Helper lambda to expand over the index sequence
                const auto process_batch_array
                  = [&]<std::size_t... Is>(std::index_sequence<Is...>)
                {
                     ((
                        [&]()
                        {
-                            if (
-                              auto ptr = std::get_if<Is>(
-                                &batch_array[Is]))// compile-time index
+                            if (auto ptr = std::get_if<Is>(&batch_array[Is]))
                             {
                                  constexpr ConfigKey key = BatchConfigKeys[Is];
                                  using nested_value_t =
@@ -1478,7 +1474,7 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                                    SelectionInfo<key>::id, nested_table);
                             }
                        }()),
-                     ...);// fold expression
+                     ...);
                };
 
                process_batch_array(
