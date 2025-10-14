@@ -121,7 +121,8 @@ enum class ConfigKey : std::uint32_t
      BatchFlattenType,
      BatchCompactEnabled,
      BatchFlattenEnabled,
-     // All is used to map all values less than All.
+     // BatchQueue,
+     //  All is used to map all values less than All.
      All,
 
 };
@@ -130,6 +131,12 @@ struct SelectionBase
 {
      virtual ~SelectionBase() = default;
 };
+
+template<ConfigKey Key>
+struct SelectionInfo;
+
+template<ConfigKey Key>
+using selection_value_t = typename SelectionInfo<Key>::value_type;
 
 static inline const constexpr auto BatchConfigKeys
   = std::array{ ConfigKey::BatchInputType,
@@ -147,8 +154,7 @@ static inline const constexpr auto BatchConfigKeys
                 ConfigKey::BatchGenerateWhiteOnBlackMask,
                 ConfigKey::BatchCompactType,
                 ConfigKey::BatchFlattenType };
-using BatchConfigKeyArrayT = std::
-  array<std::unique_ptr<SelectionBase>, std::ranges::size(BatchConfigKeys)>;
+
 
 template<ConfigKey... Keys>
 consteval bool has_duplicate_keys()
@@ -187,9 +193,6 @@ consteval bool has_valid_keys()
      }
 }
 
-
-template<ConfigKey Key>
-struct SelectionInfo;
 
 template<>
 struct SelectionInfo<ConfigKey::StarterField>
@@ -784,6 +787,7 @@ struct SelectionInfo<ConfigKey::BatchFlattenType>
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
 };
+
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
 {
@@ -1271,6 +1275,47 @@ struct SelectionLoadStrategy
      }
 };
 
+using BatchConfigValueVariant = decltype([] {
+    return []<std::size_t... Is>(std::index_sequence<Is...>)
+        -> std::variant<selection_value_t<BatchConfigKeys[Is]>...>
+    {
+        return {};
+    }(std::make_index_sequence<BatchConfigKeys.size()>{});
+}());
+
+using BatchConfigKeyArrayT
+  = std::array<BatchConfigValueVariant, std::ranges::size(BatchConfigKeys)>;
+
+// template<>
+// struct SelectionInfo<ConfigKey::BatchQueue>
+// {
+//      using value_type = std::map<std::string, BatchConfigKeyArrayT>;
+//      static constexpr std::string_view id = "BatchQueue";
+// };
+
+// template<>
+// struct
+// SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
+// {
+//      using ValueT = typename
+//      SelectionInfo<ConfigKey::BatchQueue>::value_type;
+//      // No loading: object is fully initialized elsewhere
+//      static bool load(
+//        const Configuration &config,
+//        std::string_view     id,
+//        ValueT              &value)
+//      {
+//           if (!config->contains(id))
+//           {
+//                return false;
+//           }
+//           const auto &arr = config[id];
+//           return true;// We're returning true to prevent fall back logic from
+//                       // triggering.
+//      }
+// };
+
+
 // For filters that are constructed with full context and do not support default
 // init
 template<ff_8::FilterTag Tag>
@@ -1647,54 +1692,6 @@ struct Selections
           return selection->value;
      }
 
-     BatchConfigKeyArrayT generate_batch_config_key_array() const
-     {
-          return generate_batch_config_key_array(Configuration{});
-     }
-
-     BatchConfigKeyArrayT
-       generate_batch_config_key_array(const Configuration &config) const
-     {
-          return [&]<std::size_t... Is>(
-                   std::index_sequence<Is...>) -> BatchConfigKeyArrayT
-          {
-               BatchConfigKeyArrayT result{};
-
-               ((result[Is] = [&]<ConfigKey Key>()
-                   -> std::unique_ptr<Selection<Key>>
-                      {
-                           return std::make_unique<Selection<Key>>(config);
-                      }.template operator()<BatchConfigKeys[Is]>()),
-                ...);
-               return result;
-          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
-     }
-
-     void apply_batch_config_key_array(const BatchConfigKeyArrayT &input)
-     {
-          [&]<std::size_t... Is>(std::index_sequence<Is...>)
-          {
-               // Assign input elements
-               (
-                 // For each index Is...
-                 [&]
-                 {
-                      auto       &dst = m_selections_array[std::to_underlying(
-                        BatchConfigKeys[Is])];
-                      const auto &src = input[Is];
-
-                      if (dst && src)
-                      {
-                           *dst = *src;
-                      }
-                 }(),
-                 ...);
-
-               // Call update() for each key
-               update<BatchConfigKeys[Is]...>();
-          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
-     }
-
      template<ConfigKey Key>
           requires(has_valid_keys<Key>())
      const auto &get() const
@@ -1720,6 +1717,54 @@ struct Selections
             m_selections_array[index].get());
           return selection->value;
      }
+
+     BatchConfigKeyArrayT generate_batch_config_key_array() const
+     {
+          return [&]<std::size_t... Is>(
+                   std::index_sequence<Is...>) -> BatchConfigKeyArrayT
+          {
+               BatchConfigKeyArrayT result{};
+
+               ((result[Is] =
+                   [&]<ConfigKey Key>()
+                   {
+                        return BatchConfigValueVariant{ std::in_place_index<Is>,
+                                                        get<Key>() };
+                   }.template operator()<BatchConfigKeys[Is]>()),
+                ...);
+               return result;
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
+     void apply_batch_config_key_array(const BatchConfigKeyArrayT &input)
+     {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               // Assign input elements
+               (
+                 // For each index Is...
+                 [&]
+                 {
+                      auto       &dst = m_selections_array[std::to_underlying(
+                        BatchConfigKeys[Is])];
+                      const auto &src = input[Is];
+
+                      if (auto *value = std::get_if<Is>(&src); dst && value)
+                      {
+                           static constexpr const auto Key
+                             = BatchConfigKeys[Is];
+                           Selection<Key> *selection
+                             = static_cast<Selection<Key> *>(dst.get());
+                           selection->value = *value;
+                      }
+                 }(),
+                 ...);
+
+               // Call update() for each key
+               update<BatchConfigKeys[Is]...>();
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
 
      const auto get_id(ConfigKey key)
      {
