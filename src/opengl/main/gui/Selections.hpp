@@ -121,7 +121,7 @@ enum class ConfigKey : std::uint32_t
      BatchFlattenType,
      BatchCompactEnabled,
      BatchFlattenEnabled,
-     // BatchQueue,
+     BatchQueue,
      //  All is used to map all values less than All.
      All,
 
@@ -1286,34 +1286,33 @@ using BatchConfigValueVariant = decltype([] {
 using BatchConfigKeyArrayT
   = std::array<BatchConfigValueVariant, std::ranges::size(BatchConfigKeys)>;
 
-// template<>
-// struct SelectionInfo<ConfigKey::BatchQueue>
-// {
-//      using value_type = std::map<std::string, BatchConfigKeyArrayT>;
-//      static constexpr std::string_view id = "BatchQueue";
-// };
+template<>
+struct SelectionInfo<ConfigKey::BatchQueue>
+{
+     using value_type
+       = std::vector<std::pair<std::string, BatchConfigKeyArrayT>>;
+     static constexpr std::string_view id = "BatchQueue";
+};
 
-// template<>
-// struct
-// SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
-// {
-//      using ValueT = typename
-//      SelectionInfo<ConfigKey::BatchQueue>::value_type;
-//      // No loading: object is fully initialized elsewhere
-//      static bool load(
-//        const Configuration &config,
-//        std::string_view     id,
-//        ValueT              &value)
-//      {
-//           if (!config->contains(id))
-//           {
-//                return false;
-//           }
-//           const auto &arr = config[id];
-//           return true;// We're returning true to prevent fall back logic from
-//                       // triggering.
-//      }
-// };
+template<>
+struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
+{
+     using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
+     // No loading: object is fully initialized elsewhere
+     static bool load(
+       const Configuration     &config,
+       std::string_view         id,
+       [[maybe_unused]] ValueT &value)
+     {
+          if (!config->contains(id))
+          {
+               return false;
+          }
+          [[maybe_unused]] const auto &arr = config[id];
+          return true;// We're returning true to prevent fall back logic from
+                      // triggering.
+     }
+};
 
 
 // For filters that are constructed with full context and do not support default
@@ -1383,6 +1382,16 @@ struct SelectionUpdateStrategy
                spdlog::info("selection<{}>: {}", id, value);
                config->insert_or_assign(id, value);
           }
+     }
+};
+
+template<>
+struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
+{
+     using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
+     static void update(auto &&...) noexcept
+     {
+          // No-op: filter manages its own update
      }
 };
 
@@ -1480,7 +1489,8 @@ struct Selection : SelectionBase
           else
           {
                throw std::runtime_error(
-                 "Selection not initialized and not default-initializable");
+                 "Selection not initialized and not "
+                 "default-initializable");
           }
      }
 
@@ -1542,8 +1552,8 @@ struct Selection : SelectionBase
           }
      }
 
-     // update skips over ffnx values as we're currently not writing to the ffnx
-     // config file.
+     // update skips over ffnx values as we're currently not writing to the
+     // ffnx config file.
      void update([[maybe_unused]] Configuration &config) const
      {
           if constexpr (!SelectionUseFFNXConfig<Key>::value)
@@ -1598,8 +1608,9 @@ consteval inline auto load_selections_id_array()
 /**
  * @brief Manages various settings and selections for the application.
  *
- * This struct contains configuration options and runtime selections, such as
- * window dimensions, drawing modes, selected tiles, and rendering options.
+ * This struct contains configuration options and runtime selections, such
+ * as window dimensions, drawing modes, selected tiles, and rendering
+ * options.
  */
 struct Selections
 {
@@ -1646,12 +1657,13 @@ struct Selections
      }
 
      ///**
-     // * @brief Refreshes FFNx-related paths based on the current FF8 path.
+     // * @brief Refreshes FFNx-related paths based on the current FF8
+     // path.
      // *
-     // * This function must be rerun if the FF8 path changes, as the presence
-     // and location
-     // * of FFNx components are path-dependent. It reads configuration from
-     // "FFNx.toml".
+     // * This function must be rerun if the FF8 path changes, as the
+     // presence and location
+     // * of FFNx components are path-dependent. It reads configuration
+     // from "FFNx.toml".
      // */
      // void                         refresh_ffnx_paths(const
      // std::filesystem::path &ff8_path);
