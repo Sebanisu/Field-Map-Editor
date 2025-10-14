@@ -1438,9 +1438,56 @@ template<>
 struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
 {
      using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
-     static void update(auto &&...) noexcept
+
+     static void update(
+       toml::table     &config,
+       std::string_view id,
+       const ValueT    &value)
      {
-          // No-op: filter manages its own update
+          toml::array updated_array;
+
+          for (const auto &[entry_name, batch_array] :
+               value)// structured bindings
+          {
+               toml::table entry_table;
+               entry_table.insert_or_assign("name", entry_name);
+
+               // Helper lambda to expand over the index sequence
+               const auto process_batch_array
+                 = [&]<std::size_t... Is>(std::index_sequence<Is...>)
+               {
+                    ((
+                       [&]()
+                       {
+                            if (
+                              auto ptr = std::get_if<Is>(
+                                &batch_array[Is]))// compile-time index
+                            {
+                                 constexpr ConfigKey key = BatchConfigKeys[Is];
+                                 using nested_value_t =
+                                   typename SelectionInfo<key>::value_type;
+
+                                 toml::table nested_table;
+                                 SelectionUpdateStrategy<nested_value_t>::
+                                   update(
+                                     nested_table,
+                                     SelectionInfo<key>::id,
+                                     *ptr);
+
+                                 entry_table.insert_or_assign(
+                                   SelectionInfo<key>::id, nested_table);
+                            }
+                       }()),
+                     ...);// fold expression
+               };
+
+               process_batch_array(
+                 std::make_index_sequence<BatchConfigKeys.size()>{});
+
+               updated_array.push_back(std::move(entry_table));
+          }
+
+          config.insert_or_assign(id, std::move(updated_array));
      }
 };
 
