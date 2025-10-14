@@ -53,40 +53,36 @@ class batch
        = RangeConsumer{ open_viii::LangCommon::to_array() };
      FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-                        m_future_of_future_consumer = {};
+                                   m_future_of_future_consumer = {};
+     mutable float                 m_total_elapsed_time        = 0.f;
+     mutable std::array<char, 64U> m_new_batch_name            = {};
 
-     mutable bool       m_update_delay              = false;
-     mutable bool       m_force_loading             = true;
-
-     mutable float      m_interval                  = 0.03f;
-     mutable float      m_total_elapsed_time        = 0.f;
-
-     void               combo_input_type();
-     void               combo_output_type();
-     void               combo_compact_type_ffnx();
-     void               combo_compact_type();
-     void               combo_flatten_type_bpp();
-     void               combo_flatten_type();
-     void               browse_input_path();
-     void               browse_input_map_path();
-     void               browse_output_path();
-     void               button_start();
-     void               button_stop();
-     void               combo_load_map();
-     void               choose_field_and_coo();
-     void               reset_for_next();
-     void               generate_map_sprite();
-     void               compact();
-     void               flatten();
-     bool               consume_one_future();
-     void               open_directory_browser();
-     void               button_input_browse();
-     void               button_output_browse();
-     void               example_input_paths();
-     void               example_output_paths();
+     void                          combo_input_type();
+     void                          combo_output_type();
+     void                          combo_compact_type_ffnx();
+     void                          combo_compact_type();
+     void                          combo_flatten_type_bpp();
+     void                          combo_flatten_type();
+     void                          browse_input_path();
+     void                          browse_input_map_path();
+     void                          browse_output_path();
+     void                          button_start();
+     void                          button_stop();
+     void                          combo_load_map();
+     void                          choose_field_and_coo();
+     void                          reset_for_next();
+     void                          generate_map_sprite();
+     void                          compact();
+     void                          flatten();
+     bool                          consume_one_future();
+     void                          open_directory_browser();
+     void                          button_input_browse();
+     void                          button_output_browse();
+     void                          example_input_paths();
+     void                          example_output_paths();
      // both use the output pattern currently
-     const std::string &get_output_pattern(fme::input_types type);
-     const std::string &get_output_pattern(fme::output_types type);
+     const std::string            &get_output_pattern(fme::input_types type);
+     const std::string            &get_output_pattern(fme::output_types type);
      const std::string &get_output_map_pattern(fme::input_types type);
      const std::string &get_output_map_pattern(fme::output_types type);
      void               save_input_path();
@@ -109,6 +105,7 @@ class batch
        std::vector<bool>              &enabled);
      void save_textures();
      void save_map();
+     void draw_queue();
 
 
    public:

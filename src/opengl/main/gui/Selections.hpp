@@ -121,7 +121,11 @@ enum class ConfigKey : std::uint32_t
      BatchFlattenType,
      BatchCompactEnabled,
      BatchFlattenEnabled,
+     BatchForceLoading,
      BatchQueue,
+     BatchQueueEnabled,
+     BatchUpdateDelay,
+     BatchUpdateDelayEnabled,
      //  All is used to map all values less than All.
      All,
 
@@ -153,7 +157,8 @@ static inline const constexpr auto BatchConfigKeys
                 ConfigKey::BatchGenerateColorfulMask,
                 ConfigKey::BatchGenerateWhiteOnBlackMask,
                 ConfigKey::BatchCompactType,
-                ConfigKey::BatchFlattenType };
+                ConfigKey::BatchFlattenType,
+                ConfigKey::BatchForceLoading };
 
 
 template<ConfigKey... Keys>
@@ -624,6 +629,38 @@ struct SelectionInfo<ConfigKey::CurrentPatternIndex>
 {
      using value_type                     = std::int32_t;
      static constexpr std::string_view id = "CurrentPatternIndex";
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchQueueEnabled>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchQueueEnabled";
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchUpdateDelay>
+{
+     using value_type                     = float;
+     static constexpr std::string_view id = "BatchUpdateDelay";
+     static inline value_type          default_value()
+     {
+          return 0.03f;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchUpdateDelayEnabled>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchUpdateDelayEnabled";
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchForceLoading>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchForceLoading";
+     static inline value_type          default_value()
+     {
+          return true;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchInputType>
@@ -1838,6 +1875,12 @@ struct Selections
                 ...);
                return result;
           }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
+     void enqueue_batch_config(const std::string &name)
+     {
+          get<ConfigKey::BatchQueue>().emplace_back(
+            name, generate_batch_config_key_array());
      }
 
      void apply_batch_config_key_array(const BatchConfigKeyArrayT &input)

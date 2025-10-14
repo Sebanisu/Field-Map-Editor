@@ -106,17 +106,28 @@ void fme::batch::draw_window()
      }
      prev_disabled = disabled;
 
-     if (ImGui::Checkbox("Enable Delay", &m_update_delay))
+     if (ImGui::Checkbox(
+           "Enable Delay",
+           &selections->get<ConfigKey::BatchUpdateDelayEnabled>()))
      {
-          spdlog::info("Toggle Delay for Batch Operation: {}", m_update_delay);
+          spdlog::info(
+            "Toggle Delay for Batch Operation: {}",
+            selections->get<ConfigKey::BatchUpdateDelay>());
+          selections->update<ConfigKey::BatchUpdateDelayEnabled>();
      }
      tool_tip(
        fmt::format(
-         "Delay processing operations by: {:.2f} seconds", m_interval));
+         "Delay processing operations by: {:.2f} seconds",
+         selections->get<ConfigKey::BatchUpdateDelay>()));
      ImGui::SameLine();
-     if (ImGui::Checkbox("Toggle Force Loading", &m_force_loading))
+     if (ImGui::Checkbox(
+           "Toggle Force Loading",
+           &selections->get<ConfigKey::BatchForceLoading>()))
      {
-          spdlog::info("Toggle Force Loading: {}", m_force_loading);
+          spdlog::info(
+            "Toggle Force Loading: {}",
+            selections->get<ConfigKey::BatchForceLoading>());
+          selections->update<ConfigKey::BatchForceLoading>();
      }
      tool_tip(
        "Enabling force loading ensures some TOML operations succeed by "
@@ -124,10 +135,14 @@ void fme::batch::draw_window()
        "disrupt operations on weaker hardware. Disabling it allows async "
        "operations to run normally, potentially improving performance.");
      if (ImGui::SliderFloat(
-           "Delay Interval (seconds)", &m_interval, 0.03F, 3.00F, "%.2f"))
+           "Delay Interval (seconds)",
+           &selections->get<ConfigKey::BatchUpdateDelay>(), 0.03F, 3.00F,
+           "%.2f"))
      {
           spdlog::info(
-            "Interval Delay for Batch Operation changed: {:.2f}", m_interval);
+            "Interval Delay for Batch Operation changed: {:.2f}",
+            selections->get<ConfigKey::BatchUpdateDelay>());
+          selections->update<ConfigKey::BatchUpdateDelay>();
      }
      tool_tip("Adjust delay interval larger number is slower.");
 
@@ -185,6 +200,7 @@ void fme::batch::draw_window()
           spdlog::error(
             "Failed to lock m_archives_group: shared_ptr is expired.");
      }
+     draw_queue();
      // click to start processing
      button_start();
      ImGui::EndDisabled();
@@ -192,11 +208,150 @@ void fme::batch::draw_window()
      // click to stop processsing.
      button_stop();
      ImGui::EndDisabled();
-     if (!disabled)
+     if (disabled)
+     {
+          format_imgui_text("{}", m_status);
+     }
+}
+void fme::batch::draw_queue()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     if (ImGui::Checkbox(
+           "##Enable Processing of Queued Batch Operations",
+           &selections->get<ConfigKey::BatchQueueEnabled>()))
+     {
+          selections->update<ConfigKey::BatchQueueEnabled>();
+     }
+     else
+     {
+          tool_tip(
+            "Enabling this will allow queued batch operations to be "
+            "processed.");
+     }
+     ImGui::SameLine();
+     if (!ImGui::CollapsingHeader("Batch Operation Queue"))
      {
           return;
      }
-     format_imgui_text("{}", m_status);
+     auto &queue = selections->get<ConfigKey::BatchQueue>();
+
+     ImGui::InputText(
+       "New Batch Operation Name",
+       m_new_batch_name.data(),
+       m_new_batch_name.size());
+     if (ImGui::Button("Enqueue"))
+     {
+          selections->enqueue_batch_config(
+            std::string{ m_new_batch_name.data() });
+          selections->update<ConfigKey::BatchQueue>();
+     }
+     else
+     {
+          tool_tip("Enqueue the current batch operation settings.");
+     }
+     ImGui::SameLine();
+     if (ImGui::Button("Clear"))
+     {
+          queue.clear();
+          selections->update<ConfigKey::BatchQueue>();
+     }
+     else
+     {
+          tool_tip("Clear all queued batch operations.");
+     }
+     if (ImGui::BeginTable(
+           "BatchQueueTable", 4,
+           ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg))
+     {
+          ImGui::TableSetupColumn("Name");
+          ImGui::TableSetupColumn("Load", ImGuiTableColumnFlags_WidthFixed);
+          ImGui::TableSetupColumn("Replace", ImGuiTableColumnFlags_WidthFixed);
+          ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_WidthFixed);
+          ImGui::TableHeadersRow();
+          std::optional<std::ptrdiff_t> to_erase = {};
+          for (const auto &[index, pair] : queue | std::views::enumerate)
+          {
+               const auto &[name, settings] = pair;
+               const auto pop_id            = PushPopID();
+               ImGui::TableNextRow();
+               ImGui::TableNextColumn();
+
+               ImGui::Selectable(name.c_str());
+
+
+               if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+               {
+                    ImGui::SetDragDropPayload(
+                      "BATCH_QUEUE_ITEM", &index, sizeof(decltype(index)));
+                    ImGui::Text("Move %s", name.c_str());
+                    ImGui::EndDragDropSource();
+               }
+
+               if (ImGui::BeginDragDropTarget())
+               {
+                    if (
+                      const ImGuiPayload *payload
+                      = ImGui::AcceptDragDropPayload("BATCH_QUEUE_ITEM"))
+                    {
+                         IM_ASSERT(
+                           payload->DataSize == sizeof(decltype(index)));
+                         const auto src_index
+                           = *(const decltype(index) *)payload->Data;
+                         if (src_index != index)
+                         {
+                              auto item = std::move(queue[src_index]);
+                              queue.erase(queue.begin() + src_index);
+                              queue.insert(
+                                queue.begin() + index, std::move(item));
+                              selections->update<ConfigKey::BatchQueue>();
+                         }
+                    }
+                    ImGui::EndDragDropTarget();
+               }
+
+               ImGui::TableNextColumn();
+
+               if (ImGui::SmallButton(ICON_FA_FOLDER_OPEN))
+               {
+                    selections->apply_batch_config_key_array(settings);
+                    m_input_path_valid = safe_copy_string(
+                      selections->get<ConfigKey::BatchInputPath>(),
+                      m_input_path);
+                    m_output_path_valid = safe_copy_string(
+                      selections->get<ConfigKey::BatchOutputPath>(),
+                      m_output_path);
+               }
+
+               ImGui::TableNextColumn();
+               if (ImGui::SmallButton(ICON_FA_REPEAT))
+               {
+                    queue[index].first = std::string{ m_new_batch_name.data() };
+                    queue[index].second
+                      = selections->generate_batch_config_key_array();
+                    selections->update<ConfigKey::BatchQueue>();
+               }
+               tool_tip("Reload or update this batch operation.");
+
+               ImGui::TableNextColumn();
+               if (ImGui::SmallButton(ICON_FA_TRASH))
+               {
+                    to_erase = index;
+               }
+               tool_tip("Remove this batch operation from the queue.");
+          }
+          ImGui::EndTable();
+          if (to_erase.has_value())
+          {
+               queue.erase(queue.begin() + to_erase.value());
+               selections->update<ConfigKey::BatchQueue>();
+               to_erase.reset();
+          }
+     }
 }
 
 void fme::batch::combo_input_type()
@@ -1411,7 +1566,10 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           return;
      }
 
-     if (m_update_delay)
+     if (
+       selections->get<ConfigKey::BatchUpdateDelayEnabled>()
+       && selections->get<ConfigKey::BatchUpdateDelay>()
+            > std::numeric_limits<float>::epsilon())
      {
           // Interval between updates in seconds
 
@@ -1421,7 +1579,9 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           m_total_elapsed_time += elapsed_time;
 
           // Skip update if interval threshold hasn't been reached
-          if (m_total_elapsed_time < m_interval)
+          if (
+            m_total_elapsed_time
+            < selections->get<ConfigKey::BatchUpdateDelay>())
           {
                return;
           }
@@ -1749,7 +1909,7 @@ void fme::batch::generate_map_sprite()
                                == output_types::swizzle,
                .disable_blends = true,
                .require_coo    = true,
-               .force_loading  = m_force_loading
+               .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
             map_group.opt_coo.has_value()
@@ -1768,7 +1928,7 @@ void fme::batch::generate_map_sprite()
                                == output_types::swizzle,
                .disable_blends = true,
                .require_coo    = false,
-               .force_loading  = m_force_loading
+               .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
             !map_group.opt_coo.has_value()
