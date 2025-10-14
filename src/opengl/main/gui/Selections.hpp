@@ -1209,11 +1209,11 @@ template<typename ValueT>
 struct SelectionLoadStrategy
 {
      static bool load(
-       const Configuration &config,
-       std::string_view     id,
-       ValueT              &value)
+       const toml::table &config,
+       std::string_view   id,
+       ValueT            &value)
      {
-          if (!config->contains(id))
+          if (!config.contains(id))
           {
                return false;
           }
@@ -1300,15 +1300,65 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
      using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
      // No loading: object is fully initialized elsewhere
      static bool load(
-       const Configuration     &config,
-       std::string_view         id,
+       const toml::table       &root_table,
+       std::string_view         index_id,
        [[maybe_unused]] ValueT &value)
      {
-          if (!config->contains(id))
+          const toml::array *index_array = nullptr;
+
+          if (auto it_base = root_table.find(index_id);
+              it_base != root_table.end() && it_base->second.is_array())
+          {
+               index_array = it_base->second.as_array();
+          }
+          else
           {
                return false;
           }
-          [[maybe_unused]] const auto &arr = config[id];
+          value.clear();
+          value.reserve(index_array->size());
+
+          for (const auto &item : *index_array)
+          {
+               const toml::table *value_table = nullptr;
+               if (item.is_table())
+               {
+                    value_table = item.as_table();
+               }
+               else
+               {
+                    continue;
+               }
+               std::string entry_name
+                 = value_table->get("name")->value_or(std::string{});
+
+               const auto fill_result
+                 = [&]<std::size_t... Is>(
+                     std::index_sequence<Is...>) -> BatchConfigKeyArrayT
+               {
+                    BatchConfigKeyArrayT result{};
+                    ((result[Is] =
+                        [&]<ConfigKey Key>()
+                        {
+                             using nested_value_t
+                               = SelectionInfo<Key>::value_type;
+                             nested_value_t temp{};
+                             SelectionLoadStrategy<nested_value_t>::load(
+                               *value_table, SelectionInfo<Key>::id, temp);
+                             return BatchConfigValueVariant{
+                                  std::in_place_index<Is>, std::move(temp)
+                             };
+                        }.template operator()<BatchConfigKeys[Is]>()),
+                     ...);
+                    return result;
+               };
+
+               // Expand over the index sequence
+               BatchConfigKeyArrayT result = fill_result(
+                 std::make_index_sequence<BatchConfigKeys.size()>{});
+               value.emplace_back(std::move(entry_name), std::move(result));
+          }
+
           return true;// We're returning true to prevent fall back logic from
                       // triggering.
      }
