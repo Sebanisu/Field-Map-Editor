@@ -215,6 +215,13 @@ void fme::batch::draw_window()
 }
 void fme::batch::draw_queue()
 {
+     const auto archives_group = m_archives_group.lock();
+     if (!archives_group)
+     {
+          spdlog::error(
+            "Failed to lock m_archives_group: shared_ptr is expired.");
+          return;
+     }
      const auto selections = m_selections.lock();
      if (!selections)
      {
@@ -328,10 +335,9 @@ void fme::batch::draw_queue()
                     (void)safe_copy_string(name, m_new_batch_name);
 
                     if (
-                      archives_group
-                      && archives_group->mapdata().size()
-                           != selections->get<ConfigKey::BatchMapListEnabled>()
-                                .size())
+                      archives_group->mapdata().size()
+                      != selections->get<ConfigKey::BatchMapListEnabled>()
+                           .size())
                     {
                          selections->get<ConfigKey::BatchMapListEnabled>()
                            .resize(archives_group->mapdata().size(), true);
@@ -342,8 +348,10 @@ void fme::batch::draw_queue()
                ImGui::TableNextColumn();
                if (ImGui::SmallButton(ICON_FA_REPEAT))
                {
-                    queue[index].first = std::string{ m_new_batch_name.data() };
-                    queue[index].second
+                    auto &[dst_name, dst_settings]
+                      = queue[static_cast<std::size_t>(index)];
+                    dst_name = std::string{ m_new_batch_name.data() };
+                    dst_settings
                       = selections->generate_batch_config_key_array();
                     selections->update<ConfigKey::BatchQueue>();
                }
