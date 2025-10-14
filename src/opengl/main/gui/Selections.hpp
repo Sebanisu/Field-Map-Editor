@@ -142,23 +142,18 @@ struct SelectionInfo;
 template<ConfigKey Key>
 using selection_value_t = typename SelectionInfo<Key>::value_type;
 
-static inline const constexpr auto BatchConfigKeys
-  = std::array{ ConfigKey::BatchInputType,
-                ConfigKey::BatchInputRootPathType,
-                ConfigKey::BatchInputMapRootPathType,
-                ConfigKey::BatchOutputType,
-                ConfigKey::BatchOutputRootPathType,
-                ConfigKey::BatchMapListEnabled,
-                ConfigKey::BatchInputPath,
-                ConfigKey::BatchInputMapPath,
-                ConfigKey::BatchOutputPath,
-                ConfigKey::BatchInputLoadMap,
-                ConfigKey::BatchOutputSaveMap,
-                ConfigKey::BatchGenerateColorfulMask,
-                ConfigKey::BatchGenerateWhiteOnBlackMask,
-                ConfigKey::BatchCompactType,
-                ConfigKey::BatchFlattenType,
-                ConfigKey::BatchForceLoading };
+static inline const constexpr auto BatchConfigKeys = std::array{
+     ConfigKey::BatchInputType, ConfigKey::BatchInputRootPathType,
+     ConfigKey::BatchInputMapRootPathType, ConfigKey::BatchOutputType,
+     ConfigKey::BatchOutputRootPathType,
+     // ConfigKey::BatchMapListEnabled,
+     ConfigKey::BatchInputPath, ConfigKey::BatchInputMapPath,
+     ConfigKey::BatchOutputPath, ConfigKey::BatchInputLoadMap,
+     ConfigKey::BatchOutputSaveMap, ConfigKey::BatchGenerateColorfulMask,
+     ConfigKey::BatchGenerateWhiteOnBlackMask, ConfigKey::BatchCompactType,
+     ConfigKey::BatchFlattenType, ConfigKey::BatchForceLoading,
+     ConfigKey::BatchCompactEnabled, ConfigKey::BatchFlattenEnabled
+};
 
 
 template<ConfigKey... Keys>
@@ -1380,8 +1375,13 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                              using nested_value_t
                                = SelectionInfo<Key>::value_type;
                              nested_value_t temp{};
-                             SelectionLoadStrategy<nested_value_t>::load(
-                               *value_table, SelectionInfo<Key>::id, temp);
+                             if (!SelectionLoadStrategy<nested_value_t>::load(
+                                   *value_table, SelectionInfo<Key>::id, temp))
+                             {
+                                  spdlog::error(
+                                    "Failed to load {}: {}", entry_name,
+                                    SelectionInfo<Key>::id);
+                             }
                              return BatchConfigValueVariant{
                                   std::in_place_index<Is>, std::move(temp)
                              };
@@ -1500,15 +1500,9 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                                  using nested_value_t =
                                    typename SelectionInfo<key>::value_type;
 
-                                 toml::table nested_table;
                                  SelectionUpdateStrategy<nested_value_t>::
                                    update(
-                                     nested_table,
-                                     SelectionInfo<key>::id,
-                                     *ptr);
-
-                                 entry_table.insert_or_assign(
-                                   SelectionInfo<key>::id, nested_table);
+                                     entry_table, SelectionInfo<key>::id, *ptr);
                             }
                        }()),
                      ...);
