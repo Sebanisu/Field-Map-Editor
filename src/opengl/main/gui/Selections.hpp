@@ -59,6 +59,7 @@ enum class ConfigKey : std::uint32_t
      DisplayFieldFileWindow,
      DisplayFiltersWindow,
      DisplayTexturesWindow,
+     DisplayImageCompareWindow,
      OutputSwizzlePattern,
      OutputSwizzleAsOneImagePattern,
      OutputDeswizzlePattern,
@@ -435,6 +436,12 @@ struct SelectionInfo<ConfigKey::DisplayTexturesWindow>
 {
      using value_type                     = bool;
      static constexpr std::string_view id = "DisplayTexturesWindow";
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayImageCompareWindow>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "DisplayImageCompareWindow";
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
@@ -1367,9 +1374,30 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                {
                     continue;
                }
-               std::string entry_name
-                 = value_table->get("name")->value_or(std::string{});
-               bool entry_enabled = value_table->get("enabled")->value_or(true);
+               if (value_table == nullptr)
+               {
+                    continue;
+               }
+               std::string entry_name = [&]() -> std::string
+               {
+                    if (const auto *name_ptr
+                        = value_table->get_as<std::string>("name");
+                        name_ptr)
+                    {
+                         return name_ptr->get();
+                    }
+                    return {};
+               }();
+               const bool entry_enabled = [&]() -> bool
+               {
+                    if (const auto *enabled_ptr
+                        = value_table->get_as<bool>("enabled");
+                        enabled_ptr)
+                    {
+                         return enabled_ptr->get();
+                    }
+                    return true;
+               }();
 
                const auto fill_result
                  = [&]<std::size_t... Is>(
