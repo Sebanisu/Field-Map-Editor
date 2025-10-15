@@ -2170,6 +2170,11 @@ void fme::batch::reset_for_next()
                     m_fields_consumer.restart();
                     m_lang_consumer.restart();
                }
+               else
+               {
+                    spdlog::info("No more queue entries to process.");
+                    stop();
+               }
           }
      }
 }
@@ -2217,7 +2222,7 @@ void fme::batch::choose_field_and_coo()
      if (batch_enabled && !batch_queue.empty())
      {
           // If still valid and not done, apply current queue item
-          if (m_queue_consumer && !m_queue_consumer.done())
+          while (m_queue_consumer && !m_queue_consumer.done())
           {
                const auto current_index
                  = m_queue_consumer.distance_from_begin();
@@ -2227,20 +2232,18 @@ void fme::batch::choose_field_and_coo()
                     spdlog::info("Processing batch index {}", current_index);
                     m_last_queue_index                    = current_index;
                     const auto &[name, settings, enabled] = *m_queue_consumer;
+
                     if (!enabled)
                     {
                          spdlog::info(
                            "Skipping disabled batch index {}", current_index);
                          ++m_queue_consumer;
-                         if (!m_queue_consumer.done())
+                         if (m_queue_consumer.done())
                          {
-                              m_fields_consumer.restart();
-                              m_lang_consumer.restart();
-                              m_last_queue_index = -1;
-                              m_field.reset();
-                              m_coo.reset();
+                              spdlog::info("No more batch entries to process.");
+                              stop();
                          }
-                         return;// not sure if this is right.
+                         continue;// skip to next iteration instead of returning
                     }
 
                     // Apply the settings for this batch
@@ -2268,6 +2271,10 @@ void fme::batch::choose_field_and_coo()
                          selections->update<ConfigKey::BatchMapListEnabled>();
                     }
                }
+
+               // Stop after processing a valid entry this frame/tick Or
+               // If current_index == m_last_queue_index, nothing to do
+               break;
           }
      }
 
