@@ -214,7 +214,7 @@ void fme::batch::draw_window()
             m_queue_consumer && !m_queue_consumer.done()
             && selections->get<ConfigKey::BatchQueueEnabled>())
           {
-               const auto &[name, _] = *m_queue_consumer;
+               const auto &[name, _, enabled] = *m_queue_consumer;
                format_imgui_text(
                  "{}: '{}' - {}", m_last_queue_index, name, m_status);
           }
@@ -286,19 +286,29 @@ void fme::batch::draw_queue()
            "BatchQueueTable", 4,
            ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg))
      {
+          ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed);
           ImGui::TableSetupColumn("Name");
           ImGui::TableSetupColumn("Load", ImGuiTableColumnFlags_WidthFixed);
           ImGui::TableSetupColumn("Replace", ImGuiTableColumnFlags_WidthFixed);
           ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_WidthFixed);
           ImGui::TableHeadersRow();
           std::optional<std::ptrdiff_t> to_erase = {};
-          for (const auto &[index, pair] : queue | std::views::enumerate)
+          for (auto &&[index, pair] : queue | std::views::enumerate)
           {
-               const auto &[name, settings] = pair;
-               const auto pop_id            = PushPopID();
+               auto &&[name, settings, enabled] = pair;
+               const auto pop_id                = PushPopID();
                ImGui::TableNextRow();
                ImGui::TableNextColumn();
-
+               if (ImGui::Checkbox(
+                     fmt::format("##Enabled{}", index).c_str(), &enabled))
+               {
+                    selections->update<ConfigKey::BatchQueue>();
+               }
+               else
+               {
+                    tool_tip("Enable or disable this batch operation.");
+               }
+               ImGui::TableNextColumn();
                ImGui::Selectable(name.c_str());
 
 
@@ -361,11 +371,12 @@ void fme::batch::draw_queue()
                ImGui::TableNextColumn();
                if (ImGui::SmallButton(ICON_FA_REPEAT))
                {
-                    auto &[dst_name, dst_settings]
+                    auto &[dst_name, dst_settings, dst_enabled]
                       = queue[static_cast<std::size_t>(index)];
                     dst_name = std::string{ m_new_batch_name.data() };
                     dst_settings
                       = selections->generate_batch_config_key_array();
+                    dst_enabled = enabled;
                     selections->update<ConfigKey::BatchQueue>();
                }
                tool_tip("Reload or update this batch operation.");
@@ -2207,8 +2218,23 @@ void fme::batch::choose_field_and_coo()
                if (current_index != m_last_queue_index)
                {
                     spdlog::info("Processing batch index {}", current_index);
-                    m_last_queue_index           = current_index;
-                    const auto &[name, settings] = *m_queue_consumer;
+                    m_last_queue_index                    = current_index;
+                    const auto &[name, settings, enabled] = *m_queue_consumer;
+                    if (!enabled)
+                    {
+                         spdlog::info(
+                           "Skipping disabled batch index {}", current_index);
+                         ++m_queue_consumer;
+                         if (!m_queue_consumer.done())
+                         {
+                              m_fields_consumer.restart();
+                              m_lang_consumer.restart();
+                              m_last_queue_index = -1;
+                              m_field.reset();
+                              m_coo.reset();
+                         }
+                         return;// not sure if this is right.
+                    }
 
                     // Apply the settings for this batch
                     selections->apply_batch_config_key_array(settings);

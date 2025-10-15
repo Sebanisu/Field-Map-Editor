@@ -1318,11 +1318,17 @@ using BatchConfigValueVariant = decltype([] {
 using BatchConfigKeyArrayT
   = std::array<BatchConfigValueVariant, std::ranges::size(BatchConfigKeys)>;
 
+struct BatchConfigEntry
+{
+     std::string          name;
+     BatchConfigKeyArrayT settings;
+     bool                 enabled = true;
+};
+
 template<>
 struct SelectionInfo<ConfigKey::BatchQueue>
 {
-     using value_type
-       = std::vector<std::pair<std::string, BatchConfigKeyArrayT>>;
+     using value_type                     = std::vector<BatchConfigEntry>;
      static constexpr std::string_view id = "BatchQueue";
 };
 
@@ -1483,10 +1489,11 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
      {
           toml::array updated_array;
 
-          for (const auto &[entry_name, batch_array] : value)
+          for (const auto &[entry_name, batch_array, enabled] : value)
           {
                toml::table entry_table;
                entry_table.insert_or_assign("name", entry_name);
+               entry_table.insert_or_assign("enabled", enabled);
 
                const auto process_batch_array
                  = [&]<std::size_t... Is>(std::index_sequence<Is...>)
