@@ -1369,6 +1369,7 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                }
                std::string entry_name
                  = value_table->get("name")->value_or(std::string{});
+               bool entry_enabled = value_table->get("enabled")->value_or(true);
 
                const auto fill_result
                  = [&]<std::size_t... Is>(
@@ -1399,7 +1400,8 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                // Expand over the index sequence
                BatchConfigKeyArrayT result = fill_result(
                  std::make_index_sequence<BatchConfigKeys.size()>{});
-               value.emplace_back(std::move(entry_name), std::move(result));
+               value.emplace_back(
+                 std::move(entry_name), std::move(result), entry_enabled);
           }
 
           return true;// We're returning true to prevent fall back logic from
