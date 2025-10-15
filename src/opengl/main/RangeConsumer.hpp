@@ -4,10 +4,14 @@
 
 #ifndef FIELD_MAP_EDITOR_RANGECONSUMER_HPP
 #define FIELD_MAP_EDITOR_RANGECONSUMER_HPP
+#include <cstddef>
+#include <iterator>
 #include <ranges>
 #include <stacktrace>
+#include <utility>
 #include <vector>
-template<std::ranges::input_range range_t>
+
+template<std::ranges::forward_range range_t>
 class RangeConsumer
 {
    public:
@@ -74,6 +78,11 @@ class RangeConsumer
           std::ranges::advance(pos, offset);
           return *this;
      }
+     [[nodiscard]] auto distance_from_begin() const
+          requires std::ranges::sized_range<range_t>
+     {
+          return std::ranges::distance(std::ranges::begin(*m_range), pos);
+     }
      [[nodiscard]] std::size_t size() const
      {
           return std::ranges::size(m_range);
@@ -108,6 +117,105 @@ class RangeConsumer
           m_stop = true;
      }
 };
+
+
+template<std::ranges::forward_range range_t>
+class RangeConsumerView
+{
+   public:
+     using value_t = std::ranges::range_value_t<range_t>;
+
+   private:
+     range_t *m_range = nullptr;// Non-owning pointer
+
+   public:
+     using begin_t
+       = std::remove_cvref_t<decltype(std::ranges::begin(*m_range))>;
+     using end_t = std::remove_cvref_t<decltype(std::ranges::end(*m_range))>;
+
+   private:
+     begin_t pos{};
+     end_t   end_pos{};
+     bool    m_stop = false;
+
+   public:
+     RangeConsumerView() = default;
+
+     explicit RangeConsumerView(range_t &in_range)
+       : m_range(&in_range)
+       , pos(std::ranges::begin(in_range))
+       , end_pos(std::ranges::end(in_range))
+     {
+     }
+
+     void reset(range_t &in_range)
+     {
+          m_range = &in_range;
+          restart();
+     }
+
+     void restart()
+     {
+          if (!m_range)
+               return;
+          pos     = std::ranges::begin(*m_range);
+          end_pos = std::ranges::end(*m_range);
+          m_stop  = false;
+     }
+
+     [[nodiscard]] std::ranges::range_difference_t<range_t>
+       distance_from_begin() const
+          requires std::ranges::sized_range<range_t>
+     {
+          if (!m_range)
+               return {};
+          return std::ranges::distance(std::ranges::begin(*m_range), pos);
+     }
+
+     [[nodiscard]] std::size_t size() const
+          requires std::ranges::sized_range<range_t>
+     {
+          if (!m_range)
+               return {};
+          return std::ranges::size(*m_range);
+     }
+
+     [[nodiscard]] bool empty() const
+     {
+          return !m_range || std::ranges::empty(*m_range);
+     }
+
+     [[nodiscard]] bool done() const
+     {
+          return m_stop || !m_range || pos == end_pos;
+     }
+
+     auto &operator++()
+     {
+          ++pos;
+          return *this;
+     }
+
+     decltype(auto) operator*() const
+     {
+          return *pos;
+     }
+     decltype(auto) operator*()
+     {
+          return *pos;
+     }
+
+     explicit operator bool() const
+     {
+          return !done();
+     }
+
+     void stop()
+     {
+          m_stop = true;
+     }
+};
+
 template<std::ranges::range range_t>
 class [[nodiscard]] FutureConsumer
 {

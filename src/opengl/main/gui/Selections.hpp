@@ -19,7 +19,7 @@
 #include <spdlog/spdlog.h>
 namespace fme
 {
-enum class ConfigKey
+enum class ConfigKey : std::uint32_t
 {
      StarterField,
      FF8DirectoryPaths,
@@ -69,23 +69,10 @@ enum class ConfigKey
      OutputMapPatternForFullFileName,
      CurrentPattern,
      CurrentPatternIndex,
-     BatchInputType,
-     BatchInputRootPathType,
-     BatchInputMapRootPathType,
-     BatchOutputType,
-     BatchOutputRootPathType,
-     BatchMapListEnabled,
      BackgroundCheckerboardScale,
      BackgroundColor,
      BackgroundColor2,
      BackgroundSettings,
-     BatchInputPath,
-     BatchInputMapPath,
-     BatchOutputPath,
-     BatchInputLoadMap,
-     BatchOutputSaveMap,
-     BatchGenerateColorfulMask,
-     BatchGenerateWhiteOnBlackMask,
      PathPatternsWithPaletteAndTexturePage,
      PathPatternsWithPalette,
      PathPatternsWithTexturePage,
@@ -117,17 +104,57 @@ enum class ConfigKey
      FFNXOverridePath,
      FFNXDirectPath,
 
-     // Filters not required by update or load.
+     BatchInputType,
+     BatchInputRootPathType,
+     BatchInputMapRootPathType,
+     BatchOutputType,
+     BatchOutputRootPathType,
+     BatchMapListEnabled,
+     BatchInputPath,
+     BatchInputMapPath,
+     BatchOutputPath,
+     BatchInputLoadMap,
+     BatchOutputSaveMap,
+     BatchGenerateColorfulMask,
+     BatchGenerateWhiteOnBlackMask,
      BatchCompactType,
      BatchFlattenType,
-     // All is used to map all values less than All.
-     All,
-
-     // Filters not required by update or load.
      BatchCompactEnabled,
      BatchFlattenEnabled,
+     BatchForceLoading,
+     BatchQueue,
+     BatchQueueEnabled,
+     BatchUpdateDelay,
+     BatchUpdateDelayEnabled,
+     //  All is used to map all values less than All.
+     All,
 
 };
+
+struct SelectionBase
+{
+     virtual ~SelectionBase() = default;
+};
+
+template<ConfigKey Key>
+struct SelectionInfo;
+
+template<ConfigKey Key>
+using selection_value_t = typename SelectionInfo<Key>::value_type;
+
+static inline const constexpr auto BatchConfigKeys = std::array{
+     ConfigKey::BatchInputType, ConfigKey::BatchInputRootPathType,
+     ConfigKey::BatchInputMapRootPathType, ConfigKey::BatchOutputType,
+     ConfigKey::BatchOutputRootPathType,
+     // ConfigKey::BatchMapListEnabled,
+     ConfigKey::BatchInputPath, ConfigKey::BatchInputMapPath,
+     ConfigKey::BatchOutputPath, ConfigKey::BatchInputLoadMap,
+     ConfigKey::BatchOutputSaveMap, ConfigKey::BatchGenerateColorfulMask,
+     ConfigKey::BatchGenerateWhiteOnBlackMask, ConfigKey::BatchCompactType,
+     ConfigKey::BatchFlattenType, ConfigKey::BatchForceLoading,
+     ConfigKey::BatchCompactEnabled, ConfigKey::BatchFlattenEnabled
+};
+
 
 template<ConfigKey... Keys>
 consteval bool has_duplicate_keys()
@@ -166,9 +193,6 @@ consteval bool has_valid_keys()
      }
 }
 
-
-template<ConfigKey Key>
-struct SelectionInfo;
 
 template<>
 struct SelectionInfo<ConfigKey::StarterField>
@@ -602,6 +626,38 @@ struct SelectionInfo<ConfigKey::CurrentPatternIndex>
      static constexpr std::string_view id = "CurrentPatternIndex";
 };
 template<>
+struct SelectionInfo<ConfigKey::BatchQueueEnabled>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchQueueEnabled";
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchUpdateDelay>
+{
+     using value_type                     = float;
+     static constexpr std::string_view id = "BatchUpdateDelay";
+     static inline value_type          default_value()
+     {
+          return 0.03f;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchUpdateDelayEnabled>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchUpdateDelayEnabled";
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchForceLoading>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchForceLoading";
+     static inline value_type          default_value()
+     {
+          return true;
+     }
+};
+template<>
 struct SelectionInfo<ConfigKey::BatchInputType>
 {
      using value_type                     = input_types;
@@ -737,38 +793,33 @@ struct SelectionInfo<ConfigKey::BatchGenerateWhiteOnBlackMask>
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 {
+     using value_type = bool;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactType>
 {
-     using value_type = ff_8::filter<ff_8::FilterTag::Compact>;
+     using value_type = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::value_type;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
-     static inline value_type default_value(const Configuration &config)
-     {
-          return { true, config };
-     }
 };
 
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenEnabled>
 {
+     using value_type = bool;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
 };
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenType>
 {
-     using value_type = ff_8::filter<ff_8::FilterTag::Flatten>;
+     using value_type = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::value_type;
      static constexpr std::string_view id
        = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
-     static inline value_type default_value(const Configuration &config)
-     {
-          return { true, config };
-     }
 };
+
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
 {
@@ -1190,11 +1241,11 @@ template<typename ValueT>
 struct SelectionLoadStrategy
 {
      static bool load(
-       const Configuration &config,
-       std::string_view     id,
-       ValueT              &value)
+       const toml::table &config,
+       std::string_view   id,
+       ValueT            &value)
      {
-          if (!config->contains(id))
+          if (!config.contains(id))
           {
                return false;
           }
@@ -1256,6 +1307,101 @@ struct SelectionLoadStrategy
      }
 };
 
+using BatchConfigValueVariant = decltype([] {
+    return []<std::size_t... Is>(std::index_sequence<Is...>)
+        -> std::variant<selection_value_t<BatchConfigKeys[Is]>...>
+    {
+        return {};
+    }(std::make_index_sequence<BatchConfigKeys.size()>{});
+}());
+
+using BatchConfigKeyArrayT
+  = std::array<BatchConfigValueVariant, std::ranges::size(BatchConfigKeys)>;
+
+template<>
+struct SelectionInfo<ConfigKey::BatchQueue>
+{
+     using value_type
+       = std::vector<std::pair<std::string, BatchConfigKeyArrayT>>;
+     static constexpr std::string_view id = "BatchQueue";
+};
+
+template<>
+struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
+{
+     using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
+     // No loading: object is fully initialized elsewhere
+     static bool load(
+       const toml::table       &root_table,
+       std::string_view         index_id,
+       [[maybe_unused]] ValueT &value)
+     {
+          const toml::array *index_array = nullptr;
+
+          if (auto it_base = root_table.find(index_id);
+              it_base != root_table.end() && it_base->second.is_array())
+          {
+               index_array = it_base->second.as_array();
+          }
+          else
+          {
+               return false;
+          }
+          value.clear();
+          value.reserve(index_array->size());
+
+          for (const auto &item : *index_array)
+          {
+               const toml::table *value_table = nullptr;
+               if (item.is_table())
+               {
+                    value_table = item.as_table();
+               }
+               else
+               {
+                    continue;
+               }
+               std::string entry_name
+                 = value_table->get("name")->value_or(std::string{});
+
+               const auto fill_result
+                 = [&]<std::size_t... Is>(
+                     std::index_sequence<Is...>) -> BatchConfigKeyArrayT
+               {
+                    BatchConfigKeyArrayT result{};
+                    ((result[Is] =
+                        [&]<ConfigKey Key>()
+                        {
+                             using nested_value_t
+                               = SelectionInfo<Key>::value_type;
+                             nested_value_t temp{};
+                             if (!SelectionLoadStrategy<nested_value_t>::load(
+                                   *value_table, SelectionInfo<Key>::id, temp))
+                             {
+                                  spdlog::error(
+                                    "Failed to load {}: {}", entry_name,
+                                    SelectionInfo<Key>::id);
+                             }
+                             return BatchConfigValueVariant{
+                                  std::in_place_index<Is>, std::move(temp)
+                             };
+                        }.template operator()<BatchConfigKeys[Is]>()),
+                     ...);
+                    return result;
+               };
+
+               // Expand over the index sequence
+               BatchConfigKeyArrayT result = fill_result(
+                 std::make_index_sequence<BatchConfigKeys.size()>{});
+               value.emplace_back(std::move(entry_name), std::move(result));
+          }
+
+          return true;// We're returning true to prevent fall back logic from
+                      // triggering.
+     }
+};
+
+
 // For filters that are constructed with full context and do not support default
 // init
 template<ff_8::FilterTag Tag>
@@ -1273,7 +1419,7 @@ template<typename ValueT>
 struct SelectionUpdateStrategy
 {
      static void update(
-       Configuration   &config,
+       toml::table     &config,
        std::string_view id,
        const ValueT    &value)
      {
@@ -1286,23 +1432,22 @@ struct SelectionUpdateStrategy
                  "selection<{}>: \"{}\"",
                  id,
                  std::filesystem::path(str_val).string());
-               config->insert_or_assign(id, str_val);
+               config.insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(
-                 id, std::bit_cast<std::uint32_t>(value));
+               config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value.raw());
+               config.insert_or_assign(id, value.raw());
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, std::to_underlying(value));
+               config.insert_or_assign(id, std::to_underlying(value));
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
           {
@@ -1321,8 +1466,55 @@ struct SelectionUpdateStrategy
           else
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value);
+               config.insert_or_assign(id, value);
           }
+     }
+};
+
+template<>
+struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
+{
+     using ValueT = typename SelectionInfo<ConfigKey::BatchQueue>::value_type;
+
+     static void update(
+       toml::table     &config,
+       std::string_view id,
+       const ValueT    &value)
+     {
+          toml::array updated_array;
+
+          for (const auto &[entry_name, batch_array] : value)
+          {
+               toml::table entry_table;
+               entry_table.insert_or_assign("name", entry_name);
+
+               const auto process_batch_array
+                 = [&]<std::size_t... Is>(std::index_sequence<Is...>)
+               {
+                    ((
+                       [&]()
+                       {
+                            if (auto ptr = std::get_if<Is>(&batch_array[Is]))
+                            {
+                                 constexpr ConfigKey key = BatchConfigKeys[Is];
+                                 using nested_value_t =
+                                   typename SelectionInfo<key>::value_type;
+
+                                 SelectionUpdateStrategy<nested_value_t>::
+                                   update(
+                                     entry_table, SelectionInfo<key>::id, *ptr);
+                            }
+                       }()),
+                     ...);
+               };
+
+               process_batch_array(
+                 std::make_index_sequence<BatchConfigKeys.size()>{});
+
+               updated_array.push_back(std::move(entry_table));
+          }
+
+          config.insert_or_assign(id, std::move(updated_array));
      }
 };
 
@@ -1336,10 +1528,6 @@ struct SelectionUpdateStrategy<ff_8::filter<Tag>>
      }
 };
 
-struct SelectionBase
-{
-     virtual ~SelectionBase() = default;
-};
 
 template<ConfigKey Key>
 struct Selection : SelectionBase
@@ -1347,6 +1535,13 @@ struct Selection : SelectionBase
      using value_type = typename SelectionInfo<Key>::value_type;
 
      value_type value;
+     Selection([[maybe_unused]] const Configuration &config)
+       : Selection(
+           config,
+           std::nullopt)
+     {
+     }
+
      Selection(
        [[maybe_unused]] const Configuration                &config,
        [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
@@ -1417,7 +1612,8 @@ struct Selection : SelectionBase
           else
           {
                throw std::runtime_error(
-                 "Selection not initialized and not default-initializable");
+                 "Selection not initialized and not "
+                 "default-initializable");
           }
      }
 
@@ -1479,8 +1675,8 @@ struct Selection : SelectionBase
           }
      }
 
-     // update skips over ffnx values as we're currently not writing to the ffnx
-     // config file.
+     // update skips over ffnx values as we're currently not writing to the
+     // ffnx config file.
      void update([[maybe_unused]] Configuration &config) const
      {
           if constexpr (!SelectionUseFFNXConfig<Key>::value)
@@ -1518,7 +1714,7 @@ struct Selection : SelectionBase
           }
      }
 };
-;
+
 consteval inline auto load_selections_id_array()
 {
      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
@@ -1535,8 +1731,9 @@ consteval inline auto load_selections_id_array()
 /**
  * @brief Manages various settings and selections for the application.
  *
- * This struct contains configuration options and runtime selections, such as
- * window dimensions, drawing modes, selected tiles, and rendering options.
+ * This struct contains configuration options and runtime selections, such
+ * as window dimensions, drawing modes, selected tiles, and rendering
+ * options.
  */
 struct Selections
 {
@@ -1583,12 +1780,13 @@ struct Selections
      }
 
      ///**
-     // * @brief Refreshes FFNx-related paths based on the current FF8 path.
+     // * @brief Refreshes FFNx-related paths based on the current FF8
+     // path.
      // *
-     // * This function must be rerun if the FF8 path changes, as the presence
-     // and location
-     // * of FFNx components are path-dependent. It reads configuration from
-     // "FFNx.toml".
+     // * This function must be rerun if the FF8 path changes, as the
+     // presence and location
+     // * of FFNx components are path-dependent. It reads configuration
+     // from "FFNx.toml".
      // */
      // void                         refresh_ffnx_paths(const
      // std::filesystem::path &ff8_path);
@@ -1654,6 +1852,60 @@ struct Selections
             m_selections_array[index].get());
           return selection->value;
      }
+
+     BatchConfigKeyArrayT generate_batch_config_key_array() const
+     {
+          return [&]<std::size_t... Is>(
+                   std::index_sequence<Is...>) -> BatchConfigKeyArrayT
+          {
+               BatchConfigKeyArrayT result{};
+
+               ((result[Is] =
+                   [&]<ConfigKey Key>()
+                   {
+                        return BatchConfigValueVariant{ std::in_place_index<Is>,
+                                                        get<Key>() };
+                   }.template operator()<BatchConfigKeys[Is]>()),
+                ...);
+               return result;
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
+     void enqueue_batch_config(const std::string &name)
+     {
+          get<ConfigKey::BatchQueue>().emplace_back(
+            name, generate_batch_config_key_array());
+     }
+
+     void apply_batch_config_key_array(const BatchConfigKeyArrayT &input)
+     {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               // Assign input elements
+               (
+                 // For each index Is...
+                 [&]
+                 {
+                      auto       &dst = m_selections_array[std::to_underlying(
+                        BatchConfigKeys[Is])];
+                      const auto &src = input[Is];
+
+                      if (auto *value = std::get_if<Is>(&src); dst && value)
+                      {
+                           static constexpr const auto Key
+                             = BatchConfigKeys[Is];
+                           Selection<Key> *selection
+                             = static_cast<Selection<Key> *>(dst.get());
+                           selection->value = *value;
+                      }
+                 }(),
+                 ...);
+
+               // Call update() for each key
+               update<BatchConfigKeys[Is]...>();
+          }(std::make_index_sequence<std::ranges::size(BatchConfigKeys)>{});
+     }
+
 
      const auto get_id(ConfigKey key)
      {

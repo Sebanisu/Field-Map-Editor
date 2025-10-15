@@ -46,20 +46,20 @@ class batch
           | ImGuiFileBrowserFlags_EditPathString
           | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
-
+     RangeConsumerView<fme::SelectionInfo<ConfigKey::BatchQueue>::value_type>
+                                                        m_queue_consumer  = {};
      RangeConsumer<open_viii::archive::FIFLFS<true>>    m_fields_consumer = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = { nullptr };
      RangeConsumer<decltype(open_viii::LangCommon::to_array())> m_lang_consumer
        = RangeConsumer{ open_viii::LangCommon::to_array() };
      FutureConsumer<std::vector<std::future<void>>> m_future_consumer = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>
-                        m_future_of_future_consumer = {};
-
-     mutable bool       m_update_delay              = false;
-     mutable bool       m_force_loading             = true;
-
-     mutable float      m_interval                  = 0.03f;
-     mutable float      m_total_elapsed_time        = 0.f;
+                                   m_future_of_future_consumer = {};
+     mutable float                 m_total_elapsed_time        = 0.f;
+     mutable std::array<char, 64U> m_new_batch_name            = {};
+     mutable std::ranges::range_difference_t<
+       fme::SelectionInfo<ConfigKey::BatchQueue>::value_type>
+                        m_last_queue_index = { -1 };
 
      void               combo_input_type();
      void               combo_output_type();
@@ -109,6 +109,7 @@ class batch
        std::vector<bool>              &enabled);
      void save_textures();
      void save_map();
+     void draw_queue();
 
 
    public:

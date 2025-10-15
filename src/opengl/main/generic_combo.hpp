@@ -365,6 +365,277 @@ GenericComboWithFilter(
     FilterT                                   // FilterT
     >;
 
+template<
+  typename InputValueT,
+  typename StringT,
+  typename ToolTipT,
+  typename ValueT>
+     requires std::assignable_from<ValueT &, InputValueT>
+class GenericComboWithToggle
+{
+   public:
+     GenericComboWithToggle(
+       std::string_view             name,
+       std::span<const InputValueT> value_range,
+       std::span<const StringT>     string_range,
+       std::span<const ToolTipT>    tooltip_range,
+       ValueT                      &value,
+       bool                        &enabled,
+       generic_combo_settings       settings = {})
+       : name_(name)
+       , values_(value_range)
+       , strings_(string_range)
+       , tool_tips_(tooltip_range)
+       , value_(value)
+       , enabled_(enabled)
+       , settings_(settings)
+       , current_idx_(0)
+       , changed_(false)
+       , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
+     {
+     }
+
+     bool render() const
+     {
+          if (values_.empty() || strings_.empty())
+               return false;
+
+          updateCurrentIndex();
+
+          const auto old_idx = current_idx_;
+          renderCheckBox();
+          renderComboBox();
+          renderLeftButton();
+          renderRightButton();
+          renderExploreButton();
+          renderTitle();
+
+          if (old_idx != current_idx_)
+          {
+               static constexpr auto pattern = "{}: \t{}\t{}\t{}";
+               spdlog::info(
+                 pattern,
+                 gui_labels::set,
+                 name_,
+                 *getNext(values_, current_idx_),
+                 *getNext(strings_, current_idx_));
+
+               value_.get() = *getNext(values_, current_idx_);
+          }
+
+          return old_idx != current_idx_ || changed_;
+     }
+
+   private:
+     std::string_view               name_;
+     std::span<const InputValueT>   values_;
+     std::span<const StringT>       strings_;
+     std::span<const ToolTipT>      tool_tips_;
+     std::reference_wrapper<ValueT> value_;
+     std::reference_wrapper<bool>   enabled_;
+     generic_combo_settings         settings_;
+     mutable std::ranges::range_difference_t<std::span<const InputValueT>>
+                  current_idx_;
+     mutable bool changed_;
+     float        spacing_;
+
+     void         updateCurrentIndex() const
+     {
+          const auto found = std::find_if(
+            values_.begin(), values_.end(),
+            [&](const auto &tmp)
+            {
+                 using ValueU = std::remove_cvref_t<ValueT>;
+                 using InputU = std::remove_cvref_t<InputValueT>;
+
+                 if constexpr (std::is_enum_v<ValueU> && std::is_enum_v<InputU>)
+                      return std::to_underlying(value_.get())
+                             == std::to_underlying(tmp);
+                 else
+                      return value_.get() == tmp;
+            });
+
+          if (found != values_.end())
+          {
+               current_idx_ = std::distance(values_.begin(), found);
+          }
+          else
+          {
+               current_idx_ = 0;
+               if (!values_.empty())
+               {
+                    value_.get() = values_.front();
+               }
+               changed_ = true;
+          }
+     }
+
+     template<typename Range>
+     auto getNext(
+       const Range &range,
+       const auto  &idx) const
+     {
+          return std::ranges::next(range.begin(), idx);
+     }
+
+     void renderCheckBox() const
+     {
+          const auto _       = PushPopID();
+          bool       checked = enabled_.get();
+          if (ImGui::Checkbox("", &checked))
+          {
+               enabled_.get() = checked;
+               changed_       = true;
+          }
+          ImGui::SameLine(0, spacing_);
+     }
+
+     void renderComboBox() const
+     {
+          const auto  _            = PushPopID();
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_count = [&]()
+          {
+               int count = 3;
+               if (settings_.show_explore_button)
+                    ++count;
+               return static_cast<float>(count);
+          }();
+          ImGui::PushItemWidth(
+            ImGui::CalcItemWidth() - spacing_ * button_count
+            - button_size * button_count);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
+
+          const char *current_item_cstr = [&]() -> const char *
+          {
+               if (
+                 strings_.empty()
+                 || !std::cmp_less(current_idx_, strings_.size()))
+                    return "N/A";
+               return std::data(*getNext(strings_, current_idx_));
+          }();
+
+          if (ImGui::BeginCombo(
+                "##Empty", current_item_cstr, ImGuiComboFlags_HeightLarge))
+          {
+               ImGui::Columns(settings_.num_columns, "##columns", false);
+               for (const auto &[index_raw, string] :
+                    std::views::enumerate(strings_))
+               {
+                    const auto index
+                      = static_cast<decltype(current_idx_)>(index_raw);
+                    const bool  is_selected = (index == current_idx_);
+                    const char *c_str_value = std::ranges::data(string);
+                    const auto  pop_id      = PushPopID();
+                    const auto  pop_column
+                      = glengine::ScopeGuard{ &ImGui::NextColumn };
+                    if (ImGui::Selectable(c_str_value, is_selected))
+                    {
+                         current_idx_   = index;
+                         changed_       = true;
+                         enabled_.get() = true;
+                    }
+                    if (is_selected)
+                         ImGui::SetItemDefaultFocus();
+                    renderToolTip(index);
+               }
+               ImGui::Columns(1);
+               ImGui::EndCombo();
+          }
+          renderToolTip(current_idx_);
+     }
+
+     void renderToolTip(const decltype(current_idx_) index) const
+     {
+          if (tool_tips_.empty())
+               return;
+          const auto &tooltip = *getNext(tool_tips_, index);
+          tool_tip(tooltip);
+     }
+
+     auto size_of_values() const
+     {
+          return static_cast<ptrdiff_t>(values_.size());
+     }
+
+     void renderLeftButton() const
+     {
+          const auto _ = PushPopID();
+          ImGui::SameLine(0, spacing_);
+          const bool disabled = current_idx_ == 0;
+          ImGui::BeginDisabled(disabled);
+          if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+          {
+               --current_idx_;
+               changed_       = true;
+               enabled_.get() = true;
+          }
+          ImGui::EndDisabled();
+     }
+
+     void renderRightButton() const
+     {
+          const auto _ = PushPopID();
+          ImGui::SameLine(0, spacing_);
+          const bool disabled = current_idx_ + 1 >= size_of_values();
+          ImGui::BeginDisabled(disabled);
+          if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+          {
+               ++current_idx_;
+               changed_       = true;
+               enabled_.get() = true;
+          }
+          ImGui::EndDisabled();
+     }
+
+     void renderExploreButton() const
+     {
+          if (!settings_.show_explore_button)
+               return;
+
+          ImGui::SameLine(0, spacing_);
+          const float button_size = ImGui::GetFrameHeight();
+          const auto  _           = PushPopID();
+          if (ImGui::Button(
+                ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          {
+               open_directory(*getNext(strings_, current_idx_));
+          }
+          tool_tip(gui_labels::explore_tooltip);
+     }
+
+     void renderTitle() const
+     {
+          if (name_.empty())
+               return;
+          ImGui::SameLine(0, spacing_);
+          format_imgui_text("{}", name_);
+     }
+};
+
+template<
+  std::ranges::contiguous_range ValueRangeT,
+  std::ranges::contiguous_range StringRangeT,
+  std::ranges::contiguous_range ToolTipRangeT,
+  typename ValueT>
+     requires std::assignable_from<
+       ValueT &,
+       std::ranges::range_value_t<ValueRangeT>>
+GenericComboWithToggle(
+  std::string_view,
+  ValueRangeT &&,
+  StringRangeT &&,
+  ToolTipRangeT &&,
+  ValueT &,
+  bool &,
+  generic_combo_settings = {})
+  -> GenericComboWithToggle<
+    std::ranges::range_value_t<ValueRangeT>,
+    std::ranges::range_value_t<StringRangeT>,
+    std::ranges::range_value_t<ToolTipRangeT>,
+    ValueT>;
+
 
 template<
   ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT,
