@@ -244,6 +244,9 @@ void fme::batch::draw_queue()
            &selections->get<ConfigKey::BatchQueueEnabled>()))
      {
           selections->update<ConfigKey::BatchQueueEnabled>();
+          m_queue_consumer.stop();// because if the batch was started before
+                                  // this is checked it would continue running
+                                  // as if it were enabled when it is not.
      }
      else
      {
@@ -283,7 +286,7 @@ void fme::batch::draw_queue()
           tool_tip("Clear all queued batch operations.");
      }
      if (ImGui::BeginTable(
-           "BatchQueueTable", 4,
+           "BatchQueueTable", 5,
            ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg))
      {
           ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed);
