@@ -1861,6 +1861,9 @@ struct Selections
           }
           Selection<Key> *selection
             = static_cast<Selection<Key> *>(m_selections_array[index].get());
+          if (!selection)
+               throw std::runtime_error(
+                 "Selection pointer is invalid/dangling");
           return selection->value;
      }
 
@@ -1887,6 +1890,9 @@ struct Selections
           }
           const Selection<Key> *selection = static_cast<const Selection<Key> *>(
             m_selections_array[index].get());
+          if (!selection)
+               throw std::runtime_error(
+                 "Selection pointer is invalid/dangling");
           return selection->value;
      }
 

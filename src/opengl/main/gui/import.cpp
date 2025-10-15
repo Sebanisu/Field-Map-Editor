@@ -27,7 +27,7 @@ namespace fme
 
 void import::render() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -139,8 +139,8 @@ void import::render() const
 open_viii::graphics::background::Map::variant_tile &
   import::combo_selected_tile(bool &changed) const
 {
-     auto selections = m_selections.lock();
-     auto map_sprite = m_map_sprite.lock();
+     const auto selections = m_selections.lock();
+     const auto map_sprite = m_map_sprite.lock();
 
      static open_viii::graphics::background::Map::variant_tile current_tile
        = { std::monostate{} };
@@ -358,8 +358,8 @@ import::import() {
 
 bool import::browse_for_image_display_preview() const
 {
-     auto selections = m_selections.lock();
-     auto map_sprite = m_map_sprite.lock();
+     const auto selections = m_selections.lock();
+     const auto map_sprite = m_map_sprite.lock();
 
      if (!selections)
      {
@@ -495,7 +495,7 @@ bool import::browse_for_image_display_preview() const
 
 bool import::combo_tile_size() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -531,7 +531,7 @@ void import::generate_map_for_imported_image(
      using namespace open_viii::graphics::background;
      using namespace open_viii::graphics;
 
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -616,7 +616,7 @@ void import::generate_map_for_imported_image(
 void import::collapsing_header_generated_tiles() const
 {
 
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -693,7 +693,7 @@ void import::collapsing_header_generated_tiles() const
 void import::update_scaled_up_render_texture() const
 {
      // todo fix imports
-     //  auto selections = m_selections.lock();
+     // const auto selections = m_selections.lock();
      //  if (!selections)
      //  {
      //       spdlog::error("m_selections is no longer valid. File: {}, Line:
@@ -729,7 +729,7 @@ void import::update_scaled_up_render_texture() const
 void import::update_imported_render_texture() const
 {
 
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -801,7 +801,7 @@ void import::save_swizzle_textures() const
             __LINE__);
           return;
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -830,7 +830,7 @@ void import::reset_imported_image() const
             __LINE__);
           return;
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -862,7 +862,7 @@ void import::find_selected_tile_for_import(
             __LINE__);
           return;
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(
@@ -915,7 +915,7 @@ void import::filter_empty_import_tiles() const
 {//* Filter empty tiles
 
      // todo fix rendering for glengine
-     //  auto selections = m_selections.lock();
+     //  const auto selections = m_selections.lock();
 
      // if (!selections)
      // {
@@ -961,8 +961,8 @@ bool import::checkbox_render_imported_image() const
 {
      if (m_loaded_image_texture.get_size() != glm::ivec2{})
      {
-          auto selections = m_selections.lock();
-          auto map_sprite = m_map_sprite.lock();
+          const auto selections = m_selections.lock();
+          const auto map_sprite = m_map_sprite.lock();
 
           if (!selections)
           {

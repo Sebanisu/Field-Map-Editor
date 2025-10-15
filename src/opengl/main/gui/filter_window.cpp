@@ -109,8 +109,8 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
 }
 void fme::filter_window::render() const
 {
-     m_changed            = false;
-     auto lock_selections = m_selections.lock();
+     m_changed                  = false;
+     const auto lock_selections = m_selections.lock();
      if (!lock_selections)
      {
           spdlog::error("Failed to lock selections: shared_ptr is expired.");

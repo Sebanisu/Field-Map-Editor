@@ -275,6 +275,7 @@ void gui::start(GLFWwindow *const window)
           {
                m_batch_window.draw_window();
           }
+          m_image_compare_window.render();
           m_custom_paths_window.render();
           m_field_file_window.render();
           m_keyboard_shortcuts_window.render();
@@ -1688,6 +1689,13 @@ void gui::windows_menu()
           m_selections->update<ConfigKey::DisplayTexturesWindow>();
      }
 
+     if (ImGui::MenuItem(
+           "Display Image Compare",
+           nullptr,
+           &m_selections->get<ConfigKey::DisplayImageCompareWindow>()))
+     {
+          m_selections->update<ConfigKey::DisplayImageCompareWindow>();
+     }
 
      ImGui::Separator();
      if (ImGui::MenuItem(

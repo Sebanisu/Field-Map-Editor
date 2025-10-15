@@ -24,6 +24,7 @@
 #include "formatters.hpp"
 #include "generic_combo.hpp"
 #include "gui/history_window.hpp"
+#include "image_compare_window.hpp"
 #include "import.hpp"
 #include "keyboard_shortcuts_window.hpp"
 #include "map_directory_mode.hpp"
@@ -86,6 +87,7 @@ struct gui
      custom_paths_window       m_custom_paths_window = { m_selections };
      field_file_window         m_field_file_window = { m_field, m_selections };
      keyboard_shortcuts_window m_keyboard_shortcuts_window = { m_selections };
+     ImageCompareWindow        m_image_compare_window      = { m_selections };
      float                     saved_window_width          = {};
      float                     saved_window_height         = {};
      fme::import               m_import                    = {};
