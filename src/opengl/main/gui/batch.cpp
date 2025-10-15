@@ -210,7 +210,18 @@ void fme::batch::draw_window()
      ImGui::EndDisabled();
      if (disabled)
      {
-          format_imgui_text("{}", m_status);
+          if (
+            m_queue_consumer && !m_queue_consumer.done()
+            && selections->get<ConfigKey::BatchQueueEnabled>())
+          {
+               const auto &[name, _] = *m_queue_consumer;
+               format_imgui_text(
+                 "{}: '{}' - {}", m_last_queue_index, name, m_status);
+          }
+          else
+          {
+               format_imgui_text("{}", m_status);
+          }
      }
 }
 void fme::batch::draw_queue()
@@ -1412,11 +1423,12 @@ void fme::batch::button_start()
           auto config = Configuration(config_path);
           config->clear();
      }
-
+     m_queue_consumer.reset(selections->get<ConfigKey::BatchQueue>());
      m_fields_consumer = archives_group->fields();
      m_field.reset();
      m_lang_consumer.restart();
      m_coo.reset();
+     m_last_queue_index = -1;
 }
 
 void fme::batch::button_stop()
@@ -1631,17 +1643,17 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      // Select the next valid field and COO if needed
      choose_field_and_coo();
 
-     // Exit if required data is missing or invalid
-     if (!m_field || !m_coo || !m_field->operator bool())
-     {
-          return;
-     }
-
      const auto pop_next = glengine::ScopeGuard(
        [this]()
        {
             reset_for_next();// Clean up and prepare for next processing cycle
        });
+
+     // Exit if required data is missing or invalid
+     if (!m_field || !m_coo || !m_field->operator bool())
+     {
+          return;
+     }
 
      // Update status with the field and language info
      m_status
@@ -2105,6 +2117,14 @@ void fme::batch::flatten()
  */
 void fme::batch::reset_for_next()
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     const auto &batch_enabled
+       = selections->get<ConfigKey::BatchQueueEnabled>();
      // Clear the current language
      m_coo.reset();
 
@@ -2119,6 +2139,17 @@ void fme::batch::reset_for_next()
           if (!m_fields_consumer.done())
           {
                m_lang_consumer.restart();
+          }
+          else if (
+            batch_enabled && m_queue_consumer && !m_queue_consumer.done())
+          {
+               ++m_queue_consumer;
+               // Reset field/lang consumers for the next queue entry
+               if (!m_queue_consumer.done())
+               {
+                    m_fields_consumer.restart();
+                    m_lang_consumer.restart();
+               }
           }
      }
 }
@@ -2143,7 +2174,7 @@ void fme::batch::reset_for_next()
  */
 void fme::batch::choose_field_and_coo()
 {
-     // Attempt to acquire a shared_ptr to the archives group
+     // 1. Lock shared pointers
      const auto archives_group = m_archives_group.lock();
      if (!archives_group)
      {
@@ -2159,50 +2190,85 @@ void fme::batch::choose_field_and_coo()
           return;
      }
 
-     // Attempt to choose a valid field from m_fields_consumer
+     // 2. Handle Batch Queue (if enabled and not empty)
+     const auto &batch_queue  = selections->get<ConfigKey::BatchQueue>();
+     const bool batch_enabled = selections->get<ConfigKey::BatchQueueEnabled>();
+
+     if (batch_enabled && !batch_queue.empty())
+     {
+          // If still valid and not done, apply current queue item
+          if (m_queue_consumer && !m_queue_consumer.done())
+          {
+               const auto current_index
+                 = m_queue_consumer.distance_from_begin();
+
+               if (current_index != m_last_queue_index)
+               {
+                    spdlog::info("Processing batch index {}", current_index);
+                    m_last_queue_index           = current_index;
+                    const auto &[name, settings] = *m_queue_consumer;
+
+                    // Apply the settings for this batch
+                    selections->apply_batch_config_key_array(settings);
+
+                    // Copy paths and batch name
+                    m_input_path_valid = safe_copy_string(
+                      selections->get<ConfigKey::BatchInputPath>(),
+                      m_input_path);
+
+                    m_output_path_valid = safe_copy_string(
+                      selections->get<ConfigKey::BatchOutputPath>(),
+                      m_output_path);
+
+                    (void)safe_copy_string(name, m_new_batch_name);
+
+                    // Ensure map enable flags align with archive group
+                    if (
+                      archives_group->mapdata().size()
+                      != selections->get<ConfigKey::BatchMapListEnabled>()
+                           .size())
+                    {
+                         selections->get<ConfigKey::BatchMapListEnabled>()
+                           .resize(archives_group->mapdata().size(), true);
+                         selections->update<ConfigKey::BatchMapListEnabled>();
+                    }
+               }
+          }
+     }
+
+     // 3. Handle fields
      while ((!m_field || !m_field->operator bool())
             && !m_fields_consumer.done())
      {
-          // Retrieve the next archive from the consumer
           open_viii::archive::FIFLFSArchiveFetcher tmp = *m_fields_consumer;
 
-          // Reference to the list of map names in the archive group
           const auto &map_data    = archives_group->mapdata();
 
-          // Attempt to find a case-insensitive match for the current archive's
-          // map name
           const auto  find_result = std::ranges::find_if(
             map_data,
             [&](std::string_view map_name) -> bool
             { return open_viii::tools::i_equals(map_name, tmp.map_name()); });
 
-          // If a matching map name is found
           if (find_result != std::ranges::end(map_data))
           {
                const auto offset = std::ranges::distance(
                  std::ranges::begin(map_data), find_result);
 
-               // Check if the map at this offset is enabled
                if (selections->get<ConfigKey::BatchMapListEnabled>().at(
                      static_cast<std::size_t>(offset)))
                {
-                    // Create the field object from the archive and store it
                     m_field
                       = std::make_shared<open_viii::archive::FIFLFS<false>>(
                         tmp.get());
-
-                    // Move to the next consumer item
                     ++m_fields_consumer;
-
-                    break;// Exit the loop after successfully choosing a field
+                    break;
                }
           }
 
-          // Skip to next field archive if current one is invalid or disabled
           ++m_fields_consumer;
      }
 
-     // Attempt to choose the first available language archive
+     // 4. Handle language archives
      while (!m_coo && !m_lang_consumer.done())
      {
           m_coo = *m_lang_consumer;
@@ -2210,12 +2276,13 @@ void fme::batch::choose_field_and_coo()
      }
 }
 
+
 // std::filesystem::path fme::batch::append_file_structure(const
 // std::filesystem::path &path) const
 // {
 //      std::string const      name   = m_map_sprite.get_base_name();
-//      std::string_view const prefix = std::string_view(name).substr(0, 2);
-//      return path / prefix / name;
+//      std::string_view const prefix = std::string_view(name).substr(0,
+//      2); return path / prefix / name;
 // }
 
 void fme::batch::open_directory_browser()
@@ -2297,13 +2364,33 @@ fme::batch &fme::batch::operator=(std::weak_ptr<Selections> new_selections)
 
 bool fme::batch::in_progress() const
 {
-     return !m_fields_consumer.done() || m_field;
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+     const auto &batch_enabled
+       = selections->get<ConfigKey::BatchQueueEnabled>();
+     if (batch_enabled)
+     {
+          return !m_fields_consumer.done() || m_field
+                 || (m_queue_consumer && !m_queue_consumer.done());
+     }
+     else
+     {
+          return !m_fields_consumer.done() || m_field;
+     }
 }
 void fme::batch::stop()
 {
      m_fields_consumer.stop();
      m_lang_consumer.stop();
+     m_queue_consumer.stop();
+     m_last_queue_index = -1;
      m_field.reset();
+     m_coo.reset();
+     m_status.clear();
 }
 
 fme::batch::batch(

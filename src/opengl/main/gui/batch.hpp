@@ -46,7 +46,8 @@ class batch
           | ImGuiFileBrowserFlags_EditPathString
           | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
-
+     RangeConsumerView<fme::SelectionInfo<ConfigKey::BatchQueue>::value_type>
+                                                        m_queue_consumer  = {};
      RangeConsumer<open_viii::archive::FIFLFS<true>>    m_fields_consumer = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = { nullptr };
      RangeConsumer<decltype(open_viii::LangCommon::to_array())> m_lang_consumer
@@ -56,33 +57,36 @@ class batch
                                    m_future_of_future_consumer = {};
      mutable float                 m_total_elapsed_time        = 0.f;
      mutable std::array<char, 64U> m_new_batch_name            = {};
+     mutable std::ranges::range_difference_t<
+       fme::SelectionInfo<ConfigKey::BatchQueue>::value_type>
+                        m_last_queue_index = { -1 };
 
-     void                          combo_input_type();
-     void                          combo_output_type();
-     void                          combo_compact_type_ffnx();
-     void                          combo_compact_type();
-     void                          combo_flatten_type_bpp();
-     void                          combo_flatten_type();
-     void                          browse_input_path();
-     void                          browse_input_map_path();
-     void                          browse_output_path();
-     void                          button_start();
-     void                          button_stop();
-     void                          combo_load_map();
-     void                          choose_field_and_coo();
-     void                          reset_for_next();
-     void                          generate_map_sprite();
-     void                          compact();
-     void                          flatten();
-     bool                          consume_one_future();
-     void                          open_directory_browser();
-     void                          button_input_browse();
-     void                          button_output_browse();
-     void                          example_input_paths();
-     void                          example_output_paths();
+     void               combo_input_type();
+     void               combo_output_type();
+     void               combo_compact_type_ffnx();
+     void               combo_compact_type();
+     void               combo_flatten_type_bpp();
+     void               combo_flatten_type();
+     void               browse_input_path();
+     void               browse_input_map_path();
+     void               browse_output_path();
+     void               button_start();
+     void               button_stop();
+     void               combo_load_map();
+     void               choose_field_and_coo();
+     void               reset_for_next();
+     void               generate_map_sprite();
+     void               compact();
+     void               flatten();
+     bool               consume_one_future();
+     void               open_directory_browser();
+     void               button_input_browse();
+     void               button_output_browse();
+     void               example_input_paths();
+     void               example_output_paths();
      // both use the output pattern currently
-     const std::string            &get_output_pattern(fme::input_types type);
-     const std::string            &get_output_pattern(fme::output_types type);
+     const std::string &get_output_pattern(fme::input_types type);
+     const std::string &get_output_pattern(fme::output_types type);
      const std::string &get_output_map_pattern(fme::input_types type);
      const std::string &get_output_map_pattern(fme::output_types type);
      void               save_input_path();
