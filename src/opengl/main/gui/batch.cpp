@@ -319,10 +319,12 @@ void fme::batch::draw_queue()
                          IM_ASSERT(
                            payload->DataSize == sizeof(decltype(index)));
                          const auto src_index
-                           = *(const decltype(index) *)payload->Data;
+                           = *static_cast<const decltype(index) *>(
+                             payload->Data);
                          if (src_index != index)
                          {
-                              auto item = std::move(queue[src_index]);
+                              auto item = std::move(
+                                queue[static_cast<size_t>(src_index)]);
                               queue.erase(queue.begin() + src_index);
                               queue.insert(
                                 queue.begin() + index, std::move(item));
