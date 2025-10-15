@@ -244,9 +244,6 @@ void fme::batch::draw_queue()
            &selections->get<ConfigKey::BatchQueueEnabled>()))
      {
           selections->update<ConfigKey::BatchQueueEnabled>();
-          m_queue_consumer.stop();// because if the batch was started before
-                                  // this is checked it would continue running
-                                  // as if it were enabled when it is not.
      }
      else
      {
@@ -1439,12 +1436,19 @@ void fme::batch::button_start()
           auto config = Configuration(config_path);
           config->clear();
      }
-     m_queue_consumer.reset(selections->get<ConfigKey::BatchQueue>());
      m_fields_consumer = archives_group->fields();
      m_field.reset();
      m_lang_consumer.restart();
      m_coo.reset();
-     m_last_queue_index = -1;
+     if (!selections->get<ConfigKey::BatchQueueEnabled>())
+     {
+          m_queue_consumer.stop();
+     }
+     else
+     {
+          m_queue_consumer.reset(selections->get<ConfigKey::BatchQueue>());
+          m_last_queue_index = -1;
+     }
 }
 
 void fme::batch::button_stop()
