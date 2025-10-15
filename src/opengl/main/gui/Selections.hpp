@@ -1318,11 +1318,17 @@ using BatchConfigValueVariant = decltype([] {
 using BatchConfigKeyArrayT
   = std::array<BatchConfigValueVariant, std::ranges::size(BatchConfigKeys)>;
 
+struct BatchConfigEntry
+{
+     std::string          name;
+     BatchConfigKeyArrayT settings;
+     bool                 enabled = true;
+};
+
 template<>
 struct SelectionInfo<ConfigKey::BatchQueue>
 {
-     using value_type
-       = std::vector<std::pair<std::string, BatchConfigKeyArrayT>>;
+     using value_type                     = std::vector<BatchConfigEntry>;
      static constexpr std::string_view id = "BatchQueue";
 };
 
@@ -1363,6 +1369,7 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                }
                std::string entry_name
                  = value_table->get("name")->value_or(std::string{});
+               bool entry_enabled = value_table->get("enabled")->value_or(true);
 
                const auto fill_result
                  = [&]<std::size_t... Is>(
@@ -1393,7 +1400,8 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                // Expand over the index sequence
                BatchConfigKeyArrayT result = fill_result(
                  std::make_index_sequence<BatchConfigKeys.size()>{});
-               value.emplace_back(std::move(entry_name), std::move(result));
+               value.emplace_back(
+                 std::move(entry_name), std::move(result), entry_enabled);
           }
 
           return true;// We're returning true to prevent fall back logic from
@@ -1483,10 +1491,11 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
      {
           toml::array updated_array;
 
-          for (const auto &[entry_name, batch_array] : value)
+          for (const auto &[entry_name, batch_array, enabled] : value)
           {
                toml::table entry_table;
                entry_table.insert_or_assign("name", entry_name);
+               entry_table.insert_or_assign("enabled", enabled);
 
                const auto process_batch_array
                  = [&]<std::size_t... Is>(std::index_sequence<Is...>)
