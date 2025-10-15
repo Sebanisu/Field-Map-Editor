@@ -19,16 +19,16 @@ class ImageCompareWindow
           std::size_t           differing_pixels      = {};
           double                difference_percentage = {};
      };
-     ImageCompareWindow(std::weak_ptr<Selections> selections);
+     ImageCompareWindow(const std::shared_ptr<Selections> &selections);
      void render();
 
    private:
-     static const constexpr std::size_t max_path_length = 4096U;
+     static const constexpr std::size_t max_path_length = 1024U;
      std::array<char, max_path_length>  m_path1{};
      bool                               m_path1_valid = false;
      std::array<char, max_path_length>  m_path2{};
      bool                               m_path2_valid = false;
-     const std::weak_ptr<Selections>   &m_selections;
+     std::weak_ptr<Selections>          m_selections;
      std::vector<DiffResult>            m_diff_results{};
      bool                               m_auto_scroll = true;
      ImGui::FileBrowser                 m_directory_browser;

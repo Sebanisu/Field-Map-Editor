@@ -8,8 +8,9 @@
 namespace fme
 {
 
-ImageCompareWindow::ImageCompareWindow(std::weak_ptr<Selections> selections)
-  : m_selections(std::move(selections))
+ImageCompareWindow::ImageCompareWindow(
+  const std::shared_ptr<Selections> &selections)
+  : m_selections(selections)
 {
 }
 
@@ -21,7 +22,17 @@ void ImageCompareWindow::render()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     bool show_window = selections->get<ConfigKey::DisplayImageCompareWindow>();
+     bool show_window = false;
+     try
+     {
+          show_window = selections->get<ConfigKey::DisplayImageCompareWindow>();
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Exception getting DisplayImageCompareWindow: {}", e.what());
+          return;
+     }
      const auto pop_show_window = glengine::ScopeGuard(
        [&show_window, selections]()
        {
@@ -108,7 +119,14 @@ void ImageCompareWindow::CompareDirectories()
           }
      }
 }
-
+struct StbiDeleter
+{
+     void operator()(std::uint8_t *img) const noexcept
+     {
+          if (img)
+               stbi_image_free(img);
+     }
+};
 ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
   std::filesystem::path fileA,
   std::filesystem::path fileB)
@@ -118,27 +136,20 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
        &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
          difference_percentage]
        = result;
-     int         width1 = 0, height1 = 0, channels1 = 0;
-     int         width2 = 0, height2 = 0, channels2 = 0;
-     const auto *img1
-       = stbi_load(path1.string().c_str(), &width1, &height1, &channels1, 4);
-     const auto *img2
-       = stbi_load(path2.string().c_str(), &width2, &height2, &channels2, 4);
-     const auto cleanup = glengine::ScopeGuard(
-       [img1, img2]()
-       {
-            if (img1)
-            {
-                 stbi_image_free((void *)img1);
-            }
-            if (img2)
-            {
-                 stbi_image_free((void *)img2);
-            }
-       });
-     total_pixels1 = static_cast<std::size_t>(width1) * height1;
-     total_pixels2 = static_cast<std::size_t>(width2) * height2;
-     if (width1 != width2 || height1 != height2 || channels1 != channels2)
+     int width1 = 0, height1 = 0, channels1 = 0;
+     int width2 = 0, height2 = 0, channels2 = 0;
+
+     std::unique_ptr<std::uint8_t[], StbiDeleter> img1(
+       stbi_load(path1.string().c_str(), &width1, &height1, &channels1, 4));
+     std::unique_ptr<std::uint8_t[], StbiDeleter> img2(
+       stbi_load(path2.string().c_str(), &width2, &height2, &channels2, 4));
+     total_pixels1
+       = static_cast<std::size_t>(width1) * static_cast<std::size_t>(height1);
+     total_pixels2
+       = static_cast<std::size_t>(width2) * static_cast<std::size_t>(height2);
+     if (
+       !img1 || !img2 || width1 != width2 || height1 != height2
+       || channels1 != channels2)
      {
           differing_pixels      = (std::max)(total_pixels1, total_pixels2);
           difference_percentage = 100.0;

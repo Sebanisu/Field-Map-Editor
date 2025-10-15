@@ -132,11 +132,6 @@ enum class ConfigKey : std::uint32_t
 
 };
 
-struct SelectionBase
-{
-     virtual ~SelectionBase() = default;
-};
-
 template<ConfigKey Key>
 struct SelectionInfo;
 
@@ -1567,7 +1562,7 @@ struct SelectionUpdateStrategy<ff_8::filter<Tag>>
 
 
 template<ConfigKey Key>
-struct Selection : SelectionBase
+struct Selection
 {
      using value_type = typename SelectionInfo<Key>::value_type;
 
@@ -1752,6 +1747,14 @@ struct Selection : SelectionBase
      }
 };
 
+using SelectionVariant = decltype([] {
+    return []<std::size_t... Is>(std::index_sequence<Is...>)
+        -> std::variant<std::monostate,Selection<static_cast<ConfigKey>(Is)>...>
+    {
+        return std::monostate{}; // default-constructed variant
+    }(std::make_index_sequence<static_cast<std::size_t>(ConfigKey::All)>{});
+}());
+
 consteval inline auto load_selections_id_array()
 {
      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
@@ -1777,8 +1780,7 @@ struct Selections
    private:
      static constexpr std::size_t SelectionsSizeT
        = static_cast<std::size_t>(fme::ConfigKey::All);
-     using SelectionsArrayT
-       = std::array<std::unique_ptr<SelectionBase>, SelectionsSizeT>;
+     using SelectionsArrayT = std::array<SelectionVariant, SelectionsSizeT>;
      SelectionsArrayT m_selections_array;
 
      static inline constexpr std::array<std::string_view, SelectionsSizeT>
@@ -1795,20 +1797,34 @@ struct Selections
                SelectionsArrayT result{};
 
                ((result[Is] = [&]<ConfigKey Key>()
-                   -> std::unique_ptr<Selection<Key>>
+                   -> SelectionVariant
                       {
                            if constexpr (ConfigKey::FF8Path == Key)
                            {
-                                auto tmp = std::make_unique<Selection<Key>>(
-                                  config, ffnx_config);
-                                ff8_path    = tmp->value;
-                                ffnx_config = get_ffnx_config(tmp->value);
+                                //   auto tmp = SelectionVariant{
+                                //        std::in_place_index<Is + 1U>, config,
+                                //        ffnx_config
+                                //   };
+                                auto tmp = SelectionVariant{
+                                     std::in_place_type<Selection<Key>>, config,
+                                     ffnx_config
+                                };
+                                const auto &selection
+                                  = std::get<Selection<Key>>(tmp);
+                                ff8_path    = selection.value;
+                                ffnx_config = get_ffnx_config(*ff8_path);
                                 return std::move(tmp);
                            }
                            else
                            {
-                                return std::make_unique<Selection<Key>>(
-                                  config, ffnx_config);
+                                //   return SelectionVariant{
+                                //        std::in_place_index<Is + 1U>, config,
+                                //        ffnx_config
+                                //   };
+                                return SelectionVariant{
+                                     std::in_place_type<Selection<Key>>, config,
+                                     ffnx_config
+                                };
                            }
                       }.template operator()<static_cast<ConfigKey>(Is)>()),
                 ...);
@@ -1841,60 +1857,64 @@ struct Selections
           requires(SelectionsSizeT > static_cast<std::size_t>(Key))
      auto &get()
      {
-          static constexpr std::size_t index = static_cast<std::size_t>(Key);
-          using ValueT = typename SelectionInfo<Key>::value_type;
+          static constexpr std::size_t index
+            = static_cast<std::size_t>(Key);// +1 for monostate
+          using ValueT    = typename SelectionInfo<Key>::value_type;
 
-          if (!m_selections_array[index])
+          auto *selection = std::get_if<index + 1U>(&m_selections_array[index]);
+
+          if (!selection)
           {
                if constexpr (std::default_initializable<ValueT>)
                {
                     throw std::runtime_error(
-                      "Mutable access to default-initialized value is not "
-                      "supported");
+                      "Attempted mutable access to a selection that is "
+                      "currently in the uninitialized (monostate) state");
                }
                else
                {
                     throw std::runtime_error(
-                      "Selection not initialized and not "
-                      "default-initializable");
+                      "Selection not initialized and not default-initializable "
+                      "(monostate state)");
                }
           }
-          Selection<Key> *selection
-            = static_cast<Selection<Key> *>(m_selections_array[index].get());
-          if (!selection)
-               throw std::runtime_error(
-                 "Selection pointer is invalid/dangling");
+
           return selection->value;
      }
+
 
      template<ConfigKey Key>
           requires(has_valid_keys<Key>())
      const auto &get() const
      {
-          static constexpr std::size_t index = static_cast<std::size_t>(Key);
+          static constexpr std::size_t index
+            = static_cast<std::size_t>(Key) + 1U;// +1 for monostate
           using ValueT = typename SelectionInfo<Key>::value_type;
 
-          if (!m_selections_array[index])
+          // Use get_if to safely check for the Selection<Key> type
+          const auto *selection
+            = std::get_if<index>(&m_selections_array[std::to_underlying(Key)]);
+
+          if (!selection)
           {
                if constexpr (std::default_initializable<ValueT>)
                {
+                    // Return a static default value for const access if
+                    // default-initializable
                     static const ValueT default_value{};
                     return default_value;
                }
                else
                {
                     throw std::runtime_error(
-                      "Selection not initialized and not "
-                      "default-initializable");
+                "Selection for key " + std::to_string(static_cast<size_t>(Key)) +
+                " is uninitialized (monostate) and not default-initializable");
                }
           }
-          const Selection<Key> *selection = static_cast<const Selection<Key> *>(
-            m_selections_array[index].get());
-          if (!selection)
-               throw std::runtime_error(
-                 "Selection pointer is invalid/dangling");
+
           return selection->value;
      }
+
 
      BatchConfigKeyArrayT generate_batch_config_key_array() const
      {
@@ -1933,13 +1953,12 @@ struct Selections
                         BatchConfigKeys[Is])];
                       const auto &src = input[Is];
 
-                      if (auto *value = std::get_if<Is>(&src); dst && value)
+                      const auto *src_value = std::get_if<Is>(&src);
+                      auto       *dst_value = std::get_if<
+                              std::to_underlying(BatchConfigKeys[Is]) + 1U>(&dst);
+                      if (dst_value && src_value)
                       {
-                           static constexpr const auto Key
-                             = BatchConfigKeys[Is];
-                           Selection<Key> *selection
-                             = static_cast<Selection<Key> *>(dst.get());
-                           selection->value = *value;
+                           dst_value->value = *src_value;
                       }
                  }(),
                  ...);
@@ -1981,15 +2000,16 @@ struct Selections
                  {
                       static constexpr std::size_t index
                         = static_cast<std::size_t>(Key);
-                      if (
-                        index >= std::ranges::size(m_selections_array)
-                        || !m_selections_array[index])
+                      if (index >= std::ranges::size(m_selections_array))
                       {
                            return;
                       }
-                      Selection<Key> *selection = static_cast<Selection<Key> *>(
-                        m_selections_array[index].get());
-                      selection->refresh(ffnx_config);
+                      auto *selection
+                        = std::get_if<index + 1U>(&m_selections_array[index]);
+                      if (selection)
+                      {
+                           selection->refresh(ffnx_config);
+                      }
                  }.template operator()<Keys>(),
                  ...);
           }
@@ -2017,15 +2037,16 @@ struct Selections
                  {
                       static constexpr std::size_t index
                         = static_cast<std::size_t>(Key);
-                      if (
-                        index >= std::ranges::size(m_selections_array)
-                        || !m_selections_array[index])
+                      if (index >= std::ranges::size(m_selections_array))
                       {
                            return;
                       }
-                      Selection<Key> *selection = static_cast<Selection<Key> *>(
-                        m_selections_array[index].get());
-                      selection->update(config);
+                      auto *selection
+                        = std::get_if<index + 1U>(&m_selections_array[index]);
+                      if (selection)
+                      {
+                           selection->update(config);
+                      }
                  }.template operator()<Keys>(),
                  ...);
                config.save();
@@ -2040,14 +2061,11 @@ struct Selections
                (
                  [&]<ConfigKey Key>()
                  {
-                      if (m_selections_array[Is])
+                      auto *selection
+                        = std::get_if<Is + 1U>(&m_selections_array[Is]);
+                      if (selection && selection->reset_to_demaster())
                       {
-                           auto *selection = static_cast<Selection<Key> *>(
-                             m_selections_array[Is].get());
-                           if (selection->reset_to_demaster())
-                           {
-                                selection->update(config);
-                           }
+                           selection->update(config);
                       }
                  }.template operator()<static_cast<ConfigKey>(Is)>(),
                  ...);
@@ -2063,14 +2081,11 @@ struct Selections
                (
                  [&]<ConfigKey Key>()
                  {
-                      if (m_selections_array[Is])
+                      auto *selection
+                        = std::get_if<Is + 1U>(&m_selections_array[Is]);
+                      if (selection && selection->reset_to_ffnx())
                       {
-                           auto *selection = static_cast<Selection<Key> *>(
-                             m_selections_array[Is].get());
-                           if (selection->reset_to_ffnx())
-                           {
-                                selection->update(config);
-                           }
+                           selection->update(config);
                       }
                  }.template operator()<static_cast<ConfigKey>(Is)>(),
                  ...);
