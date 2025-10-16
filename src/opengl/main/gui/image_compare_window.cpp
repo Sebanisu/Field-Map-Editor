@@ -157,7 +157,8 @@ void ImageCompareWindow::render()
                     if (ImGui::BeginTable(
                           "ResultsTable", 4,
                           ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
-                            | ImGuiTableFlags_ScrollY))
+                            | ImGuiTableFlags_ScrollY
+                            | ImGuiTableFlags_Sortable))
                     {
                          // Set up columns
                          ImGui::TableSetupColumn(
@@ -169,6 +170,149 @@ void ImageCompareWindow::render()
                          ImGui::TableSetupColumn(
                            "%", ImGuiTableColumnFlags_WidthFixed);
                          ImGui::TableHeadersRow();
+                         if (m_consumer.done())
+                         {
+                              ImGuiTableSortSpecs *sort_specs
+                                = ImGui::TableGetSortSpecs();
+                              if (sort_specs && sort_specs->SpecsDirty)
+                              {
+                                   // sort_specs->Specs contains the column
+                                   // index and direction
+                                   for (int i = 0; i < sort_specs->SpecsCount;
+                                        i++)
+                                   {
+                                        const ImGuiTableColumnSortSpecs
+                                          *col_spec
+                                          = &sort_specs->Specs[i];
+                                        int column_index
+                                          = col_spec->ColumnIndex;
+                                        ImGuiSortDirection dir
+                                          = col_spec
+                                              ->SortDirection;// 0=asc,1=desc
+
+                                        // Perform your sorting of your data
+                                        // based on column_index and dir
+                                        // Example: sort your vector of rows
+                                        // accordingly
+                                        switch (column_index)
+                                        {
+                                             case 0:// File Path
+                                                  if (
+                                                    dir
+                                                    == ImGuiSortDirection_Ascending)
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         {},// default operator<
+                                                         [](const auto &diff)
+                                                         {
+                                                              return diff.path1
+                                                                .filename();
+                                                         });
+                                                  else
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         std::ranges::greater{},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return diff.path1
+                                                                .filename();
+                                                         });
+                                                  break;
+
+                                             case 1:// D Pixels
+                                                  if (
+                                                    dir
+                                                    == ImGuiSortDirection_Ascending)
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         {},// operator<
+                                                         [](const auto &diff)
+                                                         {
+                                                              return (
+                                                                std::
+                                                                  max)(diff
+                                                                         .total_pixels1,
+                                                                       diff
+                                                                         .total_pixels2);
+                                                         });
+                                                  else
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         std::ranges::greater{},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return (
+                                                                std::
+                                                                  max)(diff
+                                                                         .total_pixels1,
+                                                                       diff
+                                                                         .total_pixels2);
+                                                         });
+                                                  break;
+
+                                             case 2:// T Pixels
+                                                  if (
+                                                    dir
+                                                    == ImGuiSortDirection_Ascending)
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         {},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return (
+                                                                std::
+                                                                  max)(diff
+                                                                         .total_pixels1,
+                                                                       diff
+                                                                         .total_pixels2);
+                                                         });
+                                                  else
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         std::ranges::greater{},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return (
+                                                                std::
+                                                                  max)(diff
+                                                                         .total_pixels1,
+                                                                       diff
+                                                                         .total_pixels2);
+                                                         });
+                                                  break;
+
+                                             case 3:// %
+                                                  if (
+                                                    dir
+                                                    == ImGuiSortDirection_Ascending)
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         {},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return diff
+                                                                .difference_percentage;
+                                                         });
+                                                  else
+                                                       std::ranges::sort(
+                                                         m_diff_results,
+                                                         std::ranges::greater{},
+                                                         [](const auto &diff)
+                                                         {
+                                                              return diff
+                                                                .difference_percentage;
+                                                         });
+                                                  break;
+
+                                             default:
+                                                  break;
+                                        }
+                                   }
+
+                                   // Mark as not dirty
+                                   sort_specs->SpecsDirty = false;
+                              }
+                         }
 
                          for (const auto
                                 &[path1, path2, total_pixels1, total_pixels2,
@@ -178,26 +322,44 @@ void ImageCompareWindow::render()
                               // First row: path1
                               ImGui::TableNextRow();
                               ImGui::TableNextColumn();// File Path
-                              format_imgui_text("{}", path1);
+                              format_imgui_text(
+                                "{}{}", path1.parent_path(),
+                                static_cast<char>(
+                                  std::filesystem::path::preferred_separator));
+                              ImGui::SameLine();
+                              ImGui::PushStyleColor(
+                                ImGuiCol_Text,
+                                IM_COL32(255, 192, 64, 255));// Orange
+                              format_imgui_text("{}", path1.filename());
+                              ImGui::PopStyleColor();
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text("{}", differing_pixels);
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text("{}", total_pixels1);
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text(
-                                "{:0.2f}", difference_percentage);
+                                "{:0.2f}", difference_percentage * 100.0);
 
                               // Second row: path2
                               ImGui::TableNextRow();
                               ImGui::TableNextColumn();// File Path
-                              format_imgui_text("{}", path2);
+                              format_imgui_text(
+                                "{}{}", path2.parent_path(),
+                                static_cast<char>(
+                                  std::filesystem::path::preferred_separator));
+                              ImGui::SameLine();
+                              ImGui::PushStyleColor(
+                                ImGuiCol_Text,
+                                IM_COL32(255, 192, 64, 255));// Orange
+                              format_imgui_text("{}", path2.filename());
+                              ImGui::PopStyleColor();
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text("{}", differing_pixels);
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text("{}", total_pixels2);
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text(
-                                "{:0.2f}", difference_percentage);
+                                "{:0.2f}", difference_percentage * 100.0);
                               if (m_auto_scroll && !m_consumer.done())
                               {
                                    ImGui::SetScrollHereY(1.0f);
