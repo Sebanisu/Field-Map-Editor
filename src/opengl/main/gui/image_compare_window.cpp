@@ -312,19 +312,13 @@ void ImageCompareWindow::handle_table_sorting()
                            m_diff_results,
                            {},// operator<
                            [](const auto &diff)
-                           {
-                                return (std::max)(diff.total_pixels1,
-                                                  diff.total_pixels2);
-                           });
+                           { return diff.differing_pixels; });
                     else
                          std::ranges::sort(
                            m_diff_results,
                            std::ranges::greater{},
                            [](const auto &diff)
-                           {
-                                return (std::max)(diff.total_pixels1,
-                                                  diff.total_pixels2);
-                           });
+                           { return diff.differing_pixels; });
                     break;
 
                case 2:// T Pixels
