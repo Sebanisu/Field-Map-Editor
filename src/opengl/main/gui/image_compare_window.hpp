@@ -1,6 +1,7 @@
 #ifndef C126DFEB_2E60_4799_8C5D_8ECE89625649
 #define C126DFEB_2E60_4799_8C5D_8ECE89625649
 #include "filebrowser.hpp"
+#include "RangeConsumer.hpp"
 #include "Selections.hpp"
 #include <filesystem>
 #include <string>
@@ -32,10 +33,13 @@ class ImageCompareWindow
      std::vector<DiffResult>            m_diff_results{};
      bool                               m_auto_scroll = true;
      ImGui::FileBrowser                 m_directory_browser;
-     void                               CompareDirectories();
-     DiffResult                         CompareImage(
-                               std::filesystem::path fileA,
-                               std::filesystem::path fileB);
+     RangeConsumer<std::filesystem::recursive_directory_iterator> m_consumer;
+     void       CompareDirectoriesStart();
+     void       CompareDirectoriesStep();
+     void       CompareDirectoriesStop();
+     DiffResult CompareImage(
+       std::filesystem::path fileA,
+       std::filesystem::path fileB);
 };
 }// namespace fme
 #endif /* C126DFEB_2E60_4799_8C5D_8ECE89625649 */

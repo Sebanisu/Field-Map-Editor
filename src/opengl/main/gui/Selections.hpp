@@ -26,6 +26,8 @@ enum class ConfigKey : std::uint32_t
      FF8Path,
      TomlPaths,
      TomlPath,
+     ImageCompareWindowPath1,
+     ImageCompareWindowPath2,
      WindowWidth,
      WindowHeight,
      Palette,
@@ -211,6 +213,18 @@ struct SelectionInfo<ConfigKey::TomlPath>
 {
      using value_type                     = std::filesystem::path;
      static constexpr std::string_view id = "TomlPath";
+};
+template<>
+struct SelectionInfo<ConfigKey::ImageCompareWindowPath1>
+{
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "ImageCompareWindowPath1";
+};
+template<>
+struct SelectionInfo<ConfigKey::ImageCompareWindowPath2>
+{
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "ImageCompareWindowPath2";
 };
 template<>
 struct SelectionInfo<ConfigKey::WindowWidth>
