@@ -198,7 +198,7 @@ void ImageCompareWindow::render()
                               ImGui::TableNextColumn();// Difference
                               format_imgui_text(
                                 "{:0.2f}", difference_percentage);
-                              if (m_auto_scroll && !m_diff_results.empty())
+                              if (m_auto_scroll && !m_consumer.done())
                               {
                                    ImGui::SetScrollHereY(1.0f);
                               }
