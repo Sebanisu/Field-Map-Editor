@@ -1564,21 +1564,18 @@ bool fme::batch::browse_path(
           tool_tip(std::string_view{ path_buffer.begin(), path_buffer.end() });
      }
      ImGui::SameLine(0, spacing);
+     if (ImGui::Button(
+           gui_labels::browse.data(), ImVec2{ button_width, button_size }))
      {
-          if (ImGui::Button(
-                gui_labels::browse.data(), ImVec2{ button_width, button_size }))
+          // Trigger the chooseFolder function when the button is clicked
+          // chooseFolder();
+          if (std::addressof(path_buffer) == std::addressof(m_input_path))
           {
-               // Trigger the chooseFolder function when the button is clicked
-               // chooseFolder();
-               if (std::addressof(path_buffer) == std::addressof(m_input_path))
-               {
-                    button_input_browse();
-               }
-               else if (
-                 std::addressof(path_buffer) == std::addressof(m_output_path))
-               {
-                    button_output_browse();
-               }
+               button_input_browse();
+          }
+          else if (std::addressof(path_buffer) == std::addressof(m_output_path))
+          {
+               button_output_browse();
           }
      }
      ImGui::SameLine(0, spacing);
