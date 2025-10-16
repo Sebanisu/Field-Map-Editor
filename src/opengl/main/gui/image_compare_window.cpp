@@ -141,6 +141,11 @@ void ImageCompareWindow::render()
           CompareDirectoriesStop();
      }
      ImGui::EndDisabled();
+     ImGui::SameLine();
+     if (ImGui::Checkbox("Autoscroll", &m_auto_scroll))
+     {
+          // noop;
+     }
      ImGui::Separator();
      diff_results_table();
      CompareDirectoriesStep();
@@ -186,13 +191,46 @@ void ImageCompareWindow::diff_results_table()
             &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
               difference_percentage] : m_diff_results)
      {
+          const auto crop_path_to_fit = [](
+                                          const std::filesystem::path &path,
+                                          float total_width) -> std::string
+          {
+               std::string parent          = path.parent_path().string();
+               std::string filename        = path.filename().string();
+               float       separator_width = ImGui::CalcTextSize("/").x;
+               float filename_width = ImGui::CalcTextSize(filename.c_str()).x;
+               float available_for_parent
+                 = total_width - filename_width - separator_width
+                   - ImGui::GetStyle().ItemSpacing.x * 2;
+
+               if (available_for_parent <= 0.0f)
+                    return "...";
+
+               const char *ellipsis       = "...";
+               float       ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
+
+               // Trim from the RIGHT (preserve the beginning of the path)
+               while (!parent.empty()
+                      && ImGui::CalcTextSize(parent.c_str()).x + ellipsis_width
+                           > available_for_parent)
+               {
+                    parent.pop_back();
+               }
+
+               if (parent.size() < path.parent_path().string().size())
+                    parent += ellipsis;
+
+               return parent;
+          };
+
+
           // First row: path1
           ImGui::TableNextRow();
           ImGui::TableNextColumn();// File Path
           format_imgui_text(
-            "{}{}", path1.parent_path(),
+            "{}{}", crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
             static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine();
+          ImGui::SameLine(0, 0);
           ImGui::PushStyleColor(
             ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
           format_imgui_text("{}", path1.filename());
@@ -208,9 +246,9 @@ void ImageCompareWindow::diff_results_table()
           ImGui::TableNextRow();
           ImGui::TableNextColumn();// File Path
           format_imgui_text(
-            "{}{}", path2.parent_path(),
+            "{}{}", crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
             static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine();
+          ImGui::SameLine(0, 0);
           ImGui::PushStyleColor(
             ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
           format_imgui_text("{}", path2.filename());
@@ -230,12 +268,12 @@ void ImageCompareWindow::diff_results_table()
 
 void ImageCompareWindow::handle_table_sorting()
 {
-     if (m_consumer.done())
+     if (!m_consumer.done())
      {
           return;
      }
      ImGuiTableSortSpecs *sort_specs = ImGui::TableGetSortSpecs();
-     if (!sort_specs || !sort_specs->SpecsDirty)
+     if (!(sort_specs && sort_specs->SpecsDirty))
      {
           return;
      }
