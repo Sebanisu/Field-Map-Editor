@@ -1827,7 +1827,7 @@ struct Selections
                                   = std::get<Selection<Key>>(tmp);
                                 ff8_path    = selection.value;
                                 ffnx_config = get_ffnx_config(*ff8_path);
-                                return std::move(tmp);
+                                return tmp;
                            }
                            else
                            {
