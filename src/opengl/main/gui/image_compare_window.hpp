@@ -34,6 +34,8 @@ class ImageCompareWindow
      bool                               m_auto_scroll = true;
      ImGui::FileBrowser                 m_directory_browser;
      RangeConsumer<std::filesystem::recursive_directory_iterator> m_consumer;
+     void       diff_results_table();
+     void       handle_table_sorting();
      void       CompareDirectoriesStart();
      void       CompareDirectoriesStep();
      void       CompareDirectoriesStop();
