@@ -24,18 +24,32 @@ class ImageCompareWindow
      void render();
 
    private:
-     static const constexpr std::size_t max_path_length = 1024U;
-     std::array<char, max_path_length>  m_path1{};
-     bool                               m_path1_valid = false;
-     std::array<char, max_path_length>  m_path2{};
-     bool                               m_path2_valid = false;
-     std::weak_ptr<Selections>          m_selections;
-     std::vector<DiffResult>            m_diff_results{};
-     bool                               m_auto_scroll = true;
-     ImGui::FileBrowser                 m_directory_browser;
+     enum struct directory_mode
+     {
+          input_mode,
+          output_mode,
+     };
+     static const constexpr std::size_t max_path_length          = { 1024U };
+     std::array<char, max_path_length>  m_path1                  = {};
+     bool                               m_path1_valid            = { false };
+     std::array<char, max_path_length>  m_path2                  = {};
+     bool                               m_path2_valid            = false;
+     std::weak_ptr<Selections>          m_selections             = {};
+     std::vector<DiffResult>            m_diff_results           = {};
+     bool                               m_auto_scroll            = true;
+     directory_mode                     m_directory_browser_mode = {};
+     ImGui::FileBrowser                 m_directory_browser{
+          ImGuiFileBrowserFlags_SelectDirectory
+          | ImGuiFileBrowserFlags_CreateNewDir
+          | ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
+     };
      RangeConsumer<std::filesystem::recursive_directory_iterator> m_consumer;
      void       diff_results_table();
      void       handle_table_sorting();
+     void       open_directory_browser();
+     void       button_input_browse();
+     void       button_output_browse();
      void       CompareDirectoriesStart();
      void       CompareDirectoriesStep();
      void       CompareDirectoriesStop();
