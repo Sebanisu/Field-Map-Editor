@@ -19,6 +19,7 @@ class [[nodiscard]] textures_window
      mutable ImGui::FileBrowser        m_save_dialog{
           ImGuiFileBrowserFlags_EditPathString
           | ImGuiFileBrowserFlags_EnterNewFilename
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
      mutable std::filesystem::path m_save_directory = []()
      {
