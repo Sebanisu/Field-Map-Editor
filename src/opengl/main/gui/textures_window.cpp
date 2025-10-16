@@ -7,7 +7,7 @@
 
 void fme::textures_window::render() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error(

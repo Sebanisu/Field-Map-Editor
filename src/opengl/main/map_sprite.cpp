@@ -658,7 +658,7 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
             MAX_TEXTURES);
           return {};
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -676,7 +676,7 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
 std::future<std::future<void>>
   map_sprite::load_full_filename_textures(const std::string filename) const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -707,7 +707,7 @@ std::future<std::future<void>> map_sprite::load_swizzle_textures(
             MAX_TEXTURES);
           return {};
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -736,7 +736,7 @@ std::future<std::future<void>>
             MAX_TEXTURES);
           return {};
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -766,7 +766,7 @@ std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(
             MAX_TEXTURES);
           return {};
      }
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");

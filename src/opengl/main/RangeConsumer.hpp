@@ -5,13 +5,15 @@
 #ifndef FIELD_MAP_EDITOR_RANGECONSUMER_HPP
 #define FIELD_MAP_EDITOR_RANGECONSUMER_HPP
 #include <cstddef>
+#include <future>
 #include <iterator>
 #include <ranges>
+#include <spdlog/spdlog.h>
 #include <stacktrace>
 #include <utility>
 #include <vector>
 
-template<std::ranges::forward_range range_t>
+template<std::ranges::input_range range_t>
 class RangeConsumer
 {
    public:
@@ -51,6 +53,7 @@ class RangeConsumer
      {
      }
      void restart()
+          requires(std::ranges::forward_range<range_t>)
      {
           pos     = std::ranges::begin(m_range);
           end_pos = std::ranges::end(m_range);
@@ -59,7 +62,9 @@ class RangeConsumer
      RangeConsumer<range_t> &operator=(range_t new_value)
      {
           m_range = std::move(new_value);
-          restart();
+          pos     = std::ranges::begin(m_range);
+          end_pos = std::ranges::end(m_range);
+          m_stop  = false;
           return *this;
      }
      RangeConsumer<range_t> &operator+=(range_t &&new_value)
@@ -84,6 +89,7 @@ class RangeConsumer
           return std::ranges::distance(std::ranges::begin(*m_range), pos);
      }
      [[nodiscard]] std::size_t size() const
+          requires std::ranges::sized_range<range_t>
      {
           return std::ranges::size(m_range);
      }
@@ -96,15 +102,18 @@ class RangeConsumer
           return m_stop || pos == end_pos;
      }
      auto &operator++()
+          requires(std::ranges::input_range<range_t>)
      {
-          pos = std::next(pos);
+          ++pos;
           return *this;
      }
      decltype(auto) operator*() const
+          requires(std::ranges::input_range<range_t>)
      {
           return *pos;
      }
      decltype(auto) operator*()
+          requires(std::ranges::input_range<range_t>)
      {
           return *pos;
      }
@@ -119,7 +128,7 @@ class RangeConsumer
 };
 
 
-template<std::ranges::forward_range range_t>
+template<std::ranges::input_range range_t>
 class RangeConsumerView
 {
    public:
@@ -151,10 +160,15 @@ class RangeConsumerView
      void reset(range_t &in_range)
      {
           m_range = &in_range;
-          restart();
+          if (!m_range)
+               return;
+          pos     = std::ranges::begin(*m_range);
+          end_pos = std::ranges::end(*m_range);
+          m_stop  = false;
      }
 
      void restart()
+          requires(std::ranges::forward_range<range_t>)
      {
           if (!m_range)
                return;
@@ -191,16 +205,19 @@ class RangeConsumerView
      }
 
      auto &operator++()
+          requires(std::ranges::input_range<range_t>)
      {
           ++pos;
           return *this;
      }
 
      decltype(auto) operator*() const
+          requires(std::ranges::input_range<range_t>)
      {
           return *pos;
      }
      decltype(auto) operator*()
+          requires(std::ranges::input_range<range_t>)
      {
           return *pos;
      }

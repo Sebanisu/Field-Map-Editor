@@ -436,7 +436,7 @@ void fme::custom_paths_window::populate_input_pattern() const
 
 void fme::custom_paths_window::populate_test_output() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -456,7 +456,7 @@ void fme::custom_paths_window::populate_test_output() const
 
 bool fme::custom_paths_window::combo_selected_pattern() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -1112,8 +1112,8 @@ void fme::custom_paths_window::render() const
      m_scrolling_child_size
        = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
      using namespace std::string_view_literals;
-     bool override_changed = { false };
-     auto selections       = m_selections.lock();
+     bool       override_changed = { false };
+     const auto selections       = m_selections.lock();
      if (!selections || !selections->get<ConfigKey::DisplayCustomPathsWindow>())
      {
           return;

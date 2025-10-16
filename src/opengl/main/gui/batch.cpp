@@ -2336,7 +2336,8 @@ void fme::batch::open_directory_browser()
      }
      const auto clear_browser = glengine::ScopeGuard(
        [this]() { m_directory_browser.ClearSelected(); });
-     const std::string &selected_path = m_directory_browser.GetPwd().string();
+     const std::string &selected_path
+       = m_directory_browser.GetDirectory().string();
      // todo check if the directory is valid.
      // const auto         tmp           = safedir(selected_path);
      switch (m_directory_browser_mode)
