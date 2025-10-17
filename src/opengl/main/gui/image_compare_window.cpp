@@ -1,8 +1,11 @@
 #include "image_compare_window.hpp"
 #include "format_imgui_text.hpp"
 #include "safedir.hpp"
+#include "tool_tip.hpp"
 #include <execution>
+#include <IconsFontAwesome6.h>
 #include <numeric>
+#include <open_file_explorer.hpp>
 #include <ScopeGuard.hpp>
 #include <stb_image.h>
 
@@ -68,6 +71,66 @@ ImageCompareWindow::ImageCompareWindow(
        selections->get<ConfigKey::ImageCompareWindowPath2>().string(), m_path2);
 }
 
+
+void ImageCompareWindow::button_input_browse()
+{
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle("Path A");
+     m_directory_browser.SetPwd(m_path1.data());
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_directory_browser_mode = directory_mode::input_mode;
+};
+
+void ImageCompareWindow::button_output_browse()
+{
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle("Path B");
+     m_directory_browser.SetPwd(m_path2.data());
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_directory_browser_mode = directory_mode::output_mode;
+};
+
+void ImageCompareWindow::open_directory_browser()
+{
+     m_directory_browser.Display();
+     if (!m_directory_browser.HasSelected())
+     {
+          return;
+     }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     const auto clear_browser = glengine::ScopeGuard(
+       [this]() { m_directory_browser.ClearSelected(); });
+     const std::string &selected_path
+       = m_directory_browser.GetDirectory().string();
+     // todo check if the directory is valid.
+     // const auto         tmp           = safedir(selected_path);
+     switch (m_directory_browser_mode)
+     {
+          case directory_mode::input_mode:
+          {
+               m_path1_valid = safe_copy_string(selected_path, m_path1);
+               selections->get<ConfigKey::ImageCompareWindowPath1>()
+                 = m_path1.data();
+               selections->update<ConfigKey::ImageCompareWindowPath1>();
+          }
+          break;
+               break;
+          case directory_mode::output_mode:
+          {
+               m_path2_valid = safe_copy_string(selected_path, m_path2);
+               selections->get<ConfigKey::ImageCompareWindowPath2>()
+                 = m_path2.data();
+               selections->update<ConfigKey::ImageCompareWindowPath2>();
+          }
+          break;
+     }
+}
+
 void ImageCompareWindow::render()
 {
      const auto selections = m_selections.lock();
@@ -87,6 +150,8 @@ void ImageCompareWindow::render()
             "Exception getting DisplayImageCompareWindow: {}", e.what());
           return;
      }
+
+     open_directory_browser();
      const auto pop_show_window = glengine::ScopeGuard(
        [&show_window, selections]()
        {
@@ -101,34 +166,130 @@ void ImageCompareWindow::render()
        });
 
 
+     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin("Image Comparison Tool", &show_window))
      {
-          ImGui::End();
           return;
      }
-     const auto pop_end = glengine::ScopeGuard([]() { ImGui::End(); });
+
+     const ImGuiStyle &style        = ImGui::GetStyle();
+     const float       spacing      = style.ItemInnerSpacing.x;
+     const float       button_size  = ImGui::GetFrameHeight();
+     const float       button_width = button_size * 3.0F;
      ImGui::BeginDisabled(!m_consumer.done());
-     if (ImGui::InputText("Path A", m_path1.data(), m_path1.size()))
      {
-          const auto tmp = safedir(m_path1.data());
-          m_path1_valid  = tmp.is_dir() && tmp.is_exists();
-          if (m_path1_valid)
+          const auto  popid = PushPopID();
+          const float width = ImGui::CalcItemWidth();
+          ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
+          if (!m_path1_valid)
           {
-               selections->get<ConfigKey::ImageCompareWindowPath1>()
-                 = m_path1.data();
-               selections->update<ConfigKey::ImageCompareWindowPath1>();
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBg,
+                 static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBgHovered,
+                 static_cast<ImVec4>(
+                   ImColor::HSV(0.0F, 0.8F, 0.8F)));// lighter red on hover
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBgActive,
+                 static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
           }
+          const auto pop_color = glengine::ScopeGuard(
+            [valid = m_path1_valid]()
+            {
+                 if (!valid)
+                 {
+                      ImGui::PopStyleColor(3);
+                 }
+            });
+          if (ImGui::InputText("##Path A", m_path1.data(), m_path1.size()))
+          {
+               const auto tmp = safedir(m_path1.data());
+               m_path1_valid  = tmp.is_dir() && tmp.is_exists();
+               if (m_path1_valid)
+               {
+                    selections->get<ConfigKey::ImageCompareWindowPath1>()
+                      = m_path1.data();
+                    selections->update<ConfigKey::ImageCompareWindowPath1>();
+               }
+          }
+
+          ImGui::SameLine(0, spacing);
+          if (ImGui::Button(
+                gui_labels::browse.data(), ImVec2{ button_width, button_size }))
+          {
+               button_input_browse();
+          }
+          ImGui::SameLine(0, spacing);
+          if (ImGui::Button(
+                gui_labels::explore.data(),
+                ImVec2{ button_width, button_size }))
+          {
+               open_directory(m_path1.data());
+          }
+          tool_tip(gui_labels::explore_tooltip);
+          ImGui::SameLine(0, spacing);
+
+          format_imgui_wrapped_text("{}", "Path A");
      }
-     if (ImGui::InputText("Path B", m_path2.data(), m_path2.size()))
      {
-          const auto tmp = safedir(m_path2.data());
-          m_path2_valid  = tmp.is_dir() && tmp.is_exists();
-          if (m_path2_valid)
+          const auto  popid = PushPopID();
+          const float width = ImGui::CalcItemWidth();
+          ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
+          const auto pop_item_width
+            = glengine::ScopeGuard(&ImGui::PopItemWidth);
+          if (!m_path2_valid)
           {
-               selections->get<ConfigKey::ImageCompareWindowPath2>()
-                 = m_path2.data();
-               selections->update<ConfigKey::ImageCompareWindowPath2>();
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBg,
+                 static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBgHovered,
+                 static_cast<ImVec4>(
+                   ImColor::HSV(0.0F, 0.8F, 0.8F)));// lighter red on hover
+               ImGui::PushStyleColor(
+                 ImGuiCol_FrameBgActive,
+                 static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
           }
+          const auto pop_color = glengine::ScopeGuard(
+            [valid = m_path2_valid]()
+            {
+                 if (!valid)
+                 {
+                      ImGui::PopStyleColor(3);
+                 }
+            });
+          if (ImGui::InputText("##Path B", m_path2.data(), m_path2.size()))
+          {
+               const auto tmp = safedir(m_path2.data());
+               m_path2_valid  = tmp.is_dir() && tmp.is_exists();
+               if (m_path2_valid)
+               {
+                    selections->get<ConfigKey::ImageCompareWindowPath2>()
+                      = m_path2.data();
+                    selections->update<ConfigKey::ImageCompareWindowPath2>();
+               }
+          }
+
+          ImGui::SameLine(0, spacing);
+          if (ImGui::Button(
+                gui_labels::browse.data(), ImVec2{ button_width, button_size }))
+          {
+               button_output_browse();
+          }
+          ImGui::SameLine(0, spacing);
+          if (ImGui::Button(
+                gui_labels::explore.data(),
+                ImVec2{ button_width, button_size }))
+          {
+               open_directory(m_path2.data());
+          }
+          tool_tip(gui_labels::explore_tooltip);
+          ImGui::SameLine(0, spacing);
+
+          format_imgui_wrapped_text("{}", "Path B");
      }
      if (ImGui::Button("Start Compare"))
      {
@@ -142,237 +303,259 @@ void ImageCompareWindow::render()
           CompareDirectoriesStop();
      }
      ImGui::EndDisabled();
-     ImGui::Separator();
-     if (!m_diff_results.empty())
+     ImGui::SameLine();
+     if (ImGui::Checkbox("Autoscroll", &m_auto_scroll))
      {
-          if (ImGui::CollapsingHeader(
-                "Results", ImGuiTreeNodeFlags_DefaultOpen))
+          // noop;
+     }
+     ImGui::Separator();
+     diff_results_table();
+     CompareDirectoriesStep();
+}
+
+void ImageCompareWindow::diff_results_table()
+{
+     if (m_diff_results.empty())
+     {
+          return;
+     }
+     if (!ImGui::CollapsingHeader("Results", ImGuiTreeNodeFlags_DefaultOpen))
+     {
+          return;
+     }
+     // Begin a child window with a fixed height and scrollbars
+     // Adjust height as needed to fit your layout
+
+     const auto end_child = glengine::ScopeGuard(&ImGui::EndChild);
+     if (!ImGui::BeginChild(
+           "ResultsChild", ImVec2(0, 0), true,
+           ImGuiWindowFlags_HorizontalScrollbar))
+     {
+          return;
+     }
+     if (!ImGui::BeginTable(
+           "ResultsTable", 5,
+           ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
+             | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Sortable))
+     {
+          return;
+     }
+     const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
+
+     // Set up columns
+     ImGui::TableSetupColumn("File Path", ImGuiTableColumnFlags_WidthStretch);
+     ImGui::TableSetupColumn("D Pixels", ImGuiTableColumnFlags_WidthFixed);
+     ImGui::TableSetupColumn("T Pixels", ImGuiTableColumnFlags_WidthFixed);
+     ImGui::TableSetupColumn("%##Header", ImGuiTableColumnFlags_WidthFixed);
+     ImGui::TableSetupColumn(
+       ICON_FA_COPY "##Header",
+       ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort);
+     ImGui::TableHeadersRow();
+     handle_table_sorting();
+     for (const auto
+            &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
+              difference_percentage] : m_diff_results)
+     {
+
+          const auto crop_path_to_fit = [](
+                                          const std::filesystem::path &path,
+                                          float total_width) -> std::string
           {
-               // Begin a child window with a fixed height and scrollbars
-               // Adjust height as needed to fit your layout
-               if (ImGui::BeginChild(
-                     "ResultsChild", ImVec2(0, 0), true,
-                     ImGuiWindowFlags_HorizontalScrollbar))
+               std::string parent          = path.parent_path().string();
+               std::string filename        = path.filename().string();
+               float       separator_width = ImGui::CalcTextSize("/").x;
+               float filename_width = ImGui::CalcTextSize(filename.c_str()).x;
+               float available_for_parent
+                 = total_width - filename_width - separator_width
+                   - ImGui::GetStyle().ItemSpacing.x * 2;
+
+               if (available_for_parent <= 0.0f)
+                    return "...";
+
+               const char *ellipsis       = "...";
+               float       ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
+
+               // Trim from the RIGHT (preserve the beginning of the path)
+               while (!parent.empty()
+                      && ImGui::CalcTextSize(parent.c_str()).x + ellipsis_width
+                           > available_for_parent)
                {
-                    if (ImGui::BeginTable(
-                          "ResultsTable", 4,
-                          ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
-                            | ImGuiTableFlags_ScrollY
-                            | ImGuiTableFlags_Sortable))
-                    {
-                         // Set up columns
-                         ImGui::TableSetupColumn(
-                           "File Path", ImGuiTableColumnFlags_WidthStretch);
-                         ImGui::TableSetupColumn(
-                           "D Pixels", ImGuiTableColumnFlags_WidthFixed);
-                         ImGui::TableSetupColumn(
-                           "T Pixels", ImGuiTableColumnFlags_WidthFixed);
-                         ImGui::TableSetupColumn(
-                           "%", ImGuiTableColumnFlags_WidthFixed);
-                         ImGui::TableHeadersRow();
-                         if (m_consumer.done())
-                         {
-                              ImGuiTableSortSpecs *sort_specs
-                                = ImGui::TableGetSortSpecs();
-                              if (sort_specs && sort_specs->SpecsDirty)
-                              {
-                                   // sort_specs->Specs contains the column
-                                   // index and direction
-                                   for (int i = 0; i < sort_specs->SpecsCount;
-                                        i++)
-                                   {
-                                        const ImGuiTableColumnSortSpecs
-                                          *col_spec
-                                          = &sort_specs->Specs[i];
-                                        int column_index
-                                          = col_spec->ColumnIndex;
-                                        ImGuiSortDirection dir
-                                          = col_spec
-                                              ->SortDirection;// 0=asc,1=desc
-
-                                        // Perform your sorting of your data
-                                        // based on column_index and dir
-                                        // Example: sort your vector of rows
-                                        // accordingly
-                                        switch (column_index)
-                                        {
-                                             case 0:// File Path
-                                                  if (
-                                                    dir
-                                                    == ImGuiSortDirection_Ascending)
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         {},// default operator<
-                                                         [](const auto &diff)
-                                                         {
-                                                              return diff.path1
-                                                                .filename();
-                                                         });
-                                                  else
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         std::ranges::greater{},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return diff.path1
-                                                                .filename();
-                                                         });
-                                                  break;
-
-                                             case 1:// D Pixels
-                                                  if (
-                                                    dir
-                                                    == ImGuiSortDirection_Ascending)
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         {},// operator<
-                                                         [](const auto &diff)
-                                                         {
-                                                              return (
-                                                                std::
-                                                                  max)(diff
-                                                                         .total_pixels1,
-                                                                       diff
-                                                                         .total_pixels2);
-                                                         });
-                                                  else
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         std::ranges::greater{},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return (
-                                                                std::
-                                                                  max)(diff
-                                                                         .total_pixels1,
-                                                                       diff
-                                                                         .total_pixels2);
-                                                         });
-                                                  break;
-
-                                             case 2:// T Pixels
-                                                  if (
-                                                    dir
-                                                    == ImGuiSortDirection_Ascending)
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         {},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return (
-                                                                std::
-                                                                  max)(diff
-                                                                         .total_pixels1,
-                                                                       diff
-                                                                         .total_pixels2);
-                                                         });
-                                                  else
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         std::ranges::greater{},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return (
-                                                                std::
-                                                                  max)(diff
-                                                                         .total_pixels1,
-                                                                       diff
-                                                                         .total_pixels2);
-                                                         });
-                                                  break;
-
-                                             case 3:// %
-                                                  if (
-                                                    dir
-                                                    == ImGuiSortDirection_Ascending)
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         {},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return diff
-                                                                .difference_percentage;
-                                                         });
-                                                  else
-                                                       std::ranges::sort(
-                                                         m_diff_results,
-                                                         std::ranges::greater{},
-                                                         [](const auto &diff)
-                                                         {
-                                                              return diff
-                                                                .difference_percentage;
-                                                         });
-                                                  break;
-
-                                             default:
-                                                  break;
-                                        }
-                                   }
-
-                                   // Mark as not dirty
-                                   sort_specs->SpecsDirty = false;
-                              }
-                         }
-
-                         for (const auto
-                                &[path1, path2, total_pixels1, total_pixels2,
-                                  differing_pixels, difference_percentage] :
-                              m_diff_results)
-                         {
-                              // First row: path1
-                              ImGui::TableNextRow();
-                              ImGui::TableNextColumn();// File Path
-                              format_imgui_text(
-                                "{}{}", path1.parent_path(),
-                                static_cast<char>(
-                                  std::filesystem::path::preferred_separator));
-                              ImGui::SameLine();
-                              ImGui::PushStyleColor(
-                                ImGuiCol_Text,
-                                IM_COL32(255, 192, 64, 255));// Orange
-                              format_imgui_text("{}", path1.filename());
-                              ImGui::PopStyleColor();
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text("{}", differing_pixels);
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text("{}", total_pixels1);
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text(
-                                "{:0.2f}", difference_percentage * 100.0);
-
-                              // Second row: path2
-                              ImGui::TableNextRow();
-                              ImGui::TableNextColumn();// File Path
-                              format_imgui_text(
-                                "{}{}", path2.parent_path(),
-                                static_cast<char>(
-                                  std::filesystem::path::preferred_separator));
-                              ImGui::SameLine();
-                              ImGui::PushStyleColor(
-                                ImGuiCol_Text,
-                                IM_COL32(255, 192, 64, 255));// Orange
-                              format_imgui_text("{}", path2.filename());
-                              ImGui::PopStyleColor();
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text("{}", differing_pixels);
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text("{}", total_pixels2);
-                              ImGui::TableNextColumn();// Difference
-                              format_imgui_text(
-                                "{:0.2f}", difference_percentage * 100.0);
-                              if (m_auto_scroll && !m_consumer.done())
-                              {
-                                   ImGui::SetScrollHereY(1.0f);
-                              }
-                         }
-
-                         ImGui::EndTable();
-                    }
+                    parent.pop_back();
                }
-               ImGui::EndChild();
+
+               if (parent.size() < path.parent_path().string().size())
+                    parent += ellipsis;
+
+               return parent;
+          };
+
+
+          // First row: path1
+          ImGui::TableNextRow();
+          ImGui::TableNextColumn();// File Path
+          format_imgui_text(
+            "{}{}", crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
+            static_cast<char>(std::filesystem::path::preferred_separator));
+          ImGui::SameLine(0, 0);
+          ImGui::PushStyleColor(
+            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+          format_imgui_text("{}", path1.filename());
+          ImGui::PopStyleColor();
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{}", differing_pixels);
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{}", total_pixels1);
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+          ImGui::TableNextColumn();// Copy
+          {
+               const auto pop_id_buttons = PushPopID();
+               if (ImGui::SmallButton(ICON_FA_COPY))
+               {
+                    ImGui::SetClipboardText(path1.string().c_str());
+               }
+               else
+               {
+                    tool_tip("Copy full path to clipboard");
+               }
+          }
+
+          // Second row: path2
+          ImGui::TableNextRow();
+          ImGui::TableNextColumn();// File Path
+          format_imgui_text(
+            "{}{}", crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
+            static_cast<char>(std::filesystem::path::preferred_separator));
+          ImGui::SameLine(0, 0);
+          ImGui::PushStyleColor(
+            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+          format_imgui_text("{}", path2.filename());
+          ImGui::PopStyleColor();
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{}", differing_pixels);
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{}", total_pixels2);
+          ImGui::TableNextColumn();// Difference
+          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+          ImGui::TableNextColumn();// Copy
+          {
+               const auto pop_id_buttons = PushPopID();
+               if (ImGui::SmallButton(ICON_FA_COPY))
+               {
+                    ImGui::SetClipboardText(path1.string().c_str());
+               }
+               else
+               {
+                    tool_tip("Copy full path to clipboard");
+               }
+          }
+
+
+          if (m_auto_scroll && !m_consumer.done())
+          {
+               ImGui::SetScrollHereY(1.0f);
           }
      }
-     CompareDirectoriesStep();
+}
+
+void ImageCompareWindow::handle_table_sorting()
+{
+     if (!m_consumer.done())
+     {
+          return;
+     }
+     ImGuiTableSortSpecs *sort_specs = ImGui::TableGetSortSpecs();
+     if (!(sort_specs && sort_specs->SpecsDirty))
+     {
+          return;
+     }
+     // sort_specs->Specs contains the column
+     // index and direction
+     for (int i = 0; i < sort_specs->SpecsCount; i++)
+     {
+          const ImGuiTableColumnSortSpecs *col_spec     = &sort_specs->Specs[i];
+          int                              column_index = col_spec->ColumnIndex;
+          ImGuiSortDirection dir = col_spec->SortDirection;// 0=asc,1=desc
+
+          // Perform your sorting of your data
+          // based on column_index and dir
+          // Example: sort your vector of rows
+          // accordingly
+          switch (column_index)
+          {
+               case 0:// File Path
+                    if (dir == ImGuiSortDirection_Ascending)
+                         std::ranges::sort(
+                           m_diff_results,
+                           {},// default operator<
+                           [](const auto &diff)
+                           { return diff.path1.filename(); });
+                    else
+                         std::ranges::sort(
+                           m_diff_results,
+                           std::ranges::greater{},
+                           [](const auto &diff)
+                           { return diff.path1.filename(); });
+                    break;
+
+               case 1:// D Pixels
+                    if (dir == ImGuiSortDirection_Ascending)
+                         std::ranges::sort(
+                           m_diff_results,
+                           {},// operator<
+                           [](const auto &diff)
+                           { return diff.differing_pixels; });
+                    else
+                         std::ranges::sort(
+                           m_diff_results,
+                           std::ranges::greater{},
+                           [](const auto &diff)
+                           { return diff.differing_pixels; });
+                    break;
+
+               case 2:// T Pixels
+                    if (dir == ImGuiSortDirection_Ascending)
+                         std::ranges::sort(
+                           m_diff_results,
+                           {},
+                           [](const auto &diff)
+                           {
+                                return (std::max)(diff.total_pixels1,
+                                                  diff.total_pixels2);
+                           });
+                    else
+                         std::ranges::sort(
+                           m_diff_results,
+                           std::ranges::greater{},
+                           [](const auto &diff)
+                           {
+                                return (std::max)(diff.total_pixels1,
+                                                  diff.total_pixels2);
+                           });
+                    break;
+
+               case 3:// %
+                    if (dir == ImGuiSortDirection_Ascending)
+                         std::ranges::sort(
+                           m_diff_results,
+                           {},
+                           [](const auto &diff)
+                           { return diff.difference_percentage; });
+                    else
+                         std::ranges::sort(
+                           m_diff_results,
+                           std::ranges::greater{},
+                           [](const auto &diff)
+                           { return diff.difference_percentage; });
+                    break;
+
+               default:
+                    break;
+          }
+     }
+
+     // Mark as not dirty
+     sort_specs->SpecsDirty = false;
 }
 
 void ImageCompareWindow::CompareDirectoriesStart()
@@ -434,6 +617,10 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
   std::filesystem::path fileA,
   std::filesystem::path fileB)
 {
+     // Normalize paths using the preferred separator for the current platform
+     fileA.make_preferred();
+     fileB.make_preferred();
+
      DiffResult result{ .path1 = std::move(fileA), .path2 = std::move(fileB) };
      auto
        &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
