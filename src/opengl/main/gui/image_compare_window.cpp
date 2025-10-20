@@ -326,6 +326,11 @@ void ImageCompareWindow::render()
      {
           // noop;
      }
+     ImGui::BeginDisabled(
+       !m_consumer.done() || !m_future_consumer.done()
+       || m_diff_results.empty());
+     export_button();
+     ImGui::EndDisabled();
      ImGui::Separator();
      if (!m_diff_result_futures.empty())
      {
@@ -378,6 +383,7 @@ void ImageCompareWindow::diff_results_table()
      {
           return;
      }
+
      if (!ImGui::BeginTable(
            "ResultsTable", 5,
            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
@@ -397,110 +403,126 @@ void ImageCompareWindow::diff_results_table()
        ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort);
      ImGui::TableHeadersRow();
      handle_table_sorting();
-     for (const auto
-            &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
-              difference_percentage] : m_diff_results)
+     ImGuiListClipper clipper{};
+     clipper.Begin(
+       static_cast<int>(m_diff_results.size()),
+       ImGui::GetTextLineHeightWithSpacing() * 2U);
+     while (clipper.Step())
      {
-
-          const auto crop_path_to_fit = [](
-                                          const std::filesystem::path &path,
-                                          float total_width) -> std::string
+          int start_idx = clipper.DisplayStart;
+          int end_idx
+            = (clipper.DisplayEnd + 1);// include partially visible row
+          int count = end_idx - start_idx;
+          for (const auto
+                 &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
+                   difference_percentage] :
+               m_diff_results | std::views::drop(start_idx)
+                 | std::views::take(count))
           {
-               std::string parent          = path.parent_path().string();
-               std::string filename        = path.filename().string();
-               float       separator_width = ImGui::CalcTextSize("/").x;
-               float filename_width = ImGui::CalcTextSize(filename.c_str()).x;
-               float available_for_parent
-                 = total_width - filename_width - separator_width
-                   - ImGui::GetStyle().ItemSpacing.x * 2;
 
-               if (available_for_parent <= 0.0f)
-                    return "...";
-
-               const char *ellipsis       = "...";
-               float       ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
-
-               // Trim from the RIGHT (preserve the beginning of the path)
-               while (!parent.empty()
-                      && ImGui::CalcTextSize(parent.c_str()).x + ellipsis_width
-                           > available_for_parent)
+               const auto crop_path_to_fit
+                 = [](
+                     const std::filesystem::path &path,
+                     float                        total_width) -> std::string
                {
-                    parent.pop_back();
+                    std::string parent          = path.parent_path().string();
+                    std::string filename        = path.filename().string();
+                    float       separator_width = ImGui::CalcTextSize("/").x;
+                    float       filename_width
+                      = ImGui::CalcTextSize(filename.c_str()).x;
+                    float available_for_parent
+                      = total_width - filename_width - separator_width
+                        - ImGui::GetStyle().ItemSpacing.x * 2;
+
+                    if (available_for_parent <= 0.0f)
+                         return "...";
+
+                    const char *ellipsis = "...";
+                    float ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
+
+                    // Trim from the RIGHT (preserve the beginning of the path)
+                    while (!parent.empty()
+                           && ImGui::CalcTextSize(parent.c_str()).x
+                                  + ellipsis_width
+                                > available_for_parent)
+                    {
+                         parent.pop_back();
+                    }
+
+                    if (parent.size() < path.parent_path().string().size())
+                         parent += ellipsis;
+
+                    return parent;
+               };
+
+
+               // First row: path1
+               ImGui::TableNextRow();
+               ImGui::TableNextColumn();// File Path
+               format_imgui_text(
+                 "{}{}",
+                 crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
+                 static_cast<char>(std::filesystem::path::preferred_separator));
+               ImGui::SameLine(0, 0);
+               ImGui::PushStyleColor(
+                 ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+               format_imgui_text("{}", path1.filename());
+               ImGui::PopStyleColor();
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", differing_pixels);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", total_pixels1);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+               ImGui::TableNextColumn();// Copy
+               {
+                    const auto pop_id_buttons = PushPopID();
+                    if (ImGui::SmallButton(ICON_FA_COPY))
+                    {
+                         ImGui::SetClipboardText(path1.string().c_str());
+                    }
+                    else
+                    {
+                         tool_tip("Copy full path to clipboard");
+                    }
                }
 
-               if (parent.size() < path.parent_path().string().size())
-                    parent += ellipsis;
-
-               return parent;
-          };
-
-
-          // First row: path1
-          ImGui::TableNextRow();
-          ImGui::TableNextColumn();// File Path
-          format_imgui_text(
-            "{}{}", crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
-            static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine(0, 0);
-          ImGui::PushStyleColor(
-            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
-          format_imgui_text("{}", path1.filename());
-          ImGui::PopStyleColor();
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", differing_pixels);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", total_pixels1);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
-          ImGui::TableNextColumn();// Copy
-          {
-               const auto pop_id_buttons = PushPopID();
-               if (ImGui::SmallButton(ICON_FA_COPY))
+               // Second row: path2
+               ImGui::TableNextRow();
+               ImGui::TableNextColumn();// File Path
+               format_imgui_text(
+                 "{}{}",
+                 crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
+                 static_cast<char>(std::filesystem::path::preferred_separator));
+               ImGui::SameLine(0, 0);
+               ImGui::PushStyleColor(
+                 ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+               format_imgui_text("{}", path2.filename());
+               ImGui::PopStyleColor();
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", differing_pixels);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", total_pixels2);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+               ImGui::TableNextColumn();// Copy
                {
-                    ImGui::SetClipboardText(path1.string().c_str());
-               }
-               else
-               {
-                    tool_tip("Copy full path to clipboard");
+                    const auto pop_id_buttons = PushPopID();
+                    if (ImGui::SmallButton(ICON_FA_COPY))
+                    {
+                         ImGui::SetClipboardText(path1.string().c_str());
+                    }
+                    else
+                    {
+                         tool_tip("Copy full path to clipboard");
+                    }
                }
           }
-
-          // Second row: path2
-          ImGui::TableNextRow();
-          ImGui::TableNextColumn();// File Path
-          format_imgui_text(
-            "{}{}", crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
-            static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine(0, 0);
-          ImGui::PushStyleColor(
-            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
-          format_imgui_text("{}", path2.filename());
-          ImGui::PopStyleColor();
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", differing_pixels);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", total_pixels2);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
-          ImGui::TableNextColumn();// Copy
-          {
-               const auto pop_id_buttons = PushPopID();
-               if (ImGui::SmallButton(ICON_FA_COPY))
-               {
-                    ImGui::SetClipboardText(path1.string().c_str());
-               }
-               else
-               {
-                    tool_tip("Copy full path to clipboard");
-               }
-          }
-
-
-          if (
-            m_auto_scroll && (!m_consumer.done() || !m_future_consumer.done()))
-          {
-               ImGui::SetScrollHereY(1.0f);
-          }
+     }
+     clipper.End();
+     if (m_auto_scroll && (!m_consumer.done() || !m_future_consumer.done()))
+     {
+          ImGui::SetScrollHereY(1.0f);
      }
 }
 
@@ -631,20 +653,19 @@ void ImageCompareWindow::CompareDirectoriesStart()
           catch (const std::filesystem::filesystem_error &e)
           {
                spdlog::warn(
-                 "Skipping file due to filesystem error: {} ({})",
-                 entry.path().string(), e.what());
+                 "Skipping file due to filesystem error: {} ({})", entry.path(),
+                 e.what());
           }
           catch (const std::exception &e)
           {
                spdlog::warn(
                  "Skipping file due to unexpected exception: {} ({})",
-                 entry.path().string(), e.what());
+                 entry.path(), e.what());
           }
           catch (...)
           {
                spdlog::warn(
-                 "Skipping file due to unknown exception: {}",
-                 entry.path().string());
+                 "Skipping file due to unknown exception: {}", entry.path());
           }
      }
 }
@@ -688,19 +709,18 @@ void ImageCompareWindow::CompareDirectoriesStep()
           {
                spdlog::warn(
                  "Skipping file due to filesystem error: {} ({})",
-                 entry.path().string(), e.what());
+                 entryA.path(), e.what());
           }
           catch (const std::exception &e)
           {
                spdlog::warn(
                  "Skipping file due to unexpected exception: {} ({})",
-                 entry.path().string(), e.what());
+                 entryA.path(), e.what());
           }
           catch (...)
           {
                spdlog::warn(
-                 "Skipping file due to unknown exception: {}",
-                 entry.path().string());
+                 "Skipping file due to unknown exception: {}", entryA.path());
           }
      } while (!m_consumer.done() && skipped < MAX_SKIPPED
               && processed < MAX_PROCESSED);
@@ -708,6 +728,39 @@ void ImageCompareWindow::CompareDirectoriesStep()
      {
           spdlog::info("Directory comparison completed.");
           spdlog::info("Found {} differing files.", m_diff_results.size());
+     }
+}
+
+void ImageCompareWindow::export_button()
+{
+     if (ImGui::Button("Export Diff Results"))
+     {
+          try
+          {
+               // Convert your diff results to TOML string/array
+               auto                  toml_array = to_toml_array(m_diff_results);
+
+               // Choose a path — hardcoded or with a dialog
+               std::filesystem::path out_path   = "diff_results.toml";
+
+               // Write the TOML to file
+               std::ofstream         ofs(out_path);
+               if (!ofs)
+               {
+                    spdlog::error(
+                      "Failed to open file for writing: {}", out_path.string());
+               }
+               else
+               {
+                    ofs << toml_array;
+                    spdlog::info(
+                      "Diff results written to {}", out_path.string());
+               }
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::error("Error exporting diff results: {}", e.what());
+          }
      }
 }
 

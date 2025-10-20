@@ -29,6 +29,7 @@ class ImageCompareWindow
        to_toml_array(const std::span<const DiffResult> diffs) noexcept;
      ImageCompareWindow(const std::shared_ptr<Selections> &selections);
      void render();
+     void export_button();
 
    private:
      static constexpr const std::size_t PopThreshold = 1000U;
