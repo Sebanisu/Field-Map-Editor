@@ -615,6 +615,16 @@ void ImageCompareWindow::CompareDirectoriesStart()
      m_consumer = RangeConsumer<std::filesystem::recursive_directory_iterator>(
        std::filesystem::recursive_directory_iterator(m_path1.data()));
      m_future_consumer.clear_detached();
+     m_files_in_path2.clear();
+     for (auto &entry :
+          std::filesystem::recursive_directory_iterator(m_path2.data()))
+     {
+          if (entry.is_regular_file())
+          {
+               m_files_in_path2.insert(
+                 std::filesystem::relative(entry.path(), m_path2.data()));
+          }
+     }
 }
 
 void ImageCompareWindow::CompareDirectoriesStep()
@@ -628,17 +638,13 @@ void ImageCompareWindow::CompareDirectoriesStep()
      {
           const auto relative_path = std::filesystem::relative(
             entryA.path(), std::filesystem::path(m_path1.data()));
-          const auto pathB
-            = std::filesystem::path(m_path2.data()) / relative_path;
-          if (
-            std::filesystem::exists(pathB)
-            && std::filesystem::is_regular_file(pathB))
+          if (m_files_in_path2.contains(relative_path))
           {
+               const auto pathB
+                 = std::filesystem::path(m_path2.data()) / relative_path;
+
                m_diff_result_futures.push_back(
                  CompareImageAsync(entryA.path(), pathB));
-               // auto diff = CompareImage(entryA.path(), pathB);
-               // if (diff.differing_pixels > 0)
-               //      m_diff_results.push_back(std::move(diff));
           }
      }
      ++m_consumer;

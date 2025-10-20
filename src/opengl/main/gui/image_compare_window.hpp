@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <span>
 #include <string>
+#include <unordered_set>
 #include <vector>
 namespace fme
 {
@@ -36,13 +37,14 @@ class ImageCompareWindow
           input_mode,
           output_mode,
      };
-     static const constexpr std::size_t max_path_length = { 1024U };
-     std::array<char, max_path_length>  m_path1         = {};
-     bool                               m_path1_valid   = { false };
-     std::array<char, max_path_length>  m_path2         = {};
-     bool                               m_path2_valid   = false;
-     std::weak_ptr<Selections>          m_selections    = {};
-     std::vector<DiffResult>            m_diff_results  = {};
+     static const constexpr std::size_t        max_path_length  = { 1024U };
+     std::array<char, max_path_length>         m_path1          = {};
+     bool                                      m_path1_valid    = { false };
+     std::array<char, max_path_length>         m_path2          = {};
+     bool                                      m_path2_valid    = false;
+     std::weak_ptr<Selections>                 m_selections     = {};
+     std::vector<DiffResult>                   m_diff_results   = {};
+     std::unordered_set<std::filesystem::path> m_files_in_path2 = {};
 
      std::vector<std::future<ImageCompareWindow::DiffResult>>
                         m_diff_result_futures    = {};
