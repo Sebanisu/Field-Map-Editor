@@ -496,7 +496,8 @@ void ImageCompareWindow::diff_results_table()
           }
 
 
-          if (m_auto_scroll && !m_consumer.done())
+          if (
+            m_auto_scroll && (!m_consumer.done() || !m_future_consumer.done()))
           {
                ImGui::SetScrollHereY(1.0f);
           }
@@ -505,7 +506,7 @@ void ImageCompareWindow::diff_results_table()
 
 void ImageCompareWindow::handle_table_sorting()
 {
-     if (!m_consumer.done())
+     if (!m_consumer.done() || !m_future_consumer.done())
      {
           return;
      }
@@ -619,35 +620,90 @@ void ImageCompareWindow::CompareDirectoriesStart()
      for (auto &entry :
           std::filesystem::recursive_directory_iterator(m_path2.data()))
      {
-          if (entry.is_regular_file())
+          try
           {
-               m_files_in_path2.insert(
-                 std::filesystem::relative(entry.path(), m_path2.data()));
+               if (entry.is_regular_file())
+               {
+                    m_files_in_path2.insert(
+                      std::filesystem::relative(entry.path(), m_path2.data()));
+               }
+          }
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to filesystem error: {} ({})",
+                 entry.path().string(), e.what());
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to unexpected exception: {} ({})",
+                 entry.path().string(), e.what());
+          }
+          catch (...)
+          {
+               spdlog::warn(
+                 "Skipping file due to unknown exception: {}",
+                 entry.path().string());
           }
      }
 }
 
 void ImageCompareWindow::CompareDirectoriesStep()
 {
+
      if (m_consumer.done())
           return;
-
-     auto &entryA = *m_consumer;
-
-     if (entryA.is_regular_file())
+     static constexpr const int MAX_SKIPPED   = 100;
+     static constexpr const int MAX_PROCESSED = 10;
+     int                        skipped       = {};
+     int                        processed     = {};
+     do
      {
-          const auto relative_path = std::filesystem::relative(
-            entryA.path(), std::filesystem::path(m_path1.data()));
-          if (m_files_in_path2.contains(relative_path))
+          auto &entryA = *m_consumer;
+          ++m_consumer;
+          try
           {
-               const auto pathB
-                 = std::filesystem::path(m_path2.data()) / relative_path;
+               if (entryA.is_regular_file())
+               {
+                    const auto relative_path = std::filesystem::relative(
+                      entryA.path(), std::filesystem::path(m_path1.data()));
+                    if (m_files_in_path2.contains(relative_path))
+                    {
+                         const auto pathB
+                           = std::filesystem::path(m_path2.data())
+                             / relative_path;
 
-               m_diff_result_futures.push_back(
-                 CompareImageAsync(entryA.path(), pathB));
+                         m_diff_result_futures.push_back(
+                           CompareImageAsync(entryA.path(), pathB));
+                         ++processed;
+                    }
+                    else
+                    {
+                         ++skipped;
+                    }
+               }
           }
-     }
-     ++m_consumer;
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to filesystem error: {} ({})",
+                 entry.path().string(), e.what());
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to unexpected exception: {} ({})",
+                 entry.path().string(), e.what());
+          }
+          catch (...)
+          {
+               spdlog::warn(
+                 "Skipping file due to unknown exception: {}",
+                 entry.path().string());
+          }
+     } while (!m_consumer.done() && skipped < MAX_SKIPPED
+              && processed < MAX_PROCESSED);
      if (m_consumer.done())
      {
           spdlog::info("Directory comparison completed.");
@@ -685,7 +741,8 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
   std::filesystem::path fileA,
   std::filesystem::path fileB)
 {
-     // Normalize paths using the preferred separator for the current platform
+     // Normalize paths using the preferred separator for the current
+     // platform
      fileA.make_preferred();
      fileB.make_preferred();
 
