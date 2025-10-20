@@ -240,6 +240,7 @@ class [[nodiscard]] FutureConsumer
      using range_value_t = std::ranges::range_value_t<range_t>;
 
      std::vector<RangeConsumer<range_t>> m_ranges{};
+     bool                                m_stop{};
 
      void                                compact()
      {
@@ -328,31 +329,59 @@ class [[nodiscard]] FutureConsumer
           return *this;
      }
 
-     void consume_now()
+     void clear()
      {
-          for (auto &range : m_ranges)
+          m_ranges.clear();// will block until async tasks finish
+     }
+
+     void clear_detached()
+     {
+          std::thread(
+            [old = std::move(std::move(m_ranges))]() mutable
+            {
+                 // let futures destruct asynchronously
+                 old.clear();
+            })
+            .detach();
+          m_ranges.clear();
+     }
+
+     void stop()
+     {
+          m_stop = true;
+     }
+
+     auto consume_now()
+     {
+          using result_t = decltype(std::declval<range_value_t>().get());
+          if constexpr (std::is_void_v<result_t>)
           {
-               for (; !range.done(); ++range)
+               for (auto &range : m_ranges)
                {
-
-
-                    auto &item = *range;
-                    if (item.valid())
+                    for (; !range.done(); ++range)
                     {
-                         if constexpr (std::is_void_v<
-                                         decltype(std::declval<range_value_t>()
-                                                    .get())>)
-                         {
+                         auto &item = *range;
+                         if (item.valid())
                               item.get();
-                         }
-                         else
-                         {
-                              std::ignore = std::move(item.get());
-                         }
                     }
                }
           }
+          else
+          {
+               std::vector<result_t> results;
+               for (auto &range : m_ranges)
+               {
+                    for (; !range.done(); ++range)
+                    {
+                         auto &item = *range;
+                         if (item.valid())
+                              results.push_back(item.get());
+                    }
+               }
+               return results;
+          }
      }
+
      FutureConsumer<range_t> &operator=(range_t &&new_value)
      {
           consume_now();
@@ -362,12 +391,14 @@ class [[nodiscard]] FutureConsumer
           {
                new_value.clear();
           }
+          m_stop = false;
           return *this;
      }
 
      FutureConsumer<range_t> &operator+=(range_value_t &&new_value)
      {
           m_ranges.emplace_back(std::move(new_value));
+          m_stop = false;
           return *this;
      }
 
@@ -378,6 +409,7 @@ class [[nodiscard]] FutureConsumer
           {
                new_value.clear();
           }
+          m_stop = false;
           return *this;
      }
 
@@ -390,6 +422,7 @@ class [[nodiscard]] FutureConsumer
           {
                other.m_ranges.clear();
           }
+          m_stop = false;
           return *this;
      }
 
@@ -401,19 +434,41 @@ class [[nodiscard]] FutureConsumer
           return *this;
      }
 
-     void consume_one_with_callback(auto &&callback)
-          requires(
-            !std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+     template<typename Callback = std::nullptr_t>
+     void consume_one_with_callback(Callback &&callback = nullptr)
      {
-          consume_one([&callback](auto &fut)
-                      { std::invoke(callback, fut.get()); });
+          consume_one(
+            [&callback](auto &fut)
+            {
+                 if constexpr (std::is_void_v<
+                                 decltype(std::declval<range_value_t>().get())>)
+                 {
+                      fut.get();
+                      if constexpr (!std::is_same_v<Callback, std::nullptr_t>)
+                      {
+                           std::invoke(callback);
+                      }
+                 }
+                 else
+                 {
+                      if constexpr (!std::is_same_v<Callback, std::nullptr_t>)
+                      {
+                           std::invoke(callback, fut.get());
+                      }
+                      else
+                      {
+                           std::ignore = fut.get();
+                      }
+                 }
+            });
      }
 
 
      [[nodiscard]] bool done() const
      {
-          return std::ranges::all_of(
-            m_ranges, [](const auto &range) { return range.done(); });
+          return m_stop
+                 || std::ranges::all_of(
+                   m_ranges, [](const auto &range) { return range.done(); });
      }
 
      ~FutureConsumer()
@@ -421,6 +476,7 @@ class [[nodiscard]] FutureConsumer
           consume_now();
      }
 };
+
 template<std::ranges::range range_t>
 class [[nodiscard]] FutureOfFutureConsumer
 {

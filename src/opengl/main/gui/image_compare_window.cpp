@@ -59,6 +59,24 @@ static bool safe_copy_string(
      const auto tmp                     = safedir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
+ImageCompareWindow::DiffResult::operator toml::table() const
+{
+     return toml::table{ { "path1", path1.string() },
+                         { "path2", path2.string() },
+                         { "total_pixels1", total_pixels1 },
+                         { "total_pixels2", total_pixels2 },
+                         { "differing_pixels", differing_pixels },
+                         { "difference_percentage", difference_percentage } };
+}
+toml::array ImageCompareWindow::to_toml_array(
+  const std::span<const DiffResult> diffs) noexcept
+{
+     toml::array arr;
+     arr.reserve(diffs.size());
+     for (const auto &diff : diffs)
+          arr.push_back(static_cast<toml::table>(diff));
+     return arr;
+}
 
 ImageCompareWindow::ImageCompareWindow(
   const std::shared_ptr<Selections> &selections)
@@ -176,7 +194,7 @@ void ImageCompareWindow::render()
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
      const float       button_width = button_size * 3.0F;
-     ImGui::BeginDisabled(!m_consumer.done());
+     ImGui::BeginDisabled(!m_consumer.done() || !m_future_consumer.done());
      {
           const auto  popid = PushPopID();
           const float width = ImGui::CalcItemWidth();
@@ -297,7 +315,7 @@ void ImageCompareWindow::render()
      }
      ImGui::SameLine();
      ImGui::EndDisabled();
-     ImGui::BeginDisabled(m_consumer.done());
+     ImGui::BeginDisabled(m_consumer.done() && m_future_consumer.done());
      if (ImGui::Button("Stop Compare"))
      {
           CompareDirectoriesStop();
@@ -309,8 +327,35 @@ void ImageCompareWindow::render()
           // noop;
      }
      ImGui::Separator();
+     if (!m_diff_result_futures.empty())
+     {
+          format_imgui_text(
+            "Async queued up {} operations...", m_diff_result_futures.size());
+     }
+
+     if (!m_diff_results.empty())
+     {
+          format_imgui_text("{} Different Results.", m_diff_results.size());
+     }
      diff_results_table();
      CompareDirectoriesStep();
+     if (
+       (m_consumer.done() && !m_diff_result_futures.empty())
+       || m_diff_result_futures.size() >= PopThreshold)
+     {
+          m_future_consumer += std::move(m_diff_result_futures);
+          m_diff_result_futures.clear();
+     }
+     if (m_future_consumer.done())
+     {
+          return;
+     }
+     m_future_consumer.consume_one_with_callback(
+       [this](DiffResult result)
+       {
+            if (result.differing_pixels > 0)
+                 m_diff_results.push_back(std::move(result));
+       });
 }
 
 void ImageCompareWindow::diff_results_table()
@@ -566,8 +611,10 @@ void ImageCompareWindow::CompareDirectoriesStart()
           return;
      }
      m_diff_results.clear();
+     m_diff_result_futures.clear();
      m_consumer = RangeConsumer<std::filesystem::recursive_directory_iterator>(
        std::filesystem::recursive_directory_iterator(m_path1.data()));
+     m_future_consumer.clear_detached();
 }
 
 void ImageCompareWindow::CompareDirectoriesStep()
@@ -587,9 +634,11 @@ void ImageCompareWindow::CompareDirectoriesStep()
             std::filesystem::exists(pathB)
             && std::filesystem::is_regular_file(pathB))
           {
-               auto diff = CompareImage(entryA.path(), pathB);
-               if (diff.differing_pixels > 0)
-                    m_diff_results.push_back(std::move(diff));
+               m_diff_result_futures.push_back(
+                 CompareImageAsync(entryA.path(), pathB));
+               // auto diff = CompareImage(entryA.path(), pathB);
+               // if (diff.differing_pixels > 0)
+               //      m_diff_results.push_back(std::move(diff));
           }
      }
      ++m_consumer;
@@ -603,6 +652,7 @@ void ImageCompareWindow::CompareDirectoriesStep()
 void ImageCompareWindow::CompareDirectoriesStop()
 {
      m_consumer.stop();
+     m_future_consumer.stop();
 }
 
 struct StbiDeleter
@@ -613,6 +663,18 @@ struct StbiDeleter
                stbi_image_free(img);
      }
 };
+
+std::future<ImageCompareWindow::DiffResult>
+  ImageCompareWindow::CompareImageAsync(
+    std::filesystem::path fileA,
+    std::filesystem::path fileB)
+{
+     return std::async(
+       std::launch::async,
+       [fileA = std::move(fileA), fileB = std::move(fileB)]
+       { return CompareImage(fileA, fileB); });
+}
+
 ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
   std::filesystem::path fileA,
   std::filesystem::path fileB)
@@ -634,9 +696,9 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
      std::unique_ptr<std::uint8_t[], StbiDeleter> img2(
        stbi_load(path2.string().c_str(), &width2, &height2, &channels2, 4));
      total_pixels1
-       = static_cast<std::size_t>(width1) * static_cast<std::size_t>(height1);
+       = static_cast<std::int64_t>(width1) * static_cast<std::int64_t>(height1);
      total_pixels2
-       = static_cast<std::size_t>(width2) * static_cast<std::size_t>(height2);
+       = static_cast<std::int64_t>(width2) * static_cast<std::int64_t>(height2);
      if (
        !img1 || !img2 || width1 != width2 || height1 != height2
        || channels1 != channels2)
@@ -648,11 +710,12 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
      }
 
      auto indices = std::views::iota(
-       size_t{ 0 }, (std::min)(total_pixels1, total_pixels2));
+       size_t{ 0 },
+       static_cast<std::size_t>((std::min)(total_pixels1, total_pixels2)));
      static const constexpr int error = 0;
      differing_pixels                 = std::transform_reduce(
-       std::execution::par_unseq, indices.begin(), indices.end(), size_t{ 0 },
-       std::plus{},
+       std::execution::par_unseq, indices.begin(), indices.end(),
+       std::int64_t{ 0 }, std::plus{},
        [&](const size_t idx)
        {
             const size_t i  = idx * 4;
@@ -662,9 +725,9 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
             const int    da = std::abs(img1[i + 3] - img2[i + 3]);
             if (dr > error || dg > error || db > error || da > error)
             {
-                 return 1;
+                 return std::int64_t{ 1 };
             }
-            return 0;
+            return std::int64_t{ 0 };
        });
      difference_percentage
        = static_cast<double>(differing_pixels)
