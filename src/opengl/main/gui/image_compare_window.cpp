@@ -738,10 +738,13 @@ void ImageCompareWindow::export_button()
           try
           {
                // Convert your diff results to TOML string/array
-               auto                  toml_array = to_toml_array(m_diff_results);
+               toml::table entries{};
+
+               entries.insert_or_assign(
+                 "compare", to_toml_array(m_diff_results));
 
                // Choose a path — hardcoded or with a dialog
-               std::filesystem::path out_path   = "diff_results.toml";
+               std::filesystem::path out_path = "diff_results.toml";
 
                // Write the TOML to file
                std::ofstream         ofs(out_path);
@@ -752,7 +755,7 @@ void ImageCompareWindow::export_button()
                }
                else
                {
-                    ofs << toml_array;
+                    ofs << entries;
                     spdlog::info(
                       "Diff results written to {}", out_path.string());
                }
