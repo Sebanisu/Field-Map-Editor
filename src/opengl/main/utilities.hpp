@@ -5,11 +5,49 @@
 #include <filesystem>
 #include <ranges>
 #include <tuple>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
 namespace fme
 {
+template<
+  std::size_t N,
+  typename F>
+constexpr auto for_each_index(F &&f)
+{
+     using result_t = decltype(f.template operator()<0>());
+
+     if constexpr (std::is_void_v<result_t>)
+     {
+          [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               (f.template operator()<Is>(), ...);
+          }(std::make_index_sequence<N>{});
+     }
+     else
+     {
+          return [&]<std::size_t... Is>(std::index_sequence<Is...>)
+          {
+               return std::tuple<decltype(f.template operator()<Is>())...> {
+                    f.template operator()<Is>()...
+               };
+          }(std::make_index_sequence<N>{});
+     }
+}
+
+template<
+  typename Enum,
+  std::size_t N = static_cast<std::size_t>(Enum::All),
+  typename F>
+constexpr auto for_each_enum(F &&f)
+     requires(std::is_enum_v<Enum>)
+{
+     return for_each_index<N>(
+       [&]<std::size_t I>()
+       { return f.template operator()<static_cast<Enum>(I)>(); });
+}
+
 
 template<typename R>
 concept erasable_range = std::ranges::range<R> && requires(R &r) {

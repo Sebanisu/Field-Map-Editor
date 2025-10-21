@@ -13,6 +13,7 @@
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
 #include "tile_operations.hpp"
+#include "utilities.hpp"
 #include <concepts.hpp>
 #include <cstdint>
 #include <filesystem>
@@ -1454,98 +1455,57 @@ struct filters
 
      void reload(const toml::table &table)
      {
-          [&]<std::size_t... Is>(std::index_sequence<Is...>)
-          {
-               ((
-                  [&]
-                  {
-                       static constexpr const auto Key
-                         = static_cast<FilterTag>(Is);
-                       using ValueT = typename ConfigKeys<Key>::value_type;
-
-                       // Skip std::filesystem::path
-                       if constexpr (!std::
-                                       is_same_v<ValueT, std::filesystem::path>)
-                       {
-                            get<Key>().reload(table);
-                       }
-                  }()),
-                ...);
-          }(std::make_index_sequence<static_cast<std::size_t>(
-              FilterTag::All)>{});
+          fme::for_each_enum<FilterTag>(
+            [&]<FilterTag Key>()
+            {
+                 using ValueT = typename ConfigKeys<Key>::value_type;
+                 if constexpr (!std::is_same_v<ValueT, std::filesystem::path>)
+                      get<Key>().reload(table);
+            });
      }
 
 
      void combine(const toml::table &table)
      {
-          [&]<std::size_t... Is>(std::index_sequence<Is...>)
-          {
-               ((
-                  [&]
-                  {
-                       static constexpr const auto Key
-                         = static_cast<FilterTag>(Is);
-                       using ValueT = typename ConfigKeys<Key>::value_type;
-
-                       // Skip std::filesystem::path
-                       if constexpr (!std::
-                                       is_same_v<ValueT, std::filesystem::path>)
-                       {
-                            get<Key>().combine(table);
-                       }
-                  }()),
-                ...);
-          }(std::make_index_sequence<static_cast<std::size_t>(
-              FilterTag::All)>{});
+          fme::for_each_enum<FilterTag>(
+            [&]<FilterTag Key>()
+            {
+                 using ValueT = typename ConfigKeys<Key>::value_type;
+                 if constexpr (!std::is_same_v<ValueT, std::filesystem::path>)
+                      get<Key>().combine(table);
+            });
      }
 
 
      void update_table(toml::table &table)
      {
-          [&]<std::size_t... Is>(std::index_sequence<Is...>)
-          {
-               ((
-                  [&]
-                  {
-                       static constexpr const auto Key
-                         = static_cast<FilterTag>(Is);
-                       using ValueT = typename ConfigKeys<Key>::value_type;
-
-                       // Skip std::filesystem::path
-                       if constexpr (!std::
-                                       is_same_v<ValueT, std::filesystem::path>)
-                       {
-                            get<Key>().update(table);
-                       }
-                  }()),
-                ...);
-          }(std::make_index_sequence<static_cast<std::size_t>(
-              FilterTag::All)>{});
+          fme::for_each_enum<FilterTag>(
+            [&]<FilterTag Key>()
+            {
+                 using ValueT = typename ConfigKeys<Key>::value_type;
+                 if constexpr (!std::is_same_v<ValueT, std::filesystem::path>)
+                      get<Key>().update(table);
+            });
      }
 
      template<open_viii::graphics::background::is_tile ThisTileT>
      bool operator()(const ThisTileT &tile) const
      {
+
           std::bitset<static_cast<std::size_t>(FilterTag::All)> results;
-          [&]<std::size_t... Is>(std::index_sequence<Is...>)
-          {
-               ((
-                  [&]
-                  {
-                       static constexpr const auto Key
-                         = static_cast<FilterTag>(Is);
-                       if constexpr (HasOperationType<Key>)
-                       {
-                            results.set(Is, std::invoke(get<Key>(), tile));
-                       }
-                       else
-                       {
-                            results.set(Is, true);
-                       }
-                  }()),
-                ...);
-          }(std::make_index_sequence<static_cast<std::size_t>(
-              FilterTag::All)>{});
+          fme::for_each_enum<FilterTag>(
+            [&]<FilterTag Key>()
+            {
+                 if constexpr (HasOperationType<Key>)
+                 {
+                      results.set(
+                        std::to_underlying(Key), std::invoke(get<Key>(), tile));
+                 }
+                 else
+                 {
+                      results.set(std::to_underlying(Key), true);
+                 }
+            });
           return results.all();
      }
 };
