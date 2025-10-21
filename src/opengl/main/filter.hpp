@@ -1306,22 +1306,16 @@ struct filters
        const bool                load_config,
        const fme::Configuration &config)
      {
-          return
-            [&]<std::size_t... Is>(std::index_sequence<Is...>) -> FiltersArrayT
-          {
-               FiltersArrayT result{};
 
-               ((result[Is] = [&]<FilterTag Key>()
-                   -> FilterVariant
-                      {
-                           return FilterVariant{
-                                std::in_place_type<filter<Key>>, load_config,
-                                config
-                           };
-                      }.template operator()<static_cast<FilterTag>(Is)>()),
-                ...);
-               return result;
-          }(std::make_index_sequence<FiltersSizeT>{});
+          FiltersArrayT result{};
+          fme::for_each_enum<FilterTag>(
+            [&]<FilterTag Key>()
+            {
+                 result[std::to_underlying(Key)]
+                   = FilterVariant{ std::in_place_type<filter<Key>>,
+                                    load_config, config };
+            });
+          return result;
      }
 
      filters(const filters &)                = default;
