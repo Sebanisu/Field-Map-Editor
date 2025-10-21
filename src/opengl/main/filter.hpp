@@ -646,14 +646,9 @@ template<FilterTag tag>
 concept HasOperationType
   = requires { typename ConfigKeys<tag>::operation_type; };
 
-struct FilterBase
-{
-     virtual ~FilterBase()                             = default;
-     virtual std::unique_ptr<FilterBase> clone() const = 0;
-};
 
 template<FilterTag Tag>
-struct filter : FilterBase
+struct filter
 {
    public:
      using value_type                            = ConfigKeys<Tag>::value_type;
@@ -685,6 +680,7 @@ struct filter : FilterBase
              ConfigKeys<Tag>::enabled_key_name))
      {
      }
+
      filter(FilterSettings settings)
        : filter(
            HasFlag(
@@ -692,11 +688,6 @@ struct filter : FilterBase
              FilterSettings::Config_Enabled),
            fme::Configuration{})
      {
-     }
-
-     std::unique_ptr<FilterBase> clone() const override
-     {
-          return std::make_unique<filter<Tag>>(*this);// calls copy ctor
      }
 
      filter &reload(const toml::table &table)
@@ -952,7 +943,7 @@ struct filter : FilterBase
 };
 template<FilterTag Tag>
      requires(HasOperationType<Tag>)
-struct filter<Tag> : FilterBase
+struct filter<Tag>
 {
    public:
      using value_type     = ConfigKeys<Tag>::value_type;
@@ -993,12 +984,6 @@ struct filter<Tag> : FilterBase
              FilterSettings::Config_Enabled),
            fme::Configuration{})
      {
-     }
-
-
-     std::unique_ptr<FilterBase> clone() const override
-     {
-          return std::make_unique<filter<Tag>>(*this);// calls copy ctor
      }
 
      filter &reload(const toml::table &table)
@@ -1298,14 +1283,21 @@ concept IsFilter
 template<typename T, typename TileT = void>
 concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 
+using FilterVariant = decltype([] {
+    return []<std::size_t... Is>(std::index_sequence<Is...>)
+        -> std::variant<std::monostate,filter<static_cast<FilterTag>(Is)>...>
+    {
+        return std::monostate{}; // default-constructed variant
+    }(std::make_index_sequence<static_cast<std::size_t>(FilterTag::All)>{});
+}());
+
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
 
      static constexpr std::size_t FiltersSizeT
        = static_cast<std::size_t>(FilterTag::All);
-     using FiltersArrayT
-       = std::array<std::unique_ptr<FilterBase>, FiltersSizeT>;
+     using FiltersArrayT = std::array<FilterVariant, FiltersSizeT>;
 
      FiltersArrayT m_filters_array;
 
@@ -1319,51 +1311,20 @@ struct filters
                FiltersArrayT result{};
 
                ((result[Is] = [&]<FilterTag Key>()
-                   -> std::unique_ptr<filter<Key>>
+                   -> FilterVariant
                       {
-                           return std::make_unique<filter<Key>>(
-                             load_config, config);
+                           return FilterVariant{
+                                std::in_place_type<filter<Key>>, load_config,
+                                config
+                           };
                       }.template operator()<static_cast<FilterTag>(Is)>()),
                 ...);
                return result;
           }(std::make_index_sequence<FiltersSizeT>{});
      }
 
-
-     // Deep copy constructor
-     filters(const filters &input)
-     {
-          for (auto &&[self, other] :
-               std::views::zip(m_filters_array, input.m_filters_array))
-          {
-               if (other)
-               {
-                    self = other->clone();
-               }
-          }
-     }
-
-     // Deep copy assignment
-     filters &operator=(const filters &input)
-     {
-          if (this != &input)
-          {
-
-               for (auto &&[self, other] :
-                    std::views::zip(m_filters_array, input.m_filters_array))
-               {
-                    if (other)
-                    {
-                         self = other->clone();
-                    }
-                    else
-                    {
-                         self.reset();
-                    }
-               }
-          }
-          return *this;
-     }
+     filters(const filters &)                = default;
+     filters &operator=(const filters &)     = default;
 
      filters(filters &&) noexcept            = default;
      filters &operator=(filters &&) noexcept = default;
@@ -1495,25 +1456,27 @@ struct filters
                ((
                   [&]
                   {
-                       using ValueT =
-                         typename ConfigKeys<static_cast<FilterTag>(
-                           Is)>::value_type;
+                       static constexpr const auto Key
+                         = static_cast<FilterTag>(Is);
+                       using ValueT = typename ConfigKeys<Key>::value_type;
 
                        // Skip std::filesystem::path
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (!m_filters_array[Is])
+                            if (
+                              (m_filters_array[Is].index() != 0U)
+                              || std::holds_alternative<std::monostate>(
+                                m_filters_array[Is]))
                             {
                                  throw std::runtime_error(
                                    "Filter not initialized");
                             }
 
-                            auto *current = static_cast<
-                              filter<static_cast<FilterTag>(Is)> *>(
-                              m_filters_array[Is].get());
 
-                            current->reload(table);
+                            auto &current
+                              = std::get<filter<Key>>(m_filters_array[Is]);
+                            current.reload(table);
                        }
                   }()),
                 ...);
@@ -1529,23 +1492,26 @@ struct filters
                ((
                   [&]
                   {
-                       using ValueT =
-                         typename ConfigKeys<static_cast<FilterTag>(
-                           Is)>::value_type;
+                       static constexpr const auto Key
+                         = static_cast<FilterTag>(Is);
+                       using ValueT = typename ConfigKeys<Key>::value_type;
 
                        // Skip std::filesystem::path
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (!m_filters_array[Is])
+                            if (
+                              (m_filters_array[Is].index() != 0U)
+                              || std::holds_alternative<std::monostate>(
+                                m_filters_array[Is]))
                             {
                                  throw std::runtime_error(
                                    "Filter not initialized");
                             }
 
-                            auto *current = static_cast<
-                              filter<static_cast<FilterTag>(Is)> *>(
-                              m_filters_array[Is].get());
+
+                            auto &current
+                              = std::get<filter<Key>>(m_filters_array[Is]);
 
                             current->combine(table);
                        }
@@ -1563,23 +1529,26 @@ struct filters
                ((
                   [&]
                   {
-                       using ValueT =
-                         typename ConfigKeys<static_cast<FilterTag>(
-                           Is)>::value_type;
+                       static constexpr const auto Key
+                         = static_cast<FilterTag>(Is);
+                       using ValueT = typename ConfigKeys<Key>::value_type;
 
                        // Skip std::filesystem::path
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (!m_filters_array[Is])
+                            if (
+                              (m_filters_array[Is].index() != 0U)
+                              || std::holds_alternative<std::monostate>(
+                                m_filters_array[Is]))
                             {
                                  throw std::runtime_error(
                                    "Filter not initialized");
                             }
 
-                            auto *current = static_cast<
-                              filter<static_cast<FilterTag>(Is)> *>(
-                              m_filters_array[Is].get());
+
+                            auto &current
+                              = std::get<filter<Key>>(m_filters_array[Is]);
 
                             current->update(table);
                        }
@@ -1598,19 +1567,22 @@ struct filters
                ((
                   [&]
                   {
-                       // Skip std::filesystem::path
-                       if constexpr (HasOperationType<static_cast<FilterTag>(
-                                       Is)>)
+                       static constexpr const auto Key
+                         = static_cast<FilterTag>(Is);
+                       if constexpr (HasOperationType<Key>)
                        {
-                            if (!m_filters_array[Is])
+                            if (
+                              (m_filters_array[Is].index() != 0U)
+                              || std::holds_alternative<std::monostate>(
+                                m_filters_array[Is]))
                             {
                                  throw std::runtime_error(
                                    "Filter not initialized");
                             }
 
-                            const auto *current = static_cast<
-                              const filter<static_cast<FilterTag>(Is)> *>(
-                              m_filters_array[Is].get());
+
+                            auto &current
+                              = std::get<filter<Key>>(m_filters_array[Is]);
 
                             results.set(Is, std::invoke(*current, tile));
                        }
