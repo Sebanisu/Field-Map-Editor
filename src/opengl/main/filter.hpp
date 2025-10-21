@@ -1343,7 +1343,7 @@ struct filters
 
 
           if (
-            (m_filters_array[index].index() != 0U)
+            (m_filters_array[index].index() == 0U)
             || std::holds_alternative<std::monostate>(m_filters_array[index]))
           {
                // if constexpr (std::default_initializable<ValueT>)
@@ -1372,7 +1372,7 @@ struct filters
           // using ValueT = typename ConfigKeys<Tag>::value_type;
 
           if (
-            (m_filters_array[index].index() != 0U)
+            (m_filters_array[index].index() == 0U)
             || std::holds_alternative<std::monostate>(m_filters_array[index]))
           {
                // if constexpr (std::default_initializable<ValueT>)
