@@ -1346,23 +1346,26 @@ struct filters
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
           using ValueT = typename ConfigKeys<Tag>::value_type;
 
-          if (!m_filters_array[index])
+
+          if (
+            (m_filters_array[index].index() != 0U)
+            || std::holds_alternative<std::monostate>(m_filters_array[index]))
           {
-               if constexpr (std::default_initializable<ValueT>)
-               {
-                    throw std::runtime_error(
-                      "Mutable access to default-initialized value is not "
-                      "supported");
-               }
-               else
+               // if constexpr (std::default_initializable<ValueT>)
+               // {
+               //      throw std::runtime_error(
+               //        "Mutable access to default-initialized value is not "
+               //        "supported");
+               // }
+               // else
                {
                     throw std::runtime_error(
                       "Filter not initialized and not "
                       "default-initializable");
                }
           }
-          filter<Tag> *current
-            = static_cast<filter<Tag> *>(m_filters_array[index].get());
+
+          auto &current = std::get<filter<Tag>>(m_filters_array[index]);
           return *current;
      }
 
@@ -1374,23 +1377,25 @@ struct filters
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
           using ValueT = typename ConfigKeys<Tag>::value_type;
 
-          if (!m_filters_array[index])
+          if (
+            (m_filters_array[index].index() != 0U)
+            || std::holds_alternative<std::monostate>(m_filters_array[index]))
           {
-               if constexpr (std::default_initializable<ValueT>)
-               {
-                    throw std::runtime_error(
-                      "Mutable access to default-initialized value is not "
-                      "supported");
-               }
-               else
+               // if constexpr (std::default_initializable<ValueT>)
+               // {
+               //      throw std::runtime_error(
+               //        "Mutable access to default-initialized value is not "
+               //        "supported");
+               // }
+               // else
                {
                     throw std::runtime_error(
                       "Filter not initialized and not "
                       "default-initializable");
                }
           }
-          const filter<Tag> *current
-            = static_cast<const filter<Tag> *>(m_filters_array[index].get());
+
+          const auto &current = std::get<filter<Tag>>(m_filters_array[index]);
           return *current;
      }
 
@@ -1513,7 +1518,7 @@ struct filters
                             auto &current
                               = std::get<filter<Key>>(m_filters_array[Is]);
 
-                            current->combine(table);
+                            current.combine(table);
                        }
                   }()),
                 ...);
@@ -1550,7 +1555,7 @@ struct filters
                             auto &current
                               = std::get<filter<Key>>(m_filters_array[Is]);
 
-                            current->update(table);
+                            current.update(table);
                        }
                   }()),
                 ...);
