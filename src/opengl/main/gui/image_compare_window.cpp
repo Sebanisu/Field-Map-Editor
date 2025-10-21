@@ -309,10 +309,12 @@ void ImageCompareWindow::render()
 
           format_imgui_wrapped_text("{}", "Path B");
      }
+     ImGui::BeginDisabled(!m_path1_valid || !m_path2_valid);
      if (ImGui::Button("Start Compare"))
      {
           CompareDirectoriesStart();
      }
+     ImGui::EndDisabled();
      ImGui::SameLine();
      ImGui::EndDisabled();
      ImGui::BeginDisabled(m_consumer.done() && m_future_consumer.done());
