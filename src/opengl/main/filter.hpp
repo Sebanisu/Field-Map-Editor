@@ -1365,8 +1365,7 @@ struct filters
                }
           }
 
-          auto &current = std::get<filter<Tag>>(m_filters_array[index]);
-          return *current;
+          return std::get<filter<Tag>>(m_filters_array[index]);
      }
 
 
@@ -1395,8 +1394,7 @@ struct filters
                }
           }
 
-          const auto &current = std::get<filter<Tag>>(m_filters_array[index]);
-          return *current;
+          return std::get<filter<Tag>>(m_filters_array[index]);
      }
 
 
@@ -1469,19 +1467,7 @@ struct filters
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (
-                              (m_filters_array[Is].index() != 0U)
-                              || std::holds_alternative<std::monostate>(
-                                m_filters_array[Is]))
-                            {
-                                 throw std::runtime_error(
-                                   "Filter not initialized");
-                            }
-
-
-                            auto &current
-                              = std::get<filter<Key>>(m_filters_array[Is]);
-                            current.reload(table);
+                            get<Key>().reload(table);
                        }
                   }()),
                 ...);
@@ -1505,20 +1491,7 @@ struct filters
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (
-                              (m_filters_array[Is].index() != 0U)
-                              || std::holds_alternative<std::monostate>(
-                                m_filters_array[Is]))
-                            {
-                                 throw std::runtime_error(
-                                   "Filter not initialized");
-                            }
-
-
-                            auto &current
-                              = std::get<filter<Key>>(m_filters_array[Is]);
-
-                            current.combine(table);
+                            get<Key>().combine(table);
                        }
                   }()),
                 ...);
@@ -1542,20 +1515,7 @@ struct filters
                        if constexpr (!std::
                                        is_same_v<ValueT, std::filesystem::path>)
                        {
-                            if (
-                              (m_filters_array[Is].index() != 0U)
-                              || std::holds_alternative<std::monostate>(
-                                m_filters_array[Is]))
-                            {
-                                 throw std::runtime_error(
-                                   "Filter not initialized");
-                            }
-
-
-                            auto &current
-                              = std::get<filter<Key>>(m_filters_array[Is]);
-
-                            current.update(table);
+                            get<Key>().update(table);
                        }
                   }()),
                 ...);
@@ -1576,20 +1536,7 @@ struct filters
                          = static_cast<FilterTag>(Is);
                        if constexpr (HasOperationType<Key>)
                        {
-                            if (
-                              (m_filters_array[Is].index() != 0U)
-                              || std::holds_alternative<std::monostate>(
-                                m_filters_array[Is]))
-                            {
-                                 throw std::runtime_error(
-                                   "Filter not initialized");
-                            }
-
-
-                            auto &current
-                              = std::get<filter<Key>>(m_filters_array[Is]);
-
-                            results.set(Is, std::invoke(*current, tile));
+                            results.set(Is, std::invoke(get<Key>(), tile));
                        }
                        else
                        {
