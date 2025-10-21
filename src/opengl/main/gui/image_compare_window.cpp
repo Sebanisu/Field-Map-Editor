@@ -94,7 +94,10 @@ void ImageCompareWindow::button_input_browse()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle("Path A");
-     m_directory_browser.SetPwd(m_path1.data());
+     if (m_path1_valid)
+     {
+          m_directory_browser.SetDirectory(m_path1.data());
+     }
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::input_mode;
 };
@@ -103,7 +106,10 @@ void ImageCompareWindow::button_output_browse()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle("Path B");
-     m_directory_browser.SetPwd(m_path2.data());
+     if (m_path2_valid)
+     {
+          m_directory_browser.SetDirectory(m_path2.data());
+     }
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::output_mode;
 };
@@ -157,38 +163,30 @@ void ImageCompareWindow::render()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     bool show_window = false;
-     try
+
+     bool &show_window
+       = selections->get<ConfigKey::DisplayImageCompareWindow>();
+     if (!show_window)
      {
-          show_window = selections->get<ConfigKey::DisplayImageCompareWindow>();
-     }
-     catch (const std::exception &e)
-     {
-          spdlog::error(
-            "Exception getting DisplayImageCompareWindow: {}", e.what());
           return;
      }
-
-     open_directory_browser();
-     const auto pop_show_window = glengine::ScopeGuard(
-       [&show_window, selections]()
-       {
-            if (
-              selections->get<ConfigKey::DisplayImageCompareWindow>()
-              != show_window)
-            {
-                 selections->get<ConfigKey::DisplayImageCompareWindow>()
-                   = show_window;
-                 selections->update<ConfigKey::DisplayImageCompareWindow>();
-            }
-       });
+     const auto pop_visible = glengine::ScopeGuard{
+          [&selections, &show_window, was_visable = show_window]
+          {
+               ImGui::End();
+               if (was_visable != show_window)
+               {
+                    selections->update<ConfigKey::DisplayImageCompareWindow>();
+               }
+          }
+     };
 
 
-     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin("Image Comparison Tool", &show_window))
      {
           return;
      }
+     open_directory_browser();
 
      const ImGuiStyle &style        = ImGui::GetStyle();
      const float       spacing      = style.ItemInnerSpacing.x;
