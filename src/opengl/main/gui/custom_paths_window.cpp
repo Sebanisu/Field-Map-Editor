@@ -142,13 +142,18 @@ static const auto trim = [](const std::string &str) -> std::string
 
 [[nodiscard]] static consteval auto load_pattern_selector_array()
 {
-     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr
-     {
-          return std::array<fme::PatternSelector, sizeof...(Is)>{
-               static_cast<fme::PatternSelector>(Is)...
-          };
-     }(std::make_index_sequence<static_cast<std::size_t>(
-         fme::PatternSelector::End)>{});
+     std::array<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>
+       result{};
+
+     fme::for_each_enum<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>(
+       [&]<fme::PatternSelector Key>()
+       { result[std::to_underlying(Key)] = Key; });
+
+     return result;
 }
 
 static const auto m_tests = std::to_array<fme::key_value_data>(
@@ -249,141 +254,122 @@ void fme::custom_paths_window::notify(ConfigKey key) const
 
 fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>)
-     {
-          const auto selections = m_selections.lock();
-          if (!selections)
-          {
-               spdlog::error(
-                 "Failed to lock m_selections: shared_ptr is expired.");
-               return fme::VectorOrString::unknown;
-          }
-          fme::VectorOrString result = fme::VectorOrString::unknown;
-          bool                found =
-            (([&]() -> bool {
-                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
-                  {
-                       result = fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type;
-                       return true;
-                  }
-                  return false;
-             }())
-             || ...);
 
-          if (!found)
-          {
-               spdlog::critical(
-                 "Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(
-                   selections->get<ConfigKey::CurrentPattern>()),
-                 selections->get<ConfigKey::CurrentPattern>());
-               throw std::runtime_error(
-                 "Unhandled PatternSelector value in vector_or_string()");
-          }
+     fme::VectorOrString result     = fme::VectorOrString::unknown;
+     const auto          selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(
-         fme::PatternSelector::End)>{});
+     }
+
+     bool found = false;
+
+     fme::for_each_enum<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>(
+       [&]<fme::PatternSelector Key>()
+       {
+            if (!found && selections->get<ConfigKey::CurrentPattern>() == Key)
+            {
+                 result = fme::PatternInfo<Key>::type;
+                 found  = true;
+            }
+       });
+
+     if (!found)
+     {
+          const auto current = selections->get<ConfigKey::CurrentPattern>();
+          spdlog::critical(
+            "Unhandled PatternSelector value: {}:{}",
+            std::to_underlying(current),
+            current);
+          throw std::runtime_error(
+            "Unhandled PatternSelector value in vector_or_string()");
+     }
+
+     return result;
 }
 
 std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
-     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::string *
+     const auto selections = m_selections.lock();
+     if (!selections)
      {
-          const auto selections = m_selections.lock();
-          if (!selections)
-          {
-               spdlog::error(
-                 "Failed to lock m_selections: shared_ptr is expired.");
-               return nullptr;
-          }
-          std::string *result = nullptr;
-          ((
-             [&]()
-             {
-                  if (
-                    selections->get<ConfigKey::CurrentPattern>()
-                    == static_cast<fme::PatternSelector>(Is))
-                  {
-                       if constexpr (
-                         fme::PatternInfo<static_cast<fme::PatternSelector>(
-                           Is)>::type
-                         == VectorOrString::string)
-                       {
-                            result = &selections->get<fme::PatternInfo<
-                              static_cast<fme::PatternSelector>(Is)>::key>();
-                       }
-                       else if constexpr (
-                         fme::PatternInfo<static_cast<fme::PatternSelector>(
-                           Is)>::type
-                         == VectorOrString::vector)
-                       {
-                            result = get_current_string_value_from_index(
-                              selections->get<fme::PatternInfo<
-                                static_cast<fme::PatternSelector>(Is)>::key>(),
-                              selections
-                                ->get<ConfigKey::CurrentPatternIndex>());
-                       }
-                  }
-             }()),
-           ...);
-          if (!result)
-          {
-               spdlog::debug(
-                 "Pattern Vector is empty, or Unhandled PatternSelector value: "
-                 "{}:{}",
-                 std::to_underlying(
-                   selections->get<ConfigKey::CurrentPattern>()),
-                 selections->get<ConfigKey::CurrentPattern>());
-          }
-          return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(
-         fme::PatternSelector::End)>{});
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return nullptr;
+     }
+     std::string *result = nullptr;
+     fme::for_each_enum<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>(
+       [&]<fme::PatternSelector Key>()
+       {
+            if (selections->get<ConfigKey::CurrentPattern>() != Key)
+            {
+                 return;
+            }
+
+            if constexpr (fme::PatternInfo<Key>::type == VectorOrString::string)
+            {
+                 result = &selections->get<fme::PatternInfo<Key>::key>();
+            }
+            else if constexpr (
+              fme::PatternInfo<Key>::type == VectorOrString::vector)
+            {
+                 result = get_current_string_value_from_index(
+                   selections->get<fme::PatternInfo<Key>::key>(),
+                   selections->get<ConfigKey::CurrentPatternIndex>());
+            }
+       });
+
+
+     if (!result)
+     {
+          spdlog::debug(
+            "Pattern Vector is empty, or Unhandled PatternSelector value: "
+            "{}:{}",
+            std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+            selections->get<ConfigKey::CurrentPattern>());
+     }
+     return result;
 }
 
 std::vector<std::string> *
   fme::custom_paths_window::get_current_string_vector_mutable() const
 {
-     return [&]<std::size_t... Is>(
-              std::index_sequence<Is...>) -> std::vector<std::string> *
+     const auto selections = m_selections.lock();
+     if (!selections)
      {
-          const auto selections = m_selections.lock();
-          if (!selections)
-          {
-               spdlog::error(
-                 "Failed to lock m_selections: shared_ptr is expired.");
-               return nullptr;
-          }
-          std::vector<std::string> *result = nullptr;
-          ((
-             [&]()
-             {
-                  if (
-                    selections->get<ConfigKey::CurrentPattern>()
-                    == static_cast<fme::PatternSelector>(Is))
-                  {
-                       if constexpr (
-                         fme::PatternInfo<static_cast<fme::PatternSelector>(
-                           Is)>::type
-                         == VectorOrString::vector)
-                       {
-                            result = &selections->get<fme::PatternInfo<
-                              static_cast<fme::PatternSelector>(Is)>::key>();
-                       }
-                  }
-             }()),
-           ...);
-          if (!result)
-          {
-               spdlog::debug(
-                 "VectorOrString type is not vector, or Unhandled "
-                 "PatternSelector value: {}:{}",
-                 std::to_underlying(
-                   selections->get<ConfigKey::CurrentPattern>()),
-                 selections->get<ConfigKey::CurrentPattern>());
-          }
-          return result;
-     }(std::make_index_sequence<static_cast<std::size_t>(
-         fme::PatternSelector::End)>{});
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return nullptr;
+     }
+     std::vector<std::string> *result = nullptr;
+     fme::for_each_enum<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>(
+       [&]<fme::PatternSelector Key>()
+       {
+            if constexpr (fme::PatternInfo<Key>::type == VectorOrString::vector)
+            {
+                 if (selections->get<ConfigKey::CurrentPattern>() != Key)
+                 {
+                      return;
+                 }
+                 result = &selections->get<fme::PatternInfo<Key>::key>();
+            }
+       });
+
+
+     if (!result)
+     {
+          spdlog::debug(
+            "VectorOrString type is not vector, or Unhandled "
+            "PatternSelector value: {}:{}",
+            std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+            selections->get<ConfigKey::CurrentPattern>());
+     }
+     return result;
 }
 
 const std::vector<std::string> *
@@ -493,43 +479,41 @@ bool fme::custom_paths_window::combo_selected_pattern() const
 
 void fme::custom_paths_window::save_pattern() const
 {
-     [&]<std::size_t... Is>(std::index_sequence<Is...>)
+     const auto selections = m_selections.lock();
+     if (!selections)
      {
-          const auto selections = m_selections.lock();
-          if (!selections)
-          {
-               spdlog::error(
-                 "Failed to lock m_selections: shared_ptr is expired.");
-               return;
-          }
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     bool found = false;
+     fme::for_each_enum<
+       fme::PatternSelector,
+       std::to_underlying(fme::PatternSelector::End)>(
+       [&]<fme::PatternSelector Key>()
+       {
+            if (!found && selections->get<ConfigKey::CurrentPattern>() == Key)
+            {
+                 if (auto *const strptr = get_current_string_value_mutable();
+                     strptr)
+                 {
+                      notify(fme::PatternInfo<Key>::key);
+                      *strptr = std::string{ m_input_pattern_string.data() };
+                 }
+                 selections->update<fme::PatternInfo<Key>::key>();
+                 found = true;
+            }
+       });
 
-          bool found =
-            (([&]() {
-                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
-                  {
-                       if (auto *const strptr = get_current_string_value_mutable(); strptr)
-                       {
-                            notify(fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key);
-                            *strptr = std::string{ m_input_pattern_string.data() };
-                       }
-                       selections->update<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
-                       return true;
-                  }
-                  return false;
-             }())
-             || ...);
-          if (!found)
-          {
-               spdlog::critical(
-                 "Unhandled PatternSelector value: {}:{}",
-                 std::to_underlying(
-                   selections->get<ConfigKey::CurrentPattern>()),
-                 selections->get<ConfigKey::CurrentPattern>());
-               throw std::runtime_error(
-                 "Unhandled PatternSelector value in save_pattern()");
-          }
-     }(std::make_index_sequence<static_cast<std::size_t>(
-         fme::PatternSelector::End)>{});
+
+     if (!found)
+     {
+          spdlog::critical(
+            "Unhandled PatternSelector value: {}:{}",
+            std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+            selections->get<ConfigKey::CurrentPattern>());
+          throw std::runtime_error(
+            "Unhandled PatternSelector value in save_pattern()");
+     }
 }
 
 bool fme::custom_paths_window::textbox_pattern() const
