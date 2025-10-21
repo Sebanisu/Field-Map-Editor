@@ -59,6 +59,24 @@ static bool safe_copy_string(
      const auto tmp                     = safedir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
+ImageCompareWindow::DiffResult::operator toml::table() const
+{
+     return toml::table{ { "path1", path1.string() },
+                         { "path2", path2.string() },
+                         { "total_pixels1", total_pixels1 },
+                         { "total_pixels2", total_pixels2 },
+                         { "differing_pixels", differing_pixels },
+                         { "difference_percentage", difference_percentage } };
+}
+toml::array ImageCompareWindow::to_toml_array(
+  const std::span<const DiffResult> diffs) noexcept
+{
+     toml::array arr;
+     arr.reserve(diffs.size());
+     for (const auto &diff : diffs)
+          arr.push_back(static_cast<toml::table>(diff));
+     return arr;
+}
 
 ImageCompareWindow::ImageCompareWindow(
   const std::shared_ptr<Selections> &selections)
@@ -176,7 +194,7 @@ void ImageCompareWindow::render()
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
      const float       button_width = button_size * 3.0F;
-     ImGui::BeginDisabled(!m_consumer.done());
+     ImGui::BeginDisabled(!m_consumer.done() || !m_future_consumer.done());
      {
           const auto  popid = PushPopID();
           const float width = ImGui::CalcItemWidth();
@@ -297,7 +315,7 @@ void ImageCompareWindow::render()
      }
      ImGui::SameLine();
      ImGui::EndDisabled();
-     ImGui::BeginDisabled(m_consumer.done());
+     ImGui::BeginDisabled(m_consumer.done() && m_future_consumer.done());
      if (ImGui::Button("Stop Compare"))
      {
           CompareDirectoriesStop();
@@ -308,9 +326,41 @@ void ImageCompareWindow::render()
      {
           // noop;
      }
+     ImGui::BeginDisabled(
+       !m_consumer.done() || !m_future_consumer.done()
+       || m_diff_results.empty());
+     export_button();
+     ImGui::EndDisabled();
      ImGui::Separator();
+     if (!m_diff_result_futures.empty())
+     {
+          format_imgui_text(
+            "Async queued up {} operations...", m_diff_result_futures.size());
+     }
+
+     if (!m_diff_results.empty())
+     {
+          format_imgui_text("{} Different Results.", m_diff_results.size());
+     }
      diff_results_table();
      CompareDirectoriesStep();
+     if (
+       (m_consumer.done() && !m_diff_result_futures.empty())
+       || m_diff_result_futures.size() >= PopThreshold)
+     {
+          m_future_consumer += std::move(m_diff_result_futures);
+          m_diff_result_futures.clear();
+     }
+     if (m_future_consumer.done())
+     {
+          return;
+     }
+     m_future_consumer.consume_one_with_callback(
+       [this](DiffResult result)
+       {
+            if (result.differing_pixels > 0)
+                 m_diff_results.push_back(std::move(result));
+       });
 }
 
 void ImageCompareWindow::diff_results_table()
@@ -333,6 +383,7 @@ void ImageCompareWindow::diff_results_table()
      {
           return;
      }
+
      if (!ImGui::BeginTable(
            "ResultsTable", 5,
            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders
@@ -352,115 +403,132 @@ void ImageCompareWindow::diff_results_table()
        ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort);
      ImGui::TableHeadersRow();
      handle_table_sorting();
-     for (const auto
-            &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
-              difference_percentage] : m_diff_results)
+     ImGuiListClipper clipper{};
+     clipper.Begin(
+       static_cast<int>(m_diff_results.size()),
+       ImGui::GetTextLineHeightWithSpacing() * 2U);
+     while (clipper.Step())
      {
-
-          const auto crop_path_to_fit = [](
-                                          const std::filesystem::path &path,
-                                          float total_width) -> std::string
+          int start_idx = clipper.DisplayStart;
+          int end_idx
+            = (clipper.DisplayEnd + 1);// include partially visible row
+          int count = end_idx - start_idx;
+          for (const auto
+                 &[path1, path2, total_pixels1, total_pixels2, differing_pixels,
+                   difference_percentage] :
+               m_diff_results | std::views::drop(start_idx)
+                 | std::views::take(count))
           {
-               std::string parent          = path.parent_path().string();
-               std::string filename        = path.filename().string();
-               float       separator_width = ImGui::CalcTextSize("/").x;
-               float filename_width = ImGui::CalcTextSize(filename.c_str()).x;
-               float available_for_parent
-                 = total_width - filename_width - separator_width
-                   - ImGui::GetStyle().ItemSpacing.x * 2;
 
-               if (available_for_parent <= 0.0f)
-                    return "...";
-
-               const char *ellipsis       = "...";
-               float       ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
-
-               // Trim from the RIGHT (preserve the beginning of the path)
-               while (!parent.empty()
-                      && ImGui::CalcTextSize(parent.c_str()).x + ellipsis_width
-                           > available_for_parent)
+               const auto crop_path_to_fit
+                 = [](
+                     const std::filesystem::path &path,
+                     float                        total_width) -> std::string
                {
-                    parent.pop_back();
+                    std::string parent          = path.parent_path().string();
+                    std::string filename        = path.filename().string();
+                    float       separator_width = ImGui::CalcTextSize("/").x;
+                    float       filename_width
+                      = ImGui::CalcTextSize(filename.c_str()).x;
+                    float available_for_parent
+                      = total_width - filename_width - separator_width
+                        - ImGui::GetStyle().ItemSpacing.x * 2;
+
+                    if (available_for_parent <= 0.0f)
+                         return "...";
+
+                    const char *ellipsis = "...";
+                    float ellipsis_width = ImGui::CalcTextSize(ellipsis).x;
+
+                    // Trim from the RIGHT (preserve the beginning of the path)
+                    while (!parent.empty()
+                           && ImGui::CalcTextSize(parent.c_str()).x
+                                  + ellipsis_width
+                                > available_for_parent)
+                    {
+                         parent.pop_back();
+                    }
+
+                    if (parent.size() < path.parent_path().string().size())
+                         parent += ellipsis;
+
+                    return parent;
+               };
+
+
+               // First row: path1
+               ImGui::TableNextRow();
+               ImGui::TableNextColumn();// File Path
+               format_imgui_text(
+                 "{}{}",
+                 crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
+                 static_cast<char>(std::filesystem::path::preferred_separator));
+               ImGui::SameLine(0, 0);
+               ImGui::PushStyleColor(
+                 ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+               format_imgui_text("{}", path1.filename());
+               ImGui::PopStyleColor();
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", differing_pixels);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", total_pixels1);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+               ImGui::TableNextColumn();// Copy
+               {
+                    const auto pop_id_buttons = PushPopID();
+                    if (ImGui::SmallButton(ICON_FA_COPY))
+                    {
+                         ImGui::SetClipboardText(path1.string().c_str());
+                    }
+                    else
+                    {
+                         tool_tip("Copy full path to clipboard");
+                    }
                }
 
-               if (parent.size() < path.parent_path().string().size())
-                    parent += ellipsis;
-
-               return parent;
-          };
-
-
-          // First row: path1
-          ImGui::TableNextRow();
-          ImGui::TableNextColumn();// File Path
-          format_imgui_text(
-            "{}{}", crop_path_to_fit(path1, ImGui::GetContentRegionAvail().x),
-            static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine(0, 0);
-          ImGui::PushStyleColor(
-            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
-          format_imgui_text("{}", path1.filename());
-          ImGui::PopStyleColor();
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", differing_pixels);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", total_pixels1);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
-          ImGui::TableNextColumn();// Copy
-          {
-               const auto pop_id_buttons = PushPopID();
-               if (ImGui::SmallButton(ICON_FA_COPY))
+               // Second row: path2
+               ImGui::TableNextRow();
+               ImGui::TableNextColumn();// File Path
+               format_imgui_text(
+                 "{}{}",
+                 crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
+                 static_cast<char>(std::filesystem::path::preferred_separator));
+               ImGui::SameLine(0, 0);
+               ImGui::PushStyleColor(
+                 ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
+               format_imgui_text("{}", path2.filename());
+               ImGui::PopStyleColor();
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", differing_pixels);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{}", total_pixels2);
+               ImGui::TableNextColumn();// Difference
+               format_imgui_text("{:0.2f}", difference_percentage * 100.0);
+               ImGui::TableNextColumn();// Copy
                {
-                    ImGui::SetClipboardText(path1.string().c_str());
-               }
-               else
-               {
-                    tool_tip("Copy full path to clipboard");
+                    const auto pop_id_buttons = PushPopID();
+                    if (ImGui::SmallButton(ICON_FA_COPY))
+                    {
+                         ImGui::SetClipboardText(path1.string().c_str());
+                    }
+                    else
+                    {
+                         tool_tip("Copy full path to clipboard");
+                    }
                }
           }
-
-          // Second row: path2
-          ImGui::TableNextRow();
-          ImGui::TableNextColumn();// File Path
-          format_imgui_text(
-            "{}{}", crop_path_to_fit(path2, ImGui::GetContentRegionAvail().x),
-            static_cast<char>(std::filesystem::path::preferred_separator));
-          ImGui::SameLine(0, 0);
-          ImGui::PushStyleColor(
-            ImGuiCol_Text, IM_COL32(255, 192, 64, 255));// Orange
-          format_imgui_text("{}", path2.filename());
-          ImGui::PopStyleColor();
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", differing_pixels);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{}", total_pixels2);
-          ImGui::TableNextColumn();// Difference
-          format_imgui_text("{:0.2f}", difference_percentage * 100.0);
-          ImGui::TableNextColumn();// Copy
-          {
-               const auto pop_id_buttons = PushPopID();
-               if (ImGui::SmallButton(ICON_FA_COPY))
-               {
-                    ImGui::SetClipboardText(path1.string().c_str());
-               }
-               else
-               {
-                    tool_tip("Copy full path to clipboard");
-               }
-          }
-
-
-          if (m_auto_scroll && !m_consumer.done())
-          {
-               ImGui::SetScrollHereY(1.0f);
-          }
+     }
+     clipper.End();
+     if (m_auto_scroll && (!m_consumer.done() || !m_future_consumer.done()))
+     {
+          ImGui::SetScrollHereY(1.0f);
      }
 }
 
 void ImageCompareWindow::handle_table_sorting()
 {
-     if (!m_consumer.done())
+     if (!m_consumer.done() || !m_future_consumer.done())
      {
           return;
      }
@@ -566,33 +634,96 @@ void ImageCompareWindow::CompareDirectoriesStart()
           return;
      }
      m_diff_results.clear();
+     m_diff_result_futures.clear();
      m_consumer = RangeConsumer<std::filesystem::recursive_directory_iterator>(
        std::filesystem::recursive_directory_iterator(m_path1.data()));
+     m_future_consumer.clear_detached();
+     m_files_in_path2.clear();
+     for (auto &entry :
+          std::filesystem::recursive_directory_iterator(m_path2.data()))
+     {
+          try
+          {
+               if (entry.is_regular_file())
+               {
+                    m_files_in_path2.insert(
+                      std::filesystem::relative(entry.path(), m_path2.data()));
+               }
+          }
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to filesystem error: {} ({})", entry.path(),
+                 e.what());
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to unexpected exception: {} ({})",
+                 entry.path(), e.what());
+          }
+          catch (...)
+          {
+               spdlog::warn(
+                 "Skipping file due to unknown exception: {}", entry.path());
+          }
+     }
 }
 
 void ImageCompareWindow::CompareDirectoriesStep()
 {
+
      if (m_consumer.done())
           return;
-
-     auto &entryA = *m_consumer;
-
-     if (entryA.is_regular_file())
+     static constexpr const int MAX_SKIPPED   = 100;
+     static constexpr const int MAX_PROCESSED = 10;
+     int                        skipped       = {};
+     int                        processed     = {};
+     do
      {
-          const auto relative_path = std::filesystem::relative(
-            entryA.path(), std::filesystem::path(m_path1.data()));
-          const auto pathB
-            = std::filesystem::path(m_path2.data()) / relative_path;
-          if (
-            std::filesystem::exists(pathB)
-            && std::filesystem::is_regular_file(pathB))
+          auto &entryA = *m_consumer;
+          ++m_consumer;
+          try
           {
-               auto diff = CompareImage(entryA.path(), pathB);
-               if (diff.differing_pixels > 0)
-                    m_diff_results.push_back(std::move(diff));
+               if (entryA.is_regular_file())
+               {
+                    const auto relative_path = std::filesystem::relative(
+                      entryA.path(), std::filesystem::path(m_path1.data()));
+                    if (m_files_in_path2.contains(relative_path))
+                    {
+                         const auto pathB
+                           = std::filesystem::path(m_path2.data())
+                             / relative_path;
+
+                         m_diff_result_futures.push_back(
+                           CompareImageAsync(entryA.path(), pathB));
+                         ++processed;
+                    }
+                    else
+                    {
+                         ++skipped;
+                    }
+               }
           }
-     }
-     ++m_consumer;
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to filesystem error: {} ({})",
+                 entryA.path(), e.what());
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::warn(
+                 "Skipping file due to unexpected exception: {} ({})",
+                 entryA.path(), e.what());
+          }
+          catch (...)
+          {
+               spdlog::warn(
+                 "Skipping file due to unknown exception: {}", entryA.path());
+          }
+     } while (!m_consumer.done() && skipped < MAX_SKIPPED
+              && processed < MAX_PROCESSED);
      if (m_consumer.done())
      {
           spdlog::info("Directory comparison completed.");
@@ -600,9 +731,46 @@ void ImageCompareWindow::CompareDirectoriesStep()
      }
 }
 
+void ImageCompareWindow::export_button()
+{
+     if (ImGui::Button("Export Diff Results"))
+     {
+          try
+          {
+               // Convert your diff results to TOML string/array
+               toml::table entries{};
+
+               entries.insert_or_assign(
+                 "compare", to_toml_array(m_diff_results));
+
+               // Choose a path — hardcoded or with a dialog
+               std::filesystem::path out_path = "diff_results.toml";
+
+               // Write the TOML to file
+               std::ofstream         ofs(out_path);
+               if (!ofs)
+               {
+                    spdlog::error(
+                      "Failed to open file for writing: {}", out_path.string());
+               }
+               else
+               {
+                    ofs << entries;
+                    spdlog::info(
+                      "Diff results written to {}", out_path.string());
+               }
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::error("Error exporting diff results: {}", e.what());
+          }
+     }
+}
+
 void ImageCompareWindow::CompareDirectoriesStop()
 {
      m_consumer.stop();
+     m_future_consumer.stop();
 }
 
 struct StbiDeleter
@@ -613,11 +781,24 @@ struct StbiDeleter
                stbi_image_free(img);
      }
 };
+
+std::future<ImageCompareWindow::DiffResult>
+  ImageCompareWindow::CompareImageAsync(
+    std::filesystem::path fileA,
+    std::filesystem::path fileB)
+{
+     return std::async(
+       std::launch::async,
+       [fileA = std::move(fileA), fileB = std::move(fileB)]
+       { return CompareImage(fileA, fileB); });
+}
+
 ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
   std::filesystem::path fileA,
   std::filesystem::path fileB)
 {
-     // Normalize paths using the preferred separator for the current platform
+     // Normalize paths using the preferred separator for the current
+     // platform
      fileA.make_preferred();
      fileB.make_preferred();
 
@@ -634,9 +815,9 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
      std::unique_ptr<std::uint8_t[], StbiDeleter> img2(
        stbi_load(path2.string().c_str(), &width2, &height2, &channels2, 4));
      total_pixels1
-       = static_cast<std::size_t>(width1) * static_cast<std::size_t>(height1);
+       = static_cast<std::int64_t>(width1) * static_cast<std::int64_t>(height1);
      total_pixels2
-       = static_cast<std::size_t>(width2) * static_cast<std::size_t>(height2);
+       = static_cast<std::int64_t>(width2) * static_cast<std::int64_t>(height2);
      if (
        !img1 || !img2 || width1 != width2 || height1 != height2
        || channels1 != channels2)
@@ -648,11 +829,12 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
      }
 
      auto indices = std::views::iota(
-       size_t{ 0 }, (std::min)(total_pixels1, total_pixels2));
+       size_t{ 0 },
+       static_cast<std::size_t>((std::min)(total_pixels1, total_pixels2)));
      static const constexpr int error = 0;
      differing_pixels                 = std::transform_reduce(
-       std::execution::par_unseq, indices.begin(), indices.end(), size_t{ 0 },
-       std::plus{},
+       std::execution::par_unseq, indices.begin(), indices.end(),
+       std::int64_t{ 0 }, std::plus{},
        [&](const size_t idx)
        {
             const size_t i  = idx * 4;
@@ -662,9 +844,9 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
             const int    da = std::abs(img1[i + 3] - img2[i + 3]);
             if (dr > error || dg > error || db > error || da > error)
             {
-                 return 1;
+                 return std::int64_t{ 1 };
             }
-            return 0;
+            return std::int64_t{ 0 };
        });
      difference_percentage
        = static_cast<double>(differing_pixels)
