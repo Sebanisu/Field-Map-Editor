@@ -1344,7 +1344,7 @@ struct filters
      filter<Tag> &get()
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
-          using ValueT = typename ConfigKeys<Tag>::value_type;
+          // using ValueT = typename ConfigKeys<Tag>::value_type;
 
 
           if (
@@ -1375,7 +1375,7 @@ struct filters
      const filter<Tag> &get() const
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
-          using ValueT = typename ConfigKeys<Tag>::value_type;
+          // using ValueT = typename ConfigKeys<Tag>::value_type;
 
           if (
             (m_filters_array[index].index() != 0U)
