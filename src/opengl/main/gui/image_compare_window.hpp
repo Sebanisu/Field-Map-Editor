@@ -57,11 +57,34 @@ class ImageCompareWindow
           | ImGuiFileBrowserFlags_EditPathString
           | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
+
+     ImGui::FileBrowser m_save_dialog{
+          ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_CreateNewDir
+          | ImGuiFileBrowserFlags_EnterNewFilename
+          | ImGuiFileBrowserFlags_SkipItemsCausingError
+     };
      RangeConsumer<std::filesystem::recursive_directory_iterator> m_consumer;
      FutureConsumer<std::vector<std::future<ImageCompareWindow::DiffResult>>>
-                       m_future_consumer;
+                           m_future_consumer;
+
+     std::filesystem::path m_save_directory = []()
+     {
+          try
+          {
+               return std::filesystem::current_path();
+          }
+          catch (std::filesystem::filesystem_error &e)
+          {
+               spdlog::error(
+                 "{}:{} - Failed to get current path: {}", __FILE__, __LINE__,
+                 e.what());
+               return std::filesystem::path{};
+          }
+     }();
      void              diff_results_table();
      void              handle_table_sorting();
+     void              display_save_browser();
      void              open_directory_browser();
      void              button_input_browse();
      void              button_output_browse();

@@ -18,6 +18,7 @@ class [[nodiscard]] textures_window
      mutable const glengine::Texture  *m_selected_texture = { nullptr };
      mutable ImGui::FileBrowser        m_save_dialog{
           ImGuiFileBrowserFlags_EditPathString
+          | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EnterNewFilename
           | ImGuiFileBrowserFlags_SkipItemsCausingError
      };
