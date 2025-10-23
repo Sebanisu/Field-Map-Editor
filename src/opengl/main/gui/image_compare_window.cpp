@@ -114,6 +114,57 @@ void ImageCompareWindow::button_output_browse()
      m_directory_browser_mode = directory_mode::output_mode;
 };
 
+void ImageCompareWindow::display_save_browser()
+{
+
+     if (m_diff_results.empty())
+     {
+          return;
+     }
+     m_save_dialog.Display();
+
+     if (!m_save_dialog.HasSelected())
+     {
+          return;
+     }
+     const auto save_path = m_save_dialog.GetSelected();
+     spdlog::info("Saving compare diff toml to '{}'", save_path.string());
+
+     m_save_dialog.ClearSelected();
+     // Update save directory to the parent path of the saved file
+     try
+     {
+          m_save_directory = save_path.parent_path();
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "{}:{} - Failed to get parent path of '{}', '{}'", __FILE__,
+            __LINE__, save_path, e.what());
+     }
+     open_directory(m_save_directory);
+
+
+     // Convert your diff results to TOML string/array
+     toml::table entries{};
+
+     entries.insert_or_assign("compare", to_toml_array(m_diff_results));
+
+     // Choose a path — hardcoded or with a dialog
+
+     // Write the TOML to file
+     std::ofstream ofs(save_path);
+     if (!ofs)
+     {
+          spdlog::error("Failed to open file for writing: {}", save_path);
+     }
+     else
+     {
+          ofs << entries;
+          spdlog::info("Diff results written to {}", save_path);
+     }
+}
+
 void ImageCompareWindow::open_directory_browser()
 {
      m_directory_browser.Display();
@@ -187,6 +238,7 @@ void ImageCompareWindow::render()
           return;
      }
      open_directory_browser();
+     display_save_browser();
 
      const ImGuiStyle &style        = ImGui::GetStyle();
      const float       spacing      = style.ItemInnerSpacing.x;
@@ -735,35 +787,11 @@ void ImageCompareWindow::export_button()
 {
      if (ImGui::Button("Export Diff Results"))
      {
-          try
-          {
-               // Convert your diff results to TOML string/array
-               toml::table entries{};
-
-               entries.insert_or_assign(
-                 "compare", to_toml_array(m_diff_results));
-
-               // Choose a path — hardcoded or with a dialog
-               std::filesystem::path out_path = "diff_results.toml";
-
-               // Write the TOML to file
-               std::ofstream         ofs(out_path);
-               if (!ofs)
-               {
-                    spdlog::error(
-                      "Failed to open file for writing: {}", out_path.string());
-               }
-               else
-               {
-                    ofs << entries;
-                    spdlog::info(
-                      "Diff results written to {}", out_path.string());
-               }
-          }
-          catch (const std::exception &e)
-          {
-               spdlog::error("Error exporting diff results: {}", e.what());
-          }
+          m_save_dialog.SetTitle("Export Diff Results As...");
+          m_save_dialog.SetTypeFilters({ ".toml" });
+          m_save_dialog.SetDirectory(m_save_directory);
+          m_save_dialog.SetInputName("diff_results.toml");
+          m_save_dialog.Open();
      }
 }
 
