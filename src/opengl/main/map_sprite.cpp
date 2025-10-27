@@ -34,7 +34,6 @@ namespace fme
 map_sprite::map_sprite(
   ff_8::map_group                        map_group,
   map_sprite_settings                    settings,
-  ff_8::filters                          in_filters,
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
@@ -43,7 +42,6 @@ map_sprite::map_sprite(
         ? std::move(map_group)
         : ff_8::map_group{})
   , m_settings(settings)
-  , m_filters(std::move(in_filters))
   , m_selections(selections)
   , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_canvas(get_canvas())
@@ -326,13 +324,12 @@ const glengine::Texture *map_sprite::get_texture(
   const std::uint8_t              texture_page) const
 {
      const size_t index = get_texture_pos(bpp, palette, texture_page);
-     const size_t size  = m_texture->size();
-     if (index >= size)
+     if (index >= MAX_TEXTURES)
      {
           spdlog::debug(
             "Increase texture array size. it is too small! index {} >= size {}",
             index,
-            size);
+            MAX_TEXTURES);
           spdlog::debug(
             "bpp: {}, palette: {}, texture page: {}",
             static_cast<int>(bpp),

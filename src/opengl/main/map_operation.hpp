@@ -153,18 +153,18 @@ struct source_x_y_texture_page
 }
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  const std::uint8_t   &texture_page,
-  bool                  skip_filters,
-  bool                  find_all);
+  const map_group::Map    &map,
+  const ff_8::TileFilters &filters,
+  const glm::ivec2        &pixel_pos,
+  const std::uint8_t      &texture_page,
+  bool                     skip_filters,
+  bool                     find_all);
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  bool                  skip_filters,
-  bool                  find_all);
+  const map_group::Map    &map,
+  const ff_8::TileFilters &filters,
+  const glm::ivec2        &pixel_pos,
+  bool                     skip_filters,
+  bool                     find_all);
 
 template<
   std::integral input_t,
@@ -202,12 +202,12 @@ static inline void find_intersecting_get_indices(
 
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
-  const tilesT        &tiles,
-  const ff_8::filters &filters,
-  const glm::ivec2    &pixel_pos,
-  const std::uint8_t  &texture_page,
-  bool                 skip_filters = false,
-  bool                 find_all     = false)
+  const tilesT            &tiles,
+  const ff_8::TileFilters &filters,
+  const glm::ivec2        &pixel_pos,
+  const std::uint8_t      &texture_page,
+  bool                     skip_filters = false,
+  bool                     find_all     = false)
 {
 
      using namespace open_viii::graphics::background;
@@ -285,11 +285,11 @@ template<std::ranges::range tilesT>
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t>
   find_intersecting_deswizzle(
-    const tilesT        &tiles,
-    const ff_8::filters &filters,
-    const glm::ivec2    &pixel_pos,
-    bool                 skip_filters = false,
-    bool                 find_all     = false)
+    const tilesT            &tiles,
+    const ff_8::TileFilters &filters,
+    const glm::ivec2        &pixel_pos,
+    bool                     skip_filters = false,
+    bool                     find_all     = false)
 {
      using namespace open_viii::graphics::background;
      auto                     filtered = tiles | Map::filter_view_invalid();

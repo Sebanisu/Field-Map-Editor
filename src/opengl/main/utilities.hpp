@@ -38,14 +38,18 @@ constexpr auto for_each_index(F &&f)
 
 template<
   typename Enum,
-  std::size_t N = static_cast<std::size_t>(Enum::All),
+  std::size_t EndT   = static_cast<std::size_t>(Enum::All),
+  std::size_t BeginT = 0,
   typename F>
 constexpr auto for_each_enum(F &&f)
-     requires(std::is_enum_v<Enum>)
+     requires(std::is_enum_v<Enum> && (EndT >= BeginT))
 {
-     return for_each_index<N>(
+     return for_each_index<EndT - BeginT>(
        [&]<std::size_t I>()
-       { return f.template operator()<static_cast<Enum>(I)>(); });
+       {
+            return std::forward<F>(f)
+              .template operator()<static_cast<Enum>(I + BeginT)>();
+       });
 }
 
 

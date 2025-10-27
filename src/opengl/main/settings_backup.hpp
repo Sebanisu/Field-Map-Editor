@@ -10,11 +10,14 @@ namespace fme
 {
 struct map_sprite_settings
 {
-     bool draw_swizzle               = false;
-     bool disable_texture_page_shift = false;
-     bool disable_blends             = false;
-     bool require_coo                = true;
-     bool force_loading              = false;
+     bool                         draw_swizzle               = false;
+     bool                         disable_texture_page_shift = false;
+     bool                         disable_blends             = false;
+     bool                         require_coo                = true;
+     bool                         force_loading              = false;
+
+     mutable ff_8::TileFilters    tile_filters               = { false };
+     mutable ff_8::TextureFilters texture_filters            = { false };
 };
 template<typename T>
 struct setting_backup
@@ -98,12 +101,12 @@ struct setting_backup
 struct settings_backup
 {
    public:
-     setting_backup<ff_8::filters>       filters;
+     setting_backup<ff_8::TileFilters>   filters;
      setting_backup<map_sprite_settings> settings;
      // setting_backup<std::int32_t>  scale;
 
      settings_backup(
-       ff_8::filters       &in_filters,
+       ff_8::TileFilters   &in_filters,
        map_sprite_settings &in_settings)
        : filters{ in_filters }
        , settings{ in_settings }

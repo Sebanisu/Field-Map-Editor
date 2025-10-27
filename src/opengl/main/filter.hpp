@@ -104,10 +104,6 @@ enum class FilterTag : std::uint8_t
 {
      Pupu,
      MultiPupu,
-     Swizzle,
-     Deswizzle,
-     SwizzleAsOneImage,
-     FullFileName,
      Map,
      DrawBit,
      Z,
@@ -132,9 +128,38 @@ enum class FilterTag : std::uint8_t
      Flatten,
      CompactOnLoadOriginal,
      FlattenOnLoadOriginal,
-     All,
-     None,
+     EndFilters,
+
+     Swizzle,
+     Deswizzle,
+     SwizzleAsOneImage,
+     FullFileName,
+     EndTextures,
+
+     All,// for variant
+
+     None          = 255U,
+
+
+     BeginFilters  = 0U,
+     BeginTextures = Swizzle,
+
 };
+consteval inline FilterTag operator-(
+  FilterTag a,
+  FilterTag b)
+{
+     return static_cast<FilterTag>(
+       std::to_underlying(a) - std::to_underlying(b));
+}
+
+consteval inline FilterTag operator+(
+  FilterTag a,
+  FilterTag b)
+{
+     return static_cast<FilterTag>(
+       std::to_underlying(a) + std::to_underlying(b));
+}
 
 template<FilterTag Tag>
 struct ConfigKeys;
@@ -648,8 +673,19 @@ concept HasOperationType
   = requires { typename ConfigKeys<tag>::operation_type; };
 
 
+template<FilterTag tag>
+concept HasValueType = requires { typename ConfigKeys<tag>::value_type; };
+
+
 template<FilterTag Tag>
 struct filter
+{
+     // placeholder because end values don't have value_types
+};
+
+template<FilterTag Tag>
+     requires(HasValueType<Tag>)
+struct filter<Tag>
 {
    public:
      using value_type                            = ConfigKeys<Tag>::value_type;
@@ -943,7 +979,7 @@ struct filter
      }
 };
 template<FilterTag Tag>
-     requires(HasOperationType<Tag>)
+     requires(HasValueType<Tag> && HasOperationType<Tag>)
 struct filter<Tag>
 {
    public:
@@ -1292,12 +1328,13 @@ using FilterVariant = decltype([] {
     }(std::make_index_sequence<static_cast<std::size_t>(FilterTag::All)>{});
 }());
 
+template<FilterTag BeginTagT, FilterTag EndTagT>
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
 
      static constexpr std::size_t FiltersSizeT
-       = static_cast<std::size_t>(FilterTag::All);
+       = static_cast<std::size_t>(EndTagT - BeginTagT);
      using FiltersArrayT = std::array<FilterVariant, FiltersSizeT>;
 
      FiltersArrayT m_filters_array;
@@ -1308,7 +1345,7 @@ struct filters
      {
 
           FiltersArrayT result{};
-          fme::for_each_enum<FilterTag>(
+          fme::for_each_enum<FilterTag, EndTagT, BeginTagT>(
             [&]<FilterTag Key>()
             {
                  result[std::to_underlying(Key)]
@@ -1335,10 +1372,11 @@ struct filters
 
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      filter<Tag> &get()
      {
-          static constexpr std::size_t index = static_cast<std::size_t>(Tag);
+          static constexpr std::size_t index
+            = static_cast<std::size_t>(Tag - BeginTagT);
           // using ValueT = typename ConfigKeys<Tag>::value_type;
 
 
@@ -1365,10 +1403,11 @@ struct filters
 
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      const filter<Tag> &get() const
      {
-          static constexpr std::size_t index = static_cast<std::size_t>(Tag);
+          static constexpr std::size_t index
+            = static_cast<std::size_t>(Tag - BeginTagT);
           // using ValueT = typename ConfigKeys<Tag>::value_type;
 
           if (
@@ -1394,7 +1433,7 @@ struct filters
 
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      ConfigKeys<Tag>::value_type &value()
      {
 
@@ -1402,7 +1441,7 @@ struct filters
      }
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      const ConfigKeys<Tag>::value_type &value() const
      {
 
@@ -1414,7 +1453,7 @@ struct filters
        FilterTag Tag,
        typename TypeT>
           requires(
-            FiltersSizeT > static_cast<std::size_t>(Tag)
+            FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT)
             && !std::same_as<
                std::remove_cvref_t<TypeT>,
                toml::table>)
@@ -1425,7 +1464,7 @@ struct filters
 
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      bool enabled() const
      {
 
@@ -1434,14 +1473,14 @@ struct filters
 
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      filter<Tag> &enable()
      {
           return get<Tag>().enable();
      }
 
      template<FilterTag Tag>
-          requires(FiltersSizeT > static_cast<std::size_t>(Tag))
+          requires(FiltersSizeT > static_cast<std::size_t>(Tag - BeginTagT))
      filter<Tag> &disable()
      {
           return get<Tag>().disable();
@@ -1449,7 +1488,7 @@ struct filters
 
      void reload(const toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          fme::for_each_enum<FilterTag, EndTagT, BeginTagT>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1461,7 +1500,7 @@ struct filters
 
      void combine(const toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          fme::for_each_enum<FilterTag, EndTagT, BeginTagT>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1473,7 +1512,7 @@ struct filters
 
      void update_table(toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          fme::for_each_enum<FilterTag, EndTagT, BeginTagT>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1487,7 +1526,7 @@ struct filters
      {
 
           std::bitset<static_cast<std::size_t>(FilterTag::All)> results;
-          fme::for_each_enum<FilterTag>(
+          fme::for_each_enum<FilterTag, EndTagT, BeginTagT>(
             [&]<FilterTag Key>()
             {
                  if constexpr (HasOperationType<Key>)
@@ -1503,12 +1542,15 @@ struct filters
           return results.all();
      }
 };
+using TileFilters = filters<FilterTag::BeginFilters, FilterTag::EndFilters>;
+using TextureFilters
+  = filters<FilterTag::BeginTextures, FilterTag::EndTextures>;
 namespace tile_operations
 {
      template<open_viii::graphics::background::is_tile tileT>
      bool fail_any_filters(
-       const ff_8::filters &filters,
-       const tileT         &tile)
+       const ff_8::TileFilters &filters,
+       const tileT             &tile)
      {
           return !std::invoke(filters, tile);
      }

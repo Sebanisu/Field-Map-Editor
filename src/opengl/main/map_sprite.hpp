@@ -9,6 +9,7 @@
 #include "gui/Selections.hpp"
 #include "map_group.hpp"
 #include "map_operation.hpp"
+#include "map_textures.hpp"
 #include "MapHistory.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
@@ -208,6 +209,8 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle  = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
+     std::weak_ptr<Selections> m_selections   = {};
+     map_textures              m_map_textures = { m_selections };
      std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> m_texture
        = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
      std::shared_ptr<std::map<std::string, glengine::Texture>>
@@ -226,10 +229,7 @@ struct [[nodiscard]] map_sprite// final
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
-                           m_child_textures_map = {};
-     mutable ff_8::filters m_filters
-       = { false };// default false should be override by gui to true.
-     std::weak_ptr<Selections>           m_selections             = {};
+                                         m_child_textures_map     = {};
      bool                                m_using_imported_texture = {};
      const glengine::Texture            *m_imported_texture       = { nullptr };
      std::uint16_t                       m_imported_tile_size     = {};
@@ -348,7 +348,7 @@ struct [[nodiscard]] map_sprite// final
      map_sprite(
        ff_8::map_group                        map_group,
        map_sprite_settings                    settings,
-       ff_8::filters                          in_filters,
+       ff_8::TileFilters                      in_filters,
        std::weak_ptr<Selections>              selections,
        std::shared_ptr<glengine::FrameBuffer> framebuffer
        = std::make_shared<glengine::FrameBuffer>());
@@ -424,19 +424,19 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] map_sprite    with_field(
           WeakField        field,
           open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite with_filters(ff_8::filters filters) const;
+     [[nodiscard]] map_sprite with_filters(ff_8::TileFilters filters) const;
      [[nodiscard]] bool       empty() const;
-     [[nodiscard]] const ff_8::filters &filter() const;
-     [[nodiscard]] map_sprite           update(
-                 ff_8::map_group map_group,
-                 bool            draw_swizzle) const;
+     [[nodiscard]] const ff_8::TileFilters &filter() const;
+     [[nodiscard]] map_sprite               update(
+                     ff_8::map_group map_group,
+                     bool            draw_swizzle) const;
      [[nodiscard]] ff_8::all_unique_values_and_strings
                                       get_all_unique_values_and_strings() const;
      [[nodiscard]] glm::uvec2         get_tile_texture_size_for_import() const;
      [[nodiscard]] Rectangle          get_canvas() const;
      [[nodiscard]] bool               undo_enabled() const;
      [[nodiscard]] bool               redo_enabled() const;
-     [[nodiscard]] ff_8::filters     &filter();
+     [[nodiscard]] ff_8::TileFilters &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const
      // BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] bool               fallback_textures() const;
@@ -489,7 +489,7 @@ struct [[nodiscard]] map_sprite// final
        const std::shared_ptr<Selections> &selections);
      void cache_pupuids(
        const std::string &,
-       const ff_8::filters &) const;
+       const ff_8::TileFilters &) const;
      [[nodiscard]] const std::map<
        std::string,
        std::string> &
@@ -689,14 +689,14 @@ struct [[nodiscard]] map_sprite// final
           {
                return ff_8::find_intersecting_swizzle(
                  tiles,
-                 m_filters,
+                 m_settings.tile_filters,
                  pixel_pos,
                  texture_page,
                  skip_filters,
                  find_all);
           }
           return ff_8::find_intersecting_deswizzle(
-            tiles, m_filters, pixel_pos, skip_filters, find_all);
+            tiles, m_settings.tile_filters, pixel_pos, skip_filters, find_all);
      }
      template<typename funcT>
      auto const_visit_working_tiles(funcT &&p_function) const
@@ -726,8 +726,9 @@ struct [[nodiscard]] map_sprite// final
      {
 
           if (
-            !m_filters.enabled<ff_8::FilterTag::Deswizzle>()
-            && !m_filters.enabled<ff_8::FilterTag::FullFileName>())
+            !m_settings.texture_filters.enabled<ff_8::FilterTag::Deswizzle>()
+            && !m_settings.texture_filters
+                  .enabled<ff_8::FilterTag::FullFileName>())
           {
                return get_texture(
                  tile.depth(), tile.palette_id(), tile.texture_id());
@@ -1007,7 +1008,8 @@ struct [[nodiscard]] map_sprite// final
                     return to_vec2(
                       ff_8::source_coords_for_imported(tile_const));
                }
-               if (m_filters.enabled<ff_8::FilterTag::SwizzleAsOneImage>())
+               if (m_settings.texture_filters
+                     .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                {
                     // Calculate UVs for single texture
                     // Source X adjusted by texture_page * texture_page_width
@@ -1015,13 +1017,16 @@ struct [[nodiscard]] map_sprite// final
                     return to_vec2(
                       ff_8::source_coords_for_single_swizzle(tile_const));
                }
-               if (m_filters.enabled<ff_8::FilterTag::Swizzle>())
+               if (m_settings.texture_filters
+                     .enabled<ff_8::FilterTag::Swizzle>())
                {
                     return to_vec2(ff_8::source_coords_for_swizzle(tile_const));
                }
                if (
-                 m_filters.enabled<ff_8::FilterTag::Deswizzle>()
-                 || m_filters.enabled<ff_8::FilterTag::FullFileName>())
+                 m_settings.texture_filters
+                   .enabled<ff_8::FilterTag::Deswizzle>()
+                 || m_settings.texture_filters
+                      .enabled<ff_8::FilterTag::FullFileName>())
                {
                     return to_vec2(
                       ff_8::source_coords_for_deswizzle(tile_const));

@@ -50,6 +50,7 @@ set(MAIN_SOURCES
     map_operation.cpp
     MapHistory.cpp
     map_sprite.cpp
+    map_textures.cpp
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
