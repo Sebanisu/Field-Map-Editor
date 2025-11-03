@@ -4,8 +4,8 @@
 #include "TestTexture2D.hpp"
 #include "Application.hpp"
 #include "ImGuiPushID.hpp"
-#include "Renderer.hpp"
-#include "ScopeGuard.hpp"
+#include <glengine/Renderer.hpp>
+#include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 static_assert(glengine::Renderable<test::TestTexture2D>);
 static constinit bool Preview = { false };

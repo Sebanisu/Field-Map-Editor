@@ -5,10 +5,10 @@
 #ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERING_HPP
 #define FIELD_MAP_EDITOR_TESTBATCHRENDERING_HPP
 #include "ImGuiViewPortWindow.hpp"
-#include "IndexBuffer.hpp"
-#include "Shader.hpp"
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
+#include <glengine/IndexBuffer.hpp>
+#include <glengine/Shader.hpp>
+#include <glengine/VertexArray.hpp>
+#include <glengine/VertexBuffer.hpp>
 
 namespace test
 {

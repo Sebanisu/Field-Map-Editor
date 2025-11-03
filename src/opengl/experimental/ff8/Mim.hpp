@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_MIM_HPP
 #define FIELD_MAP_EDITOR_MIM_HPP
-#include "BatchRenderer.hpp"
 #include "BPPs.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "Palettes.hpp"
-#include <Counter.hpp>
+#include <glengine/BatchRenderer.hpp>
+#include <glengine/Counter.hpp>
 namespace ff_8
 {
 class Mim

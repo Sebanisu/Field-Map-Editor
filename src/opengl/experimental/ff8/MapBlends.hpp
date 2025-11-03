@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_MAPBLENDS_HPP
 #define FIELD_MAP_EDITOR_MAPBLENDS_HPP
 #include "ImGuiIndent.hpp"
-#include <BlendModeEquations.hpp>
-#include <BlendModeParameters.hpp>
-#include <GLCheck.hpp>
+#include <glengine/BlendModeEquations.hpp>
+#include <glengine/BlendModeParameters.hpp>
+#include <glengine/GLCheck.hpp>
 class MapBlends
 {
    public:

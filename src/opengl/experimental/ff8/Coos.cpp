@@ -3,7 +3,7 @@
 //
 
 #include "Coos.hpp"
-#include "GenericCombo.hpp"
+#include <glengine/GenericCombo.hpp>
 static constexpr auto coo_index  = std::string_view("coo_index");
 static constexpr auto coo_string = std::string_view("coo_string");
 bool                  ff_8::Coos::on_im_gui_update() const

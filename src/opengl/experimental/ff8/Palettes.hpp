@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_PALETTES_HPP
 #define FIELD_MAP_EDITOR_PALETTES_HPP
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/Renderable.hpp>
 
 namespace ff_8
 {

@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_TESTMENU_HPP
 #define FIELD_MAP_EDITOR_TESTMENU_HPP
-#include "Event/EventItem.hpp"
 #include "Menu.hpp"
+#include <glengine/Event/EventItem.hpp>
 
 namespace test
 {

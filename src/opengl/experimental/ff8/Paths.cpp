@@ -3,7 +3,7 @@
 //
 #include "Paths.hpp"
 #include "Configuration.hpp"
-#include "GenericCombo.hpp"
+#include <glengine/GenericCombo.hpp>
 #include <open_viii/paths/Paths.hpp>
 static constexpr auto ff8_directory_paths
   = std::string_view{ "ff8_directory_paths" };

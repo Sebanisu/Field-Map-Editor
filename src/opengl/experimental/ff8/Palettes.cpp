@@ -2,8 +2,8 @@
 // Created by pcvii on 12/1/2021.
 //
 #include "Palettes.hpp"
-#include "GenericCombo.hpp"
 #include "imgui.h"
+#include <glengine/GenericCombo.hpp>
 bool ff_8::Palettes::on_im_gui_update() const
 {
      return glengine::GenericCombo("Palette", m_current, m_strings);

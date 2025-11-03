@@ -4,7 +4,7 @@
 #include "TestBatchRendering.hpp"
 #include "Application.hpp"
 #include "ImGuiPushID.hpp"
-#include "Vertex.hpp"
+#include <glengine/Vertex.hpp>
 static constinit bool Preview = false;
 static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::on_im_gui_update() const

@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_UPSCALES_HPP
 #define FIELD_MAP_EDITOR_UPSCALES_HPP
 #include "Configuration.hpp"
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/Renderable.hpp>
 namespace ff_8
 {
 class Upscales

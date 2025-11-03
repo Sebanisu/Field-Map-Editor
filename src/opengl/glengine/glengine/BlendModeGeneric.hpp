@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_BLENDMODEGENERIC_HPP
 #define FIELD_MAP_EDITOR_BLENDMODEGENERIC_HPP
-#include "GenericCombo.hpp"
+#include <glengine/GenericCombo.hpp>
 namespace glengine
 {
 template<typename SelectionsStringsLambdaT, typename SelectionsValuesLambdaT>

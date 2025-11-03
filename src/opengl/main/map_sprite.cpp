@@ -8,20 +8,20 @@
 #include "save_image_pbo.hpp"
 #include "utilities.hpp"
 #include <bit>
-#include <BlendModeSettings.hpp>
-#include <DistanceBuffer.hpp>
 #include <expected>
 #include <fmt/format.h>
-#include <FrameBuffer.hpp>
-#include <FrameBufferBackup.hpp>
-#include <HistogramBuffer.hpp>
+#include <glengine/BlendModeSettings.hpp>
+#include <glengine/DistanceBuffer.hpp>
+#include <glengine/FrameBuffer.hpp>
+#include <glengine/FrameBufferBackup.hpp>
+#include <glengine/HistogramBuffer.hpp>
+#include <glengine/PaletteBuffer.hpp>
+#include <glengine/ScopeGuard.hpp>
+#include <glengine/SubTexture.hpp>
 #include <open_viii/graphics/Png.hpp>
-#include <PaletteBuffer.hpp>
 #include <ranges>
-#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
-#include <SubTexture.hpp>
 #include <utility>
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;

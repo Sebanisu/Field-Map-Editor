@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 // clang-format on
 #include "gui/gui.hpp"
-#include <BlendModeSettings.hpp>
+#include <glengine/BlendModeSettings.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #ifdef _WIN32

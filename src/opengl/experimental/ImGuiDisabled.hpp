@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_IMGUIDISABLED_HPP
 #define FIELD_MAP_EDITOR_IMGUIDISABLED_HPP
-#include "ScopeGuard.hpp"
+#include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
 namespace glengine
 {

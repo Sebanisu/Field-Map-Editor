@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_PATHS_HPP
 #define FIELD_MAP_EDITOR_PATHS_HPP
 #include "Configuration.hpp"
-#include "ScopeGuard.hpp"
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/Renderable.hpp>
+#include <glengine/ScopeGuard.hpp>
 
 
 namespace ff_8

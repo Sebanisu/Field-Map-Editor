@@ -4,8 +4,8 @@
 
 #include "Fields.hpp"
 #include "Configuration.hpp"
-#include "GenericCombo.hpp"
 #include <fmt/chrono.h>
+#include <glengine/GenericCombo.hpp>
 
 namespace ff_8
 {

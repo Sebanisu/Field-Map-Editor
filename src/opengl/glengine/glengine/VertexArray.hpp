@@ -5,11 +5,11 @@
 #ifndef FIELD_MAP_EDITOR_VERTEXARRAY_HPP
 #define FIELD_MAP_EDITOR_VERTEXARRAY_HPP
 #include "Renderer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
 #include <algorithm>
+#include <glengine/ScopeGuard.hpp>
 namespace glengine
 {
 class VertexArray

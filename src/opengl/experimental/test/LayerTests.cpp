@@ -3,8 +3,8 @@
 //
 
 #include "LayerTests.hpp"
-#include <Event/EventDispatcher.hpp>
-#include <ScopeGuard.hpp>
+#include <glengine/Event/EventDispatcher.hpp>
+#include <glengine/ScopeGuard.hpp>
 
 void layer::Tests::on_update(float ts) const
 {

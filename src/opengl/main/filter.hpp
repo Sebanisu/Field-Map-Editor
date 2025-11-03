@@ -14,10 +14,10 @@
 #include "PupuID.hpp"
 #include "tile_operations.hpp"
 #include "utilities.hpp"
-#include <concepts.hpp>
 #include <cstdint>
 #include <filesystem>
 #include <fmt/format.h>
+#include <glengine/concepts.hpp>
 #include <map>
 #include <string>
 #include <utility>

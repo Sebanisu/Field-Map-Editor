@@ -1,5 +1,5 @@
 #include "keyboard_shortcuts_window.hpp"
-#include <ScopeGuard.hpp>
+#include <glengine/ScopeGuard.hpp>
 fme::keyboard_shortcuts_window::keyboard_shortcuts_window(
   std::weak_ptr<Selections> selections)
   : m_selections(selections)

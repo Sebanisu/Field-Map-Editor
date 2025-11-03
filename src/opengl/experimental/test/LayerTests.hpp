@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_LAYERTESTS_HPP
 #define FIELD_MAP_EDITOR_LAYERTESTS_HPP
 
-#include "Event/EventItem.hpp"
+#include <glengine/Event/EventItem.hpp>
 
 #include "ff8/FF8Menu.hpp"
 #include "test/TestMenu.hpp"

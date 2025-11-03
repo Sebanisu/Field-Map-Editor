@@ -4,14 +4,14 @@
 
 #include "Mim.hpp"
 #include "Application.hpp"
-#include "Event/EventDispatcher.hpp"
-#include "FrameBuffer.hpp"
-#include "FrameBufferBackup.hpp"
 #include "ImGuiDisabled.hpp"
 #include "ImGuiTileDisplayWindow.hpp"
 #include "OrthographicCameraController.hpp"
-#include "PixelBuffer.hpp"
-#include <BlendModeSettings.hpp>
+#include <glengine/BlendModeSettings.hpp>
+#include <glengine/Event/EventDispatcher.hpp>
+#include <glengine/FrameBuffer.hpp>
+#include <glengine/FrameBufferBackup.hpp>
+#include <glengine/PixelBuffer.hpp>
 namespace ff_8
 {
 static const Bpps               Bpp         = {};

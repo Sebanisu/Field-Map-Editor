@@ -4,8 +4,8 @@
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
 #include "Selections.hpp"
+#include <glengine/ScopeGuard.hpp>
 #include <open_viii/archive/FIFLFS.hpp>
-#include <ScopeGuard.hpp>
 namespace fme
 {
 struct field_file_window

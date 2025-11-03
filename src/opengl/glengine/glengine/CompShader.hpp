@@ -2,10 +2,10 @@
 #define BC882A74_AA62_484B_A1DD_0524A057427E
 #include "GLCheck.hpp"
 #include "Renderer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
 #include <filesystem>
 #include <fstream>
+#include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine

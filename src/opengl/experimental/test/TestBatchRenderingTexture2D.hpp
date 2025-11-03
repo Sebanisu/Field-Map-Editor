@@ -4,14 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2D_HPP
 #define FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2D_HPP
-#include "IndexBuffer.hpp"
-#include "Shader.hpp"
 
 #include "ImGuiViewPortWindow.hpp"
-#include "Texture.hpp"
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
-
+#include <glengine/IndexBuffer.hpp>
+#include <glengine/Shader.hpp>
+#include <glengine/Texture.hpp>
+#include <glengine/VertexArray.hpp>
+#include <glengine/VertexBuffer.hpp>
 
 namespace test
 {

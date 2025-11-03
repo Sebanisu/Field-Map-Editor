@@ -3,10 +3,10 @@
 #include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <execution>
+#include <glengine/ScopeGuard.hpp>
 #include <IconsFontAwesome6.h>
 #include <numeric>
 #include <open_file_explorer.hpp>
-#include <ScopeGuard.hpp>
 #include <stb_image.h>
 
 namespace fme

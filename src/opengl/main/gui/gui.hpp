@@ -35,12 +35,12 @@
 #include "textures_window.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
+#include <glengine/ScopeGuard.hpp>
+#include <glengine/TimeStep.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <memory>
-#include <ScopeGuard.hpp>
-#include <TimeStep.hpp>
 
 namespace fme
 {

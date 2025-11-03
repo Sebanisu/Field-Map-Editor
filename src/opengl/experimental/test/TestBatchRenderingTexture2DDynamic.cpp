@@ -4,8 +4,8 @@
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "Application.hpp"
 #include "ImGuiPushID.hpp"
-#include "Renderer.hpp"
-#include "Vertex.hpp"
+#include <glengine/Renderer.hpp>
+#include <glengine/Vertex.hpp>
 static constinit bool FitWidth  = true;
 static constinit bool FitHeight = true;
 static constinit bool Preview   = false;

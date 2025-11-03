@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #define FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #include "GLCheck.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
+#include <glengine/ScopeGuard.hpp>
 namespace glengine
 {
 /**

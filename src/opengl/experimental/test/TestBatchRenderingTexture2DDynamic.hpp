@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2DDYNAMIC_HPP
 #define FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2DDYNAMIC_HPP
-#include "IndexBufferDynamic.hpp"
-#include "Shader.hpp"
 
 #include "ImGuiViewPortWindow.hpp"
-#include "Texture.hpp"
-#include "VertexArray.hpp"
-#include "VertexBufferDynamic.hpp"
+#include <glengine/IndexBufferDynamic.hpp>
+#include <glengine/Shader.hpp>
+#include <glengine/Texture.hpp>
+#include <glengine/VertexArray.hpp>
+#include <glengine/VertexBufferDynamic.hpp>
 
 
 namespace test

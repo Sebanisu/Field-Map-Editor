@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
 #define FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
-#include "EventEnums.hpp"
-#include "KeyCodes.hpp"
-#include "MouseButtonCodes.hpp"
+#include "glengine/Event/EventEnums.hpp"
+#include "glengine/KeyCodes.hpp"
+#include "glengine/MouseButtonCodes.hpp"
 #include <string>
 namespace glengine
 {

@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_PIXELBUFFER_HPP
 #define FIELD_MAP_EDITOR_PIXELBUFFER_HPP
 #include "FrameBuffer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
+#include <glengine/ScopeGuard.hpp>
 namespace glengine
 {
 class PixelBuffer

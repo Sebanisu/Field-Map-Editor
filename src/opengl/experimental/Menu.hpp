@@ -4,10 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_MENU_HPP
 #define FIELD_MAP_EDITOR_MENU_HPP
-#include "Event/EventItem.hpp"
-#include "MenuItem.hpp"
 #include <algorithm>
 #include <functional>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/MenuItem.hpp>
 namespace glengine
 {
 template<typename T>

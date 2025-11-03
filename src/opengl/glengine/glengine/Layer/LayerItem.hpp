@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_LAYERITEM_HPP
 #define FIELD_MAP_EDITOR_LAYERITEM_HPP
-#include "Event/EventItem.hpp"
-#include "Renderable.hpp"
+#include "glengine/Event/EventItem.hpp"
+#include "glengine/Renderable.hpp"
 #include <memory>
 #include <utility>
 namespace glengine
