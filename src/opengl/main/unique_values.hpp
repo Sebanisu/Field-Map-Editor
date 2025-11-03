@@ -7,11 +7,11 @@
 #include "formatters.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
-#include "PupuID.hpp"
 #include "tile_operations.hpp"
 #include "UniquifyPupu.hpp"
 #include <concepts>
 #include <cstdint>
+#include <ff_8/PupuID.hpp>
 #include <fmt/format.h>
 #include <map>
 #include <ranges>

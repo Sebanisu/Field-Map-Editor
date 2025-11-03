@@ -11,10 +11,10 @@
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
-#include "PupuID.hpp"
 #include "tile_operations.hpp"
 #include "utilities.hpp"
 #include <cstdint>
+#include <ff_8/PupuID.hpp>
 #include <filesystem>
 #include <fmt/format.h>
 #include <glengine/concepts.hpp>

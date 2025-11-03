@@ -30,7 +30,6 @@ add_executable(
   ff8/SimilarAdjustments.cpp
   ff8/Configuration.cpp
   ff8/MenuSaveToggles.hpp
-  ff8/PupuID.hpp
   ImGuiDisabled.cpp
   ImGuiPushItemWidth.cpp
   ImGuiPushID.cpp
@@ -51,6 +50,7 @@ add_executable(
   Window.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_EXPERIMENTAL
+  PRIVATE ${PROJECT_NAME}_ff_8
   PRIVATE glengine
   PRIVATE project_warnings
   PRIVATE Threads::Threads

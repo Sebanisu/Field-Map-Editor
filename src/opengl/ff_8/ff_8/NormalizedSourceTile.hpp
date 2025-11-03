@@ -12,10 +12,10 @@ namespace open_viii::graphics::background
  * - **Destination X, Y, Z**: These are excluded since similar/duplicate tiles
  * do not rely on specific destination coordinates.
  */
-struct normalized_source_tile
+struct NormalizedSourceTile
 {
    public:
-     using impl_type = normalized_source_tile;
+     using impl_type = NormalizedSourceTile;
      TexIdBuffer m_tex_id_buffer
        = {};///< Buffer holding texture ID, blending, depth, and draw flags.
      PaletteID m_palette_id
@@ -32,10 +32,10 @@ struct normalized_source_tile
 
 
      /// @brief Default constructor.
-     constexpr normalized_source_tile()                               = default;
+     constexpr NormalizedSourceTile()                               = default;
 
      /// @brief Compares two tiles for equality or ordering.
-     constexpr auto operator<=>(const normalized_source_tile &) const = default;
+     constexpr auto operator<=>(const NormalizedSourceTile &) const = default;
 
      /**
       * @brief Constructs a normalized tile from a generic tile object.
@@ -44,7 +44,7 @@ struct normalized_source_tile
       * properties like texture ID, source position, etc.
       * @param tile The tile object to initialize this normalized tile from.
       */
-     constexpr normalized_source_tile(const is_tile auto &tile)
+     constexpr NormalizedSourceTile(const is_tile auto &tile)
      {
           m_tex_id_buffer = m_tex_id_buffer.with_id(tile.texture_id())
                               .with_blend(tile.blend())
@@ -74,7 +74,7 @@ struct normalized_source_tile
       * @param tile The tile object to assign from.
       * @return Reference to the updated normalized tile.
       */
-     constexpr normalized_source_tile &operator=(const is_tile auto &tile)
+     constexpr NormalizedSourceTile &operator=(const is_tile auto &tile)
      {
           m_tex_id_buffer = m_tex_id_buffer.with_id(tile.texture_id())
                               .with_blend(tile.blend())
@@ -98,17 +98,16 @@ struct normalized_source_tile
      }
 
      /// @brief Default copy constructor.
-     normalized_source_tile(const normalized_source_tile &) = default;
+     NormalizedSourceTile(const NormalizedSourceTile &)            = default;
 
      /// @brief Default copy assignment operator.
-     normalized_source_tile &operator=(const normalized_source_tile &)
-       = default;
+     NormalizedSourceTile &operator=(const NormalizedSourceTile &) = default;
 
      /// @brief Default move constructor.
-     normalized_source_tile(normalized_source_tile &&) noexcept = default;
+     NormalizedSourceTile(NormalizedSourceTile &&) noexcept        = default;
 
      /// @brief Default move assignment operator.
-     normalized_source_tile &operator=(normalized_source_tile &&) noexcept
+     NormalizedSourceTile &operator=(NormalizedSourceTile &&) noexcept
        = default;
 };
 
@@ -130,7 +129,7 @@ struct normalized_source_tile
  * palette is set to a unused (maximum value) because some animations have
  * frames with different palettes.
  */
-struct normalized_source_animated_tile
+struct NormalizedSourceAnimatedTile
 {
    public:
      TexIdBuffer m_tex_id_buffer = {};///< Buffer holding texture ID, depth, and
@@ -145,22 +144,21 @@ struct normalized_source_animated_tile
                                                     ///< no animation).
 
      /// @brief Default constructor.
-     constexpr normalized_source_animated_tile() = default;
+     constexpr NormalizedSourceAnimatedTile() = default;
 
 
      /// @brief Compares two animated tiles for equality or ordering.
-     constexpr auto operator<=>(const normalized_source_animated_tile &) const
+     constexpr auto operator<=>(const NormalizedSourceAnimatedTile &) const
        = default;
 
 
      /**
       * @brief Constructs a normalized animated tile from a
-      * `normalized_source_tile`.
+      * `NormalizedSourceTile`.
       *
       * @param tile The source tile to initialize this animated tile from.
       */
-     constexpr normalized_source_animated_tile(
-       const normalized_source_tile &tile)
+     constexpr NormalizedSourceAnimatedTile(const NormalizedSourceTile &tile)
        : m_tex_id_buffer(tile.m_tex_id_buffer.with_blend(0))
        , m_palette_id(
            tile.m_animation_id != (std::numeric_limits<std::uint8_t>::max)()
@@ -179,7 +177,7 @@ struct normalized_source_animated_tile
       * properties like texture ID, source position, etc.
       * @param tile The tile object to initialize this animated tile from.
       */
-     constexpr normalized_source_animated_tile(const is_tile auto &tile)
+     constexpr NormalizedSourceAnimatedTile(const is_tile auto &tile)
        : m_tex_id_buffer{ TexIdBuffer{}
                             .with_id(tile.texture_id())
                             .with_depth(tile.depth())
@@ -204,14 +202,14 @@ struct normalized_source_animated_tile
      }
 
      /**
-      * @brief Assigns values from a `normalized_source_tile` to this animated
+      * @brief Assigns values from a `NormalizedSourceTile` to this animated
       * tile.
       *
       * @param tile The source tile to assign from.
       * @return Reference to the updated animated tile.
       */
-     constexpr normalized_source_animated_tile &
-       operator=(const normalized_source_tile &tile)
+     constexpr NormalizedSourceAnimatedTile &
+       operator=(const NormalizedSourceTile &tile)
      {
           m_tex_id_buffer = tile.m_tex_id_buffer.with_blend(0);
           m_palette_id
@@ -232,8 +230,7 @@ struct normalized_source_animated_tile
       * @param tile The tile object to assign from.
       * @return Reference to the updated animated tile.
       */
-     constexpr normalized_source_animated_tile &
-       operator=(const is_tile auto &tile)
+     constexpr NormalizedSourceAnimatedTile &operator=(const is_tile auto &tile)
      {
           m_tex_id_buffer = TexIdBuffer{}
                               .with_id(tile.texture_id())
@@ -259,23 +256,23 @@ struct normalized_source_animated_tile
      }
 
      /// @brief Default copy constructor.
-     constexpr normalized_source_animated_tile(
-       const normalized_source_animated_tile &)
+     constexpr NormalizedSourceAnimatedTile(
+       const NormalizedSourceAnimatedTile &)
        = default;
 
      /// @brief Default copy assignment operator.
-     constexpr normalized_source_animated_tile &
-       operator=(const normalized_source_animated_tile &)
+     constexpr NormalizedSourceAnimatedTile &
+       operator=(const NormalizedSourceAnimatedTile &)
        = default;
 
      /// @brief Default move constructor.
-     constexpr normalized_source_animated_tile(
-       normalized_source_animated_tile &&) noexcept
+     constexpr NormalizedSourceAnimatedTile(
+       NormalizedSourceAnimatedTile &&) noexcept
        = default;
 
      /// @brief Default move assignment operator.
-     constexpr normalized_source_animated_tile &
-       operator=(normalized_source_animated_tile &&) noexcept
+     constexpr NormalizedSourceAnimatedTile &
+       operator=(NormalizedSourceAnimatedTile &&) noexcept
        = default;
 };
 }// namespace open_viii::graphics::background

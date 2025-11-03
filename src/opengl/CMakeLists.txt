@@ -1,4 +1,5 @@
 add_subdirectory(stbi)
+add_subdirectory(ff_8)
 add_subdirectory(glengine)
 add_subdirectory(experimental)
 add_subdirectory(main)

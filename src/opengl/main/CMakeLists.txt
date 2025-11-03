@@ -53,7 +53,6 @@ set(MAIN_SOURCES
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
-    PupuID.cpp
     safedir.cpp
     save_image_pbo.cpp
     source_tile_conflicts.cpp
@@ -96,6 +95,7 @@ target_link_libraries(
   PRIVATE glfw
   PRIVATE OpenGL::GL
   PRIVATE glengine
+  PRIVATE ${PROJECT_NAME}_ff_8
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics

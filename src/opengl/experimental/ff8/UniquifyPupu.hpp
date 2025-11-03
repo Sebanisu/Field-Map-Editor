@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
 #define FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
-#include "PupuID.hpp"
+#include <ff_8/PupuID.hpp>
 #include <map>
 
 class UniquifyPupu
@@ -12,14 +12,14 @@ class UniquifyPupu
    public:
      struct PupuKey
      {
-          PupuID       pupu_id                            = {};
+          ff_8::PupuID pupu_id                            = {};
           std::int16_t x                                  = {};
           std::int16_t y                                  = {};
           auto         operator<=>(const PupuKey &) const = default;
      };
      std::map<PupuKey, std::uint8_t> m_pupu_map = {};
 
-     PupuID                          operator()(
+     ff_8::PupuID                    operator()(
        const open_viii::graphics::background::is_tile auto &tile_const)
      {
           const auto tile_size = 16;
@@ -28,8 +28,8 @@ class UniquifyPupu
           const auto y_position
             = static_cast<int16_t>(tile_const.y() / tile_size);
           auto input_value
-            = PupuKey{ PupuID(tile_const), x_position, y_position };
-          auto insert_key = [&](PupuKey key) -> PupuID
+            = PupuKey{ ff_8::PupuID(tile_const), x_position, y_position };
+          auto insert_key = [&](PupuKey key) -> ff_8::PupuID
           {
                if (m_pupu_map.contains(key))
                {
@@ -44,15 +44,16 @@ class UniquifyPupu
           };
           return insert_key(input_value);
      }
-     //  operator UniqueValues<PupuID>() const
+     //  operator UniqueValues<ff_8::PupuID>() const
      //  {
-     //    std::vector<PupuID> values{};
+     //    std::vector<ff_8::PupuID> values{};
      //    std::ranges::transform(m_pupu_map,
-     //    std::back_insert_iterator(values),[](auto && key_value)->PupuID{
+     //    std::back_insert_iterator(values),[](auto &&
+     //    key_value)->ff_8::PupuID{
      //      const auto & [key,value] = key_value;
      //      return key.pupu_id;
      //    });
-     //    UniqueValues<PupuID>{std::move(values)};
+     //    UniqueValues<ff_8::PupuID>{std::move(values)};
      //  }
 };
 #endif// FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP

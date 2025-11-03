@@ -1,5 +1,5 @@
-#include "PupuID.hpp"
-#include "formatters.hpp"
+#include "Formatters.hpp"
+#include <ff_8/PupuID.hpp>
 using namespace open_viii::graphics::background;
 namespace ff_8
 {

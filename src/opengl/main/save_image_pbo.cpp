@@ -3,8 +3,8 @@
 //
 #include "save_image_pbo.hpp"
 #include "formatters.hpp"
-#include "PupuID.hpp"
 #include <clip.h>
+#include <ff_8/PupuID.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <map>
 #include <ranges>

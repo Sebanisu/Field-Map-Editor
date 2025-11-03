@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 
-#include "PupuID.hpp"
+#include <ff_8/PupuID.hpp>
 #include <filesystem>
 #include <future>
 #include <GL/glew.h>

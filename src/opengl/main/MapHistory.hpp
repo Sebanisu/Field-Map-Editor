@@ -4,10 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
-#include "normalized_source_tile.hpp"
-#include "PupuID.hpp"
 #include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
+#include <ff_8/NormalizedSourceTile.hpp>
+#include <ff_8/PupuID.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <map>
@@ -50,11 +50,10 @@ class [[nodiscard]] MapHistory
       * @brief Alias for the `Map` type from `open_viii::graphics::background`.
       */
      using map_t   = open_viii::graphics::background::Map;
-     using nst_map = std::map<
-       open_viii::graphics::background::normalized_source_tile,
-       std::uint8_t>;
+     using nst_map = std::
+       map<open_viii::graphics::background::NormalizedSourceTile, std::uint8_t>;
      using nsat_map = std::map<
-       open_viii::graphics::background::normalized_source_animated_tile,
+       open_viii::graphics::background::NormalizedSourceAnimatedTile,
        std::uint8_t>;
 
    private:
@@ -777,7 +776,7 @@ class [[nodiscard]] MapHistory
       *
       * This getter provides access to the `m_working_similar_counts` map, which
       * contains the frequency of normalized tiles in the working map state. The
-      * map is of type `std::map<normalized_source_tile, std::uint8_t>`, where
+      * map is of type `std::map<NormalizedSourceTile, std::uint8_t>`, where
       * the key represents a normalized tile and the value represents how many
       * times it appears.
       *

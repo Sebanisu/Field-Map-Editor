@@ -149,7 +149,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * counted. The range can be any iterable sequence of indices that corresponds
  * to the tiles within the map.
  *
- * @return A map of `normalized_source_tile` to `std::uint8_t` where the key is
+ * @return A map of `NormalizedSourceTile` to `std::uint8_t` where the key is
  * the normalized tile and the value is the count of its occurrences within the
  * specified range of tile indices.
  *
@@ -158,7 +158,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * given range.
  */
 [[nodiscard]] static std::map<
-  normalized_source_tile,
+  NormalizedSourceTile,
   std::uint8_t>
   populate_similar_tile_count(
     const map_t              &map,
@@ -168,7 +168,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
      return map.visit_tiles(
        [&](const auto &tiles)
        {
-            std::map<normalized_source_tile, std::uint8_t> ret = {};
+            std::map<NormalizedSourceTile, std::uint8_t> ret = {};
             const auto to_tile = [&](const auto index)
             {
                  assert(
@@ -195,7 +195,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  *
  * This function processes a range of tile indices within the map and counts the
  * frequency of normalized animated tiles. The result is a map where each key is
- * a `normalized_source_animated_tile`, and the corresponding value represents
+ * a `NormalizedSourceAnimatedTile`, and the corresponding value represents
  * the count of its occurrences in the specified range.
  *
  * This function is useful for identifying frequently used animated tiles within
@@ -207,7 +207,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * to be counted. The range can be any iterable sequence of indices
  * corresponding to tiles in the map.
  *
- * @return A map of `normalized_source_animated_tile` to `std::uint8_t` where
+ * @return A map of `NormalizedSourceAnimatedTile` to `std::uint8_t` where
  * the key is the normalized animated tile and the value is the count of its
  * occurrences within the specified range of tile indices.
  *
@@ -216,7 +216,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * indices into tiles and count their occurrences.
  */
 [[nodiscard]] static std::map<
-  normalized_source_animated_tile,
+  NormalizedSourceAnimatedTile,
   std::uint8_t>
   populate_animation_tile_count(
     const map_t              &map,
@@ -226,7 +226,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
      return map.visit_tiles(
        [&](const auto &tiles)
        {
-            std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
+            std::map<NormalizedSourceAnimatedTile, std::uint8_t> ret = {};
             const auto to_tile = [&](const auto index)
             {
                  assert(
@@ -261,11 +261,11 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 //  counts.
 //  * @return A map of normalized source animated tiles to their total counts.
 //  */
-// [[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
+// [[nodiscard]] static std::map<NormalizedSourceAnimatedTile, std::uint8_t>
 //   populate_animation_tile_count(const ff_8::MapHistory::nst_map
 //   &similar_tiles)
 // {
-//      std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
+//      std::map<NormalizedSourceAnimatedTile, std::uint8_t> ret = {};
 //      for (const auto &[tile, count] : similar_tiles)
 //      {
 //           ret[tile] += count;
