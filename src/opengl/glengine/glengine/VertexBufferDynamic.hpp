@@ -6,9 +6,9 @@
 #define FIELD_MAP_EDITOR_VERTEXBUFFERDYNAMIC_HPP
 #include "IndexBufferDynamicSize.hpp"
 #include "Renderer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
 #include "Vertex.hpp"
+#include <glengine/ScopeGuard.hpp>
 namespace glengine
 {
 class VertexBufferDynamic

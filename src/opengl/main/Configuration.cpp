@@ -4,8 +4,8 @@
 
 #include "Configuration.hpp"
 #include "safedir.hpp"
+#include <glengine/ScopeGuard.hpp>
 #include <iostream>
-#include <ScopeGuard.hpp>
 #include <stacktrace>
 
 fme::Configuration::Configuration(std::filesystem::path in_path)

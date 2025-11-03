@@ -19,18 +19,18 @@
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include <algorithm>
-#include <BatchRenderer.hpp>
-#include <CompShader.hpp>
 #include <cstdint>
-#include <DistanceBuffer.hpp>
 #include <fmt/format.h>
-#include <FrameBuffer.hpp>
-#include <HistogramBuffer.hpp>
-#include <OrthographicCamera.hpp>
-#include <PaletteBuffer.hpp>
+#include <glengine/BatchRenderer.hpp>
+#include <glengine/CompShader.hpp>
+#include <glengine/DistanceBuffer.hpp>
+#include <glengine/FrameBuffer.hpp>
+#include <glengine/HistogramBuffer.hpp>
+#include <glengine/OrthographicCamera.hpp>
+#include <glengine/PaletteBuffer.hpp>
+#include <glengine/Shader.hpp>
+#include <glengine/Texture.hpp>
 #include <set>
-#include <Shader.hpp>
-#include <Texture.hpp>
 #include <utility>
 
 namespace fme

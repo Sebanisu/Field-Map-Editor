@@ -12,31 +12,31 @@ find_package(imgui REQUIRED)
 find_package(spdlog REQUIRED)
 add_library(
   glengine STATIC
-  BatchRenderer.cpp
-  BlendModeSettings.cpp
-  CompShader.cpp
-  Counter.cpp
-  DistanceBuffer.cpp
-  FrameBuffer.cpp
-  FrameBufferBackup.cpp
-  GLCheck.cpp
-  HistogramBuffer.cpp
-  Image.cpp
-  IndexBuffer.cpp
-  IndexBufferDynamic.cpp
-  Input.cpp
-  Layer/LayerItem.cpp
-  Layer/LayerStack.cpp
-  MenuItem.cpp
-  PaletteBuffer.cpp
-  Shader.cpp
-  SubTexture.cpp
-  Texture.cpp
-  TimeStep.cpp
-  Vertex.cpp
-  VertexArray.cpp
-  VertexBuffer.cpp
-  VertexBufferDynamic.cpp)
+  glengine/BatchRenderer.cpp
+  glengine/BlendModeSettings.cpp
+  glengine/CompShader.cpp
+  glengine/Counter.cpp
+  glengine/DistanceBuffer.cpp
+  glengine/FrameBuffer.cpp
+  glengine/FrameBufferBackup.cpp
+  glengine/GLCheck.cpp
+  glengine/HistogramBuffer.cpp
+  glengine/Image.cpp
+  glengine/IndexBuffer.cpp
+  glengine/IndexBufferDynamic.cpp
+  glengine/Input.cpp
+  glengine/Layer/LayerItem.cpp
+  glengine/Layer/LayerStack.cpp
+  glengine/MenuItem.cpp
+  glengine/PaletteBuffer.cpp
+  glengine/Shader.cpp
+  glengine/SubTexture.cpp
+  glengine/Texture.cpp
+  glengine/TimeStep.cpp
+  glengine/Vertex.cpp
+  glengine/VertexArray.cpp
+  glengine/VertexBuffer.cpp
+  glengine/VertexBufferDynamic.cpp)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(glengine PUBLIC stdc++exp)

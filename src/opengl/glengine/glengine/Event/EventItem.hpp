@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_EVENTITEM_HPP
 #define FIELD_MAP_EDITOR_EVENTITEM_HPP
-#include "Event.hpp"
-#include "MakeVisitor.hpp"
+#include "glengine/Event/Event.hpp"
+#include "glengine/MakeVisitor.hpp"
 namespace glengine
 {
 namespace event

@@ -1,43 +1,57 @@
-#ifndef BC882A74_AA62_484B_A1DD_0524A057427E
-#define BC882A74_AA62_484B_A1DD_0524A057427E
+//
+// Created by pcvii on 11/22/2021.
+//
+
+#ifndef FIELD_MAP_EDITOR_SHADER_HPP
+#define FIELD_MAP_EDITOR_SHADER_HPP
 #include "GLCheck.hpp"
 #include "Renderer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
 #include <filesystem>
 #include <fstream>
+#include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
-struct CompShader
+struct [[nodiscard]] Shader
 {
    private:
-     std::filesystem::path m_path{};
-     Glid                  m_program_id{};
-
-     static GLuint         create_compute_shader(const std::string &source);
-     static GLuint         create_compute_program(const GLuint &shader);
-
+     struct ShaderProgramSource
+     {
+          std::string vertex_shader{};
+          std::string fragment_shader{};
+     };
+     std::filesystem::path                                      m_file_path{};
+     Glid                                                       m_renderer_id{};
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
+     [[nodiscard]] static ShaderProgramSource
+       parse_shader(const std::filesystem::path &path);
+     [[nodiscard]] static std::uint32_t compile_shader(
+       const std::uint32_t    type,
+       const std::string_view source);
+     [[nodiscard]] static std::uint32_t create_shader(
+       const std::string_view,
+       const std::string_view);
+     [[nodiscard]] std::int32_t
+       get_uniform_location(std::string_view name) const;
 
    public:
-     CompShader() = default;
-     CompShader(std::filesystem::path in_path)
-       : m_path(std::move(in_path))
-       , m_program_id(
-           Glid{ create(m_path),
+     Shader() = default;
+     Shader(std::filesystem::path file_path)
+       : m_file_path(std::move(file_path))
+       , m_renderer_id(
+           Glid{ create(m_file_path),
                  destroy })
      {
      }
-     void     bind() const;
-     GlidCopy id() const;
-     void     execute(
-       GLuint,
-       GLuint,
-       GLbitfield) const;
 
+     static GLuint             create(const std::filesystem::path &path);
+     static void               destroy(const GLuint id);
+
+     void                      bind() const;
+     static void               unbind();
      [[nodiscard]] static auto backup()
      {
           GLint program_binding{ 0 };// save original
@@ -48,8 +62,6 @@ struct CompShader
      }
 
      // Set Uniforms
-     [[nodiscard]] std::int32_t
-          get_uniform_location(std::string_view name) const;
      void set_uniform(
        std::string_view name,
        glm::vec1        v) const;
@@ -186,9 +198,7 @@ struct CompShader
                perform(glUniform1iv);
           }
      }
-
-     static GLuint create(const std::filesystem::path &path);
-     static void   destroy(const GLuint id);
 };
+static_assert(Bindable<Shader>);
 }// namespace glengine
-#endif /* BC882A74_AA62_484B_A1DD_0524A057427E */
+#endif// FIELD_MAP_EDITOR_SHADER_HPP

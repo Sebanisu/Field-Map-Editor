@@ -4,10 +4,10 @@
 #include "mim_sprite.hpp"
 #include "mouse_positions.hpp"
 #include "Selections.hpp"
-#include <BatchRenderer.hpp>
-#include <FrameBuffer.hpp>
+#include <glengine/BatchRenderer.hpp>
+#include <glengine/FrameBuffer.hpp>
+#include <glengine/OrthographicCamera.hpp>
 #include <imgui.h>
-#include <OrthographicCamera.hpp>
 namespace fme
 {
 struct [[nodiscard]] draw_window

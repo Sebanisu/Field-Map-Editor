@@ -1,9 +1,9 @@
 #include "OrthographicCameraController.hpp"
-#include "Event/EventDispatcher.hpp"
-#include "GLCheck.hpp"
-#include "Input.hpp"
-#include <imgui.h>
 #include <algorithm>
+#include <glengine/Event/EventDispatcher.hpp>
+#include <glengine/GLCheck.hpp>
+#include <glengine/Input.hpp>
+#include <imgui.h>
 namespace glengine
 {
 void OrthographicCameraController::check_input(float ts) const

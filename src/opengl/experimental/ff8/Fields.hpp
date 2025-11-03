@@ -9,7 +9,7 @@
 #include "fmt/format.h"
 #include "MapFilters.hpp"
 #include "MapHistory.hpp"
-#include <DelayedTextures.hpp>
+#include <glengine/DelayedTextures.hpp>
 namespace ff_8
 {
 class Fields

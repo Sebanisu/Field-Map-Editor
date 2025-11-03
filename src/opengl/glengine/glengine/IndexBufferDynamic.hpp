@@ -6,9 +6,9 @@
 #define FIELD_MAP_EDITOR_INDEXBUFFERDYNAMIC_HPP
 #include "IndexType.hpp"
 #include "Renderer.hpp"
-#include "ScopeGuard.hpp"
 #include "UniqueValue.hpp"
 #include "Vertex.hpp"
+#include <glengine/ScopeGuard.hpp>
 namespace glengine
 {
 class IndexBufferDynamic

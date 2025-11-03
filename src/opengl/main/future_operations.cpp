@@ -3,7 +3,7 @@
 //
 
 #include "future_operations.hpp"
-#include <Image.hpp>
+#include <glengine/Image.hpp>
 #include <iostream>
 #include <span>
 #include <stacktrace>

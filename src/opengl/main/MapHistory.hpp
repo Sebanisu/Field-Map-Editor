@@ -8,11 +8,11 @@
 #include "PupuID.hpp"
 #include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
+#include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <map>
 #include <open_viii/graphics/background/Map.hpp>
 #include <ranges>
-#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 /**
  * @namespace ff_8

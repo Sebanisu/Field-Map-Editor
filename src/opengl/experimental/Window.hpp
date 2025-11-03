@@ -8,9 +8,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-#include "Event/EventItem.hpp"
-#include "Input.hpp"
 #include <functional>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/Input.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>

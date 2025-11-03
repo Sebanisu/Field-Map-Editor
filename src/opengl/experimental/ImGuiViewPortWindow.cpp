@@ -3,7 +3,7 @@
 //
 
 #include "ImGuiViewPortWindow.hpp"
-#include "Event/EventDispatcher.hpp"
+#include <glengine/Event/EventDispatcher.hpp>
 #include <imgui.h>
 namespace glengine
 {

@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #define FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP
-#include "Event/EventItem.hpp"
-#include "OrthographicCamera.hpp"
-#include <Renderable.hpp>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/OrthographicCamera.hpp>
+#include <glengine/Renderable.hpp>
 #include <optional>
 namespace glengine
 {

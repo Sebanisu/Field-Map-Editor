@@ -3,9 +3,9 @@
 //
 
 #include "Application.hpp"
-#include <Event/EventDispatcher.hpp>
+#include <glengine/Event/EventDispatcher.hpp>
+#include <glengine/TimeStep.hpp>
 #include <test/LayerTests.hpp>
-#include <TimeStep.hpp>
 
 [[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow
   = nullptr;

@@ -2,11 +2,11 @@
 // Created by pcvii on 12/6/2021.
 //
 #include "Window.hpp"
-#include "Event/Event.hpp"
 #include "ImGuiPushID.hpp"
-#include "Renderer.hpp"
-#include <BlendModeSettings.hpp>
 #include <filesystem>
+#include <glengine/BlendModeSettings.hpp>
+#include <glengine/Event/Event.hpp>
+#include <glengine/Renderer.hpp>
 #include <spdlog/spdlog.h>
 
 namespace glengine

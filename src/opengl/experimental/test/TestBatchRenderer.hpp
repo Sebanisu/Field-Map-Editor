@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP
 #define FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP
-#include "BatchRenderer.hpp"
 #include "ImGuiViewPortWindow.hpp"
-#include "ScopeGuard.hpp"
+#include <glengine/BatchRenderer.hpp>
+#include <glengine/ScopeGuard.hpp>
 
 
 namespace test

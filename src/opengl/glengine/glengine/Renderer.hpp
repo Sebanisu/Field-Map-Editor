@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_RENDERER_HPP
 #include "GLCheck.hpp"
 #include "IndexType.hpp"
-#include "ScopeGuard.hpp"
+#include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <memory>
 namespace glengine

@@ -9,10 +9,10 @@
 #include "SimilarAdjustments.hpp"
 #include "tile_operations.hpp"
 #include "VisitState.hpp"
-#include <GenericCombo.hpp>
+#include <glengine/GenericCombo.hpp>
+#include <glengine/SubTexture.hpp>
 #include <ImGuiDisabled.hpp>
 #include <ImGuiPushItemWidth.hpp>
-#include <SubTexture.hpp>
 namespace ff_8
 {
 template<typename TileFunctions>

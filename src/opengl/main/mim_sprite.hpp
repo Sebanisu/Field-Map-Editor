@@ -8,8 +8,8 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "open_viii/graphics/Png.hpp"
+#include <glengine/Texture.hpp>
 #include <imgui.h>
-#include <Texture.hpp>
 #include <vector>
 // this will hold class that has enough info to load and draw mim files.
 namespace fme

@@ -5,10 +5,10 @@
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
 #include "Configuration.hpp"
-#include "ScopeGuard.hpp"
-#include <Event/EventItem.hpp>
+#include <glengine/Event/EventItem.hpp>
+#include <glengine/Renderable.hpp>
+#include <glengine/ScopeGuard.hpp>
 #include <open_viii/strings/LangCommon.hpp>
-#include <Renderable.hpp>
 namespace ff_8
 {
 class Coos

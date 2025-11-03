@@ -3,7 +3,7 @@
 //
 
 #include "Upscales.hpp"
-#include "GenericCombo.hpp"
+#include <glengine/GenericCombo.hpp>
 #include <tl/string.hpp>
 static constexpr auto swizzle_paths_index
   = std::string_view("swizzle_paths_index");
