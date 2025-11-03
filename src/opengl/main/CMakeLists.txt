@@ -58,7 +58,6 @@ set(MAIN_SOURCES
     source_tile_conflicts.cpp
     tile_sizes.cpp
     unique_values.cpp
-    UniquifyPupu.cpp
     utilities.cpp)
 
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

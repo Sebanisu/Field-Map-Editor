@@ -8,10 +8,10 @@
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "tile_operations.hpp"
-#include "UniquifyPupu.hpp"
 #include <concepts>
 #include <cstdint>
 #include <ff_8/PupuID.hpp>
+#include <ff_8/UniquifyPupu.hpp>
 #include <fmt/format.h>
 #include <map>
 #include <ranges>

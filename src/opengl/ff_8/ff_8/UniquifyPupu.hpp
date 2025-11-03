@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
 #define FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
-#include <ff_8/PupuID.hpp>
+#include "PupuID.hpp"
 #include <map>
 namespace ff_8
 {

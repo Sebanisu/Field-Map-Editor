@@ -46,7 +46,6 @@ add_executable(
   test/TestBatchRenderingTexture2DDynamic.cpp
   test/TestMenu.cpp
   test/TestTexture2D.cpp
-  ff8/UniquifyPupu.hpp
   Window.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_EXPERIMENTAL

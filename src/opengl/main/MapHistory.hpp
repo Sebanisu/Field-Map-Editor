@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "source_tile_conflicts.hpp"
-#include "UniquifyPupu.hpp"
 #include <ff_8/NormalizedSourceTile.hpp>
 #include <ff_8/PupuID.hpp>
+#include <ff_8/UniquifyPupu.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <map>
