@@ -21,10 +21,10 @@
 #include "MouseToTilePos.h"
 #include "OrthographicCameraController.hpp"
 #include "SimilarAdjustments.hpp"
-#include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueTileValues.hpp"
 #include "Window.hpp"
+#include <ff_8/TileOperations.hpp>
 #include <glengine/BatchRenderer.hpp>
 #include <glengine/BlendModeEquations.hpp>
 #include <glengine/BlendModeParameters.hpp>
@@ -69,41 +69,41 @@ class [[nodiscard]] MoveTiles
           std::vector<std::function<TileT(const TileT &)>> operations{};
           if constexpr (std::is_same_v<
                           typename TileFunctions::X,
-                          tile_operations::X>)
+                          TileOperations::X>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithX{ m_released.x, m_pressed.x });
+                 TileOperations::X::TranslateWith{ m_released.x, m_pressed.x });
           }
           if constexpr (std::is_same_v<
                           typename TileFunctions::Y,
-                          tile_operations::Y>)
+                          TileOperations::Y>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithY{ m_released.y, m_pressed.y });
+                 TileOperations::Y::TranslateWith{ m_released.y, m_pressed.y });
           }
           if constexpr (std::is_same_v<
                           typename TileFunctions::X,
-                          tile_operations::SourceX>)
+                          TileOperations::SourceX>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithSourceX{ m_released.x,
-                                                        m_pressed.x });
+                 TileOperations::SourceX::TranslateWith{ m_released.x,
+                                                         m_pressed.x });
           }
           if constexpr (std::is_same_v<
                           typename TileFunctions::Y,
-                          tile_operations::SourceY>)
+                          TileOperations::SourceY>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithSourceY{ m_released.y,
-                                                        m_pressed.y });
+                 TileOperations::SourceY::TranslateWith{ m_released.y,
+                                                         m_pressed.y });
           }
-
+          //@todo I donno what this if constexpr is doing.
           if constexpr (std::is_same_v<
                           typename TileFunctions::TexturePage,
-                          tile_operations::TextureId>)
+                          TileOperations::TextureId>)
           {
                operations.push_back(
-                 tile_operations::WithTextureId{ m_released.z });
+                 TileOperations::TextureId::With{ m_released.z });
           }
           GetMapHistory()->copy_working_perform_operation<TileT>(
             m_indexes,
@@ -794,7 +794,7 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{})
+                     | std::views::filter(TileOperations::NotInvalidTile{})
                      | std::views::filter(
                        []([[maybe_unused]] const auto &tile) -> bool
                        {
@@ -814,7 +814,7 @@ class Map
                       std::ranges::transform(
                         f_tiles,
                         std::back_inserter(unique_z),
-                        tile_operations::Z{});
+                        TileOperations::Z{});
                       std::ranges::sort(unique_z);
                       auto [begin, end] = std::ranges::unique(unique_z);
                       unique_z.erase(begin, end);
@@ -825,7 +825,7 @@ class Map
                  {
                       auto f_tiles_reverse_filter_z
                         = f_tiles | std::views::reverse
-                          | std::views::filter(tile_operations::ZMatch{ z });
+                          | std::views::filter(TileOperations::Z::Match{ z });
                       for (const auto &tile : f_tiles_reverse_filter_z)
                       {
                            if (!lambda(tile))
@@ -1060,7 +1060,7 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{});
+                     | std::views::filter(TileOperations::NotInvalidTile{});
                  return static_cast<std::size_t>(std::ranges::count_if(
                    f_tiles, [](auto &&) { return true; }));
             });
@@ -1074,7 +1074,7 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{})
+                     | std::views::filter(TileOperations::NotInvalidTile{})
                      | std::views::filter(filter);
                  bool       changed     = false;
                  VisitState visit_state = {};

@@ -222,7 +222,7 @@ template<std::ranges::range tilesT>
            {
                 if (
                   !skip_filters
-                  && ff_8::tile_operations::fail_any_filters(filters, tile))
+                  && ff_8::TileOperations::fail_any_filters(filters, tile))
                 {
                      return false;
                 }
@@ -303,7 +303,7 @@ template<std::ranges::range tilesT>
            {
                 if (
                   !skip_filters
-                  && ff_8::tile_operations::fail_any_filters(filters, tile))
+                  && ff_8::TileOperations::fail_any_filters(filters, tile))
                 {
                      return false;
                 }

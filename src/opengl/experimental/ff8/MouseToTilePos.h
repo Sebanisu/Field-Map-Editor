@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_MOUSETOTILEPOS_H
 #define FIELD_MAP_EDITOR_MOUSETOTILEPOS_H
 #include "MapDims.hpp"
-#include "tile_operations.hpp"
+#include <ff_8/TileOperations.hpp>
 namespace ff_8
 {
 class MouseToTilePos
@@ -33,7 +33,7 @@ class MouseToTilePos
      {
           static constexpr bool has_texture_page = std::is_same_v<
             typename TileFunctions::TexturePage,
-            tile_operations::TextureId>;
+            TileOperations::TextureId>;
           texture_page = [&]() -> std::uint8_t
           {
                if constexpr (has_texture_page)

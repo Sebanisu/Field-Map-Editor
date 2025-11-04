@@ -11,10 +11,10 @@
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
-#include "tile_operations.hpp"
 #include "utilities.hpp"
 #include <cstdint>
 #include <ff_8/PupuID.hpp>
+#include <ff_8/TileOperations.hpp>
 #include <filesystem>
 #include <fmt/format.h>
 #include <glengine/concepts.hpp>
@@ -209,7 +209,7 @@ struct ConfigKeys<FilterTag::DrawBit>
           return in ? draw_bitT::enabled : draw_bitT::disabled;
      }
      using operation_type
-       = decltype([](auto &&...args) { return to_draw_bitT(ff_8::tile_operations::Draw{}(std::forward<decltype(args)>(args)...)); });
+       = decltype([](auto &&...args) { return to_draw_bitT(ff_8::TileOperations::Draw{}(std::forward<decltype(args)>(args)...)); });
      static constexpr std::string_view key_name         = "filter_draw";
      static constexpr std::string_view enabled_key_name = "filter_draw_enabled";
 };
@@ -218,8 +218,8 @@ template<>
 struct ConfigKeys<FilterTag::Z>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::ZT<TileT>;
-     using operation_type = ff_8::tile_operations::Z;
+     using value_type     = ff_8::TileOperations::Z::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::Z;
      static constexpr std::string_view key_name         = "filter_z";
      static constexpr std::string_view enabled_key_name = "filter_z_enabled";
 };
@@ -228,9 +228,9 @@ struct ConfigKeys<FilterTag::Z>
 template<>
 struct ConfigKeys<FilterTag::MultiZ>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = std::vector<ff_8::tile_operations::ZT<TileT>>;
-     using operation_type = ff_8::tile_operations::Z;
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = std::vector<ff_8::TileOperations::Z::value_type<TileT>>;
+     using operation_type                       = ff_8::TileOperations::Z;
      static constexpr std::string_view key_name = "filter_multi_z";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_z_enabled";
@@ -240,8 +240,8 @@ template<>
 struct ConfigKeys<FilterTag::Palette>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::PaletteIdT<TileT>;
-     using operation_type = ff_8::tile_operations::PaletteId;
+     using value_type     = ff_8::TileOperations::PaletteId::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::PaletteId;
      static constexpr std::string_view key_name = "filter_palette";
      static constexpr std::string_view enabled_key_name
        = "filter_palette_enabled";
@@ -250,9 +250,10 @@ struct ConfigKeys<FilterTag::Palette>
 template<>
 struct ConfigKeys<FilterTag::MultiPalette>
 {
-     using TileT      = open_viii::graphics::background::Tile1;
-     using value_type = std::vector<ff_8::tile_operations::PaletteIdT<TileT>>;
-     using operation_type = ff_8::tile_operations::PaletteId;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::PaletteId::value_type<TileT>>;
+     using operation_type = ff_8::TileOperations::PaletteId;
      static constexpr std::string_view key_name = "filter_multi_palette";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_palette_enabled";
@@ -261,9 +262,9 @@ struct ConfigKeys<FilterTag::MultiPalette>
 template<>
 struct ConfigKeys<FilterTag::AnimationId>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::AnimationIdT<TileT>;
-     using operation_type = ff_8::tile_operations::AnimationId;
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = ff_8::TileOperations::AnimationId::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::AnimationId;
      static constexpr std::string_view key_name = "filter_animation_id";
      static constexpr std::string_view enabled_key_name
        = "filter_animation_id_enabled";
@@ -272,9 +273,10 @@ struct ConfigKeys<FilterTag::AnimationId>
 template<>
 struct ConfigKeys<FilterTag::MultiAnimationId>
 {
-     using TileT      = open_viii::graphics::background::Tile1;
-     using value_type = std::vector<ff_8::tile_operations::AnimationIdT<TileT>>;
-     using operation_type = ff_8::tile_operations::AnimationId;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::AnimationId::value_type<TileT>>;
+     using operation_type = ff_8::TileOperations::AnimationId;
      static constexpr std::string_view key_name = "filter_multi_animation_id";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_animation_id_enabled";
@@ -283,9 +285,9 @@ struct ConfigKeys<FilterTag::MultiAnimationId>
 template<>
 struct ConfigKeys<FilterTag::AnimationFrame>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::AnimationStateT<TileT>;
-     using operation_type = ff_8::tile_operations::AnimationState;
+     using TileT      = open_viii::graphics::background::Tile1;
+     using value_type = ff_8::TileOperations::AnimationState::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::AnimationState;
      static constexpr std::string_view key_name = "filter_animation_frame";
      static constexpr std::string_view enabled_key_name
        = "filter_animation_frame_enabled";
@@ -297,8 +299,8 @@ struct ConfigKeys<FilterTag::MultiAnimationState>
 {
      using TileT = open_viii::graphics::background::Tile1;
      using value_type
-       = std::vector<ff_8::tile_operations::AnimationStateT<TileT>>;
-     using operation_type = ff_8::tile_operations::AnimationState;
+       = std::vector<ff_8::TileOperations::AnimationState::value_type<TileT>>;
+     using operation_type = ff_8::TileOperations::AnimationState;
      static constexpr std::string_view key_name
        = "filter_multi_animation_frame";
      static constexpr std::string_view enabled_key_name
@@ -309,8 +311,8 @@ template<>
 struct ConfigKeys<FilterTag::LayerId>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::LayerIdT<TileT>;
-     using operation_type = ff_8::tile_operations::LayerId;
+     using value_type     = ff_8::TileOperations::LayerId::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::LayerId;
      static constexpr std::string_view key_name = "filter_layer_id";
      static constexpr std::string_view enabled_key_name
        = "filter_layer_id_enabled";
@@ -320,9 +322,10 @@ struct ConfigKeys<FilterTag::LayerId>
 template<>
 struct ConfigKeys<FilterTag::MultiLayerId>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = std::vector<ff_8::tile_operations::LayerIdT<TileT>>;
-     using operation_type = ff_8::tile_operations::LayerId;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::LayerId::value_type<TileT>>;
+     using operation_type                       = ff_8::TileOperations::LayerId;
      static constexpr std::string_view key_name = "filter_multi_layer_id";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_layer_id_enabled";
@@ -332,8 +335,8 @@ template<>
 struct ConfigKeys<FilterTag::TexturePageId>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::TextureIdT<TileT>;
-     using operation_type = ff_8::tile_operations::TextureId;
+     using value_type     = ff_8::TileOperations::TextureId::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::TextureId;
      static constexpr std::string_view key_name = "filter_texture_page_id";
      static constexpr std::string_view enabled_key_name
        = "filter_texture_page_id_enabled";
@@ -342,9 +345,10 @@ struct ConfigKeys<FilterTag::TexturePageId>
 template<>
 struct ConfigKeys<FilterTag::MultiTexturePageId>
 {
-     using TileT      = open_viii::graphics::background::Tile1;
-     using value_type = std::vector<ff_8::tile_operations::TextureIdT<TileT>>;
-     using operation_type = ff_8::tile_operations::TextureId;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::TextureId::value_type<TileT>>;
+     using operation_type = ff_8::TileOperations::TextureId;
      static constexpr std::string_view key_name
        = "filter_multi_texture_page_id";
      static constexpr std::string_view enabled_key_name
@@ -355,8 +359,8 @@ template<>
 struct ConfigKeys<FilterTag::BlendMode>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::BlendModeT<TileT>;
-     using operation_type = ff_8::tile_operations::BlendMode;
+     using value_type     = ff_8::TileOperations::BlendMode::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::BlendMode;
      static constexpr std::string_view key_name = "filter_blend_mode";
      static constexpr std::string_view enabled_key_name
        = "filter_blend_mode_enabled";
@@ -365,9 +369,10 @@ struct ConfigKeys<FilterTag::BlendMode>
 template<>
 struct ConfigKeys<FilterTag::MultiBlendMode>
 {
-     using TileT      = open_viii::graphics::background::Tile1;
-     using value_type = std::vector<ff_8::tile_operations::BlendModeT<TileT>>;
-     using operation_type = ff_8::tile_operations::BlendMode;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::BlendMode::value_type<TileT>>;
+     using operation_type = ff_8::TileOperations::BlendMode;
      static constexpr std::string_view enabled_key_name
        = "filter_multi_blend_mode_enabled";
      static constexpr std::string_view key_name = "filter_multi_blend_mode";
@@ -377,8 +382,8 @@ template<>
 struct ConfigKeys<FilterTag::BlendOther>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::BlendT<TileT>;
-     using operation_type = ff_8::tile_operations::Blend;
+     using value_type     = ff_8::TileOperations::Blend::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::Blend;
      static constexpr std::string_view key_name = "filter_blend_other";
      static constexpr std::string_view enabled_key_name
        = "filter_blend_other_enabled";
@@ -388,9 +393,10 @@ struct ConfigKeys<FilterTag::BlendOther>
 template<>
 struct ConfigKeys<FilterTag::MultiBlendOther>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = std::vector<ff_8::tile_operations::BlendT<TileT>>;
-     using operation_type = ff_8::tile_operations::Blend;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::Blend::value_type<TileT>>;
+     using operation_type                       = ff_8::TileOperations::Blend;
      static constexpr std::string_view key_name = "filter_multi_blend_other";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_blend_other_enabled";
@@ -400,8 +406,8 @@ template<>
 struct ConfigKeys<FilterTag::Bpp>
 {
      using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = ff_8::tile_operations::DepthT<TileT>;
-     using operation_type = ff_8::tile_operations::Depth;
+     using value_type     = ff_8::TileOperations::Depth::value_type<TileT>;
+     using operation_type = ff_8::TileOperations::Depth;
      static constexpr std::string_view key_name         = "filter_bpp";
      static constexpr std::string_view enabled_key_name = "filter_bpp_enabled";
 };
@@ -409,9 +415,10 @@ struct ConfigKeys<FilterTag::Bpp>
 template<>
 struct ConfigKeys<FilterTag::MultiBpp>
 {
-     using TileT          = open_viii::graphics::background::Tile1;
-     using value_type     = std::vector<ff_8::tile_operations::DepthT<TileT>>;
-     using operation_type = ff_8::tile_operations::Depth;
+     using TileT = open_viii::graphics::background::Tile1;
+     using value_type
+       = std::vector<ff_8::TileOperations::Depth::value_type<TileT>>;
+     using operation_type                       = ff_8::TileOperations::Depth;
      static constexpr std::string_view key_name = "filter_multi_bpp";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_bpp_enabled";
@@ -1503,7 +1510,7 @@ struct filters
           return results.all();
      }
 };
-namespace tile_operations
+namespace TileOperations
 {
      template<open_viii::graphics::background::is_tile tileT>
      bool fail_any_filters(
@@ -1512,6 +1519,6 @@ namespace tile_operations
      {
           return !std::invoke(filters, tile);
      }
-}// namespace tile_operations
+}// namespace TileOperations
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FILTER_HPP

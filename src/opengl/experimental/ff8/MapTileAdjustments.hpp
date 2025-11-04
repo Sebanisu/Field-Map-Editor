@@ -7,8 +7,8 @@
 #include "MapDims.hpp"
 #include "MapFilters.hpp"
 #include "SimilarAdjustments.hpp"
-#include "tile_operations.hpp"
 #include "VisitState.hpp"
+#include <ff_8/TileOperations.hpp>
 #include <glengine/GenericCombo.hpp>
 #include <glengine/SubTexture.hpp>
 #include <ImGuiDisabled.hpp>
@@ -111,7 +111,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           bool draw = tile.draw();
           if (ImGui::Checkbox("draw?", &draw))
           {
@@ -126,8 +126,9 @@ class MapTileAdjustments
                  m_matching,
                  [&](TileT &new_tile)
                  {
-                      new_tile
-                        = new_tile.with_draw(static_cast<DrawT<TileT>>(draw));
+                      new_tile = new_tile.with_draw(
+                        static_cast<TileOperations::Draw::value_type<TileT>>(
+                          draw));
                  });
           }
      }
@@ -272,8 +273,9 @@ class MapTileAdjustments
                      {},
                      ImGuiSliderFlags_AlwaysClamp))
                {
-                    group.current = static_cast<typename GroupT::value_type>(
-                      current_int * step);
+                    group.current
+                      = static_cast<typename GroupT::local_value_type>(
+                        current_int * step);
                     return true;
                }
           }
@@ -291,7 +293,7 @@ class MapTileAdjustments
        bool        &changed,
        const int    current_bpp_selection) const
      {
-          using namespace tile_operations;
+
           const float                   checkbox_width = get_checkbox_width(3U);
           const std::pair<float, float> item_width
             = generate_inner_width(2, checkbox_width);
@@ -301,7 +303,7 @@ class MapTileAdjustments
             m_matching.source_xy);
           checkbox_tool_tip(
             "##matching source_x", "Matching Source X", m_matching.source_x);
-          auto x = SourceXGroup(tile);
+          auto x = TileOperations::SourceX::Group(tile);
           if (generic_slider_int(
                 x,
                 item_width.first,
@@ -318,7 +320,7 @@ class MapTileAdjustments
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
           checkbox_tool_tip(
             "##matching source_y", "Matching Source Y", m_matching.source_y);
-          auto y = SourceYGroup(tile);
+          auto y = TileOperations::SourceY::Group(tile);
           if (generic_slider_int(y, item_width.second, tile.height()))
           {
                changed       = true;
@@ -345,7 +347,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           const float                   checkbox_width = get_checkbox_width(5U);
           const std::pair<float, float> item_width
             = generate_inner_width(3, checkbox_width);
@@ -359,7 +361,7 @@ class MapTileAdjustments
             m_matching.xy);
           checkbox_tool_tip(
             "##matching x", "Matching Destination X", m_matching.x);
-          auto x = XGroup{ tile };
+          auto x = TileOperations::X::Group{ tile };
           if (generic_slider_int(x, item_width.first, tile.width()))
           {
                changed = true;
@@ -372,7 +374,7 @@ class MapTileAdjustments
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
           checkbox_tool_tip(
             "##matching y", "Matching Destination Y", m_matching.y);
-          auto y = YGroup{ tile };
+          auto y = TileOperations::Y::Group{ tile };
           if (generic_slider_int(y, item_width.first, tile.width()))
           {
                changed = true;
@@ -385,7 +387,7 @@ class MapTileAdjustments
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
           checkbox_tool_tip(
             "##matching z", "Matching Destination Z", m_matching.z);
-          auto z = ZGroup{ tile };
+          auto z = TileOperations::Z::Group{ tile };
           if (generic_slider_int(z, item_width.second, tile.width()))
           {
                changed = true;
@@ -408,9 +410,9 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
-          const auto disabled
-            = glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
+
+          const auto disabled = glengine::ImGuiDisabled(
+            !TileOperations::BlendMode::has_setter<TileT>);
           const auto blend_mode            = tile.blend_mode();
           int current_blend_mode_selection = static_cast<int>(blend_mode);
           const std::array<std::string_view, 5> blend_mode_str = {
@@ -427,7 +429,7 @@ class MapTileAdjustments
                 blend_mode_str,
                 checkbox_width))
           {
-               if constexpr (has_with_blend_mode<TileT>)
+               if constexpr (TileOperations::BlendMode::has_setter<TileT>)
                {
                     changed = true;
                     m_map_history.copy_working_perform_operation(
@@ -435,9 +437,11 @@ class MapTileAdjustments
                       m_matching,
                       [&](TileT &new_tile)
                       {
-                           new_tile = new_tile.with_blend_mode(
-                             static_cast<BlendModeT<TileT>>(
-                               current_blend_mode_selection));
+                           const auto blendmode_f
+                             = TileOperations::BlendMode::With{
+                                    current_blend_mode_selection
+                               };
+                           new_tile = blendmode_f(new_tile);
                       });
                     m_filters.unique_tile_values().refresh_blend_mode(
                       m_map_history);
@@ -449,7 +453,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           using namespace open_viii::graphics::background;
           int        layer_id = tile.layer_id();
           const auto disabled
@@ -463,8 +467,8 @@ class MapTileAdjustments
           if (ImGui::SliderInt(
                 "Layer ID",
                 &layer_id,
-                LayerIdT<TileT>{},
-                LayerIdT<TileT>{ 0b0111'1111U },
+                TileOperations::LayerId::value_type<TileT>{},
+                TileOperations::LayerId::value_type<TileT>{ 0b0111'1111U },
                 {},
                 ImGuiSliderFlags_AlwaysClamp))
           {
@@ -477,7 +481,9 @@ class MapTileAdjustments
                       [&](TileT &new_tile)
                       {
                            new_tile = new_tile.with_layer_id(
-                             static_cast<LayerIdT<TileT>>(layer_id));
+                             static_cast<
+                               TileOperations::LayerId::value_type<TileT>>(
+                               layer_id));
                       });
                     m_filters.unique_tile_values().refresh_layer_id(
                       m_map_history);
@@ -489,7 +495,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           int         texture_page_id = static_cast<int>(tile.texture_id());
           const float checkbox_width  = get_checkbox_width(1U);
           const float width           = ImGui::CalcItemWidth();
@@ -502,8 +508,8 @@ class MapTileAdjustments
           if (ImGui::SliderInt(
                 "Texture Page ID",
                 &texture_page_id,
-                TextureIdT<TileT>{},
-                TextureIdT<TileT>{
+                TileOperations::TextureId::value_type<TileT>{},
+                TileOperations::TextureId::value_type<TileT>{
                   12U },// 15 is max val but 12 or 11 is max used
                 {},
                 ImGuiSliderFlags_AlwaysClamp))
@@ -515,7 +521,9 @@ class MapTileAdjustments
                  [&](TileT &new_tile)
                  {
                       new_tile = new_tile.with_texture_id(
-                        static_cast<TextureIdT<TileT>>(texture_page_id));
+                        static_cast<
+                          TileOperations::TextureId::value_type<TileT>>(
+                          texture_page_id));
                  });
                m_filters.unique_tile_values().refresh_texture_page_id(
                  m_map_history);
@@ -526,7 +534,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
           const auto  pop_width
@@ -539,8 +547,8 @@ class MapTileAdjustments
           if (ImGui::SliderInt(
                 "Palette ID",
                 &palette_id,
-                PaletteIdT<TileT>{},
-                PaletteIdT<TileT>{ 0b1111U },
+                TileOperations::PaletteId::value_type<TileT>{},
+                TileOperations::PaletteId::value_type<TileT>{ 0b1111U },
                 {},
                 ImGuiSliderFlags_AlwaysClamp))
 
@@ -552,7 +560,9 @@ class MapTileAdjustments
                  [&](TileT &new_tile)
                  {
                       new_tile = new_tile.with_palette_id(
-                        static_cast<PaletteIdT<TileT>>(palette_id));
+                        static_cast<
+                          TileOperations::PaletteId::value_type<TileT>>(
+                          palette_id));
                  });
                m_filters.unique_tile_values().refresh_palette_id(m_map_history);
           }
@@ -562,7 +572,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           int         blend          = tile.blend();
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
@@ -573,8 +583,8 @@ class MapTileAdjustments
           if (ImGui::SliderInt(
                 "Blend Other",
                 &blend,
-                BlendT<TileT>{},
-                BlendT<TileT>{ 0b0011U },
+                TileOperations::Blend::value_type<TileT>{},
+                TileOperations::Blend::value_type<TileT>{ 0b0011U },
                 {},
                 ImGuiSliderFlags_AlwaysClamp))
           {
@@ -585,7 +595,8 @@ class MapTileAdjustments
                  [&](TileT &new_tile)
                  {
                       new_tile = new_tile.with_blend(
-                        static_cast<BlendT<TileT>>(blend));
+                        static_cast<TileOperations::Blend::value_type<TileT>>(
+                          blend));
                  });
                m_filters.unique_tile_values().refresh_blend_other(
                  m_map_history);
@@ -596,7 +607,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+
           using namespace open_viii::graphics::background;
           int         animation_id    = tile.animation_id();
           int         animation_state = tile.animation_state();
@@ -615,8 +626,10 @@ class MapTileAdjustments
                if (ImGui::SliderInt(
                      "##Animation ID",
                      &animation_id,
-                     std::numeric_limits<AnimationIdT<TileT>>::min(),
-                     std::numeric_limits<AnimationIdT<TileT>>::max(),
+                     std::numeric_limits<
+                       TileOperations::AnimationId::value_type<TileT>>::min(),
+                     std::numeric_limits<
+                       TileOperations::AnimationId::value_type<TileT>>::max(),
                      {},
                      ImGuiSliderFlags_AlwaysClamp))
                {
@@ -629,7 +642,8 @@ class MapTileAdjustments
                            [&](TileT &new_tile)
                            {
                                 new_tile = new_tile.with_animation_id(
-                                  static_cast<AnimationIdT<TileT>>(
+                                  static_cast<TileOperations::AnimationId::
+                                                value_type<TileT>>(
                                     animation_id));
                            });
                          m_filters.unique_tile_values().refresh_animation_id(
@@ -650,8 +664,10 @@ class MapTileAdjustments
                if (ImGui::SliderInt(
                      "##Animation State",
                      &animation_state,
-                     std::numeric_limits<AnimationStateT<TileT>>::min(),
-                     std::numeric_limits<AnimationStateT<TileT>>::max(),
+                     std::numeric_limits<TileOperations::AnimationState::
+                                           value_type<TileT>>::min(),
+                     std::numeric_limits<TileOperations::AnimationState::
+                                           value_type<TileT>>::max(),
                      {},
                      ImGuiSliderFlags_AlwaysClamp))
                {
@@ -664,7 +680,8 @@ class MapTileAdjustments
                            [&](TileT &new_tile)
                            {
                                 new_tile = new_tile.with_animation_state(
-                                  static_cast<AnimationStateT<TileT>>(
+                                  static_cast<TileOperations::AnimationState::
+                                                value_type<TileT>>(
                                     animation_state));
                            });
                          m_filters.unique_tile_values().refresh_animation_frame(

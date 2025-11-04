@@ -1064,7 +1064,7 @@ void map_sprite::update_position(
                return;
           }
 
-          if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+          if (ff_8::TileOperations::fail_any_filters(m_filters, tile))
           {
                failures.emplace(DrawError::FilteredOut);
                return;
@@ -1271,7 +1271,7 @@ void map_sprite::update_position(
      //                return;
      //           }
      //      }
-     //      if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+     //      if (ff_8::TileOperations::fail_any_filters(m_filters, tile))
      //      {
      //           return;
      //      }
