@@ -130,14 +130,6 @@ struct TileOperation
           }
      };
 
-     //  template<open_viii::graphics::background::is_tile TileT>
-     //  Match(const TileT &tile) -> Match<value_type<TileT>>;
-
-     //  template<typename T>
-     //       requires(!open_viii::graphics::background::is_tile<T>)
-     //  Match(T) -> Match<T>;
-
-
      // === With ===
      template<typename InputT>
      struct With
@@ -190,13 +182,6 @@ struct TileOperation
           }
      };
 
-     //  template<open_viii::graphics::background::is_tile TileT>
-     //  With(const TileT &tile) -> With<value_type<TileT>>;
-
-     //  template<typename T>
-     //       requires(!open_viii::graphics::background::is_tile<T>)
-     //  With(T) -> With<T>;
-
      // === TranslateWith ===
      template<typename InputT>
      struct TranslateWith
@@ -231,9 +216,22 @@ struct TileOperation
                         set_fn_t,
                         std::nullptr_t>)
           {
-               const auto current = m_to + GetFn(tile) - m_from;
-               spdlog::trace("translate with_...: {} -> {}", current, current);
-               return SetFn(tile, static_cast<value_type<TileT>>(current));
+               if constexpr (requires(ValueT a, ValueT b) {
+                                  { a + b } -> std::convertible_to<ValueT>;
+                                  { a - b } -> std::convertible_to<ValueT>;
+                             })
+               {
+                    const auto current = m_to + GetFn(tile) - m_from;
+                    spdlog::trace(
+                      "translate with_...: {} -> {}", current, current);
+                    return SetFn(tile, static_cast<value_type<TileT>>(current));
+               }
+               else
+               {
+                    spdlog::debug(
+                      "translate skipped for type without + or - support");
+                    return tile;
+               }
           }
 
           template<open_viii::graphics::background::is_tile TileT>
@@ -246,18 +244,15 @@ struct TileOperation
                spdlog::debug("no translate with_... available");
                return tile;
           }
+
+          template<open_viii::graphics::background::is_tile TileT>
+          friend constexpr TileT operator|(
+            const TileT         &tile,
+            const TranslateWith &op)
+          {
+               return op(tile);
+          }
      };
-
-     //  template<open_viii::graphics::background::is_tile TileT>
-     //  TranslateWith(
-     //    const TileT &tile,
-     //    value_type<TileT>) -> TranslateWith<value_type<TileT>>;
-
-     //  template<typename T>
-     //       requires(!open_viii::graphics::background::is_tile<T>)
-     //  With(
-     //    T,
-     //    T) -> With<T>;
 
      // === Group (UI State) ===
      template<open_viii::graphics::background::is_tile TileT>
@@ -395,7 +390,17 @@ using Depth = TileOperation<
 
 using LayerId = TileOperation<
   [](auto &&t) { return t.layer_id(); },
-  [](auto &&t, auto v) { return t.with_layer_id(v); }>;
+  [](open_viii::graphics::background::is_tile auto &&t, auto v)
+  {
+       if constexpr (requires { t.with_layer_id(v); })
+       {
+            return t.with_layer_id(v);
+       }
+       else
+       {
+            return std::forward<decltype(t)>(t);
+       }
+  }>;
 
 using PaletteId = TileOperation<
   [](auto &&t) { return t.palette_id(); },
@@ -403,11 +408,31 @@ using PaletteId = TileOperation<
 
 using AnimationId = TileOperation<
   [](auto &&t) { return t.animation_id(); },
-  [](auto &&t, auto v) { return t.with_animation_id(v); }>;
+  [](open_viii::graphics::background::is_tile auto &&t, auto v)
+  {
+       if constexpr (requires { t.with_animation_id(v); })
+       {
+            return t.with_animation_id(v);
+       }
+       else
+       {
+            return std::forward<decltype(t)>(t);
+       }
+  }>;
 
 using AnimationState = TileOperation<
   [](auto &&t) { return t.animation_state(); },
-  [](auto &&t, auto v) { return t.with_animation_state(v); }>;
+  [](open_viii::graphics::background::is_tile auto &&t, auto v)
+  {
+       if constexpr (requires { t.with_animation_state(v); })
+       {
+            return t.with_animation_state(v);
+       }
+       else
+       {
+            return std::forward<decltype(t)>(t);
+       }
+  }>;
 
 struct NotInvalidTile
 {
