@@ -312,8 +312,8 @@ class MapTileAdjustments
                   std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
           {
                changed       = true;
-               const auto op = [&](TileT &new_tile)
-               { new_tile = new_tile.with_source_x(x.current); };
+               const auto op = [current = x.current](TileT &new_tile)
+               { new_tile = new_tile.with_source_x(current); };
                m_map_history.copy_working_perform_operation(
                  tile, m_matching, op);
           }
@@ -324,8 +324,8 @@ class MapTileAdjustments
           if (generic_slider_int(y, item_width.second, tile.height()))
           {
                changed       = true;
-               const auto op = [&](TileT &new_tile)
-               { new_tile = new_tile.with_source_y(y.current); };
+               const auto op = [current = y.current](TileT &new_tile)
+               { new_tile = new_tile.with_source_y(current); };
                m_map_history.copy_working_perform_operation(
                  tile, m_matching, op);
           }
