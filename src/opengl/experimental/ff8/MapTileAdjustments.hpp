@@ -368,8 +368,8 @@ class MapTileAdjustments
                m_map_history.copy_working_perform_operation(
                  tile,
                  m_matching,
-                 [&](TileT &new_tile)
-                 { new_tile = new_tile.with_x(x.current); });
+                 [current = x.current](TileT &new_tile)
+                 { new_tile = new_tile.with_x(current); });
           }
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
           checkbox_tool_tip(
@@ -381,8 +381,8 @@ class MapTileAdjustments
                m_map_history.copy_working_perform_operation(
                  tile,
                  m_matching,
-                 [&](TileT &new_tile)
-                 { new_tile = new_tile.with_y(y.current); });
+                 [current = y.current](TileT &new_tile)
+                 { new_tile = new_tile.with_y(current); });
           }
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
           checkbox_tool_tip(
@@ -394,8 +394,8 @@ class MapTileAdjustments
                m_map_history.copy_working_perform_operation(
                  tile,
                  m_matching,
-                 [&](TileT &new_tile)
-                 { new_tile = new_tile.with_z(z.current); });
+                 [current = z.current](TileT &new_tile)
+                 { new_tile = new_tile.with_z(current); });
                m_filters.unique_tile_values().refresh_z(m_map_history);
           }
           ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
