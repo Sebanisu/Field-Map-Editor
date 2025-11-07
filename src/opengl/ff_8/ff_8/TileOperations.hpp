@@ -442,6 +442,117 @@ struct NotInvalidTile
           return std::cmp_not_equal(tile.x(), 0x7FFFU);
      }
 };
+namespace SwizzleAsOneImage
+{
+     struct Base
+     {
+          static constexpr int                        TILE_SIZE          = 16;
+          static constexpr int                        TEXTURE_PAGE_WIDTH = 256;
+          const open_viii::graphics::background::Map &map;
+
+          static int tiles_per_row(std::size_t size)
+          {
+               if (size > TILE_SIZE)
+               {
+                    return static_cast<int>(size) / TILE_SIZE
+                           + ((static_cast<int>(size) % TILE_SIZE) != 0 ? 1 : 0);
+               }
+               return TILE_SIZE;
+          }
+
+          template<typename TileVec>
+          static std::size_t index_of(
+            const TileVec &tiles,
+            const auto    &tile)
+          {
+               return static_cast<std::size_t>(
+                 std::distance(std::begin(tiles), std::addressof(tile)));
+          }
+          struct index_and_size
+          {
+               std::size_t index{};
+               std::size_t size{};
+          };
+
+        protected:
+          template<typename TileT>
+          index_and_size get_index_and_size(const TileT &tile) const
+          {
+               std::size_t index{};
+               std::size_t total_size{};
+
+               map.visit_tiles(
+                 [&](auto &&tiles)
+                 {
+                      using VecT  = std::remove_cvref_t<decltype(tiles)>;
+                      using ElemT = typename VecT::value_type;
+
+                      if constexpr (std::is_same_v<ElemT, TileT>)
+                      {
+                           auto filtered
+                             = tiles | std::views::filter(NotInvalidTile{});
+                           total_size = std::ranges::distance(filtered);
+                           index      = index_of(tiles, tile);
+                      }
+                 });
+
+               return { index, total_size };
+          }
+     };
+
+     struct X : Base
+     {
+          using Base::Base;// inherit constructor
+
+          template<typename TileT>
+          auto operator()(const TileT &tile) const
+          {
+               const auto &[index, total_size] = get_index_and_size(tile);
+
+               const int tpr                   = tiles_per_row(total_size);
+               const int x     = (static_cast<int>(index) % tpr) * TILE_SIZE;
+               const int tp    = x / TEXTURE_PAGE_WIDTH;
+               const int src_x = x - tp * TEXTURE_PAGE_WIDTH;
+
+               return static_cast<
+                 ff_8::TileOperations::SourceX::value_type<TileT>>(src_x);
+          }
+     };
+
+     struct Y : Base
+     {
+          using Base::Base;
+
+          template<typename TileT>
+          auto operator()(const TileT &tile) const
+          {
+               const auto &[index, total_size] = get_index_and_size(tile);
+
+               const int tpr                   = tiles_per_row(total_size);
+               const int y = (static_cast<int>(index) / tpr) * TILE_SIZE;
+
+               return static_cast<
+                 ff_8::TileOperations::SourceY::value_type<TileT>>(y);
+          }
+     };
+
+     struct TextureId : Base
+     {
+          using Base::Base;
+
+          template<typename TileT>
+          auto operator()(const TileT &tile) const
+          {
+               const auto &[index, total_size] = get_index_and_size(tile);
+
+               const int tpr                   = tiles_per_row(total_size);
+               const int x  = (static_cast<int>(index) % tpr) * TILE_SIZE;
+               const int tp = x / TEXTURE_PAGE_WIDTH;
+
+               return static_cast<std::uint8_t>(tp);
+          }
+     };
+}// namespace SwizzleAsOneImage
 
 }// namespace ff_8::TileOperations
 #endif /* DC423E74_7AF3_459A_A708_F6C46A9776EA */
