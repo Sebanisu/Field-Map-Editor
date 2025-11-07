@@ -59,17 +59,17 @@ int main()
                // ----- WITH -----
                if constexpr (Op::template has_setter<TileT>)
                {
-                    [[maybe_unused]] auto t2 = t | Op::With(new_val);
+                    [[maybe_unused]] auto t2 = t | typename Op::With(new_val);
                     // expect(eq(op(t2), new_val));
                }
                else
                {
-                    auto t2 = t | Op::With(new_val);
+                    auto t2 = t | typename Op::With(new_val);
                     expect(eq(Op(t2), Op(t)));// unchanged on read-only
                }
 
                // ----- MATCH -----
-               expect(eq(Op::Match(t)(t), true));
+               expect(eq(typename Op::Match(t)(t), true));
                // expect(eq(Op::Match(new_val)(t), false));
                // expect(neq(op(t), new_val));
 
@@ -78,18 +78,19 @@ int main()
                Val to   = static_cast<Val>(1);
                if constexpr (Op::template has_setter<TileT>)
                {
-                    [[maybe_unused]] auto t3 = t | Op::TranslateWith(from, to);
+                    [[maybe_unused]] auto t3
+                      = t | typename Op::TranslateWith(from, to);
                     // expect(neq(op(t3), to)); //sometimes eq sometimes
                     // neq
                }
                else
                {
-                    auto t3 = t | Op::TranslateWith(from, to);
+                    auto t3 = t | typename Op::TranslateWith(from, to);
                     expect(eq(Op(t3), Op(t)));// unchanged
                }
 
                // ----- GROUP -----
-               auto grp = Op::template Group<TileT>(t);
+               auto grp = typename Op::template Group<TileT>(t);
                expect(eq(grp.current, op(t)));
                expect(eq(grp.read_only, !Op::template has_setter<TileT>));
           };
