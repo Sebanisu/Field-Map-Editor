@@ -40,7 +40,6 @@ set(MAIN_SOURCES
     gui/Selections.cpp
     gui/textures_window.cpp
     gui/tool_tip.cpp
-    archives_group.cpp
     Configuration.cpp
     formatters.cpp
     future_operations.cpp

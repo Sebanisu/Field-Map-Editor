@@ -4110,7 +4110,7 @@ float gui::scaled_menubar_gap() const
 //      scaled_gap), m_scale_width, std::round(img_height +
 //      //     scaled_gap))));
 // }
-archives_group gui::get_archives_group() const
+ff_8::ArchivesGroup gui::get_archives_group() const
 {
      if (!std::ranges::empty(m_selections->get<ConfigKey::FF8Path>()))
      {
@@ -4121,7 +4121,7 @@ archives_group gui::get_archives_group() const
 }
 void gui::update_path()
 {
-     m_archives_group = std::make_shared<archives_group>(
+     m_archives_group = std::make_shared<ff_8::ArchivesGroup>(
        m_archives_group->with_path(m_selections->get<ConfigKey::FF8Path>()));
      m_batch_window = m_archives_group;
      m_custom_paths_window.refresh();
@@ -4187,9 +4187,10 @@ gui::gui(GLFWwindow *const window)
                                              // ImGuiIO::Fonts
 
      // 6. MISC
-     m_archives_group = std::make_shared<archives_group>(get_archives_group());
-     m_batch_window   = fme::batch{ m_selections, m_archives_group };
-     m_field          = init_field();
+     m_archives_group
+       = std::make_shared<ff_8::ArchivesGroup>(get_archives_group());
+     m_batch_window = fme::batch{ m_selections, m_archives_group };
+     m_field        = init_field();
      m_field_file_window.refresh(m_field);
      m_mim_sprite = get_mim_sprite();
      m_map_sprite = get_map_sprite();

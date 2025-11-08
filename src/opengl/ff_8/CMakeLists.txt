@@ -7,8 +7,10 @@ find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 add_library(
   ${PROJECT_NAME}_ff_8 STATIC
+  ff_8/ArchivesGroup.cpp
   ff_8/PupuID.cpp
-  ff_8/UniquifyPupu.cpp)
+  ff_8/UniquifyPupu.cpp
+  )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(${PROJECT_NAME}_ff_8 PUBLIC stdc++exp)

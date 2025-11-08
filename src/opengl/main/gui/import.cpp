@@ -1,5 +1,4 @@
 #include "import.hpp"
-#include "archives_group.hpp"
 #include "as_string.hpp"
 #include "collapsing_tile_info.hpp"
 #include "compact_type.hpp"
@@ -17,6 +16,7 @@
 #include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <array>
+#include <ff_8/ArchivesGroup.hpp>
 #include <imgui.h>
 #include <open_viii/graphics/BPPT.hpp>
 #include <toml++/toml.h>

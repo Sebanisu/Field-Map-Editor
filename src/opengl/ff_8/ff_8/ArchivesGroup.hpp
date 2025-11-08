@@ -1,13 +1,13 @@
 //
 // Created by pcvii on 9/5/2021.
-//
 
-#ifndef FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP
-#define FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP
-#include "map_sprite.hpp"
-#include "mim_sprite.hpp"
-#include "open_viii/archive/Archives.hpp"
-struct archives_group
+#ifndef E9C12B82_BF66_405D_B9CA_BB704F701019
+#define E9C12B82_BF66_405D_B9CA_BB704F701019
+#include "Formatters.hpp"
+#include <open_viii/archive/Archives.hpp>
+namespace ff_8
+{
+struct ArchivesGroup
 {
    private:
      open_viii::LangT             m_coo           = {};
@@ -25,8 +25,8 @@ struct archives_group
    public:
      [[nodiscard]] static std::vector<const char *>
        get_c_str(const std::vector<std::string> &in_vector);
-     archives_group() = default;
-     [[maybe_unused]] archives_group(
+     ArchivesGroup() = default;
+     [[maybe_unused]] ArchivesGroup(
        const open_viii::LangT       in_coo,
        const std::filesystem::path &in_path)
        : m_coo(in_coo)
@@ -38,11 +38,11 @@ struct archives_group
      {
      }
      /**
-      * Creates a new archives_group pointing to the provided path.
+      * Creates a new ArchivesGroup pointing to the provided path.
       * @param in_path new path.
-      * @return new archives_group
+      * @return new ArchivesGroup
       */
-     [[nodiscard]] archives_group
+     [[nodiscard]] ArchivesGroup
        with_path(const std::filesystem::path &in_path) const;
      [[maybe_unused]] [[nodiscard]] const open_viii::LangT                                          &
        coo() const noexcept;
@@ -62,4 +62,5 @@ struct archives_group
                        field(int current_map) const;
      [[nodiscard]] int find_field(std::string_view needle) const;
 };
-#endif// FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP
+}// namespace ff_8
+#endif /* E9C12B82_BF66_405D_B9CA_BB704F701019 */

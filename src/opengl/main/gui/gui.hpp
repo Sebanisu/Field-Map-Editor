@@ -7,7 +7,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-#include "archives_group.hpp"
 #include "as_string.hpp"
 #include "batch.hpp"
 #include "colors.hpp"
@@ -34,6 +33,7 @@
 #include "Selections.hpp"
 #include "textures_window.hpp"
 #include <cstdint>
+#include <ff_8/ArchivesGroup.hpp>
 #include <fmt/chrono.h>
 #include <glengine/ScopeGuard.hpp>
 #include <glengine/TimeStep.hpp>
@@ -71,13 +71,13 @@ struct gui
      // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader
      // = {};
      static constexpr std::int8_t tile_size_px = { 16 };
-     static constexpr std::uint8_t   tile_size_px_unsigned = { 16U };
-     int                             m_field_index         = {};
-     float                           m_scale_width         = {};
-     glengine::TimeStep              m_delta_clock         = {};
-     float                           m_elapsed_time        = {};///< seconds
-     std::shared_ptr<archives_group> m_archives_group      = {};
-     batch                           m_batch_window        = {};
+     static constexpr std::uint8_t        tile_size_px_unsigned = { 16U };
+     int                                  m_field_index         = {};
+     float                                m_scale_width         = {};
+     glengine::TimeStep                   m_delta_clock         = {};
+     float                                m_elapsed_time   = {};///< seconds
+     std::shared_ptr<ff_8::ArchivesGroup> m_archives_group = {};
+     batch                                m_batch_window   = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
      std::array<float, 2>                               xy           = {};
      std::shared_ptr<mim_sprite>                        m_mim_sprite = {};
@@ -148,7 +148,7 @@ struct gui
                                  m_future_of_future_consumer = {};
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
-     archives_group              get_archives_group() const;
+     ff_8::ArchivesGroup         get_archives_group() const;
      void                        update_path();
      void                        consume_one_future();
      std::shared_ptr<mim_sprite> get_mim_sprite() const;

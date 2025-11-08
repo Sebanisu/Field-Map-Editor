@@ -2363,7 +2363,7 @@ void fme::batch::open_directory_browser()
      }
 }
 
-fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
+fme::batch &fme::batch::operator=(std::weak_ptr<ff_8::ArchivesGroup> new_group)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2434,8 +2434,8 @@ void fme::batch::stop()
 }
 
 fme::batch::batch(
-  std::weak_ptr<Selections>     existing_selections,
-  std::weak_ptr<archives_group> existing_group)
+  std::weak_ptr<Selections>          existing_selections,
+  std::weak_ptr<ff_8::ArchivesGroup> existing_group)
 {
      operator=(std::move(existing_selections));
      operator=(std::move(existing_group));

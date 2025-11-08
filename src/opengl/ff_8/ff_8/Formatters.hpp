@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 #include <functional>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/Map.hpp>
