@@ -504,7 +504,7 @@ namespace SwizzleAsOneImage
      {
           using Base::Base;// inherit constructor
 
-          template<typename TileT>
+          template<open_viii::graphics::background::is_tile TileT>
           auto operator()(const TileT &tile) const
           {
                const auto &[index, total_size] = get_index_and_size(tile);
@@ -523,7 +523,7 @@ namespace SwizzleAsOneImage
      {
           using Base::Base;
 
-          template<typename TileT>
+          template<open_viii::graphics::background::is_tile TileT>
           auto operator()(const TileT &tile) const
           {
                const auto &[index, total_size] = get_index_and_size(tile);
@@ -540,7 +540,7 @@ namespace SwizzleAsOneImage
      {
           using Base::Base;
 
-          template<typename TileT>
+          template<open_viii::graphics::background::is_tile TileT>
           auto operator()(const TileT &tile) const
           {
                const auto &[index, total_size] = get_index_and_size(tile);
