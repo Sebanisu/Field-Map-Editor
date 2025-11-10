@@ -1,10 +1,9 @@
 #include "history_window.hpp"
-#include "colors.hpp"
 #include "format_imgui_text.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
 #include "tool_tip.hpp"
-
 
 void fme::history_window::render() const
 {
@@ -84,15 +83,17 @@ void fme::history_window::draw_table() const
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{ colors::TableDarkGray });// Dark gray
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableDarkGray));// Dark gray
                       }
                       else
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{
-                               colors::TableLightDarkGray });// Slightly lighter
-                                                             // gray
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableLightDarkGray));// Slightly
+                                                                  // lighter
+                                                                  // gray
                       }
                       ++i;
 
@@ -118,9 +119,13 @@ void fme::history_window::draw_table() const
 
                       const auto pop_id = PushPopID();
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderHovered, colors::TableDarkGrayHovered);
+                        ImGuiCol_HeaderHovered,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkGrayHovered));
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderActive, colors::TableDarkGrayActive);
+                        ImGuiCol_HeaderActive,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkGrayActive));
                       if (ImGui::Selectable(
                             "##undo_history",
                             false,
@@ -175,15 +180,17 @@ void fme::history_window::draw_table() const
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{ colors::TableDarkRed });// Dark red
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableDarkRed));// Dark red
                       }
                       else
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{
-                               colors::TableLightDarkRed });// Slightly lighter
-                                                            // dark red
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableLightDarkRed));// Slightly
+                                                                 // lighter dark
+                                                                 // red
                       }
                       ++i;
 
@@ -209,9 +216,13 @@ void fme::history_window::draw_table() const
                       const auto pop_id = PushPopID();
 
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
+                        ImGuiCol_HeaderHovered,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkRedHovered));
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderActive, colors::TableDarkRedActive);
+                        ImGuiCol_HeaderActive,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkRedActive));
                       if (ImGui::Selectable(
                             "##redo history",
                             false,

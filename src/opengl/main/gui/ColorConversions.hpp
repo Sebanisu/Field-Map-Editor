@@ -7,6 +7,20 @@
 
 namespace ff_8::Colors
 {
+// darkstyle imgui color blue tint
+
+static inline const ImGuiStyle DarkStyle = []()
+{
+     auto s = ImGuiStyle{};
+     ImGui::StyleColorsDark(&s);
+     return s;
+}();
+static inline const Color Button = Color{ DarkStyle.Colors[ImGuiCol_Button] };
+static inline const Color ButtonHovered
+  = Color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
+static inline const Color ButtonActive
+  = Color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
+
 [[nodiscard]] constexpr ImVec4 to_imvec4(const Color &c) noexcept
 {
      constexpr float max_f
@@ -32,6 +46,12 @@ namespace ff_8::Colors
      return { static_cast<float>(c.r) / max_f, static_cast<float>(c.g) / max_f,
               static_cast<float>(c.b) / max_f,
               static_cast<float>(c.a) / max_f };
+}
+
+[[nodiscard]] constexpr ImU32 to_imU32(const Color &c) noexcept
+{
+     // ImGui’s packing order: 0xAABBGGRR
+     return IM_COL32(c.r, c.g, c.b, c.a);
 }
 
 //  Pipeable range adaptors

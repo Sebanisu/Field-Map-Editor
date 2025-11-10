@@ -1,4 +1,5 @@
 #include "create_tile_button.hpp"
+#include "gui/ColorConversions.hpp"
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
 [[nodiscard]] bool fme::create_tile_button(
@@ -77,19 +78,23 @@ template<is_tile tileT>
      int pop_var_count = {};
      if (options.button_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
+          ImGui::PushStyleColor(
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(options.button_color.value()));
           ++pop_count;
      }
      if (options.button_hover_color.has_value())
      {
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, options.button_hover_color.value());
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(options.button_hover_color.value()));
           ++pop_count;
      }
      if (options.button_active_color.has_value())
      {
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, options.button_active_color.value());
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(options.button_active_color.value()));
           ++pop_count;
      }
      if (options.padding_size.has_value())
@@ -118,8 +123,8 @@ template<is_tile tileT>
           : options.size),
        uv0,
        uv1,
-       ImVec4{ options.background_color },
-       ImVec4{ options.tint_color });
+       ff_8::Colors::to_imvec4(options.background_color),
+       ff_8::Colors::to_imvec4(options.tint_color));
 }
 
 
@@ -156,19 +161,22 @@ template [[nodiscard]] bool fme::create_tile_button(
      if (m_options.button_color.has_value())
      {
           ImGui::PushStyleColor(
-            ImGuiCol_Button, m_options.button_color.value());
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(m_options.button_color.value()));
           ++pop_count;
      }
      if (m_options.button_hover_color.has_value())
      {
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, m_options.button_hover_color.value());
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(m_options.button_hover_color.value()));
           ++pop_count;
      }
      if (m_options.button_active_color.has_value())
      {
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, m_options.button_active_color.value());
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(m_options.button_active_color.value()));
           ++pop_count;
      }
      if (m_options.padding_size.has_value())
@@ -199,6 +207,6 @@ template [[nodiscard]] bool fme::create_tile_button(
           : m_options.size),
        uv0,
        uv1,
-       ImVec4{ m_options.background_color },
-       ImVec4{ m_options.tint_color });
+       ff_8::Colors::to_imvec4(m_options.background_color),
+       ff_8::Colors::to_imvec4(m_options.tint_color));
 }

@@ -3,7 +3,6 @@
 //
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
-#include "colors.hpp"
 #include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "draw_mode.hpp"
@@ -11,6 +10,7 @@
 #include "formatters.hpp"
 #include "tile_sizes.hpp"
 #include "utilities.hpp"
+#include <ff_8/Colors.hpp>
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
@@ -722,21 +722,21 @@ struct SelectionInfo<ConfigKey::BackgroundCheckerboardScale>
 template<>
 struct SelectionInfo<ConfigKey::BackgroundColor>
 {
-     using value_type                     = color;
+     using value_type                     = ff_8::Color;
      static constexpr std::string_view id = "BackgroundColor";
      static inline value_type          default_value()
      {
-          return fme::colors::White;
+          return ff_8::Colors::White;
      }
 };
 template<>
 struct SelectionInfo<ConfigKey::BackgroundColor2>
 {
-     using value_type                     = color;
+     using value_type                     = ff_8::Color;
      static constexpr std::string_view id = "BackgroundColor2";
      static inline value_type          default_value()
      {
-          return fme::colors::White;
+          return ff_8::Colors::White;
      }
 };
 template<>
@@ -1269,9 +1269,9 @@ struct SelectionLoadStrategy
           {
                value = config[id].value_or(value.u8string());
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
-               value = std::bit_cast<fme::color>(
+               value = std::bit_cast<ff_8::Color>(
                  config[id].value_or(std::bit_cast<std::uint32_t>(value)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
@@ -1479,7 +1479,7 @@ struct SelectionUpdateStrategy
                  std::filesystem::path(str_val).string());
                config.insert_or_assign(id, str_val);
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
                config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));

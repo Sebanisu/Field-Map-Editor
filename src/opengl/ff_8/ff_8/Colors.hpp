@@ -353,8 +353,112 @@ namespace Colors
      static constexpr Color Pink        = { 255, 192, 203 };
      static constexpr Color Brown       = { 78, 39, 5 };
 
+
+     static constexpr auto  ColorValues
+       = std::array{ Red,    Green, Blue,    White, Black,     Transparent,
+                     Yellow, Cyan,  Magenta, Gray,  LightGray, DarkGray,
+                     Orange, Peach, Purple,  Pink,  Brown };
+
+     static constexpr auto ColorNames
+       = std::array<std::string_view, std::ranges::size(ColorValues)>{
+              "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
+              "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
+              "Orange", "Peach", "Purple",  "Pink",  "Brown"
+         };
+
      // (All the button / table Colors from the original file – unchanged)
-     // …
+
+     // Green tint
+     static constexpr Color ButtonGreen = Color{ 0.26f, 0.98f, 0.26f, 0.40f };
+     static constexpr Color ButtonGreenHovered
+       = Color{ 0.26f, 0.98f, 0.26f, 1.00f };
+     static constexpr Color ButtonGreenActive
+       = Color{ 0.06f, 0.53f, 0.06f, 1.00f };
+
+     // Red tint
+     static constexpr Color ButtonRed = Color{ 0.98f, 0.26f, 0.26f, 0.40f };
+     static constexpr Color ButtonRedHovered
+       = Color{ 0.98f, 0.26f, 0.26f, 1.00f };
+     static constexpr Color ButtonRedActive
+       = Color{ 0.53f, 0.06f, 0.06f, 1.00f };
+
+     // Dark Blue tint
+     static constexpr Color ButtonDarkBlue
+       = Color{ 0.26f, 0.26f, 0.59f, 0.40f };
+     static constexpr Color ButtonDarkBlueHovered
+       = Color{ 0.26f, 0.26f, 0.59f, 1.00f };
+     static constexpr Color ButtonDarkBlueActive
+       = Color{ 0.06f, 0.06f, 0.53f, 1.00f };
+
+     // Yellow tint
+     static constexpr Color ButtonYellow = Color{ 0.98f, 0.98f, 0.26f, 0.40f };
+     static constexpr Color ButtonYellowHovered
+       = Color{ 0.98f, 0.98f, 0.26f, 1.00f };
+     static constexpr Color ButtonYellowActive
+       = Color{ 0.53f, 0.53f, 0.06f, 1.00f };
+
+     // Orange tint
+     static constexpr Color ButtonOrange = Color{ 0.98f, 0.59f, 0.26f, 0.40f };
+     static constexpr Color ButtonOrangeHovered
+       = Color{ 0.98f, 0.59f, 0.26f, 1.00f };
+     static constexpr Color ButtonOrangeActive
+       = Color{ 0.53f, 0.26f, 0.06f, 1.00f };
+
+     // Pink tint
+     static constexpr Color ButtonPink = Color{ 0.98f, 0.26f, 0.59f, 0.40f };
+     static constexpr Color ButtonPinkHovered
+       = Color{ 0.98f, 0.26f, 0.59f, 1.00f };
+     static constexpr Color ButtonPinkActive
+       = Color{ 0.53f, 0.06f, 0.29f, 1.00f };
+
+     // Tan tint
+     static constexpr Color ButtonTan = Color{ 0.98f, 0.84f, 0.57f, 0.40f };
+     static constexpr Color ButtonTanHovered
+       = Color{ 0.98f, 0.84f, 0.57f, 1.00f };
+     static constexpr Color ButtonTanActive
+       = Color{ 0.53f, 0.48f, 0.29f, 1.00f };
+
+     // tableColors
+     static constexpr Color TableDarkRed        = Color{ 120, 40, 40 };
+     static constexpr Color TableLightDarkRed   = Color{ 160, 60, 60 };
+     static constexpr Color TableDarkRedHovered = TableLightDarkRed.fade(0.4F);
+     static constexpr Color TableDarkRedActive  = Color{ 100, 20, 20 };
+
+     static constexpr Color TableDarkGray       = Color{ 80, 80, 80 };
+     static constexpr Color TableLightDarkGray  = Color{ 100, 100, 100 };
+     static constexpr Color TableDarkGrayHovered
+       = TableLightDarkGray.fade(0.4F);
+     static constexpr Color TableDarkGrayActive = Color{ 50, 50, 50 };
+
+     static constexpr Color TableDarkBlue       = Color{ 40, 60, 120 };
+     static constexpr Color TableLightDarkBlue  = Color{ 60, 90, 160 };
+     static constexpr Color TableDarkBlueHovered
+       = TableLightDarkBlue.fade(0.4F);
+     static constexpr Color TableDarkBlueActive = Color{ 20, 40, 100 };
+
+     static constexpr Color TableDarkGreen      = Color{ 40, 120, 60 };
+     static constexpr Color TableLightDarkGreen = Color{ 60, 160, 90 };
+     static constexpr Color TableDarkGreenHovered
+       = TableLightDarkGreen.fade(0.4F);
+     static constexpr Color TableDarkGreenActive = Color{ 20, 100, 40 };
+
+     static constexpr Color TableDarkPurple      = Color{ 80, 40, 120 };
+     static constexpr Color TableLightDarkPurple = Color{ 110, 60, 160 };
+     static constexpr Color TableDarkPurpleHovered
+       = TableLightDarkPurple.fade(0.4F);
+     static constexpr Color TableDarkPurpleActive = Color{ 50, 20, 100 };
+
+     static constexpr Color TableDarkTeal         = Color{ 40, 100, 100 };
+     static constexpr Color TableLightDarkTeal    = Color{ 60, 140, 140 };
+     static constexpr Color TableDarkTealHovered
+       = TableLightDarkTeal.fade(0.4F);
+     static constexpr Color TableDarkTealActive  = Color{ 20, 80, 80 };
+
+     static constexpr Color TableDarkOrange      = Color{ 120, 80, 40 };
+     static constexpr Color TableLightDarkOrange = Color{ 160, 110, 60 };
+     static constexpr Color TableDarkOrangeHovered
+       = TableLightDarkOrange.fade(0.4F);
+     static constexpr Color TableDarkOrangeActive = Color{ 100, 50, 20 };
 
 
      // HSV → RGB conversion (GLM-free)

@@ -1,6 +1,7 @@
 #include "filter_window.hpp"
 #include "as_string.hpp"
 #include "generic_combo.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui/ImGuiDisabled.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
@@ -2515,11 +2516,15 @@ void fme::filter_window::render_thumbnail_button(
                                } };
      if (selected)
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreen));
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenHovered));
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
      if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))

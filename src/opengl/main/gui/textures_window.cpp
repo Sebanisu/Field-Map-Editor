@@ -333,11 +333,15 @@ void fme::textures_window::render_thumbnail_button(
                                } };
      if (selected)
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreen));
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenHovered));
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
      const auto pop_id = PushPopID();
@@ -371,11 +375,15 @@ void fme::textures_window::render_thumbnail_button(
                                } };
      if (selected)
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreen));
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenHovered));
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
      const auto pop_id = PushPopID();

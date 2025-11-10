@@ -3,8 +3,8 @@
 //
 #include "gui.hpp"
 #include "collapsing_tile_info.hpp"
-#include "colors.hpp"
 #include "EmptyStringIterator.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
 #include "imgui_color.hpp"
 #include "main_menu_paths.hpp"
@@ -527,7 +527,8 @@ void gui::tile_conflicts_panel()
             // Default hover options for ImGuiCol_ButtonHovered
             const auto options_hover
               = tile_button_options{ .size = { buttonWidth, buttonWidth },
-                                     .button_color = colors::ButtonHovered };
+                                     .button_color
+                                     = ff_8::Colors::ButtonHovered };
 
             // Default regular options for ImGuiCol_Button
             const auto options_regular
@@ -537,30 +538,32 @@ void gui::tile_conflicts_panel()
             // tint)
             const auto options_similar = tile_button_options{
                  .size                = { buttonWidth, buttonWidth },
-                 .button_color        = colors::ButtonGreen,
-                 .button_hover_color  = colors::ButtonGreenHovered,
-                 .button_active_color = colors::ButtonGreenActive
+                 .button_color        = ff_8::Colors::ButtonGreen,
+                 .button_hover_color  = ff_8::Colors::ButtonGreenHovered,
+                 .button_active_color = ff_8::Colors::ButtonGreenActive
             };
 
             // New hover options for similar tiles (green hover)
             const auto options_similar_hover = tile_button_options{
-                 .size         = { buttonWidth, buttonWidth },
-                 .button_color = colors::ButtonGreenHovered// Green hover tint
+                 .size = { buttonWidth, buttonWidth },
+                 .button_color
+                 = ff_8::Colors::ButtonGreenHovered// Green hover tint
             };
 
             // New options for when the animation count is greater than 1 (pink
             // tint)
             const auto options_animation = tile_button_options{
                  .size                = { buttonWidth, buttonWidth },
-                 .button_color        = colors::ButtonPink,
-                 .button_hover_color  = colors::ButtonPinkHovered,
-                 .button_active_color = colors::ButtonPinkActive
+                 .button_color        = ff_8::Colors::ButtonPink,
+                 .button_hover_color  = ff_8::Colors::ButtonPinkHovered,
+                 .button_active_color = ff_8::Colors::ButtonPinkActive
             };
 
             // New hover options for animation tiles (pink hover)
             const auto options_animation_hover = tile_button_options{
-                 .size         = { buttonWidth, buttonWidth },
-                 .button_color = colors::ButtonPinkHovered// pink hover tint
+                 .size = { buttonWidth, buttonWidth },
+                 .button_color
+                 = ff_8::Colors::ButtonPinkHovered// pink hover tint
             };
 
             format_imgui_text("{}", "Legend: ");
@@ -1162,32 +1165,32 @@ void gui::hovered_tiles_panel()
                              && std::cmp_greater(
                                similar_counts.at(working_tile), 1))
                            {
-                                return colors::ButtonGreenHovered;
+                                return ff_8::Colors::ButtonGreenHovered;
                            }
                            if (
                              animation_counts.contains(working_tile)
                              && std::cmp_greater(
                                animation_counts.at(working_tile), 1))
                            {
-                                return colors::ButtonPinkHovered;
+                                return ff_8::Colors::ButtonPinkHovered;
                            }
-                           return colors::ButtonHovered;
+                           return ff_8::Colors::ButtonHovered;
                       }
 
                       if (
                         similar_counts.contains(working_tile)
                         && std::cmp_greater(similar_counts.at(working_tile), 1))
                       {
-                           return colors::ButtonGreen;
+                           return ff_8::Colors::ButtonGreen;
                       }
                       if (
                         animation_counts.contains(working_tile)
                         && std::cmp_greater(
                           animation_counts.at(working_tile), 1))
                       {
-                           return colors::ButtonPink;
+                           return ff_8::Colors::ButtonPink;
                       }
-                      return colors::Button;
+                      return ff_8::Colors::Button;
                  }();
                  const auto options
                    = tile_button_options{ .size = { buttonWidth, buttonWidth },
@@ -2058,7 +2061,7 @@ void gui::edit_menu()
 
                float sz       = ImGui::GetTextLineHeight();
                auto  zip_view = std::ranges::views::zip(
-                 fme::colors::ColorValues, fme::colors::ColorNames);
+                 ff_8::Colors::ColorValues, ff_8::Colors::ColorNames);
                constexpr int columns = 2;
                format_imgui_wrapped_text(
                  "Hold Control to set Secondary Background Color");
@@ -2541,29 +2544,32 @@ void gui::file_menu()
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{ colors::TableDarkGray.fade(-.6F).fade_alpha(
-                             -.4F) });
+                           ImU32{
+                             ff_8::Colors::TableDarkGray.fade(-.6F).fade_alpha(
+                               -.4F) });
                     }
                     else
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{
-                             colors::TableLightDarkGray.fade(-.6F).fade_alpha(
-                               -.4F) });
+                           ImU32{ ff_8::Colors::TableLightDarkGray.fade(-.6F)
+                                    .fade_alpha(-.4F) });
                     }
                     ImGui::TableNextColumn();
                     ImGui::PushStyleColor(
-                      ImGuiCol_HeaderHovered, colors::ButtonHovered);
+                      ImGuiCol_HeaderHovered,
+                      ff_8::Colors::to_imvec4(ff_8::Colors::ButtonHovered));
                     ImGui::PushStyleColor(
-                      ImGuiCol_HeaderActive, colors::ButtonActive);
+                      ImGuiCol_HeaderActive,
+                      ff_8::Colors::to_imvec4(ff_8::Colors::ButtonActive));
                     const bool checked = std::cmp_equal(m_field_index, index);
                     if (checked)
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_CellBg,
-                           ImU32{ colors::Button });// Make the selected field
-                                                    // stand out more.
+                           ImU32{
+                             ff_8::Colors::Button });// Make the selected field
+                                                     // stand out more.
                     }
                     if (ImGui::MenuItem(
                           str.c_str(),

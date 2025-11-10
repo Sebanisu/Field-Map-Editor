@@ -1,5 +1,6 @@
 #include "collapsing_tile_info.hpp"
 #include "format_imgui_text.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
@@ -119,7 +120,8 @@ bool collapsing_tile_info(
 
                         if (changed)
                              ImGui::PushStyleColor(
-                               ImGuiCol_Text, ImVec4(colors::Peach));
+                               ImGuiCol_Text,
+                               ff_8::Colors::to_imvec4(ff_8::Colors::Peach));
 
                         format_imgui_text("{}", new_val);
 

@@ -9,7 +9,6 @@
 // clang-format on
 #include "as_string.hpp"
 #include "batch.hpp"
-#include "colors.hpp"
 #include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "create_tile_button.hpp"
@@ -34,6 +33,7 @@
 #include "textures_window.hpp"
 #include <cstdint>
 #include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/Colors.hpp>
 #include <fmt/chrono.h>
 #include <glengine/ScopeGuard.hpp>
 #include <glengine/TimeStep.hpp>
@@ -126,14 +126,14 @@ struct gui
 
      create_color_button   blue_color_button = {};
      create_color_button   green_color_button
-       = { { .button_color        = colors::ButtonGreen,
-             .button_hover_color  = colors::ButtonGreenHovered,
-             .button_active_color = colors::ButtonGreenActive } };
+       = { { .button_color        = ff_8::Colors::ButtonGreen,
+             .button_hover_color  = ff_8::Colors::ButtonGreenHovered,
+             .button_active_color = ff_8::Colors::ButtonGreenActive } };
 
      create_color_button pink_color_button
-       = { { .button_color        = colors::ButtonPink,
-             .button_hover_color  = colors::ButtonPinkHovered,
-             .button_active_color = colors::ButtonPinkActive } };
+       = { { .button_color        = ff_8::Colors::ButtonPink,
+             .button_hover_color  = ff_8::Colors::ButtonPinkHovered,
+             .button_active_color = ff_8::Colors::ButtonPinkActive } };
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };

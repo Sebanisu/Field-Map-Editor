@@ -3,6 +3,7 @@
 #include "map_sprite.hpp"
 #include "Selections.hpp"
 #include <functional>
+#include <imgui.h>
 #include <memory>
 namespace fme
 {

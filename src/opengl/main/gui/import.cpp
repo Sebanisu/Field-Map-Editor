@@ -9,6 +9,7 @@
 #include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "generic_combo.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
 #include "imgui_color.hpp"
 #include "push_pop_id.hpp"
@@ -447,7 +448,7 @@ bool import::browse_for_image_display_preview() const
           {
                static constexpr float thickness = 2.0F;
                static const ImU32     color_32
-                 = static_cast<ImU32>(fme::colors::Red);
+                 = ff_8::Colors::to_imU32(ff_8::Colors::Red);
                for (auto x_pos = static_cast<std::uint32_t>(
                       selections->get<ConfigKey::TileSizeValue>());
                     std::cmp_less(x_pos, size.x);

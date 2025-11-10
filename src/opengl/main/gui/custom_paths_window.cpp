@@ -1,5 +1,6 @@
 #include "custom_paths_window.hpp"
 #include "as_string.hpp"
+#include "ColorConversions.hpp"
 #include "fa_icons.hpp"
 #include "formatters.hpp"
 #include <functional>
@@ -597,14 +598,16 @@ bool fme::custom_paths_window::vector_pattern() const
           {
                ImGui::TableSetBgColor(
                  ImGuiTableBgTarget_RowBg0,
-                 ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+                 ff_8::Colors::to_imU32(
+                   ff_8::Colors::TableDarkTeal.fade(-0.4F)));// Dark red
           }
           else
           {
                ImGui::TableSetBgColor(
                  ImGuiTableBgTarget_RowBg0,
-                 ImU32{ colors::TableLightDarkTeal.fade(
-                   -0.4F) });// Slightly lighter dark red
+                 ff_8::Colors::to_imU32(
+                   ff_8::Colors::TableLightDarkTeal.fade(
+                     -0.4F)));// Slightly lighter dark red
           }
           bg_color = !bg_color;
           ImGui::TableNextColumn();
@@ -720,14 +723,16 @@ bool fme::custom_paths_window::vector_pattern() const
      {
           ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0,
-            ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+            ff_8::Colors::to_imU32(
+              ff_8::Colors::TableDarkTeal.fade(-0.4F)));// Dark red
      }
      else
      {
           ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0,
-            ImU32{ colors::TableLightDarkTeal.fade(
-              -0.4F) });// Slightly lighter dark red
+            ff_8::Colors::to_imU32(
+              ff_8::Colors::TableLightDarkTeal.fade(
+                -0.4F)));// Slightly lighter dark red
      }
      ImGui::TableNextColumn();
      const char *add        = "Add New Pattern";
@@ -893,15 +898,17 @@ bool fme::custom_paths_window::child_keys() const
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{
-                             colors::TableDarkRed.fade(-0.4F) });// Dark red
+                           ff_8::Colors::to_imU32(
+                             ff_8::Colors::TableDarkRed.fade(
+                               -0.4F)));// Dark red
                     }
                     else
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{ colors::TableLightDarkRed.fade(
-                             -0.4F) });// Slightly lighter dark red
+                           ff_8::Colors::to_imU32(
+                             ff_8::Colors::TableLightDarkRed.fade(
+                               -0.4F)));// Slightly lighter dark red
                     }
                     bg_color = !bg_color;
                }
@@ -1023,14 +1030,16 @@ bool fme::custom_paths_window::child_test_output() const
                {
                     ImGui::TableSetBgColor(
                       ImGuiTableBgTarget_RowBg0,
-                      ImU32{ colors::TableDarkGreen.fade(-0.4F) });// Dark red
+                      ff_8::Colors::to_imU32(
+                        ff_8::Colors::TableDarkGreen.fade(-0.4F)));// Dark red
                }
                else
                {
                     ImGui::TableSetBgColor(
                       ImGuiTableBgTarget_RowBg0,
-                      ImU32{ colors::TableLightDarkGreen.fade(
-                        -0.4F) });// Slightly lighter dark red
+                      ff_8::Colors::to_imU32(
+                        ff_8::Colors::TableLightDarkGreen.fade(
+                          -0.4F)));// Slightly lighter dark red
                }
                bg_color = !bg_color;
           }

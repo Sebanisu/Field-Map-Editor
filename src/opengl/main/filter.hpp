@@ -7,12 +7,12 @@
 #include "Configuration.hpp"
 #include "draw_bit_t.hpp"
 #include "formatters.hpp"
-#include "gui/colors.hpp"
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "utilities.hpp"
 #include <cstdint>
+#include <ff_8/Colors.hpp>
 #include <ff_8/PupuID.hpp>
 #include <ff_8/TileOperations.hpp>
 #include <filesystem>
@@ -484,9 +484,9 @@ struct FilterLoadStrategy
           {
                value = config[id].value_or(value.u8string());
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
-               value = std::bit_cast<fme::color>(
+               value = std::bit_cast<ff_8::Color>(
                  config[id].value_or(std::bit_cast<std::uint32_t>(value)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
@@ -581,7 +581,7 @@ struct FilterUpdateStrategy
                  std::filesystem::path(str_val).string());
                config.insert_or_assign(id, str_val);
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
                spdlog::debug("selection<{}>: {}", id, value);
                config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));

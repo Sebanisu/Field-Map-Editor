@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include "draw_bit_t.hpp"
-#include "gui/colors.hpp"
+#include "gui/BackgroundSettings.hpp"
 #include "gui/compact_type.hpp"
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
@@ -204,26 +204,26 @@ struct fmt::formatter<fme::BackgroundSettings>
 };
 
 
-template<>
-struct fmt::formatter<fme::color>
-{
-     // Parses format specs; in this case, we don't support any custom
-     // formatting
-     constexpr auto parse(format_parse_context &ctx)
-     {
-          return ctx.begin();// no custom formatting, so just return the end
-     }
+// template<>
+// struct fmt::formatter<fme::color>
+// {
+//      // Parses format specs; in this case, we don't support any custom
+//      // formatting
+//      constexpr auto parse(format_parse_context &ctx)
+//      {
+//           return ctx.begin();// no custom formatting, so just return the end
+//      }
 
-     // Formats the color as "(r,g,b,a)"
-     template<typename FormatContext>
-     auto format(
-       const fme::color &c,
-       FormatContext    &ctx) const
-     {
-          return fmt::format_to(
-            ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
-     }
-};
+//      // Formats the color as "(r,g,b,a)"
+//      template<typename FormatContext>
+//      auto format(
+//        const fme::color &c,
+//        FormatContext    &ctx) const
+//      {
+//           return fmt::format_to(
+//             ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
+//      }
+// };
 
 template<>
 struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
