@@ -45,7 +45,6 @@ set(MAIN_SOURCES
     future_operations.cpp
     generic_combo.cpp
     main.cpp
-    map_group.cpp
     map_operation.cpp
     map_sprite.cpp
     mim_sprite.cpp

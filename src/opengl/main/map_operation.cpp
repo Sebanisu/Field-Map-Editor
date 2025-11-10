@@ -13,7 +13,7 @@
 namespace ff_8
 {
 static constexpr auto not_invalid = TileOperations::NotInvalidTile{};
-void                  flatten_bpp(map_group::Map &map)
+void                  flatten_bpp(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &tiles)
@@ -32,7 +32,7 @@ void                  flatten_bpp(map_group::Map &map)
               });
        });
 }
-void flatten_palette(map_group::Map &map)
+void flatten_palette(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &tiles)
@@ -50,7 +50,7 @@ void flatten_palette(map_group::Map &map)
               });
        });
 }
-void compact_map_order_ffnx(map_group::Map &map)
+void compact_map_order_ffnx(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &&tiles)
@@ -99,7 +99,7 @@ void compact_map_order_ffnx(map_group::Map &map)
 }
 
 void compact_move_conflicts_only(
-  map_group::Map            &map,
+  MapGroup::Map             &map,
   const SourceTileConflicts &conflicts)
 {
 
@@ -175,7 +175,7 @@ void compact_move_conflicts_only(
             }
        });
 }
-void compact_map_order(map_group::Map &map)
+void compact_map_order(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &&tiles)
@@ -194,12 +194,12 @@ void compact_map_order(map_group::Map &map)
                  const auto file_tile_index = tile_index % 256;
                  const auto source_x        = static_cast<
                           ff_8::TileOperations::SourceX::value_type<tile_t>>(
-                   (file_tile_index % ff_8::map_group::TILE_SIZE)
-                   * ff_8::map_group::TILE_SIZE);
+                   (file_tile_index % ff_8::MapGroup::TILE_SIZE)
+                   * ff_8::MapGroup::TILE_SIZE);
                  const auto source_y = static_cast<
                    ff_8::TileOperations::SourceY::value_type<tile_t>>(
-                   (file_tile_index / ff_8::map_group::TILE_SIZE)
-                   * ff_8::map_group::TILE_SIZE);
+                   (file_tile_index / ff_8::MapGroup::TILE_SIZE)
+                   * ff_8::MapGroup::TILE_SIZE);
                  ++tile_index;
                  const auto with_texture_id_operation
                    = ff_8::TileOperations::TextureId::With{ texture_page };
@@ -257,7 +257,7 @@ template<
   typename key_lambdaT,
   typename weight_lambdaT>
 [[maybe_unused]] static void compact_generic(
-  map_group::Map  &map,
+  MapGroup::Map   &map,
   key_lambdaT    &&key_lambda,
   weight_lambdaT &&weight_lambda,
   int              passes = 2)
@@ -281,11 +281,11 @@ template<
                       const auto weight = weight_lambda(key, tps);
 
                       if (
-                        std::cmp_greater_equal(col, ff_8::map_group::TILE_SIZE)
+                        std::cmp_greater_equal(col, ff_8::MapGroup::TILE_SIZE)
                         || std::cmp_greater_equal(
-                          row_weight, ff_8::map_group::TILE_SIZE)
+                          row_weight, ff_8::MapGroup::TILE_SIZE)
                         || std::cmp_greater(
-                          row_weight + weight, ff_8::map_group::TILE_SIZE))
+                          row_weight + weight, ff_8::MapGroup::TILE_SIZE))
                       {
                            ++row;
                            col        = {};
@@ -293,7 +293,7 @@ template<
                       }
 
                       if (std::cmp_greater_equal(
-                            row, ff_8::map_group::TILE_SIZE))
+                            row, ff_8::MapGroup::TILE_SIZE))
                       {
                            ++page;
                            row = {};
@@ -307,9 +307,9 @@ template<
                            *tp
                              = tp->with_source_xy(
                                    static_cast<decltype(tile_t{}.source_x())>(
-                                     col * ff_8::map_group::TILE_SIZE),
+                                     col * ff_8::MapGroup::TILE_SIZE),
                                    static_cast<decltype(tile_t{}.source_y())>(
-                                     row * ff_8::map_group::TILE_SIZE))
+                                     row * ff_8::MapGroup::TILE_SIZE))
                                  .with_texture_id(
                                    static_cast<decltype(tile_t{}.texture_id())>(
                                      page));
@@ -322,7 +322,7 @@ template<
        });
 }
 
-void compact_rows(map_group::Map &map)
+void compact_rows(MapGroup::Map &map)
 {
      compact_generic(
        map,
@@ -338,7 +338,7 @@ void compact_rows(map_group::Map &map)
        [](const auto &key, const auto &)
        { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
 }
-void compact_all(map_group::Map &map)
+void compact_all(MapGroup::Map &map)
 {
      compact_generic(
        map,
@@ -357,12 +357,12 @@ void compact_all(map_group::Map &map)
 
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  const std::uint8_t   &texture_page,
-  bool                  skip_filters,
-  bool                  find_all)
+  const MapGroup::Map &map,
+  const ff_8::filters &filters,
+  const glm::ivec2    &pixel_pos,
+  const std::uint8_t  &texture_page,
+  bool                 skip_filters,
+  bool                 find_all)
 {
      return map.visit_tiles(
        [&](const auto &tiles)
@@ -372,11 +372,11 @@ void compact_all(map_group::Map &map)
        });
 }
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  bool                  skip_filters,
-  bool                  find_all)
+  const MapGroup::Map &map,
+  const ff_8::filters &filters,
+  const glm::ivec2    &pixel_pos,
+  bool                 skip_filters,
+  bool                 find_all)
 {
      return map.visit_tiles(
        [&](const auto &tiles)
@@ -396,7 +396,7 @@ QuadStrip get_triangle_strip(
      // source_position and destination_position are in TILE_SIZE cordinates.
      // TILE_SIZE default is 16x16. So we pass in the scaled up source_tile_size
      // and destination_tile_size and do the conversion.
-     constexpr static auto tile_size = static_cast<float>(map_group::TILE_SIZE);
+     constexpr static auto tile_size = static_cast<float>(MapGroup::TILE_SIZE);
      const glm::vec2 aligned_source  = glm::floor(source_position / tile_size);
      return { .uv_min
               = (aligned_source * source_tile_size) / source_texture_size,
@@ -407,8 +407,8 @@ QuadStrip get_triangle_strip(
 }
 bool test_if_map_same(
   const std::filesystem::path &saved_path,
-  const map_group::WeakField  &weak_field,
-  const map_group::MimType    &type)
+  const MapGroup::WeakField   &weak_field,
+  const MapGroup::MimType     &type)
 {
      bool       return_value = false;
      const auto field        = weak_field.lock();
@@ -417,12 +417,12 @@ bool test_if_map_same(
           spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return return_value;
      }
-     const auto raw_map = map_group::Map{
+     const auto raw_map = MapGroup::Map{
           type, field->get_entry_data({ saved_path.filename().string() }), false
      };
      auto saved_map
-       = map_group::Map{ type, open_viii::tools::read_entire_file(saved_path),
-                         false };
+       = MapGroup::Map{ type, open_viii::tools::read_entire_file(saved_path),
+                        false };
 
      raw_map.visit_tiles(
        [&](const auto &raw_tiles)
@@ -494,9 +494,9 @@ bool test_if_map_same(
 }
 void save_modified_map(
   const std::filesystem::path &dest_path,
-  const map_group::Map        &map_const,
-  const map_group::Map        &map_changed,
-  const map_group::Map *const  imported)
+  const MapGroup::Map         &map_const,
+  const MapGroup::Map         &map_changed,
+  const MapGroup::Map *const   imported)
 {
      const auto path = dest_path.string();
      spdlog::info("Saving modified map: {}", path);

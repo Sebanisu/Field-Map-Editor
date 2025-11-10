@@ -4,15 +4,15 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_GROUP_HPP
 #define FIELD_MAP_EDITOR_MAP_GROUP_HPP
+#include "MapHistory.hpp"
 #include "open_viii/archive/FIFLFS.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "open_viii/strings/LangT.hpp"
-#include <ff_8/MapHistory.hpp>
 #include <memory>
 namespace ff_8
 {
-struct map_group
+struct MapGroup
 {
      // required to initialize
      using Field                     = open_viii::archive::FIFLFS<false>;
@@ -26,8 +26,8 @@ struct map_group
      using Coo                       = open_viii::LangT;
      using OptCoo                    = std::optional<Coo>;
      static constexpr auto TILE_SIZE = 16U;
-     map_group()                     = default;
-     map_group(
+     MapGroup()                      = default;
+     MapGroup(
        WeakField,
        OptCoo);
      WeakField   field{};
@@ -37,11 +37,11 @@ struct map_group
      OptCoo      opt_coo{};
      MapHistory  maps{};
 };
-map_group::Map load_map(
-  const map_group::WeakField    &field,
-  std::optional<map_group::Coo> &coo,
-  const map_group::SharedMim    &mim,
-  std::string                   *out_path,
-  bool                           shift);
+MapGroup::Map load_map(
+  const MapGroup::WeakField    &field,
+  std::optional<MapGroup::Coo> &coo,
+  const MapGroup::SharedMim    &mim,
+  std::string                  *out_path,
+  bool                          shift);
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_GROUP_HPP

@@ -2,7 +2,7 @@
 // Created by pcvii on 2/28/2023.
 //
 
-#include "map_group.hpp"
+#include "MapGroup.hpp"
 #include "open_viii/strings/LangCommon.hpp"
 #include <fmt/format.h>
 static std::string str_to_lower(std::string input)
@@ -19,9 +19,9 @@ static std::string str_to_lower(std::string input)
 
 namespace ff_8
 {
-static map_group::Mim load_mim(
-  const map_group::WeakField &weak_field,
-  const map_group::Coo        coo)
+static MapGroup::Mim load_mim(
+  const MapGroup::WeakField &weak_field,
+  const MapGroup::Coo        coo)
 {
      const auto field = weak_field.lock();
      if (!field)
@@ -30,7 +30,7 @@ static map_group::Mim load_mim(
           return {};
      }
      auto lang_name = fmt::format(
-       "_{}{}", open_viii::LangCommon::to_string(coo), map_group::Mim::EXT);
+       "_{}{}", open_viii::LangCommon::to_string(coo), MapGroup::Mim::EXT);
      auto long_lang_name = fmt::format(
        "{}_{}{}",
        field->get_base_name(),
@@ -42,15 +42,15 @@ static map_group::Mim load_mim(
        open_viii::graphics::background::Mim::EXT);
      return { field->get_entry_data(
                 { std::string_view(long_lang_name), std::string_view(long_name),
-                  std::string_view(lang_name), map_group::Mim::EXT }),
+                  std::string_view(lang_name), MapGroup::Mim::EXT }),
               str_to_lower(std::string{ field->get_base_name() }) };
 }
-static map_group::MapHistory load_map_history(
-  const map_group::WeakField    &weak_field,
-  std::optional<map_group::Coo> &coo,
-  const map_group::SharedMim    &mim,
-  std::string                   *out_path,
-  bool                           shift = true)
+static MapGroup::MapHistory load_map_history(
+  const MapGroup::WeakField    &weak_field,
+  std::optional<MapGroup::Coo> &coo,
+  const MapGroup::SharedMim    &mim,
+  std::string                  *out_path,
+  bool                          shift = true)
 {
      const auto field = weak_field.lock();
      if (!field)
@@ -58,14 +58,14 @@ static map_group::MapHistory load_map_history(
           spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return {};
      }
-     return map_group::MapHistory{ load_map(field, coo, mim, out_path, shift) };
+     return MapGroup::MapHistory{ load_map(field, coo, mim, out_path, shift) };
 }
-map_group::Map load_map(
-  const map_group::WeakField    &weak_field,
-  std::optional<map_group::Coo> &coo,
-  const map_group::SharedMim    &mim,
-  std::string                   *out_path,
-  bool                           shift)
+MapGroup::Map load_map(
+  const MapGroup::WeakField    &weak_field,
+  std::optional<MapGroup::Coo> &coo,
+  const MapGroup::SharedMim    &mim,
+  std::string                  *out_path,
+  bool                          shift)
 {
      const auto field = weak_field.lock();
      if (!field)
@@ -75,11 +75,11 @@ map_group::Map load_map(
      }
      if (!coo)
      {
-          coo = map_group::Coo::generic;
+          coo = MapGroup::Coo::generic;
      }
      size_t out_path_pos = {};
      auto   lang_name    = fmt::format(
-       "_{}{}", open_viii::LangCommon::to_string(*coo), map_group::Map::EXT);
+       "_{}{}", open_viii::LangCommon::to_string(*coo), MapGroup::Map::EXT);
      auto long_lang_name = fmt::format(
        "{}_{}{}",
        field->get_base_name(),
@@ -89,11 +89,11 @@ map_group::Map load_map(
        "{}{}",
        field->get_base_name(),
        open_viii::graphics::background::Map::EXT);
-     auto map = map_group::Map{
+     auto map = MapGroup::Map{
           mim->mim_type(),
           field->get_entry_data(
             { std::string_view(long_lang_name), std::string_view(long_name),
-              std::string_view(lang_name), map_group::Map::EXT },
+              std::string_view(lang_name), MapGroup::Map::EXT },
             out_path,
             &out_path_pos),
           shift
@@ -104,13 +104,13 @@ map_group::Map load_map(
      }
      return map;
 }
-map_group::map_group(
-  map_group::WeakField in_field,
-  map_group::OptCoo    in_coo = std::nullopt)
+MapGroup::MapGroup(
+  MapGroup::WeakField in_field,
+  MapGroup::OptCoo    in_coo = std::nullopt)
   : field{ std::move(in_field) }
   , mim{ std::make_shared<Mim>(load_mim(
       field,
-      in_coo ? *in_coo : map_group::Coo::generic)) }
+      in_coo ? *in_coo : MapGroup::Coo::generic)) }
   , map_path{}
   , opt_coo{ in_coo }
   , maps{ load_map_history(

@@ -8,6 +8,7 @@ find_package(spdlog REQUIRED)
 add_library(
   ${PROJECT_NAME}_ff_8 STATIC
   ff_8/ArchivesGroup.cpp
+  ff_8/MapGroup.cpp
   ff_8/MapHistory.cpp
   ff_8/PupuID.cpp
   ff_8/UniquifyPupu.cpp

@@ -33,16 +33,16 @@ namespace fme
 {
 
 map_sprite::map_sprite(
-  ff_8::map_group                        map_group,
+  ff_8::MapGroup                         MapGroup,
   map_sprite_settings                    settings,
   ff_8::filters                          in_filters,
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
       !settings.require_coo
-          || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic)
-        ? std::move(map_group)
-        : ff_8::map_group{})
+          || (MapGroup.opt_coo && MapGroup.opt_coo.value() != open_viii::LangT::generic)
+        ? std::move(MapGroup)
+        : ff_8::MapGroup{})
   , m_settings(settings)
   , m_filters(std::move(in_filters))
   , m_selections(selections)
@@ -227,7 +227,7 @@ map_sprite::operator ff_8::path_search() const
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
 
-     return { ff_8::map_group{ m_map_group.field, coo }, m_settings, m_filters,
+     return { ff_8::MapGroup{ m_map_group.field, coo }, m_settings, m_filters,
               m_selections, m_render_framebuffer };
 }
 
@@ -235,7 +235,7 @@ map_sprite map_sprite::with_field(
   map_sprite::WeakField  field,
   const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo }, m_settings, m_filters,
+     return { ff_8::MapGroup{ std::move(field), coo }, m_settings, m_filters,
               m_selections, m_render_framebuffer };
 }
 
@@ -2071,7 +2071,7 @@ bool map_sprite::fail() const
 }
 void map_sprite::save_map(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo
+     ff_8::MapGroup::OptCoo coo
        = m_map_group.opt_coo;// copy because coo is modified
      const auto map = ff_8::load_map(
        m_map_group.field, coo, m_map_group.mim, nullptr, false);
@@ -2238,12 +2238,12 @@ ff_8::filters &map_sprite::filter()
      return m_filters;
 }
 map_sprite map_sprite::update(
-  ff_8::map_group map_group,
-  bool            draw_swizzle) const
+  ff_8::MapGroup MapGroup,
+  bool           draw_swizzle) const
 {
      auto settings         = m_settings;
      settings.draw_swizzle = draw_swizzle;
-     return { std::move(map_group), settings, m_filters, m_selections };
+     return { std::move(MapGroup), settings, m_filters, m_selections };
 }
 const ff_8::all_unique_values_and_strings &map_sprite::uniques() const
 {

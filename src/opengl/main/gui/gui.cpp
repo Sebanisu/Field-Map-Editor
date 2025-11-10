@@ -3803,7 +3803,7 @@ void gui::refresh_draw_mode()
                break;
           case draw_mode::draw_map:
                *m_map_sprite = m_map_sprite->update(
-                 ff_8::map_group(m_field, get_coo()),
+                 ff_8::MapGroup(m_field, get_coo()),
                  m_selections->get<ConfigKey::DrawSwizzle>());
                // m_draw_window.update(m_map_sprite);
                // m_import.update(m_map_sprite);
@@ -4345,7 +4345,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 
 std::shared_ptr<map_sprite> gui::get_map_sprite() const
 {
-     //     map_sprite(ff_8::map_group map_group, bool draw_swizzle,
+     //     map_sprite(ff_8::MapGroup MapGroup, bool draw_swizzle,
      //     ff_8::filters in_filters, bool force_disable_blends, bool
      //     require_coo);
      map_sprite_settings settings = {
@@ -4354,7 +4354,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
           .require_coo    = false,
      };
      return std::make_shared<map_sprite>(
-       ff_8::map_group{ m_field, get_coo() },
+       ff_8::MapGroup{ m_field, get_coo() },
        settings,
        ff_8::filters{ true },
        m_selections);

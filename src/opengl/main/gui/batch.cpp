@@ -1948,7 +1948,7 @@ void fme::batch::generate_map_sprite()
                break;
           }
      }
-     ff_8::map_group map_group = { m_field, *m_coo };
+     ff_8::MapGroup MapGroup = { m_field, *m_coo };
      // Create the map sprite with appropriate settings
      if (m_coo.has_value() && m_coo.value() != open_viii::LangT::generic)
      {
@@ -1961,11 +1961,11 @@ void fme::batch::generate_map_sprite()
                .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
-            map_group.opt_coo.has_value()
-            && map_group.opt_coo.value() != open_viii::LangT::generic)
+            MapGroup.opt_coo.has_value()
+            && MapGroup.opt_coo.value() != open_viii::LangT::generic)
           {
                // Both are non-generic and present → okay
-               m_map_sprite = map_sprite{ std::move(map_group), settings,
+               m_map_sprite = map_sprite{ std::move(MapGroup), settings,
                                           filters, m_selections };
                return;
           }
@@ -1980,11 +1980,11 @@ void fme::batch::generate_map_sprite()
                .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
-            !map_group.opt_coo.has_value()
-            || map_group.opt_coo.value() == open_viii::LangT::generic)
+            !MapGroup.opt_coo.has_value()
+            || MapGroup.opt_coo.value() == open_viii::LangT::generic)
           {
                // Both are generic or not set → okay
-               m_map_sprite = map_sprite{ std::move(map_group), settings,
+               m_map_sprite = map_sprite{ std::move(MapGroup), settings,
                                           filters, m_selections };
                return;
           }

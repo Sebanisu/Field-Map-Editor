@@ -4,15 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
-#include "ff_8/MapHistory.hpp"
 #include "filter.hpp"
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
-#include "map_group.hpp"
 #include "map_operation.hpp"
-#include "open_viii/archive/Archives.hpp"
-#include "open_viii/graphics/background/Map.hpp"
-#include "open_viii/graphics/background/Mim.hpp"
 #include "path_search.hpp"
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
@@ -20,6 +15,8 @@
 #include "unique_values.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <ff_8/MapGroup.hpp>
+#include <ff_8/MapHistory.hpp>
 #include <fmt/format.h>
 #include <glengine/BatchRenderer.hpp>
 #include <glengine/CompShader.hpp>
@@ -30,6 +27,9 @@
 #include <glengine/PaletteBuffer.hpp>
 #include <glengine/Shader.hpp>
 #include <glengine/Texture.hpp>
+#include <open_viii/archive/Archives.hpp>
+#include <open_viii/graphics/background/Map.hpp>
+#include <open_viii/graphics/background/Mim.hpp>
 #include <set>
 #include <utility>
 
@@ -221,7 +221,7 @@ struct [[nodiscard]] map_sprite// final
        = {};
      mutable std::map<std::string, std::vector<ff_8::PupuID>>
                                          m_cache_framebuffer_pupuids = {};
-     mutable ff_8::map_group             m_map_group                 = {};
+     mutable ff_8::MapGroup              m_map_group                 = {};
      map_sprite_settings                 m_settings                  = {};
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
@@ -346,7 +346,7 @@ struct [[nodiscard]] map_sprite// final
    public:
      map_sprite() = default;
      map_sprite(
-       ff_8::map_group                        map_group,
+       ff_8::MapGroup                         MapGroup,
        map_sprite_settings                    settings,
        ff_8::filters                          in_filters,
        std::weak_ptr<Selections>              selections,
@@ -427,8 +427,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] bool       empty() const;
      [[nodiscard]] const ff_8::filters &filter() const;
      [[nodiscard]] map_sprite           update(
-                 ff_8::map_group map_group,
-                 bool            draw_swizzle) const;
+                 ff_8::MapGroup MapGroup,
+                 bool           draw_swizzle) const;
      [[nodiscard]] ff_8::all_unique_values_and_strings
                                       get_all_unique_values_and_strings() const;
      [[nodiscard]] glm::uvec2         get_tile_texture_size_for_import() const;
