@@ -6,7 +6,6 @@
 #include "EmptyStringIterator.hpp"
 #include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "imgui_color.hpp"
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
 #include "path_search.hpp"
