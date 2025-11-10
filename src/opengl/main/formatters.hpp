@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
-#include "draw_bit_t.hpp"
 #include "gui/BackgroundSettings.hpp"
 #include "gui/compact_type.hpp"
 #include "gui/draw_mode.hpp"
@@ -51,34 +50,6 @@ struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
                     break;
                case tile_sizes::x_16_size:
                     name = "16x 256 px"sv;
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
-
-template<>
-struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       ff_8::draw_bitT draw_bit_t,
-       FormatContext  &ctx) const
-     {
-          using namespace open_viii::graphics::background;
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (draw_bit_t)
-          {
-               case ff_8::draw_bitT::all:
-                    name = "all"sv;
-                    break;
-               case ff_8::draw_bitT::disabled:
-                    name = "disabled"sv;
-                    break;
-               case ff_8::draw_bitT::enabled:
-                    name = "enabled"sv;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

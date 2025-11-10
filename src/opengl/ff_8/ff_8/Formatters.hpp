@@ -5,6 +5,7 @@
 #include "NormalizedSourceTile.hpp"
 // #include "tile_sizes.hpp"
 #include "Colors.hpp"
+#include "DrawBitT.hpp"
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -84,33 +85,33 @@ static constexpr auto to_hex(const tileT &tile)
 //      }
 // };
 
-// template<>
-// struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
-// {
-//      // parse is inherited from formatter<string_view>.
-//      template<typename FormatContext>
-//      constexpr auto format(
-//        ff_8::draw_bitT draw_bit_t,
-//        FormatContext  &ctx) const
-//      {
-//           using namespace open_viii::graphics::background;
-//           using namespace std::string_view_literals;
-//           std::string_view name = {};
-//           switch (draw_bit_t)
-//           {
-//                case ff_8::draw_bitT::all:
-//                     name = "all"sv;
-//                     break;
-//                case ff_8::draw_bitT::disabled:
-//                     name = "disabled"sv;
-//                     break;
-//                case ff_8::draw_bitT::enabled:
-//                     name = "enabled"sv;
-//                     break;
-//           }
-//           return fmt::formatter<std::string_view>::format(name, ctx);
-//      }
-// };
+template<>
+struct fmt::formatter<ff_8::DrawBitT> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       ff_8::DrawBitT draw_bit_t,
+       FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (draw_bit_t)
+          {
+               case ff_8::DrawBitT::all:
+                    name = "all"sv;
+                    break;
+               case ff_8::DrawBitT::disabled:
+                    name = "disabled"sv;
+                    break;
+               case ff_8::DrawBitT::enabled:
+                    name = "enabled"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
 
 template<>
 struct fmt::formatter<open_viii::graphics::background::BlendModeT>
