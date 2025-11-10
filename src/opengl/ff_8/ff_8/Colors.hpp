@@ -497,7 +497,7 @@ namespace Colors
           constexpr float SATURATION   = 0.8f;
           constexpr float VALUE        = 0.9f;
 
-          float           hue          = std::fmod(id * GOLDEN_RATIO, 1.0f);
+          float hue = std::fmod(static_cast<float>(id) * GOLDEN_RATIO, 1.0f);
           if (hue < 0.0f)
                hue += 1.0f;
 
