@@ -4,11 +4,11 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_GROUP_HPP
 #define FIELD_MAP_EDITOR_MAP_GROUP_HPP
-#include "MapHistory.hpp"
 #include "open_viii/archive/FIFLFS.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "open_viii/strings/LangT.hpp"
+#include <ff_8/MapHistory.hpp>
 #include <memory>
 namespace ff_8
 {

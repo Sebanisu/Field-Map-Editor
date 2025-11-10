@@ -99,14 +99,14 @@ void compact_map_order_ffnx(map_group::Map &map)
 }
 
 void compact_move_conflicts_only(
-  map_group::Map              &map,
-  const source_tile_conflicts &conflicts)
+  map_group::Map            &map,
+  const SourceTileConflicts &conflicts)
 {
 
      map.visit_tiles(
        [&conflicts](auto &&tiles)
        {
-            std::vector<ff_8::source_tile_conflicts::location> empty_locations
+            std::vector<ff_8::SourceTileConflicts::location> empty_locations
               = conflicts.range_of_empty_locations()
                 | std::ranges::to<std::vector>();
             auto range_of_conflicts = conflicts.range_of_conflicts();

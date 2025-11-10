@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 
+#include "gui/ColorConversions.hpp"
 #include <ff_8/PupuID.hpp>
 #include <filesystem>
 #include <future>
@@ -34,7 +35,7 @@ namespace fme
   glengine::FrameBuffer in_fbo,
   const GLenum          attachment = GL_COLOR_ATTACHMENT0,
   std::vector<std::tuple<
-    glm::vec4,
+    ff_8::Color,
     ff_8::PupuID>>      in_pupu_ids
   = {});
 

@@ -4,12 +4,12 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
+#include "ff_8/MapHistory.hpp"
 #include "filter.hpp"
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
 #include "map_group.hpp"
 #include "map_operation.hpp"
-#include "MapHistory.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
@@ -326,7 +326,7 @@ struct [[nodiscard]] map_sprite// final
        glengine::PaletteBuffer,
        glengine::HistogramBuffer,
        glengine::DistanceBuffer>
-       initialize_buffers(const std::vector<glm::vec4> &palette) const;
+       initialize_buffers(const std::vector<ff_8::Color> &palette) const;
 
      std::pair<
        std::vector<PupuOpEntry>,
@@ -402,16 +402,15 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &working_unique_pupu() const;
      [[nodiscard]] std::vector<std::tuple<
-       glm::vec4,
+       ff_8::Color,
        ff_8::PupuID>>
        working_unique_color_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &
        original_unique_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &original_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &working_pupu() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts &
-       original_conflicts() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts &working_conflicts() const;
+     [[nodiscard]] const ff_8::SourceTileConflicts &original_conflicts() const;
+     [[nodiscard]] const ff_8::SourceTileConflicts &working_conflicts() const;
      [[nodiscard]] const ff_8::MapHistory::nst_map &
        working_similar_counts() const;
      [[nodiscard]] const ff_8::MapHistory::nsat_map                           &

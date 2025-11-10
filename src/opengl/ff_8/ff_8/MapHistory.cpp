@@ -3,7 +3,6 @@
 //
 
 #include "MapHistory.hpp"
-#include "gui/colors.hpp"
 
 using namespace open_viii::graphics::background;
 using map_t = Map;
@@ -36,7 +35,7 @@ namespace ff_8
  *
  * The `PupuID` is designed to wrap around the unsigned 64-bit integer, allowing
  * you to reverse the ID back to the original values, much like
- * `source_tile_conflicts` handles the swizzle or input locations.
+ * `SourceTileConflicts` handles the swizzle or input locations.
  *
  * The generated `PupuID`s can be used to:
  * - Dump unswizzled images with unique filenames containing the raw hex value
@@ -105,19 +104,19 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  *
  * This function identifies and tracks conflicts between tiles in the provided
  * map. A conflict is defined as multiple tiles occupying the same grid
- * location. The result is a `source_tile_conflicts` object, which stores
+ * location. The result is a `SourceTileConflicts` object, which stores
  * information about conflicting tiles and their locations.
  *
  * @param map The map containing the tiles to process.
- * @return A `source_tile_conflicts` object representing the tile conflicts in
+ * @return A `SourceTileConflicts` object representing the tile conflicts in
  * the map.
  */
-[[nodiscard]] static source_tile_conflicts calculate_conflicts(const map_t &map)
+[[nodiscard]] static SourceTileConflicts calculate_conflicts(const map_t &map)
 {
      return map.visit_tiles(
        [](const auto &tiles)
        {
-            source_tile_conflicts stc{};
+            SourceTileConflicts stc{};
             std::ranges::for_each(
               tiles | Map::filter_view_invalid(),
               [&](const auto &tile)
@@ -332,13 +331,13 @@ static void disambiguate_normalized_tiles(
 }
 
 
-static std::vector<glm::vec4> create_colors_from_indexes(std::size_t count)
+static std::vector<ff_8::Color> create_colors_from_indexes(std::size_t count)
 {
      return std::views::iota(0u, static_cast<std::uint32_t>(count))
             | std::views::transform(
               [&](const auto index)
               {
-                   return fme::colors::encode_uint_to_rgba(
+                   return ff_8::Colors::EncodeUintToColor(
                      static_cast<std::uint32_t>(index));
               })
             | std::ranges::to<std::vector>();
@@ -458,26 +457,26 @@ const std::vector<ff_8::PupuID> &
 }
 
 
-const std::vector<glm::vec4> &
+const std::vector<ff_8::Color> &
   ff_8::MapHistory::original_unique_pupu_color() const noexcept
 {
      return m_original_unique_pupu_color;
 }
 
-const std::vector<glm::vec4> &
+const std::vector<ff_8::Color> &
   ff_8::MapHistory::working_unique_pupu_color() const noexcept
 {
      return m_working_unique_pupu_color;
 }
 
 
-const ff_8::source_tile_conflicts &
+const ff_8::SourceTileConflicts &
   ff_8::MapHistory::original_conflicts() const noexcept
 {
      return m_original_conflicts;
 }
 
-const ff_8::source_tile_conflicts &
+const ff_8::SourceTileConflicts &
   ff_8::MapHistory::working_conflicts() const noexcept
 {
      return m_working_conflicts;
@@ -532,7 +531,7 @@ map_t &ff_8::MapHistory::copy_original(std::string description)
      {
           return original_mutable();
      }
-     (void)debug_count_print();
+     // (void)debug_count_print();
      clear_redo();
      m_undo_original_or_working.push_back(pushed::original);
      m_undo_history.push_back(original());
@@ -547,7 +546,7 @@ map_t &ff_8::MapHistory::copy_working(std::string description)
      {
           return working();
      }
-     (void)debug_count_print();
+     // (void)debug_count_print();
      clear_redo();
      m_undo_original_or_working.push_back(pushed::working);
      m_undo_history.push_back(working());
@@ -560,10 +559,9 @@ map_t &ff_8::MapHistory::begin_multi_frame_working(std::string description)
 {
      if (!m_in_multi_frame_operation)
      {
-          const auto pop_set
-            = glengine::ScopeGuard{ [this]
-                                    { m_in_multi_frame_operation = true; } };
-          return copy_working(std::move(description));
+          map_t &temp                = copy_working(std::move(description));
+          m_in_multi_frame_operation = true;
+          return temp;
      }
      return working();
 }
@@ -603,7 +601,7 @@ bool ff_8::MapHistory::remove_duplicate()
 
 const map_t &ff_8::MapHistory::first_to_original(std::string description)
 {
-     (void)debug_count_print();
+     // (void)debug_count_print();
      clear_redo();
      m_undo_history.push_back(original());
      m_undo_original_or_working.push_back(pushed::original);
@@ -615,7 +613,7 @@ const map_t &ff_8::MapHistory::first_to_original(std::string description)
 
 const map_t &ff_8::MapHistory::first_to_working(std::string description)
 {
-     (void)debug_count_print();
+     // (void)debug_count_print();
      clear_redo();
      m_undo_history.push_back(working());
      m_undo_original_or_working.push_back(pushed::working);
@@ -627,7 +625,7 @@ const map_t &ff_8::MapHistory::first_to_working(std::string description)
 
 const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
 {
-     (void)debug_count_print();
+     // (void)debug_count_print();
      clear_redo();
      m_undo_history.push_back(original());
      m_undo_original_or_working.push_back(pushed::original);
@@ -640,7 +638,7 @@ const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
 
 bool ff_8::MapHistory::redo()
 {
-     const auto count = debug_count_print();
+     // const auto count = debug_count_print();
      if (!redo_enabled())
      {
           return false;
@@ -669,7 +667,7 @@ bool ff_8::MapHistory::redo()
 
 bool ff_8::MapHistory::undo(bool skip_redo)
 {
-     const auto count = debug_count_print();
+     // const auto count = debug_count_print();
      if (!undo_enabled())
      {
           return false;

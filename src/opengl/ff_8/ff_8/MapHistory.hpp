@@ -4,12 +4,11 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
-#include "source_tile_conflicts.hpp"
-#include <ff_8/NormalizedSourceTile.hpp>
-#include <ff_8/PupuID.hpp>
-#include <ff_8/UniquifyPupu.hpp>
-#include <glengine/ScopeGuard.hpp>
-#include <glm/glm.hpp>
+#include "Colors.hpp"
+#include "NormalizedSourceTile.hpp"
+#include "PupuID.hpp"
+#include "SourceTileConflicts.hpp"
+#include "UniquifyPupu.hpp"
 #include <map>
 #include <open_viii/graphics/background/Map.hpp>
 #include <ranges>
@@ -65,7 +64,7 @@ class [[nodiscard]] MapHistory
       * until `end_multi_frame_working` is called, which sets it back to
       * `false`.
       */
-     mutable bool                   m_in_multi_frame_operation   = { false };
+     mutable bool                     m_in_multi_frame_operation   = { false };
      /**
       * @brief Indicates whether the original state has been changed.
       *
@@ -78,7 +77,7 @@ class [[nodiscard]] MapHistory
       * @note This flag is used to track modifications to the original tile
       * data.
       */
-     mutable bool                   m_original_changed           = { false };
+     mutable bool                     m_original_changed           = { false };
 
      /**
       * @brief Indicates whether the working state has been changed.
@@ -91,67 +90,67 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the working tile data.
       */
-     mutable bool                   m_working_changed            = { false };
+     mutable bool                     m_working_changed            = { false };
 
 
      // Current states
      /**
       * @brief The active original map state.
       */
-     map_t                          m_original                   = {};
+     map_t                            m_original                   = {};
 
 
      /**
       * @brief The active working map state.
       */
-     map_t                          m_working                    = {};
+     map_t                            m_working                    = {};
 
      // Corresponding PupuIDs
      /**
       * @brief PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>    m_original_pupu              = {};
+     mutable std::vector<PupuID>      m_original_pupu              = {};
 
      /**
       * @brief PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>    m_working_pupu               = {};
+     mutable std::vector<PupuID>      m_working_pupu               = {};
 
 
      // Corresponding PupuIDs
      /**
       * @brief Unique PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>    m_original_unique_pupu       = {};
+     mutable std::vector<PupuID>      m_original_unique_pupu       = {};
 
      /**
       * @brief Unique PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>    m_working_unique_pupu        = {};
+     mutable std::vector<PupuID>      m_working_unique_pupu        = {};
 
 
      /**
       * @brief Unique PupuID color list corresponding to the original map state.
       */
-     mutable std::vector<glm::vec4> m_original_unique_pupu_color = {};
+     mutable std::vector<ff_8::Color> m_original_unique_pupu_color = {};
 
 
      /**
       * @brief Unique PupuID color list corresponding to the working map state.
       */
-     mutable std::vector<glm::vec4> m_working_unique_pupu_color  = {};
+     mutable std::vector<ff_8::Color> m_working_unique_pupu_color  = {};
 
 
      // Corresponding Source Conflicts
      /**
       * @brief Source Conflict list corresponding to the original map state.
       */
-     mutable source_tile_conflicts  m_original_conflicts         = {};
+     mutable SourceTileConflicts      m_original_conflicts         = {};
 
      /**
       * @brief Source Conflict list corresponding to the working map state.
       */
-     mutable source_tile_conflicts  m_working_conflicts          = {};
+     mutable SourceTileConflicts      m_working_conflicts          = {};
 
 
      /**
@@ -161,67 +160,69 @@ class [[nodiscard]] MapHistory
       * one location. Mostly just to high light it differently. Or provide a
       * user with information.
       */
-     mutable nst_map                m_working_similar_counts     = {};
+     mutable nst_map                  m_working_similar_counts     = {};
 
-     mutable nsat_map               m_working_animation_counts   = {};
+     mutable nsat_map                 m_working_animation_counts   = {};
 
 
      // Consolidated history and tracking
      /**
       * @brief Unified undo history for both original and working states.
       */
-     std::vector<map_t>             m_undo_history               = {};
+     std::vector<map_t>               m_undo_history               = {};
      /**
       * @brief Tracks whether a history entry belongs to the original or working
       * state.
       */
-     std::vector<pushed>            m_undo_original_or_working   = {};
+     std::vector<pushed>              m_undo_original_or_working   = {};
 
      // Redo history and tracking
      /**
       * @brief Unified redo history for both original and working states.
       */
-     std::vector<map_t>             m_redo_history               = {};
+     std::vector<map_t>               m_redo_history               = {};
 
      /**
       * @brief Tracks redo states for original or working states.
       */
-     std::vector<pushed>            m_redo_original_or_working   = {};
+     std::vector<pushed>              m_redo_original_or_working   = {};
 
      // New vectors for tracking descriptions of changes
      /**
       * @brief Descriptions of undo changes corresponding to
       * `m_undo_original_or_working`.
       */
-     std::vector<std::string>       m_undo_change_descriptions   = {};
+     std::vector<std::string>         m_undo_change_descriptions   = {};
 
      /**
       * @brief Descriptions of redo changes corresponding to
       * `m_redo_original_or_working`.
       */
-     std::vector<std::string>       m_redo_change_descriptions   = {};
+     std::vector<std::string>         m_redo_change_descriptions   = {};
 
-     /**
-      * @brief Debug utility to print the current map history count.
-      *
-      * Outputs the count of maps in history along with the file name and line
-      * number for debugging purposes.
-      *
-      * @return A `glengine::ScopeGuard` object that automatically logs debug
-      * information when it goes out of scope.
-      */
-     auto                           debug_count_print() const
-     {
-          return glengine::ScopeGuard(
-            [&]()
-            {
-                 spdlog::debug(
-                   "Map History Count: {}\n\t{}:{}",
-                   count() + 2U,
-                   __FILE__,
-                   __LINE__);
-            });
-     }
+     //  /**
+     //   * @brief Debug utility to print the current map history count.
+     //   *
+     //   * Outputs the count of maps in history along with the file name and
+     //   line
+     //   * number for debugging purposes.
+     //   *
+     //   * @return A `glengine::ScopeGuard` object that automatically logs
+     //   debug
+     //   * information when it goes out of scope.
+     //   */
+     //  auto                             debug_count_print() const
+     //  {
+     //       return glengine::ScopeGuard(
+     //         [&]()
+     //         {
+     //              spdlog::debug(
+     //                "Map History Count: {}\n\t{}:{}",
+     //                count() + 2U,
+     //                __FILE__,
+     //                __LINE__);
+     //         });
+     //  }
 
      /**
       * @brief Retrieve and process a tile from the original map at a specific
@@ -673,7 +674,7 @@ class [[nodiscard]] MapHistory
      /**
       * @brief Retrieves the unique colors associated with the original PupuIDs.
       *
-      * This function provides a constant reference to a vector of `glm::vec4`
+      * This function provides a constant reference to a vector of `ff_8::Color`
       * color values corresponding to the unique PupuIDs from the original state
       * of the map.
       *
@@ -683,18 +684,19 @@ class [[nodiscard]] MapHistory
       * targets. The colors are also cached in memory to allow reverse lookup
       * from a color back to its associated PupuID.
       *
-      * @return A constant reference to a vector of `glm::vec4` values, one per
-      * unique original PupuID.
+      * @return A constant reference to a vector of `ff_8::Color` values, one
+      * per unique original PupuID.
       * @note The returned colors are guaranteed to be unique for each PupuID.
       * @warning Assertions may be added in the future to validate the
       * uniqueness of the mapping.
       */
-     const std::vector<glm::vec4> &original_unique_pupu_color() const noexcept;
+     const std::vector<ff_8::Color> &
+       original_unique_pupu_color() const noexcept;
 
      /**
       * @brief Retrieves the unique colors associated with the working PupuIDs.
       *
-      * This function provides a constant reference to a vector of `glm::vec4`
+      * This function provides a constant reference to a vector of `ff_8::Color`
       * color values corresponding to the unique PupuIDs from the working state
       * of the map.
       *
@@ -704,19 +706,19 @@ class [[nodiscard]] MapHistory
       * targets. The colors are also cached in memory to allow reverse lookup
       * from a color back to its associated PupuID.
       *
-      * @return A constant reference to a vector of `glm::vec4` values, one per
-      * unique working PupuID.
+      * @return A constant reference to a vector of `ff_8::Color` values, one
+      * per unique working PupuID.
       * @note The returned colors are guaranteed to be unique for each PupuID.
       * @warning Assertions may be added in the future to validate the
       * uniqueness of the mapping.
       */
-     const std::vector<glm::vec4> &working_unique_pupu_color() const noexcept;
+     const std::vector<ff_8::Color> &working_unique_pupu_color() const noexcept;
 
 
      /**
       * @brief Retrieves the PupuID associated with a given working color.
       *
-      * This function performs a reverse lookup from a `glm::vec4` color value
+      * This function performs a reverse lookup from a `ff_8::Color` color value
       * to its corresponding `PupuID` in the working map state.
       *
       * Colors are generated uniquely for each `PupuID` to support rendering
@@ -736,7 +738,7 @@ class [[nodiscard]] MapHistory
       *          the lookup will fail.
       */
      std::optional<PupuID>
-       working_color_to_pupu_id(const glm::vec4 &in_color) const noexcept
+       working_color_to_pupu_id(const ff_8::Color &in_color) const noexcept
      {
           auto color_and_ids = std::views::zip(
             working_unique_pupu_color(), working_unique_pupu());
@@ -759,14 +761,14 @@ class [[nodiscard]] MapHistory
       * @brief Retrieves the current (working) tile conflicts.
       *
       * This function returns a constant reference to the current
-      * `source_tile_conflicts` object, which holds the conflicts between tiles
+      * `SourceTileConflicts` object, which holds the conflicts between tiles
       * in their current (working) state. The working conflicts represent the
       * tile data that is actively being used or modified.
       *
-      * @return A constant reference to the current `source_tile_conflicts`
+      * @return A constant reference to the current `SourceTileConflicts`
       * object.
       */
-     [[nodiscard]] const source_tile_conflicts                             &
+     [[nodiscard]] const SourceTileConflicts                             &
        working_conflicts() const noexcept;
 
 
@@ -795,14 +797,14 @@ class [[nodiscard]] MapHistory
       * @brief Retrieves the original tile conflicts.
       *
       * This function returns a constant reference to the original
-      * `source_tile_conflicts` object, which holds the conflicts between tiles
+      * `SourceTileConflicts` object, which holds the conflicts between tiles
       * in their initial, unmodified state. The original conflicts are typically
       * used to compare against the working conflicts or as a reference.
       *
-      * @return A constant reference to the original `source_tile_conflicts`
+      * @return A constant reference to the original `SourceTileConflicts`
       * object.
       */
-     [[nodiscard]] const source_tile_conflicts      &
+     [[nodiscard]] const SourceTileConflicts      &
        original_conflicts() const noexcept;
 
 

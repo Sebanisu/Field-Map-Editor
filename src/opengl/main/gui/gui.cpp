@@ -598,7 +598,7 @@ void gui::tile_conflicts_panel()
                         first_tile.source_x(),
                         first_tile.source_x()
                           + first_tile.texture_id()
-                              * ff_8::source_tile_conflicts::GRID_SIZE,
+                              * ff_8::SourceTileConflicts::GRID_SIZE,
                         first_tile.source_y(),
                         first_tile.texture_id());
                  }

@@ -4,6 +4,7 @@
 
 #include "NormalizedSourceTile.hpp"
 // #include "tile_sizes.hpp"
+#include "Colors.hpp"
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -508,26 +509,26 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
      }
 };
 
-// template<>
-// struct fmt::formatter<fme::color>
-// {
-//      // Parses format specs; in this case, we don't support any custom
-//      // formatting
-//      constexpr auto parse(format_parse_context &ctx)
-//      {
-//           return ctx.begin();// no custom formatting, so just return the end
-//      }
+template<>
+struct fmt::formatter<ff_8::Color>
+{
+     // Parses format specs; in this case, we don't support any custom
+     // formatting
+     constexpr auto parse(format_parse_context &ctx)
+     {
+          return ctx.begin();// no custom formatting, so just return the end
+     }
 
-//      // Formats the color as "(r,g,b,a)"
-//      template<typename FormatContext>
-//      auto format(
-//        const fme::color &c,
-//        FormatContext    &ctx) const
-//      {
-//           return fmt::format_to(
-//             ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
-//      }
-// };
+     // Formats the color as "(r,g,b,a)"
+     template<typename FormatContext>
+     auto format(
+       const ff_8::Color &c,
+       FormatContext     &ctx) const
+     {
+          return fmt::format_to(
+            ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
+     }
+};
 
 // template<>
 // struct fmt::formatter<fme::root_path_types> :

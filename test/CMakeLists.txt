@@ -13,7 +13,9 @@ endif()
 add_executable(${PROJECT_NAME}_UT_source_tile_conflicts_test
                UT_source_tile_conflicts_test.cpp)
 target_link_libraries(${PROJECT_NAME}_UT_source_tile_conflicts_test
-                      PRIVATE "${boost_namespace}::ut")
+    PRIVATE "${boost_namespace}::ut"
+    PRIVATE ${PROJECT_NAME}_ff_8
+)
 target_compile_features(
   ${PROJECT_NAME}_UT_source_tile_conflicts_test
   PRIVATE cxx_std_23

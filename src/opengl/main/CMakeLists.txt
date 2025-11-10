@@ -47,14 +47,12 @@ set(MAIN_SOURCES
     main.cpp
     map_group.cpp
     map_operation.cpp
-    MapHistory.cpp
     map_sprite.cpp
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
     safedir.cpp
     save_image_pbo.cpp
-    source_tile_conflicts.cpp
     tile_sizes.cpp
     unique_values.cpp
     utilities.cpp)

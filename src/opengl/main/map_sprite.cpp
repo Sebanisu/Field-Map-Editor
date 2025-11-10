@@ -2,6 +2,7 @@
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include "future_operations.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
 #include "map_operation.hpp"
 #include "safedir.hpp"
@@ -1600,7 +1601,7 @@ std::tuple<
   glengine::PaletteBuffer,
   glengine::HistogramBuffer,
   glengine::DistanceBuffer>
-  map_sprite::initialize_buffers(const std::vector<glm::vec4> &palette) const
+  map_sprite::initialize_buffers(const std::vector<ff_8::Color> &palette) const
 {
      std::tuple<
        glengine::PaletteBuffer, glengine::HistogramBuffer,
@@ -1609,7 +1610,8 @@ std::tuple<
             glengine::HistogramBuffer{ std::ranges::size(palette) },
             glengine::DistanceBuffer{ std::ranges::size(palette) } };
      auto &[pb, hb, db] = ret;
-     pb.initialize(palette);
+     pb.initialize(
+       palette | ff_8::Colors::as_vec4 | std::ranges::to<std::vector>());
      if (!pb.id())
           spdlog::critical("PaletteBuffer initialization failed, aborting");
 
@@ -1801,7 +1803,7 @@ std::pair<
                            "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
                            "Distance {}",
                            index,
-                           fme::color{ color },
+                           color,
                            pupu,
                            count,
                            distance);
@@ -2270,7 +2272,7 @@ const std::vector<ff_8::PupuID> &map_sprite::working_unique_pupu() const
 }
 
 std::vector<std::tuple<
-  glm::vec4,
+  ff_8::Color,
   ff_8::PupuID>>
   map_sprite::working_unique_color_pupu() const
 {
@@ -2290,7 +2292,7 @@ const std::vector<ff_8::PupuID> &map_sprite::original_unique_pupu() const
 }
 
 
-const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
+const ff_8::SourceTileConflicts &map_sprite::original_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_original_all();
@@ -2298,11 +2300,11 @@ const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
      {
           return m_map_group.maps.original_conflicts();
      }
-     static const ff_8::source_tile_conflicts blank{};
+     static const ff_8::SourceTileConflicts blank{};
      return blank;
 }
 
-const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
+const ff_8::SourceTileConflicts &map_sprite::working_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
@@ -2310,7 +2312,7 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
      {
           return m_map_group.maps.working_conflicts();
      }
-     static const ff_8::source_tile_conflicts blank{};
+     static const ff_8::SourceTileConflicts blank{};
      return blank;
 }
 
@@ -3134,8 +3136,8 @@ void map_sprite::save_deswizzle_generate_toml(
                       = out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
                     spdlog::debug(
                       "Queued image save: mask='{}'", mask_path.string());
-                    const auto colors_to_pupu =
-                      [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>>
+                    const auto colors_to_pupu = [&]()
+                      -> std::vector<std::tuple<ff_8::Color, ff_8::PupuID>>
                     {
                          if (selections->get<
                                ConfigKey::BatchGenerateWhiteOnBlackMask>())

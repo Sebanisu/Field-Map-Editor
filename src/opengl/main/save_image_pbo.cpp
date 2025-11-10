@@ -47,7 +47,7 @@ std::future<void> save_image_pbo(
   glengine::FrameBuffer in_fbo,
   const GLenum          attachment,
   std::vector<std::tuple<
-    glm::vec4,
+    ff_8::Color,
     ff_8::PupuID>>      in_color_ids)
 {
      // Backup currently bound framebuffer (restored by your helper)
@@ -189,18 +189,17 @@ std::future<void> save_image_pbo(
             }
 
             const auto span = std::span(
-              reinterpret_cast<const fme::color *>(pixels.get()),
+              reinterpret_cast<const ff_8::Color *>(pixels.get()),
               static_cast<std::size_t>(w * h));
             // For each unique PupuID, create a vector of masks
-            std::map<ff_8::PupuID, std::vector<fme::color>>  masks;
-            std::set<std::pair<fme::color, fme::color>>      logged_colors;
-            static std::map<glm::vec4, fme::color, Vec4Less> conv_cache;
-            std::map<fme::color, ff_8::PupuID>
+            std::map<ff_8::PupuID, std::vector<ff_8::Color>> masks;
+            std::set<std::pair<ff_8::Color, ff_8::Color>>    logged_colors;
+            std::map<ff_8::Color, ff_8::PupuID>
               best_id_cache;// memoizes best id for each pixel color
 
             for (const auto &[i, color_in] : span | std::views::enumerate)
             {
-                 if (color_in == fme::colors::Transparent)
+                 if (color_in == ff_8::Colors::Transparent)
                       continue;
 
                  const auto best_id = [&]() -> ff_8::PupuID
@@ -214,25 +213,13 @@ std::future<void> save_image_pbo(
                       {
                            auto it = std::ranges::min_element(
                              color_ids,
-                             [&](const auto &a, const auto &b)
+                             [&](const ff_8::Color &a, const ff_8::Color &b)
                              {
-                                  auto get_conv = [](const glm::vec4 &c)
-                                  {
-                                       auto nested_it = conv_cache.find(c);
-                                       if (nested_it != conv_cache.end())
-                                            return nested_it->second;
-                                       fme::color conv
-                                         = static_cast<fme::color>(c);
-                                       conv_cache.emplace(c, conv);
-                                       return conv;
-                                  };
-
-                                  const auto conv_a = get_conv(std::get<0>(a));
-                                  const auto conv_b = get_conv(std::get<0>(b));
-
-                                  return color_in.difference(conv_a)
-                                         < color_in.difference(conv_b);
-                             });
+                                  return color_in.difference(a)
+                                         < color_in.difference(b);
+                             },
+                             [](const auto &tuple)
+                             { return std::get<0>(tuple); });
 
                            if (it == color_ids.end())
                            {
@@ -250,19 +237,19 @@ std::future<void> save_image_pbo(
                  }
                  auto &mask = masks[best_id];
                  if (mask.empty())
-                      mask.resize(span.size(), fme::colors::Black);
+                      mask.resize(span.size(), ff_8::Colors::Black);
 
-                 mask[static_cast<std::size_t>(i)] = fme::colors::White;
+                 mask[static_cast<std::size_t>(i)] = ff_8::Colors::White;
 
                  auto it                           = std::ranges::find_if(
                    color_ids,
                    [&](const auto &tup)
                    { return std::get<1>(tup) == best_id; });
 
-                 fme::color conv_color_best;
+
                  if (it != color_ids.end())
                  {
-                      conv_color_best = conv_cache[std::get<0>(*it)];
+                      const ff_8::Color &conv_color_best = std::get<0>(*it);
                       if (
                         color_in != conv_color_best
                         && logged_colors.insert({ color_in, conv_color_best })
