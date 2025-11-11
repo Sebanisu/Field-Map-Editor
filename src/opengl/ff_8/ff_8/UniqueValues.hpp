@@ -4,16 +4,16 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
-#include "formatters.hpp"
-#include "open_viii/graphics/background/BlendModeT.hpp"
-#include "open_viii/graphics/BPPT.hpp"
+#include "Formatters.hpp"
+#include "PupuID.hpp"
+#include "TileOperations.hpp"
+#include "UniquifyPupu.hpp"
 #include <concepts>
 #include <cstdint>
-#include <ff_8/PupuID.hpp>
-#include <ff_8/TileOperations.hpp>
-#include <ff_8/UniquifyPupu.hpp>
 #include <fmt/format.h>
 #include <map>
+#include <open_viii/graphics/background/BlendModeT.hpp>
+#include <open_viii/graphics/BPPT.hpp>
 #include <ranges>
 #include <string>
 #include <utility>
@@ -21,7 +21,7 @@
 namespace ff_8
 {
 template<typename T>
-struct unique_values_and_strings
+struct UniqueValues
 {
    private:
      static constexpr auto default_filter_lambda = [](auto &&) { return true; };
@@ -29,15 +29,15 @@ struct unique_values_and_strings
        = [](auto &&, auto &&ret) { return std::forward<decltype(ret)>(ret); };
 
    public:
-     using value_type            = T;
-     unique_values_and_strings() = default;
+     using value_type = T;
+     UniqueValues()   = default;
      template<
        std::ranges::range tilesT,
        typename lambdaT,
        typename sortT   = std::less<>,
        typename filterT = decltype(default_filter_lambda),
        typename secondT = decltype(kite)>
-     explicit unique_values_and_strings(
+     explicit UniqueValues(
        const tilesT &tiles,
        lambdaT     &&lambda,
        sortT       &&sort        = {},
@@ -53,7 +53,7 @@ struct unique_values_and_strings
        , m_strings(get_strings(m_values))
      {
      }
-     explicit unique_values_and_strings(
+     explicit UniqueValues(
        std::vector<value_type>  in_values,
        std::vector<std::string> in_strings)
        : m_values(std::move(in_values))
@@ -240,19 +240,17 @@ struct all_unique_values_and_strings
      }
 
    private:
-     unique_values_and_strings<std::uint16_t> m_z               = {};
-     unique_values_and_strings<std::uint8_t>  m_layer_id        = {};
-     unique_values_and_strings<std::uint8_t>  m_texture_page_id = {};
-     unique_values_and_strings<std::uint8_t>  m_animation_id    = {};
-     unique_values_and_strings<std::uint8_t>  m_blend_other     = {};
-     unique_values_and_strings<open_viii::graphics::background::BlendModeT>
-                                                          m_blend_mode = {};
-     unique_values_and_strings<open_viii::graphics::BPPT> m_bpp        = {};
-     std::map<std::uint8_t, unique_values_and_strings<std::uint8_t>>
-       m_animation_frame = {};
-     std::
-       map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>>
-                           m_palette             = {};
+     UniqueValues<std::uint16_t> m_z               = {};
+     UniqueValues<std::uint8_t>  m_layer_id        = {};
+     UniqueValues<std::uint8_t>  m_texture_page_id = {};
+     UniqueValues<std::uint8_t>  m_animation_id    = {};
+     UniqueValues<std::uint8_t>  m_blend_other     = {};
+     UniqueValues<open_viii::graphics::background::BlendModeT> m_blend_mode
+       = {};
+     UniqueValues<open_viii::graphics::BPPT>            m_bpp             = {};
+     std::map<std::uint8_t, UniqueValues<std::uint8_t>> m_animation_frame = {};
+     std::map<open_viii::graphics::BPPT, UniqueValues<std::uint8_t>> m_palette
+       = {};
 
      static constexpr auto default_filter_lambda = [](auto &&) { return true; };
      template<
@@ -264,20 +262,20 @@ struct all_unique_values_and_strings
        typename filterT = decltype(default_filter_lambda)>
      static std::map<
        keyT,
-       unique_values_and_strings<valT>>
+       UniqueValues<valT>>
        get_map(
-         const tilesT                          &tiles,
-         const unique_values_and_strings<keyT> &keys,
-         lambdaT                              &&lambda,
-         sortT                                &&sort   = {},
-         filterT                              &&filter = {})
+         const tilesT             &tiles,
+         const UniqueValues<keyT> &keys,
+         lambdaT                 &&lambda,
+         sortT                   &&sort   = {},
+         filterT                 &&filter = {})
      {
-          std::map<keyT, unique_values_and_strings<valT>> ret = {};
+          std::map<keyT, UniqueValues<valT>> ret = {};
           for (const auto &key : keys.values())
           {
                ret.emplace(
                  key,
-                 unique_values_and_strings<valT>(
+                 UniqueValues<valT>(
                    tiles,
                    lambda,
                    sort,

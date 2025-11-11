@@ -12,11 +12,11 @@
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
 #include "tile_sizes.hpp"
-#include "unique_values.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <ff_8/MapGroup.hpp>
 #include <ff_8/MapHistory.hpp>
+#include <ff_8/UniqueValues.hpp>
 #include <fmt/format.h>
 #include <glengine/BatchRenderer.hpp>
 #include <glengine/CompShader.hpp>

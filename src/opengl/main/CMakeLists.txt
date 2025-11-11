@@ -53,7 +53,6 @@ set(MAIN_SOURCES
     safedir.cpp
     save_image_pbo.cpp
     tile_sizes.cpp
-    unique_values.cpp
     utilities.cpp)
 
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

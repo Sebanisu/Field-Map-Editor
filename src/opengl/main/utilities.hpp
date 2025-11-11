@@ -9,6 +9,7 @@
 #include <variant>
 #include <vector>
 
+
 namespace fme
 {
 template<typename T>
@@ -149,8 +150,6 @@ constexpr inline bool remove_empty_values(R &...ranges)
      }
      return false;
 }
-
-#include <filesystem>
 
 template<erasable_range... R>
 inline bool remove_nonexistent_paths(

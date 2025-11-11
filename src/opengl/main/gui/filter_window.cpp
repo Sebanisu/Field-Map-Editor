@@ -2203,7 +2203,7 @@ void fme::filter_window::menu_filtered_palettes(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto unique_palettes = ff_8::unique_values_and_strings<std::uint8_t>(
+     const auto unique_palettes = ff_8::UniqueValues<std::uint8_t>(
        value_string_pairs
          | std::views::transform([&](const auto &pair)
                                  { return std::get<0>(pair); })
@@ -2347,16 +2347,15 @@ void fme::filter_window::menu_filtered_animation_states(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto unique_animation_state
-       = ff_8::unique_values_and_strings<std::uint8_t>(
-         value_string_pairs
-           | std::views::transform([&](const auto &pair)
-                                   { return std::get<0>(pair); })
-           | std::ranges::to<std::vector>(),
-         value_string_pairs
-           | std::views::transform([&](const auto &pair)
-                                   { return std::get<1>(pair); })
-           | std::ranges::to<std::vector>());
+     const auto unique_animation_state = ff_8::UniqueValues<std::uint8_t>(
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<0>(pair); })
+         | std::ranges::to<std::vector>(),
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<1>(pair); })
+         | std::ranges::to<std::vector>());
 
      GenericMenuWithMultiFilter(
        gui_labels::animation_state,

@@ -11,8 +11,8 @@
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
-#include "unique_values.hpp"
 #include <algorithm>
+#include <ff_8/UniqueValues.hpp>
 #include <fmt/format.h>
 #include <functional>
 #include <glengine/ScopeGuard.hpp>
