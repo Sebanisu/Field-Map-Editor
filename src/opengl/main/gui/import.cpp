@@ -2,7 +2,6 @@
 #include "as_string.hpp"
 #include "collapsing_tile_info.hpp"
 #include "compact_type.hpp"
-#include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "cstdint"
 #include "filebrowser.hpp"
@@ -13,10 +12,11 @@
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
 #include "RangeConsumer.hpp"
-#include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <array>
 #include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/Configuration.hpp>
+#include <ff_8/SafeDir.hpp>
 #include <imgui.h>
 #include <open_viii/graphics/BPPT.hpp>
 #include <toml++/toml.h>

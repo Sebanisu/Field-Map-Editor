@@ -397,7 +397,7 @@ toml::table *fme::filter_window::get_root_table(
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      return &(config.operator toml::table &());
 }
 
@@ -846,7 +846,7 @@ void fme::filter_window::save_config(
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      config.save();
 }
 

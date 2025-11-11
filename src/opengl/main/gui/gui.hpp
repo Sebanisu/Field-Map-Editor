@@ -10,7 +10,6 @@
 #include "as_string.hpp"
 #include "batch.hpp"
 #include "compact_type.hpp"
-#include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "custom_paths_window.hpp"
 #include "draw_window.hpp"
@@ -28,12 +27,13 @@
 #include "map_directory_mode.hpp"
 #include "mouse_positions.hpp"
 #include "RangeConsumer.hpp"
-#include "safedir.hpp"
 #include "Selections.hpp"
 #include "textures_window.hpp"
 #include <cstdint>
 #include <ff_8/ArchivesGroup.hpp>
 #include <ff_8/Colors.hpp>
+#include <ff_8/Configuration.hpp>
+#include <ff_8/SafeDir.hpp>
 #include <fmt/chrono.h>
 #include <glengine/ScopeGuard.hpp>
 #include <glengine/TimeStep.hpp>

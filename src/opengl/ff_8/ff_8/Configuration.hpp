@@ -9,7 +9,7 @@
 #include <ranges>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
-namespace fme
+namespace ff_8
 {
 /**
  * @brief Manages the configuration settings for the application, using a TOML
@@ -23,16 +23,16 @@ class Configuration
 {
    public:
      /**
-      * @brief Constructs a Configuration object and loads the TOML
+      * @brief Constructs a ff_8::Configuration object and loads the TOML
       * configuration file.
       *
       * The configuration file is expected to be located at
       * `field-map-editor.toml` relative to the current working directory.
       */
-     Configuration();
+     ff_8::Configuration();
 
 
-     Configuration(std::filesystem::path);
+     ff_8::Configuration(std::filesystem::path);
 
                                        operator toml::table &() &;
                                        operator const toml::table &() const &;
@@ -313,5 +313,5 @@ class Configuration
      mutable toml::table                                       *m_table = {};
 };
 
-}// namespace fme
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP

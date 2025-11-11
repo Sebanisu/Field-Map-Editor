@@ -1,8 +1,8 @@
 #include "image_compare_window.hpp"
 #include "format_imgui_text.hpp"
-#include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <execution>
+#include <ff_8/SafeDir.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <IconsFontAwesome6.h>
 #include <numeric>
@@ -56,7 +56,7 @@ static bool safe_copy_string(
        std::ranges::begin(src), src_size, std::ranges::data(dst));
      dst[static_cast<size_t>(src_size)] = '\0';
 
-     const auto tmp                     = safedir(std::ranges::data(dst));
+     const auto tmp                     = ff_8::SafeDir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
 ImageCompareWindow::DiffResult::operator toml::table() const
@@ -183,7 +183,7 @@ void ImageCompareWindow::open_directory_browser()
      const std::string &selected_path
        = m_directory_browser.GetDirectory().string();
      // todo check if the directory is valid.
-     // const auto         tmp           = safedir(selected_path);
+     // const auto         tmp           = ff_8::SafeDir(selected_path);
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode:
@@ -274,7 +274,7 @@ void ImageCompareWindow::render()
             });
           if (ImGui::InputText("##Path A", m_path1.data(), m_path1.size()))
           {
-               const auto tmp = safedir(m_path1.data());
+               const auto tmp = ff_8::SafeDir(m_path1.data());
                m_path1_valid  = tmp.is_dir() && tmp.is_exists();
                if (m_path1_valid)
                {
@@ -331,7 +331,7 @@ void ImageCompareWindow::render()
             });
           if (ImGui::InputText("##Path B", m_path2.data(), m_path2.size()))
           {
-               const auto tmp = safedir(m_path2.data());
+               const auto tmp = ff_8::SafeDir(m_path2.data());
                m_path2_valid  = tmp.is_dir() && tmp.is_exists();
                if (m_path2_valid)
                {

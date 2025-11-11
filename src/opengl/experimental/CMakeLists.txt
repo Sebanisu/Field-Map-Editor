@@ -28,7 +28,6 @@ add_executable(
   ff8/MapHistory.cpp
   ff8/MapTileAdjustments.hpp
   ff8/SimilarAdjustments.cpp
-  ff8/Configuration.cpp
   ff8/MenuSaveToggles.hpp
   ImGuiDisabled.cpp
   ImGuiPushItemWidth.cpp
@@ -74,8 +73,6 @@ add_custom_command(
           $<TARGET_FILE_DIR:${PROJECT_NAME}_EXPERIMENTAL>/res
   VERBATIM)
 
-target_compile_definitions(${PROJECT_NAME}_EXPERIMENTAL
-                           PUBLIC TOML_EXCEPTIONS=0)
 if(MSVC)
   target_compile_definitions(
     ${PROJECT_NAME}_EXPERIMENTAL PUBLIC _CRT_SECURE_NO_WARNINGS) # required by
@@ -91,6 +88,11 @@ string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)
 set_target_properties(${PROJECT_NAME}_EXPERIMENTAL PROPERTIES
     OUTPUT_NAME "${experimental_exec}"
 )
+target_compile_definitions(
+  ${PROJECT_NAME}_EXPERIMENTAL
+  PUBLIC NOMINMAX # imgui uses unguarded min and max.
+  PUBLIC DEFAULT_CONFIG_PATH="res/${experimental_exec}.toml"
+  )
 if(supported)
   message(STATUS "IPO / LTO enabled")
   set_target_properties(${PROJECT_NAME}_EXPERIMENTAL

@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_UPSCALES_HPP
 #define FIELD_MAP_EDITOR_UPSCALES_HPP
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <glengine/Event/EventItem.hpp>
 #include <glengine/Renderable.hpp>
 namespace ff_8
@@ -18,7 +18,7 @@ class Upscales
      void               on_event(const glengine::event::Item &) const {}
                         operator std::filesystem::path() const;
      Upscales();
-     Upscales(Configuration);
+     Upscales(ff_8::Configuration);
 
    private:
      [[nodiscard]] const std::string &string() const;

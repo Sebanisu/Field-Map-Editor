@@ -8,6 +8,7 @@
 #include "open_file_explorer.hpp"
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <ff_8/SafeDir.hpp>
 #include <optional>
 #include <span>
 namespace fme
@@ -59,7 +60,7 @@ static bool safe_copy_string(
        std::ranges::begin(src), src_size, std::ranges::data(dst));
      dst[static_cast<size_t>(src_size)] = '\0';
 
-     const auto tmp                     = safedir(std::ranges::data(dst));
+     const auto tmp                     = ff_8::SafeDir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
 
@@ -100,7 +101,7 @@ void fme::batch::draw_window()
                const std::filesystem::path config_path
                  = config_path_values.replace_tags(
                    selections->get<ConfigKey::OutputTomlPattern>(), selections);
-               auto config = Configuration(config_path);
+               auto config = ff_8::Configuration(config_path);
                config.save();
           }
      }
@@ -1433,7 +1434,7 @@ void fme::batch::button_start()
           const std::filesystem::path config_path
             = config_path_values.replace_tags(
               selections->get<ConfigKey::OutputTomlPattern>(), selections);
-          auto config = Configuration(config_path);
+          auto config = ff_8::Configuration(config_path);
           config->clear();
      }
      m_fields_consumer = archives_group->fields();
@@ -1557,7 +1558,7 @@ bool fme::batch::browse_path(
                 "##Empty", path_buffer.data(), path_buffer.size()))
           {
                // Check if the folder path exists when the text box changes
-               const auto tmp = safedir(path_buffer.data());
+               const auto tmp = ff_8::SafeDir(path_buffer.data());
                valid_path     = tmp.is_exists() && tmp.is_dir();
                changed        = true;
           }
@@ -2336,7 +2337,7 @@ void fme::batch::open_directory_browser()
      const std::string &selected_path
        = m_directory_browser.GetDirectory().string();
      // todo check if the directory is valid.
-     // const auto         tmp           = safedir(selected_path);
+     // const auto         tmp           = ff_8::SafeDir(selected_path);
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode:

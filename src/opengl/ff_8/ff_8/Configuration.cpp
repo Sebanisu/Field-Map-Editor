@@ -1,14 +1,16 @@
 //
 // Created by pcvii on 9/5/2022.
 //
+#ifndef DEFAULT_CONFIG_PATH
+#define DEFAULT_CONFIG_PATH "res/field-map-editor.toml"// fallback, just in case
+#endif
 
-#include "Configuration.hpp"
-#include "safedir.hpp"
-#include <glengine/ScopeGuard.hpp>
+#include "SafeDir.hpp"
+#include <ff_8/Configuration.hpp>
 #include <iostream>
 #include <stacktrace>
 
-fme::Configuration::Configuration(std::filesystem::path in_path)
+ff_8::Configuration::Configuration(std::filesystem::path in_path)
   : m_path(std::move(in_path))
   , m_table(
       [&]()
@@ -36,8 +38,8 @@ fme::Configuration::Configuration(std::filesystem::path in_path)
 {
 }
 
-fme::Configuration::Configuration()
-  : fme::Configuration(
+ff_8::Configuration::Configuration()
+  : ff_8::Configuration(
       []() -> const std::filesystem::path &
       {
            static std::filesystem::path path;// path is cached across calls
@@ -46,8 +48,39 @@ fme::Configuration::Configuration()
            if (!initialized)
            {
                 std::error_code error_code{};
-                path = std::filesystem::current_path(error_code) / "res"
-                       / "field-map-editor.toml";
+
+
+                try
+                {
+                     path = std::filesystem::path(DEFAULT_CONFIG_PATH);
+
+                     if (path.is_relative())
+                     {
+                          auto current
+                            = std::filesystem::current_path(error_code);
+                          if (error_code)
+                          {
+                               std::cerr
+                                 << "Warning: failed to get current path: "
+                                 << error_code.message() << '\n';
+                               return path;// fallback to relative path
+                          }
+                          path = current / path;
+                     }
+                     path.make_preferred();
+                }
+                catch (const std::filesystem::filesystem_error &e)
+                {
+                     std::cerr
+                       << "Filesystem error while constructing config path: "
+                       << e.what() << '\n';
+                }
+                catch (const std::exception &e)
+                {
+                     std::cerr
+                       << "Unexpected error while constructing config path: "
+                       << e.what() << '\n';
+                }
                 if (error_code)
                 {
                      spdlog::warn(
@@ -67,42 +100,42 @@ fme::Configuration::Configuration()
 }
 
 
-fme::Configuration::operator toml::table &() &
+ff_8::Configuration::operator toml::table &() &
 {
      return *m_table;
 }
-fme::Configuration::operator const toml::table &() const &
+ff_8::Configuration::operator const toml::table &() const &
 {
      return *m_table;
 }
-toml::table &fme::Configuration::operator*() &
+toml::table &ff_8::Configuration::operator*() &
 {
      return *m_table;
 }
-toml::table const &fme::Configuration::operator*() const &
+toml::table const &ff_8::Configuration::operator*() const &
 {
      return *m_table;
 }
 
-toml::table *fme::Configuration::operator->() &
+toml::table *ff_8::Configuration::operator->() &
 {
      return m_table;
 }
-const toml::table *fme::Configuration::operator->() const &&
+const toml::table *ff_8::Configuration::operator->() const &&
 {
      return m_table;
 }
-const toml::table *fme::Configuration::operator->() const &
+const toml::table *ff_8::Configuration::operator->() const &
 {
      return m_table;
 }
 toml::node_view<const toml::node>
-  fme::Configuration::operator[](std::string_view i) const
+  ff_8::Configuration::operator[](std::string_view i) const
 {
      return std::as_const(*m_table)[i];
 }
 
-toml::node_view<const toml::node> fme::Configuration::operator()(
+toml::node_view<const toml::node> ff_8::Configuration::operator()(
   std::string_view root,
   std::string_view child) const
 {
@@ -113,18 +146,17 @@ toml::node_view<const toml::node> fme::Configuration::operator()(
      return root_node[child];
 }
 
-void fme::Configuration::save(const bool remove_from_cache) const
+void ff_8::Configuration::save(const bool remove_from_cache) const
 {
-     const auto pop_erase = glengine::ScopeGuard(
-       [&]()
-       {
-            if (remove_from_cache)
-            {
-                 s_tables.erase(m_path);
-                 m_table = nullptr;
-                 m_path  = std::filesystem::path{};
-            }
-       });
+     const auto erase = [&]()
+     {
+          if (remove_from_cache)
+          {
+               s_tables.erase(m_path);
+               m_table = nullptr;
+               m_path  = std::filesystem::path{};
+          }
+     };
 
      std::error_code error_code = {};
      (void)std::filesystem::create_directories(
@@ -144,13 +176,15 @@ void fme::Configuration::save(const bool remove_from_cache) const
      {
           spdlog::error(
             "ofstream: failed to open \"{}\" for writing", m_path.string());
+          erase();
           return;
      }
      fs << *m_table;
      spdlog::info("ofstream: saved config \"{}\"", m_path.string());
+     erase();
 }
 
-bool fme::Configuration::reload()
+bool ff_8::Configuration::reload()
 {
      toml::parse_result result = toml::parse_file(m_path.string());
      if (!result)

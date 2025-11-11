@@ -11,10 +11,10 @@
 #include "gui_labels.hpp"
 #include "map_sprite.hpp"
 #include "RangeConsumer.hpp"
-#include "safedir.hpp"
 #include "Selections.hpp"
 #include <array>
 #include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/SafeDir.hpp>
 #include <imgui.h>
 #include <memory>
 namespace fme

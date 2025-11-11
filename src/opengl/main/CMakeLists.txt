@@ -40,7 +40,6 @@ set(MAIN_SOURCES
     gui/Selections.cpp
     gui/textures_window.cpp
     gui/tool_tip.cpp
-    Configuration.cpp
     formatters.cpp
     future_operations.cpp
     generic_combo.cpp
@@ -50,7 +49,6 @@ set(MAIN_SOURCES
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
-    safedir.cpp
     save_image_pbo.cpp
     tile_sizes.cpp
     utilities.cpp)
@@ -62,7 +60,6 @@ else()
 endif()
 
 # set_property(TARGET ${PROJECT_NAME}_MAIN PROPERTY CXX_STANDARD 20)
-find_package(tomlplusplus CONFIG REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -77,9 +74,13 @@ target_include_directories(${PROJECT_NAME}_MAIN_COMMON
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 string(TOLOWER "${PROJECT_NAME}" main_exec)
-
 set_target_properties(${PROJECT_NAME}_MAIN PROPERTIES OUTPUT_NAME
                                                       "${main_exec}")
+target_compile_definitions(
+  ${PROJECT_NAME}_MAIN
+  PUBLIC NOMINMAX # imgui uses unguarded min and max.
+  PUBLIC DEFAULT_CONFIG_PATH="res/${main_exec}.toml"
+  )
 target_link_libraries(
   ${PROJECT_NAME}_MAIN
   PRIVATE project_warnings
@@ -102,10 +103,6 @@ target_link_libraries(
   PRIVATE clip::clip
   PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 
-target_compile_definitions(
-  ${PROJECT_NAME}_MAIN
-  PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC TOML_EXCEPTIONS=0)
 
 target_compile_features(
   ${PROJECT_NAME}_MAIN

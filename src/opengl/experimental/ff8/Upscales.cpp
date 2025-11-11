@@ -18,7 +18,7 @@ bool ff_8::Upscales::on_im_gui_update() const
                [](auto &&value) -> decltype(auto)
                { return value.template ref<std::string>(); })))
      {
-          auto config = Configuration{};
+          auto config = ff_8::Configuration{};
           config->insert_or_assign(swizzle_paths_index, m_current);
           config.save();
           return true;
@@ -137,10 +137,10 @@ static std::vector<std::string> get_default_paths()
      return paths;
 }
 ff_8::Upscales::Upscales()
-  : Upscales(Configuration{})
+  : Upscales(ff_8::Configuration{})
 {
 }
-ff_8::Upscales::Upscales(Configuration config)
+ff_8::Upscales::Upscales(ff_8::Configuration config)
   : m_current(config[swizzle_paths_index].value_or(int{}))
   , m_paths(
       [&]() -> toml::array

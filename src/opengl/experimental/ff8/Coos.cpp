@@ -10,7 +10,7 @@ bool                  ff_8::Coos::on_im_gui_update() const
 {
      if (glengine::GenericCombo("Language", m_current, m_coos))
      {
-          auto config = Configuration{};
+          auto config = ff_8::Configuration{};
           config->insert_or_assign(coo_index, m_current);
           config->insert_or_assign(coo_string, std::string_view{ *this });
           config.save();
@@ -27,6 +27,6 @@ ff_8::Coos::operator std::string_view() const
      return m_coos.at(static_cast<std::size_t>(m_current));
 }
 ff_8::Coos::Coos()
-  : m_current(Configuration{}[coo_index].value_or(int{}))
+  : m_current(ff_8::Configuration{}[coo_index].value_or(int{}))
 {
 }

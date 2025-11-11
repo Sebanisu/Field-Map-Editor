@@ -3,7 +3,7 @@
 //
 
 #include "Fields.hpp"
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <fmt/chrono.h>
 #include <glengine/GenericCombo.hpp>
 
@@ -122,7 +122,7 @@ bool Fields::on_field_change() const
           m_field = load_field();
           if (std::cmp_less(m_current_index, std::ranges::size(m_map_data)))
           {
-               auto config = Configuration{};
+               auto config = ff_8::Configuration{};
                config->insert_or_assign(fields_index, m_current_index);
 
                config->insert_or_assign(
@@ -181,7 +181,7 @@ std::string_view Fields::map_name() const
      return tmp;
 }
 Fields::Fields()
-  : m_current_index(Configuration{}[fields_index].value_or(int{}))
+  : m_current_index(ff_8::Configuration{}[fields_index].value_or(int{}))
   , m_map_data(m_archive.fields().map_data())
   , m_field(load_field())
 {

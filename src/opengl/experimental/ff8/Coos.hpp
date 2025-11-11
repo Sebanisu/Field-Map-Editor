@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <glengine/Event/EventItem.hpp>
 #include <glengine/Renderable.hpp>
 #include <glengine/ScopeGuard.hpp>

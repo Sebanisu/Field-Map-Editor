@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_FILTER_HPP
 #define FIELD_MAP_EDITOR_FILTER_HPP
-#include "Configuration.hpp"
 #include "formatters.hpp"
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
@@ -12,6 +11,7 @@
 #include "utilities.hpp"
 #include <cstdint>
 #include <ff_8/Colors.hpp>
+#include <ff_8/Configuration.hpp>
 #include <ff_8/DrawBitT.hpp>
 #include <ff_8/PupuID.hpp>
 #include <ff_8/TileOperations.hpp>
@@ -503,7 +503,7 @@ struct FilterLoadStrategy
                if constexpr (std::is_enum_v<
                                glengine::vector_elem_type_t<ValueT>>)
                {
-                    (void)fme::Configuration::load_array<
+                    (void)ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::underlying_type_t<
                         glengine::vector_elem_type_t<ValueT>>>(
@@ -513,7 +513,7 @@ struct FilterLoadStrategy
                                     glengine::vector_elem_type_t<ValueT>,
                                     open_viii::graphics::BPPT>)
                {
-                    (void)fme::Configuration::load_array<
+                    (void)ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint8_t>(config, id, value);
                }
@@ -521,13 +521,13 @@ struct FilterLoadStrategy
                                     glengine::vector_elem_type_t<ValueT>,
                                     PupuID>)
                {
-                    (void)fme::Configuration::load_array<
+                    (void)ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint32_t>(config, id, value);
                }
                else
                {
-                    (void)fme::Configuration::load_array<
+                    (void)ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
@@ -601,7 +601,7 @@ struct FilterUpdateStrategy
                if constexpr (std::is_enum_v<
                                glengine::vector_elem_type_t<ValueT>>)
                {
-                    fme::Configuration::update_array<
+                    ff_8::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::underlying_type_t<
                         glengine::vector_elem_type_t<ValueT>>>(
@@ -611,7 +611,7 @@ struct FilterUpdateStrategy
                                     glengine::vector_elem_type_t<ValueT>,
                                     open_viii::graphics::BPPT>)
                {
-                    fme::Configuration::update_array<
+                    ff_8::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint8_t>(config, id, value);
                }
@@ -619,13 +619,13 @@ struct FilterUpdateStrategy
                                     glengine::vector_elem_type_t<ValueT>,
                                     PupuID>)
                {
-                    fme::Configuration::update_array<
+                    ff_8::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint32_t>(config, id, value);
                }
                else
                {
-                    fme::Configuration::update_array<
+                    ff_8::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
                spdlog::trace("selection<{}>", id);
@@ -675,8 +675,8 @@ struct filter
      {
      }
      filter(
-       bool                      load_config,
-       const fme::Configuration &config)
+       bool                       load_config,
+       const ff_8::Configuration &config)
        : filter(
            FilterLoadStrategy<value_type>::load_value(
              load_config,
@@ -694,7 +694,7 @@ struct filter
            HasFlag(
              settings,
              FilterSettings::Config_Enabled),
-           fme::Configuration{})
+           ff_8::Configuration{})
      {
      }
 
@@ -711,7 +711,7 @@ struct filter
      {
           if (HasFlag(m_settings, FilterSettings::Config_Enabled))
           {
-               fme::Configuration config{};
+               ff_8::Configuration config{};
                return reload(config);
           }
           return *this;
@@ -815,7 +815,7 @@ struct filter
 
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_value(
                       *config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
@@ -855,7 +855,7 @@ struct filter
 
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_value(
                       config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
@@ -889,7 +889,7 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_settings(
                       config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
@@ -911,7 +911,7 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_settings(
                       config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
@@ -972,8 +972,8 @@ struct filter<Tag>
      {
      }
      filter(
-       bool                      load_config,
-       const fme::Configuration &config)
+       bool                       load_config,
+       const ff_8::Configuration &config)
        : filter(
            FilterLoadStrategy<value_type>::load_value(
              load_config,
@@ -990,7 +990,7 @@ struct filter<Tag>
            HasFlag(
              settings,
              FilterSettings::Config_Enabled),
-           fme::Configuration{})
+           ff_8::Configuration{})
      {
      }
 
@@ -1042,7 +1042,7 @@ struct filter<Tag>
      {
           if (HasFlag(m_settings, FilterSettings::Config_Enabled))
           {
-               fme::Configuration config{};
+               ff_8::Configuration config{};
                return reload(config);
           }
           return *this;
@@ -1117,7 +1117,7 @@ struct filter<Tag>
 
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_value(
                       *config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
@@ -1157,7 +1157,7 @@ struct filter<Tag>
 
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_value(
                       config, ConfigKeys<Tag>::key_name, m_value);
                     config.save();
@@ -1188,7 +1188,7 @@ struct filter<Tag>
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_settings(
                       config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
@@ -1206,7 +1206,7 @@ struct filter<Tag>
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    fme::Configuration config{};
+                    ff_8::Configuration config{};
                     FilterUpdateStrategy<value_type>::update_settings(
                       config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
@@ -1310,8 +1310,8 @@ struct filters
      FiltersArrayT m_filters_array;
 
      FiltersArrayT load_filters_array(
-       const bool                load_config,
-       const fme::Configuration &config)
+       const bool                 load_config,
+       const ff_8::Configuration &config)
      {
 
           FiltersArrayT result{};
@@ -1332,8 +1332,8 @@ struct filters
      filters &operator=(filters &&) noexcept = default;
 
      filters(
-       bool                     load_config,
-       fme::Configuration const config = {})
+       bool                      load_config,
+       ff_8::Configuration const config = {})
        : m_filters_array(load_filters_array(
            load_config,
            config))

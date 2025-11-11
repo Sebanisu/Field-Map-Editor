@@ -5,11 +5,11 @@
 #include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
 #include "map_operation.hpp"
-#include "safedir.hpp"
 #include "save_image_pbo.hpp"
 #include "utilities.hpp"
 #include <bit>
 #include <expected>
+#include <ff_8/SafeDir.hpp>
 #include <fmt/format.h>
 #include <glengine/BlendModeSettings.hpp>
 #include <glengine/DistanceBuffer.hpp>
@@ -1384,7 +1384,7 @@ void map_sprite::clear_toml_cached_framebuffers() const
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      config.save(true);
      m_cache_framebuffer.clear();
      m_cache_framebuffer_tooltips.clear();
@@ -3426,7 +3426,7 @@ open_viii::LangT
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
 
-     auto         config      = Configuration(config_path);
+     auto         config      = ff_8::Configuration(config_path);
      toml::table &root_table  = config;
 
      toml::table *field_table = nullptr;
@@ -3491,7 +3491,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
      const key_value_data config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto         config     = Configuration(config_path);
+     auto         config     = ff_8::Configuration(config_path);
      toml::table &root_table = config;
 
      const auto   coo_opt    = [&]()

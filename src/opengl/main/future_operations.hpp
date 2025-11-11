@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP
 #define FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP
-#include "safedir.hpp"
+#include <ff_8/SafeDir.hpp>
 #include <filesystem>
 #include <future>
 #include <glengine/Texture.hpp>

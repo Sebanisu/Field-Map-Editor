@@ -74,8 +74,8 @@ static void setWindowIcon(GLFWwindow *const window)
 static GLFWwindow *create_glfw_window()
 {
      using namespace fme;
-     const Configuration config = {};
-     const int           window_height
+     const ff_8::Configuration config = {};
+     const int                 window_height
        = config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(
          SelectionInfo<ConfigKey::WindowHeight>::default_value());
      const int window_width

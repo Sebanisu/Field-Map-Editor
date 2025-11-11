@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_PATHS_HPP
 #define FIELD_MAP_EDITOR_PATHS_HPP
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <glengine/Event/EventItem.hpp>
 #include <glengine/Renderable.hpp>
 #include <glengine/ScopeGuard.hpp>
@@ -21,7 +21,7 @@ class Paths
      void               on_event(const glengine::event::Item &) const {}
      [[nodiscard]]      operator std::filesystem::path() const;
      Paths();
-     explicit Paths(Configuration);
+     explicit Paths(ff_8::Configuration);
 
    private:
      [[nodiscard]] const std::string &string() const;

@@ -2,15 +2,18 @@ cmake_minimum_required(VERSION 3.18)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
+find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 add_library(
   ${PROJECT_NAME}_ff_8 STATIC
   ff_8/ArchivesGroup.cpp
+  ff_8/Configuration.cpp
   ff_8/MapGroup.cpp
   ff_8/MapHistory.cpp
   ff_8/PupuID.cpp
+  ff_8/SafeDir.cpp
   ff_8/UniquifyPupu.cpp
   )
 
@@ -28,12 +31,13 @@ target_link_libraries(
   PUBLIC OpenVIII_CPP_WIP_VIIIPaths
   PUBLIC OpenVIII_CPP_WIP_VIIIArchive
   PUBLIC OpenVIII_CPP_WIP_VIIIGraphics
+  PUBLIC tomlplusplus::tomlplusplus
   PUBLIC Threads::Threads)
 target_include_directories(${PROJECT_NAME}_ff_8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(MSVC)
   target_compile_definitions(${PROJECT_NAME}_ff_8 PUBLIC _CRT_SECURE_NO_WARNINGS
-  )# required by libpng
+ )# required by libpng  
   target_compile_options(${PROJECT_NAME}_ff_8
     PUBLIC "/bigobj"
     PUBLIC "/Qpar"
@@ -61,6 +65,13 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     PUBLIC
     "-v") # ,--gdb-index
 endif()
+
+target_compile_definitions(
+  ${PROJECT_NAME}_ff_8
+  PUBLIC NOMINMAX # imgui uses unguarded min and max.
+  PUBLIC TOML_EXCEPTIONS=0
+  PUBLIC TOML_HEADER_ONLY=1
+)
 
 if(supported)
   message(STATUS "IPO / LTO enabled")
