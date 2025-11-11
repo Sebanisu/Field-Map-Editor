@@ -31,7 +31,7 @@ target_link_libraries(
   PUBLIC OpenVIII_CPP_WIP_VIIIPaths
   PUBLIC OpenVIII_CPP_WIP_VIIIArchive
   PUBLIC OpenVIII_CPP_WIP_VIIIGraphics
-  PUBLIC tomlplusplus::tomlplusplus
+  #PUBLIC tomlplusplus::tomlplusplus
   PUBLIC Threads::Threads)
 target_include_directories(${PROJECT_NAME}_ff_8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -69,8 +69,8 @@ endif()
 target_compile_definitions(
   ${PROJECT_NAME}_ff_8
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PRIVATE TOML_EXCEPTIONS=0
-  PRIVATE TOML_HEADER_ONLY=1
+  PUBLIC TOML_EXCEPTIONS=0
+  PUBLIC TOML_HEADER_ONLY=1
 )
 
 if(supported)
