@@ -26,7 +26,7 @@ class Configuration
 {
    public:
      /**
-      * @brief Constructs a ff_8::Configuration object and loads the TOML
+      * @brief Constructs a Configuration object and loads the TOML
       * configuration file.
       *
       * The configuration file is expected to be located at

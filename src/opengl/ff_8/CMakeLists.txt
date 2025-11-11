@@ -69,8 +69,8 @@ endif()
 target_compile_definitions(
   ${PROJECT_NAME}_ff_8
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC TOML_EXCEPTIONS=0
-  PUBLIC TOML_HEADER_ONLY=1
+  PRIVATE TOML_EXCEPTIONS=0
+  PRIVATE TOML_HEADER_ONLY=1
 )
 
 if(supported)
