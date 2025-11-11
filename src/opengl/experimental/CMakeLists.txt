@@ -95,6 +95,7 @@ target_compile_definitions(
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
   PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}.toml"
   PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}_imgui.ini"
+  PUBLIC DEFAULT_LOG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}.log"
   )
 if(supported)
   message(STATUS "IPO / LTO enabled")

@@ -1,4 +1,6 @@
-
+#ifndef DEFAULT_LOG_PATH
+#define DEFAULT_LOG_PATH "res/field-map-editor.log"// fallback, just in case
+#endif
 // clang-format off
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -117,11 +119,47 @@ int main(
   [[maybe_unused]] int    argc,
   [[maybe_unused]] char **argv)
 {
+
+     std::error_code error_code = {};
+
+     auto            temp_path  = std::filesystem::path(DEFAULT_LOG_PATH);
+     std::string     path;
+     try
+     {
+          if (temp_path.is_relative())
+          {
+               temp_path = (std::filesystem::current_path(error_code) / path);
+          }
+          temp_path.make_preferred();
+          spdlog::info("log path: {}", temp_path);
+          path = temp_path.string();
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "Filesystem error while constructing config path: {}", e.what());
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Unexpected error while constructing config path: {}", e.what());
+     }
+     if (error_code)
+     {
+          spdlog::warn(
+            "{}:{} - {}: {} path: \"{}\"",
+            __FILE__,
+            __LINE__,
+            error_code.value(),
+            error_code.message(),
+            path);
+          error_code.clear();
+     }
+
      try
      {
           // Create file logger and set as default
-          auto file_logger = spdlog::basic_logger_mt(
-            "file_logger", "res/field_map_editor.log", true);
+          auto file_logger = spdlog::basic_logger_mt("file_logger", path, true);
 
           // Remove logger name from output pattern
           file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");

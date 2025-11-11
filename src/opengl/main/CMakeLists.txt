@@ -81,6 +81,7 @@ target_compile_definitions(
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
   PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}.toml"
   PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}_imgui.ini"
+  PUBLIC DEFAULT_LOG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}.log"
   )
 target_link_libraries(
   ${PROJECT_NAME}_MAIN
