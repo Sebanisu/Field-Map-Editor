@@ -1,7 +1,7 @@
 //
 // Created by pcvii on 9/7/2021.
 //
-#ifndef DEFAULT_CONFIG_PATH
+#ifndef DEFAULT_IMGUI_INI_PATH
 #define DEFAULT_IMGUI_INI_PATH "imgui.ini"// fallback, just in case
 #endif
 #include "gui.hpp"
@@ -4163,15 +4163,18 @@ gui::gui(GLFWwindow *const window)
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
      std::error_code error_code = {};
 
-     static auto     path       = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+     auto            temp_path  = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+     static std::string path;
      try
      {
-          if (path.is_relative())
+          if (temp_path.is_relative())
           {
-               path = (std::filesystem::current_path(error_code) / path);
+               temp_path = (std::filesystem::current_path(error_code) / path);
           }
-          path.make_preferred();
-          imgui_io.IniFilename = path.string().c_str();
+          temp_path.make_preferred();
+          path                 = temp_path.string();
+          imgui_io.IniFilename = path.c_str();
+          spdlog::info("ImGui ini path: {}", imgui_io.IniFilename);
           ImGui::LoadIniSettingsFromDisk(imgui_io.IniFilename);
      }
      catch (const std::filesystem::filesystem_error &e)

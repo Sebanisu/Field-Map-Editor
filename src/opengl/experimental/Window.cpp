@@ -234,15 +234,19 @@ void Window::init_im_gui(const char *const glsl_version) const
           imgui_io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
           //  events don't work with viewports
           std::error_code error_code = {};
-          static auto     path = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+          auto temp_path = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+          static std::string path;
           try
           {
-               if (path.is_relative())
+               if (temp_path.is_relative())
                {
-                    path = (std::filesystem::current_path(error_code) / path);
+                    temp_path
+                      = (std::filesystem::current_path(error_code) / path);
                }
-               path.make_preferred();
-               imgui_io.IniFilename = path.string().c_str();
+               temp_path.make_preferred();
+               path                 = temp_path.string();
+               imgui_io.IniFilename = path.c_str();
+               spdlog::info("ImGui ini path: {}", imgui_io.IniFilename);
                ImGui::LoadIniSettingsFromDisk(imgui_io.IniFilename);
           }
           catch (const std::filesystem::filesystem_error &e)
