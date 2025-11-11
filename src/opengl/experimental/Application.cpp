@@ -69,7 +69,7 @@ Application::Application(
                //      {
                //        return;
                //      }
-               spdlog::debug(
+               spdlog::trace(
                  "event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
           } }))
 {
