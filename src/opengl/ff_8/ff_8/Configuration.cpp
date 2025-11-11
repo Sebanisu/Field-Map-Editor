@@ -1,9 +1,6 @@
 //
 // Created by pcvii on 9/5/2022.
 //
-#ifndef DEFAULT_CONFIG_PATH
-#define DEFAULT_CONFIG_PATH "res/field-map-editor.toml"// fallback, just in case
-#endif
 
 #include "SafeDir.hpp"
 #include <ff_8/Configuration.hpp>
@@ -34,67 +31,6 @@ ff_8::Configuration::Configuration(std::filesystem::path in_path)
                 }
            }
            return &it->second;
-      }())
-{
-}
-
-ff_8::Configuration::Configuration()
-  : ff_8::Configuration(
-      []() -> const std::filesystem::path &
-      {
-           static std::filesystem::path path;// path is cached across calls
-           static bool                  initialized = false;
-
-           if (!initialized)
-           {
-                std::error_code error_code{};
-
-
-                try
-                {
-                     path = std::filesystem::path(DEFAULT_CONFIG_PATH);
-
-                     if (path.is_relative())
-                     {
-                          auto current
-                            = std::filesystem::current_path(error_code);
-                          if (error_code)
-                          {
-                               std::cerr
-                                 << "Warning: failed to get current path: "
-                                 << error_code.message() << '\n';
-                               return path;// fallback to relative path
-                          }
-                          path = current / path;
-                     }
-                     path.make_preferred();
-                }
-                catch (const std::filesystem::filesystem_error &e)
-                {
-                     std::cerr
-                       << "Filesystem error while constructing config path: "
-                       << e.what() << '\n';
-                }
-                catch (const std::exception &e)
-                {
-                     std::cerr
-                       << "Unexpected error while constructing config path: "
-                       << e.what() << '\n';
-                }
-                if (error_code)
-                {
-                     spdlog::warn(
-                       "{}:{} - {}: {} path: \"{}\"",
-                       __FILE__,
-                       __LINE__,
-                       error_code.value(),
-                       error_code.message(),
-                       path.string());
-                }
-                initialized = true;
-           }
-
-           return path;
       }())
 {
 }

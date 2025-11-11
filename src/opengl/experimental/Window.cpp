@@ -1,8 +1,13 @@
 //
 // Created by pcvii on 12/6/2021.
 //
+
+#ifndef DEFAULT_IMGUI_INI_PATH
+#define DEFAULT_IMGUI_INI_PATH "imgui.ini"// fallback, just in case
+#endif
 #include "Window.hpp"
 #include "ImGuiPushID.hpp"
+#include <ff_8/Formatters.hpp>
 #include <filesystem>
 #include <glengine/BlendModeSettings.hpp>
 #include <glengine/Event/Event.hpp>
@@ -224,13 +229,34 @@ void Window::init_im_gui(const char *const glsl_version) const
           // Setup Dear ImGui context
           IMGUI_CHECKVERSION();
           ImGui::CreateContext();
-          ImGuiIO          &io         = ImGui::GetIO();
-          std::error_code   error_code = {};
-          static const auto path
-            = (std::filesystem::current_path(error_code) / "res"
-               / "field-map-editor-experimental_imgui.ini")
-                .string();
-          io.IniFilename = path.c_str();
+          ImGuiIO &imgui_io = ImGui::GetIO();
+          imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+          imgui_io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+          //  events don't work with viewports
+          std::error_code error_code = {};
+          static auto     path = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+          try
+          {
+               if (path.is_relative())
+               {
+                    path = (std::filesystem::current_path(error_code) / path);
+               }
+               path.make_preferred();
+               imgui_io.IniFilename = path.string().c_str();
+               ImGui::LoadIniSettingsFromDisk(imgui_io.IniFilename);
+          }
+          catch (const std::filesystem::filesystem_error &e)
+          {
+               spdlog::error(
+                 "Filesystem error while constructing config path: {}",
+                 e.what());
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::error(
+                 "Unexpected error while constructing config path: {}",
+                 e.what());
+          }
           if (error_code)
           {
                spdlog::warn(
@@ -245,10 +271,6 @@ void Window::init_im_gui(const char *const glsl_version) const
           // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
           // Keyboard Controls io.ConfigFlags |=
           // ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-          io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-          // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't
-          // work
-          //  with viewports
 
           // Setup Dear ImGui style
           ImGui::StyleColorsDark();

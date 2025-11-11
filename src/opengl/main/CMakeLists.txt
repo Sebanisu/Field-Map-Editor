@@ -79,7 +79,8 @@ set_target_properties(${PROJECT_NAME}_MAIN PROPERTIES OUTPUT_NAME
 target_compile_definitions(
   ${PROJECT_NAME}_MAIN
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC DEFAULT_CONFIG_PATH="res/${main_exec}.toml"
+  PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}.toml"
+  PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}_imgui.ini"
   )
 target_link_libraries(
   ${PROJECT_NAME}_MAIN

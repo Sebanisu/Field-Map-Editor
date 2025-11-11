@@ -1,6 +1,9 @@
 //
 // Created by pcvii on 9/7/2021.
 //
+#ifndef DEFAULT_CONFIG_PATH
+#define DEFAULT_IMGUI_INI_PATH "imgui.ini"// fallback, just in case
+#endif
 #include "gui.hpp"
 #include "collapsing_tile_info.hpp"
 #include "EmptyStringIterator.hpp"
@@ -4153,16 +4156,34 @@ gui::gui(GLFWwindow *const window)
      IM_ASSERT(ImGui::GetCurrentContext() != nullptr);
 
      // 2. Configure ImGui (optional but common)
-     ImGuiIO          &imgui_io   = ImGui::GetIO();
-     std::error_code   error_code = {};
-     static const auto path = (std::filesystem::current_path(error_code) / "res"
-                               / "field-map-editor_imgui.ini")
-                                .string();
+     ImGuiIO &imgui_io = ImGui::GetIO();
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
-     imgui_io.IniFilename = path.c_str();
+     std::error_code error_code = {};
+
+     static auto     path       = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+     try
+     {
+          if (path.is_relative())
+          {
+               path = (std::filesystem::current_path(error_code) / path);
+          }
+          path.make_preferred();
+          imgui_io.IniFilename = path.string().c_str();
+          ImGui::LoadIniSettingsFromDisk(imgui_io.IniFilename);
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "Filesystem error while constructing config path: {}", e.what());
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Unexpected error while constructing config path: {}", e.what());
+     }
      if (error_code)
      {
           spdlog::warn(
@@ -4174,7 +4195,6 @@ gui::gui(GLFWwindow *const window)
             path);
           error_code.clear();
      }
-     ImGui::LoadIniSettingsFromDisk(path.c_str());
 
      // 3. Set ImGui style (optional)
      ImGui::StyleColorsDark();// or Light(), Classic()

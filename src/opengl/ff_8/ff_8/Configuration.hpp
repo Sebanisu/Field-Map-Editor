@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
+#ifndef DEFAULT_CONFIG_PATH
+#define DEFAULT_CONFIG_PATH "res/field-map-editor.toml"// fallback, just in case
+#endif
 #include <filesystem>
 #include <fmt/std.h>
 #include <ranges>
@@ -29,10 +32,8 @@ class Configuration
       * The configuration file is expected to be located at
       * `field-map-editor.toml` relative to the current working directory.
       */
-     ff_8::Configuration();
-
-
-     ff_8::Configuration(std::filesystem::path);
+     Configuration();
+     Configuration(std::filesystem::path);
 
                                        operator toml::table &() &;
                                        operator const toml::table &() const &;
@@ -83,8 +84,8 @@ class Configuration
       * `m_path`.
       *
       * @param remove_from_cache If true, the TOML table will also be removed
-      * from the in-memory cache after saving. This can be useful if you want to
-      *        force a reload the next time the configuration is accessed.
+      * from the in-memory cache after saving. This can be useful if you want
+      * to force a reload the next time the configuration is accessed.
       */
      void save(const bool remove_from_cache = false) const;
 
@@ -109,8 +110,8 @@ class Configuration
       *
       * @note For `bool`, both TOML arrays of booleans and strings of
       * `'0'`/`'1'` are supported.
-      * @note For `std::filesystem::path`, values are expected as UTF-8 strings
-      * and backslashes are converted to slashes.
+      * @note For `std::filesystem::path`, values are expected as UTF-8
+      * strings and backslashes are converted to slashes.
       * @note For all other types (including `std::string`), values are parsed
       * as `InputT` and optionally cast to `OutputT`.
       * @note This function requires that `InputT` is statically castable to
@@ -224,11 +225,11 @@ class Configuration
       * casted conversion from `InputT` to `OutputT`.
       *
       * @tparam InputT The type of each element in the input vector.
-      * @tparam OutputT The type to be written into the TOML array. Defaults to
-      * `InputT`.
+      * @tparam OutputT The type to be written into the TOML array. Defaults
+      * to `InputT`.
       *
-      * @param table The TOML table where the key/value pair will be inserted or
-      * updated.
+      * @param table The TOML table where the key/value pair will be inserted
+      * or updated.
       * @param key The TOML key under which to store the array.
       * @param input The vector of input values to convert and write to the
       * configuration.
@@ -312,6 +313,66 @@ class Configuration
      static inline std::map<std::filesystem::path, toml::table> s_tables{};
      mutable toml::table                                       *m_table = {};
 };
+
+static inline const std::filesystem::path CURRENT_CONFIG_PATH
+  = []() -> const std::filesystem::path
+{
+     std::filesystem::path path;// path is cached across calls
+
+
+     std::error_code       error_code{};
+
+
+     try
+     {
+          path = std::filesystem::path(DEFAULT_CONFIG_PATH);
+
+          if (path.is_relative())
+          {
+               auto current = std::filesystem::current_path(error_code);
+               if (error_code)
+               {
+                    spdlog::warn(
+                      "Warning: failed to get current path: {}",
+                      error_code.message());
+                    return path;// fallback to relative path
+               }
+               path = current / path;
+          }
+          path.make_preferred();
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "Filesystem error while constructing config path: "
+            "{}",
+            e.what());
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Unexpected error while constructing config path: "
+            "{}",
+            e.what());
+     }
+     if (error_code)
+     {
+          spdlog::warn(
+            "{}:{} - {}: {} path: \"{}\"",
+            __FILE__,
+            __LINE__,
+            error_code.value(),
+            error_code.message(),
+            path.string());
+     }
+
+
+     return path;
+}();
+inline Configuration::Configuration()
+  : Configuration(CURRENT_CONFIG_PATH)
+{
+}
 
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP

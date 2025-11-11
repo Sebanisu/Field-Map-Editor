@@ -88,10 +88,13 @@ string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)
 set_target_properties(${PROJECT_NAME}_EXPERIMENTAL PROPERTIES
     OUTPUT_NAME "${experimental_exec}"
 )
+
+
 target_compile_definitions(
   ${PROJECT_NAME}_EXPERIMENTAL
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC DEFAULT_CONFIG_PATH="res/${experimental_exec}.toml"
+  PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}.toml"
+  PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}_imgui.ini"
   )
 if(supported)
   message(STATUS "IPO / LTO enabled")
