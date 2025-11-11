@@ -2080,8 +2080,8 @@ void fme::filter_window::combo_filtered_draw_bit(
 {
      using namespace std::string_view_literals;
      static constexpr auto values
-       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
-                     ff_8::draw_bitT::disabled };
+       = std::array{ ff_8::DrawBitT::all, ff_8::DrawBitT::enabled,
+                     ff_8::DrawBitT::disabled };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tooltips
@@ -2387,8 +2387,8 @@ struct map_draw_bit
 {
    private:
      static constexpr auto m_values
-       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
-                     ff_8::draw_bitT::disabled };
+       = std::array{ ff_8::DrawBitT::all, ff_8::DrawBitT::enabled,
+                     ff_8::DrawBitT::disabled };
      static constexpr auto m_tooltips
        = std::array{ fme::gui_labels::draw_bit_all_tooltip,
                      fme::gui_labels::draw_bit_enabled_tooltip,
