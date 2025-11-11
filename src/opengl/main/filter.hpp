@@ -203,13 +203,13 @@ struct ConfigKeys<FilterTag::Map>
 template<>
 struct ConfigKeys<FilterTag::DrawBit>
 {
-     using value_type = draw_bitT;
-     static constexpr draw_bitT to_draw_bitT(bool in)
+     using value_type = DrawBitT;
+     static constexpr DrawBitT to_DrawBitT(bool in)
      {
-          return in ? draw_bitT::enabled : draw_bitT::disabled;
+          return in ? DrawBitT::enabled : DrawBitT::disabled;
      }
      using operation_type
-       = decltype([](auto &&...args) { return to_draw_bitT(ff_8::TileOperations::Draw{}(std::forward<decltype(args)>(args)...)); });
+       = decltype([](auto &&...args) { return to_DrawBitT(ff_8::TileOperations::Draw{}(std::forward<decltype(args)>(args)...)); });
      static constexpr std::string_view key_name         = "filter_draw";
      static constexpr std::string_view enabled_key_name = "filter_draw_enabled";
 };
