@@ -865,7 +865,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -896,7 +896,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPalette>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -927,7 +927,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithTexturePage>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -950,7 +950,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 
@@ -970,7 +970,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithFullFileName>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -999,7 +999,7 @@ struct SelectionInfo<ConfigKey::PatternsBase>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1047,7 +1047,7 @@ struct SelectionInfo<ConfigKey::PatternsCommonPrefixes>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1062,7 +1062,7 @@ struct SelectionInfo<ConfigKey::PatternsCommonPrefixesForMaps>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1077,7 +1077,7 @@ struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 
@@ -1095,7 +1095,7 @@ struct SelectionInfo<ConfigKey::TomlPaths>
      // static void post_load_operation([[maybe_unused]] const value_type
      // &value)
      // {
-     //      assert(has_balanced_braces(value));
+     //      assert(ff_8::has_balanced_braces(value));
      // }
 };
 
@@ -1113,7 +1113,7 @@ struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>

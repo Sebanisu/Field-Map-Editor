@@ -8,8 +8,10 @@
 #include "ImGuiDisabled.hpp"
 #include "ImGuiPushID.hpp"
 #include "ImGuiPushItemWidth.hpp"
+#include <ranges>
+#include <spdlog/spdlog.h>
 #include <utility>
-namespace glengine
+namespace imgui_utils
 {
 template<std::ranges::random_access_range dataT>
 
@@ -31,13 +33,13 @@ template<std::ranges::random_access_range dataT>
      const ImGuiStyle &style   = ImGui::GetStyle();
      const float       spacing = style.ItemInnerSpacing.x;
      {
-          const auto  pop_0       = glengine::ImGuiPushId();
+          const auto  pop_0       = imgui_utils::ImGuiPushId();
           const float width       = ImGui::CalcItemWidth() - sub_width;
           const float button_size = ImGui::GetFrameHeight();
-          const auto  pop_width   = glengine::ImGuiPushItemWidth(
+          const auto  pop_width   = imgui_utils::ImGuiPushItemWidth(
             width - spacing * 2.0f - button_size * 2.0f);
           const auto disabled
-            = glengine::ImGuiDisabled(std::ranges::empty(data));
+            = imgui_utils::ImGuiDisabled(std::ranges::empty(data));
 
           static constexpr auto c_str = [](auto &&v)
           {
@@ -77,8 +79,24 @@ template<std::ranges::random_access_range dataT>
                const auto end = glengine::ScopeGuard{ &ImGui::EndCombo };
                for (int i{}; const auto &map : data)
                {
+                    if (c_str(map) == nullptr)
+                    {
+                         spdlog::warn(
+                           "GenericCombo: encountered null c_str entry, "
+                           "skipping, at index: {}",
+                           i);
+                         continue;
+                    }
+                    if (std::ranges::empty(map))
+                    {
+                         spdlog::warn(
+                           "GenericCombo: encountered empty string entry, "
+                           "skipping, at index: {}",
+                           i);
+                         continue;
+                    }
                     const bool is_selected = i == current_index;
-                    const auto pop_1       = glengine::ImGuiPushId();
+                    const auto pop_1       = imgui_utils::ImGuiPushId();
                     if (ImGui::Selectable(c_str(map), is_selected))
                     {
                          current_index = i;
@@ -93,9 +111,9 @@ template<std::ranges::random_access_range dataT>
           }
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing);
-          const auto disabled = glengine::ImGuiDisabled(
+          const auto disabled = imgui_utils::ImGuiDisabled(
             std::cmp_less_equal(current_index, 0)
             || std::cmp_greater_equal(
               current_index - 1, std::ranges::size(data)));
@@ -106,9 +124,9 @@ template<std::ranges::random_access_range dataT>
           }
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing);
-          const auto disabled = glengine::ImGuiDisabled(
+          const auto disabled = imgui_utils::ImGuiDisabled(
             std::cmp_greater_equal(current_index + 1, std::ranges::size(data)));
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
@@ -120,5 +138,5 @@ template<std::ranges::random_access_range dataT>
      ImGui::Text("%s", label);
      return changed;
 }
-}// namespace glengine
+}// namespace imgui_utils
 #endif// FIELD_MAP_EDITOR_GENERICCOMBO_HPP

@@ -246,7 +246,7 @@ void ImageCompareWindow::render()
      const float       button_width = button_size * 3.0F;
      ImGui::BeginDisabled(!m_consumer.done() || !m_future_consumer.done());
      {
-          const auto  popid = PushPopID();
+          const auto  popid = imgui_utils::ImGuiPushId();
           const float width = ImGui::CalcItemWidth();
           ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
           const auto pop_item_width
@@ -303,7 +303,7 @@ void ImageCompareWindow::render()
           format_imgui_wrapped_text("{}", "Path A");
      }
      {
-          const auto  popid = PushPopID();
+          const auto  popid = imgui_utils::ImGuiPushId();
           const float width = ImGui::CalcItemWidth();
           ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
           const auto pop_item_width
@@ -528,7 +528,7 @@ void ImageCompareWindow::diff_results_table()
                format_imgui_text("{:0.2f}", difference_percentage * 100.0);
                ImGui::TableNextColumn();// Copy
                {
-                    const auto pop_id_buttons = PushPopID();
+                    const auto pop_id_buttons = imgui_utils::ImGuiPushId();
                     if (ImGui::SmallButton(ICON_FA_COPY))
                     {
                          ImGui::SetClipboardText(path1.string().c_str());
@@ -559,7 +559,7 @@ void ImageCompareWindow::diff_results_table()
                format_imgui_text("{:0.2f}", difference_percentage * 100.0);
                ImGui::TableNextColumn();// Copy
                {
-                    const auto pop_id_buttons = PushPopID();
+                    const auto pop_id_buttons = imgui_utils::ImGuiPushId();
                     if (ImGui::SmallButton(ICON_FA_COPY))
                     {
                          ImGui::SetClipboardText(path1.string().c_str());

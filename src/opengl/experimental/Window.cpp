@@ -6,12 +6,12 @@
 #define DEFAULT_IMGUI_INI_PATH "imgui.ini"// fallback, just in case
 #endif
 #include "Window.hpp"
-#include "ImGuiPushID.hpp"
 #include <ff_8/Formatters.hpp>
 #include <filesystem>
 #include <glengine/BlendModeSettings.hpp>
 #include <glengine/Event/Event.hpp>
 #include <glengine/Renderer.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <spdlog/spdlog.h>
 
 namespace glengine
@@ -27,7 +27,7 @@ void        Window::begin_frame() const
      ImGui_ImplOpenGL3_NewFrame();
      ImGui_ImplGlfw_NewFrame();
      ImGui::NewFrame();
-     glengine::ImGuiPushId.reset();
+     imgui_utils::ImGuiPushId.reset();
 }
 void Window::render_dockspace() const
 {

@@ -36,7 +36,6 @@ set(MAIN_SOURCES
     gui/import.cpp
     gui/main_menu_paths.cpp
     gui/mouse_positions.cpp
-    gui/push_pop_id.cpp
     gui/Selections.cpp
     gui/textures_window.cpp
     gui/tool_tip.cpp
@@ -93,6 +92,7 @@ target_link_libraries(
   PRIVATE OpenGL::GL
   PRIVATE glengine
   PRIVATE ${PROJECT_NAME}_ff_8
+  PRIVATE ${PROJECT_NAME}_imgui_utils
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics

@@ -1,13 +1,13 @@
 #include "draw_window.hpp"
 #include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <glengine/FrameBuffer.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
 #include <glm/gtc/type_ptr.hpp>        // for glm::value_ptr
 #include <IconsFontAwesome6.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <ImGuizmo.h>
 static ImVec2 operator+(
   const ImVec2 &a,
@@ -181,7 +181,7 @@ void fme::draw_window::render() const
           const auto pop_style0
             = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0 = PushPopID();
+          const auto pop_id0 = imgui_utils::ImGuiPushId();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() {
           // ImGui::PopStyleColor(); });
@@ -212,7 +212,7 @@ void fme::draw_window::render() const
             selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
             selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
 
-          const auto pop_id1 = PushPopID();
+          const auto pop_id1 = imgui_utils::ImGuiPushId();
 
           ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
@@ -230,7 +230,7 @@ void fme::draw_window::render() const
           const auto pop_style0
             = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0 = PushPopID();
+          const auto pop_id0 = imgui_utils::ImGuiPushId();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() {
           // ImGui::PopStyleColor(); });
@@ -292,7 +292,7 @@ void fme::draw_window::render() const
             color1,
             color2);
 
-          const auto pop_id1 = PushPopID();
+          const auto pop_id1 = imgui_utils::ImGuiPushId();
           ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
               framebuffer.color_attachment_id(

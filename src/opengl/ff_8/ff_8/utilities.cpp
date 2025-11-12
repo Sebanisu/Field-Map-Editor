@@ -5,10 +5,10 @@
 namespace ff_8
 {
 // Explicit instantiation for specific types
-template bool ff_8::sort_and_remove_duplicates(
+template bool sort_and_remove_duplicates(
   std::vector<std::string> &,
   std::vector<bool> &);
-template bool ff_8::sort_and_remove_duplicates(std::vector<std::string> &);
+template bool sort_and_remove_duplicates(std::vector<std::string> &);
 
 bool          has_balanced_braces([[maybe_unused]] const std::string_view s)
 {

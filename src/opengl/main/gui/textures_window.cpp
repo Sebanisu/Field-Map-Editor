@@ -103,7 +103,7 @@ void fme::textures_window::render() const
           std::string title = fmt::format("{}", index);
           render_thumbnail_button(title, texture, false, []() {});
           // Right-click context menu
-          const auto pop_id = PushPopID();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           if (!std::ranges::empty(texture.path()))
           {
                if (ImGui::BeginPopupContextItem(
@@ -344,7 +344,7 @@ void fme::textures_window::render_thumbnail_button(
             ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
      {
           std::invoke(on_click);
@@ -386,7 +386,7 @@ void fme::textures_window::render_thumbnail_button(
             ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
      {
           std::invoke(on_click);
@@ -412,7 +412,7 @@ void fme::textures_window::draw_thumbnail_label(
      ImGui::SetCursorScreenPos(ImVec2(
        text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
        text_start_pos.y));
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      //  if (ImGui::Button(ICON_FA_TRASH, button_size))
      //  {
      //       m_remove_queue.push_back(file_name);

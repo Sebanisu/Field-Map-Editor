@@ -5,7 +5,7 @@
 #include "Fields.hpp"
 #include <ff_8/Configuration.hpp>
 #include <fmt/chrono.h>
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 
 namespace ff_8
 {
@@ -117,7 +117,7 @@ bool Fields::on_archive_change() const
 
 bool Fields::on_field_change() const
 {
-     if (glengine::GenericCombo("Field", m_current_index, m_map_data))
+     if (imgui_utils::GenericCombo("Field", m_current_index, m_map_data))
      {
           m_field = load_field();
           if (std::cmp_less(m_current_index, std::ranges::size(m_map_data)))

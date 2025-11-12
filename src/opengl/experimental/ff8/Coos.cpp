@@ -3,12 +3,12 @@
 //
 
 #include "Coos.hpp"
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 static constexpr auto coo_index  = std::string_view("coo_index");
 static constexpr auto coo_string = std::string_view("coo_string");
 bool                  ff_8::Coos::on_im_gui_update() const
 {
-     if (glengine::GenericCombo("Language", m_current, m_coos))
+     if (imgui_utils::GenericCombo("Language", m_current, m_coos))
      {
           auto config = ff_8::Configuration{};
           config->insert_or_assign(coo_index, m_current);

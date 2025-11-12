@@ -3,8 +3,8 @@
 //
 #include "TestBatchRenderingTexture2D.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
 #include <glengine/Vertex.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 static constinit bool FitWidth  = true;
 static constinit bool FitHeight = true;
 static constinit bool Preview   = false;
@@ -72,13 +72,13 @@ void test::TestBatchRenderingTexture2D::on_im_gui_update() const
      constexpr float clamp_width  = window_width / 2.F - 1.F;
      const float     clamp_height = window_height / 2.F - 1.F;
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
 
           ImGui::Checkbox("fit Height", &FitHeight);
           ImGui::Checkbox("fit Width", &FitWidth);
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat3(
                 "View Offset", &view_offset.x, -clamp_width, clamp_width))
           {

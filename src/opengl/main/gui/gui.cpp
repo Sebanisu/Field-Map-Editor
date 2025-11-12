@@ -12,7 +12,6 @@
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
 #include "path_search.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <algorithm>
 #include <array>
@@ -20,6 +19,7 @@
 #include <ff_8/SafeDir.hpp>
 #include <ff_8/Utilities.hpp>
 #include <fmt/ranges.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <ImGuizmo.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
@@ -243,8 +243,8 @@ void gui::start(GLFWwindow *const window)
      (void)icons_font();
      do
      {
-          m_changed      = false;
-          get_imgui_id() = {};// reset id counter
+          m_changed = false;
+          imgui_utils::ImGuiPushId.reset();// reset id counter
           m_elapsed_time = m_delta_clock;
           consume_one_future();
           glfwPollEvents();// Input
@@ -526,7 +526,7 @@ void gui::tile_conflicts_panel()
             const auto &animation_counts
               = m_map_sprite->working_animation_counts();
 
-            const auto pop_table_id = PushPopID();
+            const auto pop_table_id = imgui_utils::ImGuiPushId();
             // Default hover options for ImGuiCol_ButtonHovered
             const auto options_hover
               = tile_button_options{ .size = { buttonWidth, buttonWidth },
@@ -2384,10 +2384,10 @@ void gui::file_menu()
                          refresh_path();
                     }
                     ImGui::TableNextColumn();
-                    const auto  pop_id      = PushPopID();
+                    const auto  pop_id      = imgui_utils::ImGuiPushId();
 
                     const float button_size = ImGui::GetFrameHeight();
-                    const auto  _           = PushPopID();
+                    const auto  _           = imgui_utils::ImGuiPushId();
                     if (ImGui::Button(
                           ICON_FA_FOLDER_OPEN,
                           ImVec2{ button_size, button_size }))
@@ -2693,7 +2693,7 @@ void gui::file_menu()
                               m_custom_paths_window.refresh();
                          }
                          ImGui::TableNextColumn();
-                         const auto _ = PushPopID();
+                         const auto _ = imgui_utils::ImGuiPushId();
                          if (ImGui::Button(
                                ICON_FA_TRASH,
                                ImVec2{ button_size, button_size }))
@@ -3080,7 +3080,7 @@ void gui::menu_map_paths()
 
 std::ptrdiff_t gui::add_delete_button(const std::ptrdiff_t index)
 {
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::Button(ICON_FA_TRASH))
      {
           ImGui::CloseCurrentPopup();
@@ -3105,7 +3105,7 @@ std::ptrdiff_t gui::add_delete_button(
      if (it != std::ranges::end(transformed_paths))
      {
           const auto &index  = std::get<0>(*it);
-          const auto  pop_id = PushPopID();
+          const auto  pop_id = imgui_utils::ImGuiPushId();
           if (ImGui::Button(ICON_FA_TRASH))
           {
                ImGui::CloseCurrentPopup();

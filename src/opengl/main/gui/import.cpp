@@ -8,7 +8,6 @@
 #include "generic_combo.hpp"
 #include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include "RangeConsumer.hpp"
 #include "tool_tip.hpp"
 #include <array>
@@ -18,6 +17,7 @@
 #include <ff_8/Filter.hpp>
 #include <ff_8/SafeDir.hpp>
 #include <imgui.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <toml++/toml.h>
 
@@ -193,7 +193,7 @@ open_viii::graphics::background::Map::variant_tile &
 
 
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
-     const auto   the_end_id_0 = PushPopID();
+     const auto   the_end_id_0 = imgui_utils::ImGuiPushId();
      static bool  was_hovered  = false;
 
      ImGui::PushItemWidth(
@@ -222,7 +222,7 @@ open_viii::graphics::background::Map::variant_tile &
                  {
                       const auto next_col_pop
                         = glengine::ScopeGuard([]() { ImGui::NextColumn(); });
-                      const auto the_end_id_1 = PushPopID();
+                      const auto the_end_id_1 = imgui_utils::ImGuiPushId();
                       const auto iterate
                         = glengine::ScopeGuard([&tile_id]() { ++tile_id; });
                       bool is_selected
@@ -293,7 +293,7 @@ open_viii::graphics::background::Map::variant_tile &
        {
             {
                  // Left
-                 const auto pop_id_left = PushPopID();
+                 const auto pop_id_left = imgui_utils::ImGuiPushId();
                  ImGui::SameLine(0, spacing);
                  const bool disabled
                    = std::cmp_less_equal(
@@ -314,7 +314,7 @@ open_viii::graphics::background::Map::variant_tile &
             }
             {
                  // Right
-                 const auto pop_id_right = PushPopID();
+                 const auto pop_id_right = imgui_utils::ImGuiPushId();
                  ImGui::SameLine(0, spacing);
                  const bool disabled = std::cmp_greater_equal(
                    selections->get<ConfigKey::ImportSelectedTile>() + 1,
@@ -430,8 +430,9 @@ bool import::browse_for_image_display_preview() const
           float const  scale             = width / static_cast<float>(size.x);
           const float  height            = static_cast<float>(size.y) * scale;
           ImVec2 const cursor_screen_pos = ImGui::GetCursorScreenPos();
-          const auto   pop_id            = PushPopID();
-          const auto   str_id = fmt::format("id2668{}", get_imgui_id());
+          const auto   pop_id            = imgui_utils::ImGuiPushId();
+          const auto   str_id
+            = fmt::format("id2668{}", imgui_utils::ImGuiPushId.id());
           ImGui::ImageButton(
             str_id.c_str(),
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
@@ -675,10 +676,11 @@ void import::collapsing_header_generated_tiles() const
                                         / static_cast<float>(texSize.x),
                                       static_cast<float>(rect.y + rect.w)
                                         / static_cast<float>(texSize.y) };
-                 const auto   the_end_tile_table_tile = PushPopID();
-                 static constexpr float button_size   = 32.F;
+                 const auto   the_end_tile_table_tile
+                   = imgui_utils::ImGuiPushId();
+                 static constexpr float button_size = 32.F;
 
-                 const auto             str = fmt::format("tb{}", i++);
+                 const auto             str         = fmt::format("tb{}", i++);
                  ImGui::ImageButton(
                    str.c_str(),
                    glengine::ConvertGliDtoImTextureId<ImTextureID>(

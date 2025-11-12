@@ -5,7 +5,6 @@
 #include "generic_combo.hpp"
 #include "gui_labels.hpp"
 #include "key_value_data.hpp"
-#include "push_pop_id.hpp"
 #include "Selections.hpp"
 #include "tool_tip.hpp"
 #include <array>
@@ -16,6 +15,7 @@
 #include <functional>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <open_viii/strings/LangCommon.hpp>
 #include <optional>
 #include <ranges>

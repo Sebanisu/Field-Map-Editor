@@ -2,10 +2,10 @@
 #include "format_imgui_text.hpp"
 #include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <glengine/ScopeGuard.hpp>
 #include <IconsFontAwesome6.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <sstream>
 #include <string>
 namespace fme
@@ -54,7 +54,7 @@ bool collapsing_tile_info(
               {
                    return false;
               }
-              const auto   pushpopid1 = PushPopID();
+              const auto   pushpopid1 = imgui_utils::ImGuiPushId();
               ImVec2 const table_pos  = ImGui::GetCursorScreenPos();
               if (ImGui::BeginTable("table_tile_info", 2))
               {

@@ -113,7 +113,7 @@ template<is_tile tileT>
                                     if (pop_var_count > 0)
                                          ImGui::PopStyleVar(pop_var_count);
                                } };
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
 
      return ImGui::ImageButton(
        "##tile_image_button",
@@ -195,7 +195,7 @@ template [[nodiscard]] bool fme::create_tile_button(
                                     if (pop_var_count > 0)
                                          ImGui::PopStyleVar(pop_var_count);
                                } };
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      ImVec2     uv0    = ImVec2(0.0f, 0.0f);
      ImVec2     uv1    = ImVec2(1.0f, 1.0f);
      return ImGui::ImageButton(

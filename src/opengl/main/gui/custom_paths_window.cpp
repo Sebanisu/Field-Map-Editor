@@ -662,7 +662,7 @@ bool fme::custom_paths_window::vector_pattern() const
             selections->get<ConfigKey::CurrentPatternIndex>()
             != static_cast<int>(index))
           {
-               const auto pop_id = PushPopID();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                // Edit button
                if (ImGui::Button(
                      fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
@@ -913,7 +913,7 @@ bool fme::custom_paths_window::child_keys() const
                     bg_color = !bg_color;
                }
                ImGui::TableNextColumn();
-               const auto  pop_id       = PushPopID();
+               const auto  pop_id       = imgui_utils::ImGuiPushId();
                std::string key_brackets = fmt::format("{{{}}}", key);
                if (ImGui::Selectable(key_brackets.data()))
                {
@@ -1044,7 +1044,7 @@ bool fme::custom_paths_window::child_test_output() const
                bg_color = !bg_color;
           }
           ImGui::TableNextColumn();
-          const auto pop_id = PushPopID();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           (void)ImGui::Selectable(test_str.data());
           if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
           {

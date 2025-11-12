@@ -6,12 +6,12 @@
 #define FIELD_MAP_EDITOR_IMGUIPUSHITEMWIDTH_HPP
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
-namespace glengine
+namespace imgui_utils
 {
 [[nodiscard]] inline auto ImGuiPushItemWidth(float item_width) noexcept
 {
      ImGui::PushItemWidth(item_width);
-     return ScopeGuard{ &ImGui::PopItemWidth };
+     return glengine::ScopeGuard{ &ImGui::PopItemWidth };
 }
-}// namespace glengine
+}// namespace imgui_utils
 #endif// FIELD_MAP_EDITOR_IMGUIPUSHITEMWIDTH_HPP

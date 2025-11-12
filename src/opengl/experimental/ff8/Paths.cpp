@@ -3,7 +3,7 @@
 //
 #include "Paths.hpp"
 #include <ff_8/Configuration.hpp>
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 #include <open_viii/paths/Paths.hpp>
 static constexpr auto ff8_directory_paths
   = std::string_view{ "ff8_directory_paths" };
@@ -11,7 +11,7 @@ static constexpr auto ff8_directory_path_index
   = std::string_view{ "ff8_directory_path_index" };
 bool ff_8::Paths::on_im_gui_update() const
 {
-     if (glengine::GenericCombo(
+     if (imgui_utils::GenericCombo(
            "Path",
            m_current,
            m_paths

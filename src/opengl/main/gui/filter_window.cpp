@@ -2,10 +2,10 @@
 #include "as_string.hpp"
 #include "generic_combo.hpp"
 #include "gui/ColorConversions.hpp"
-#include "gui/ImGuiDisabled.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include <ctre.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <set>
 
 fme::filter_window::filter_window(
@@ -423,7 +423,7 @@ void fme::filter_window::root_table_to_imgui_tree(
           const auto label = std::string{ key };
           if (val.is_table())
           {
-               const auto pop_id = PushPopID();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                // if skip_search we already found a match.
                if (!skip_search && !contains_key_recursive(val.as_table()))
                {
@@ -1333,7 +1333,7 @@ void fme::filter_window::draw_thumbnail_label(
      ImGui::SetCursorScreenPos(ImVec2(
        text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
        text_start_pos.y));
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::Button(ICON_FA_TRASH, button_size))
      {
           m_remove_queue.push_back(file_name);
@@ -1575,9 +1575,9 @@ void fme::filter_window::draw_filename_controls(
      ImGui::EndDisabled();
      ImGui::SameLine();
      {
-          const auto pop_id   = PushPopID();
+          const auto pop_id   = imgui_utils::ImGuiPushId();
           const bool has_prev = m_previous_file_name.has_value();
-          const auto disabled = ImGuiDisabled(!has_prev);
+          const auto disabled = imgui_utils::ImGuiDisabled(!has_prev);
 
           const bool activate_prev
             = ImGui::ArrowButton("##l", ImGuiDir_Left)
@@ -1593,9 +1593,9 @@ void fme::filter_window::draw_filename_controls(
      }
      ImGui::SameLine();
      {
-          const auto pop_id   = PushPopID();
+          const auto pop_id   = imgui_utils::ImGuiPushId();
           const bool has_next = m_next_file_name.has_value();
-          const auto disabled = ImGuiDisabled(!has_next);
+          const auto disabled = imgui_utils::ImGuiDisabled(!has_next);
 
           const bool activate_next
             = ImGui::ArrowButton("##l", ImGuiDir_Right)
@@ -2447,7 +2447,7 @@ void fme::filter_window::draw_thumbnail(
      }
      else
      {
-          const auto pop_id = PushPopID();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           ImVec2     padded_thumb_size
             = { m_thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
                 m_thumb_size_width * m_aspect_ratio
@@ -2537,7 +2537,7 @@ void fme::filter_window::render_thumbnail_popup(
   const std::shared_ptr<map_sprite> &lock_map_sprite,
   const std::string                 &file_name) const
 {
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (!ImGui::BeginPopupContextItem(
            file_name.c_str()))// right-click menu for this button
      {

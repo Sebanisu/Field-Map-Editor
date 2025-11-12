@@ -2,8 +2,8 @@
 #include "format_imgui_text.hpp"
 #include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
-#include "gui/push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <imgui_utils/ImGuiPushID.hpp>
 
 void fme::history_window::render() const
 {
@@ -117,7 +117,7 @@ void fme::history_window::draw_table() const
                            }
                       };
 
-                      const auto pop_id = PushPopID();
+                      const auto pop_id = imgui_utils::ImGuiPushId();
                       ImGui::PushStyleColor(
                         ImGuiCol_HeaderHovered,
                         ff_8::Colors::to_imvec4(
@@ -213,7 +213,7 @@ void fme::history_window::draw_table() const
                                 format_imgui_text("{}", text);
                            }
                       };
-                      const auto pop_id = PushPopID();
+                      const auto pop_id = imgui_utils::ImGuiPushId();
 
                       ImGui::PushStyleColor(
                         ImGuiCol_HeaderHovered,

@@ -29,9 +29,6 @@ add_executable(
   ff8/MapTileAdjustments.hpp
   ff8/SimilarAdjustments.cpp
   ff8/MenuSaveToggles.hpp
-  ImGuiDisabled.cpp
-  ImGuiPushItemWidth.cpp
-  ImGuiPushID.cpp
   ImGuiPushStyleVar.cpp
   ImGuiViewPortWindow.cpp
   main.cpp
@@ -55,6 +52,7 @@ target_link_libraries(
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
+  PRIVATE ${PROJECT_NAME}_imgui_utils
   PRIVATE imgui::imgui
   PRIVATE GLEW::GLEW
   PRIVATE glfw

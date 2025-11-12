@@ -23,8 +23,9 @@ class Coos
      [[nodiscard]] operator std::string_view() const;
 
    private:
-     static constexpr auto m_coos = open_viii::LangCommon::to_string_array();
-     mutable int           m_current{};
+     static constexpr auto m_coos
+       = open_viii::LangCommon::to_string_array_full();
+     mutable int m_current{};
 };
 static_assert(glengine::Renderable<Coos>);
 }// namespace ff_8

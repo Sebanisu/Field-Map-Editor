@@ -3,10 +3,10 @@
 //
 #include "TestTexture2D.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
 #include <glengine/Renderer.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 static_assert(glengine::Renderable<test::TestTexture2D>);
 static constinit bool Preview = { false };
 test::TestTexture2D::TestTexture2D()
@@ -44,7 +44,7 @@ void test::TestTexture2D::on_im_gui_update() const
      constexpr float clamp_width  = window_width / 2.F - 1.F;
      const float     clamp_height = window_height / 2.F - 1.F;
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           // glfwGetFramebufferSize(window, &window_width, &window_height);
 
           if (ImGui::SliderFloat2(
@@ -55,7 +55,7 @@ void test::TestTexture2D::on_im_gui_update() const
           }
      }
      {
-          const auto pop_2 = glengine::ImGuiPushId();
+          const auto pop_2 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "Model Offset 1", &model_offset.x, -clamp_width, clamp_width))
           {
@@ -64,7 +64,7 @@ void test::TestTexture2D::on_im_gui_update() const
           }
      }
      {
-          const auto pop_3 = glengine::ImGuiPushId();
+          const auto pop_3 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "Model Offset 1", &model_2_offset.x, -clamp_width, clamp_width))
           {

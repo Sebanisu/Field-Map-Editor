@@ -6,9 +6,9 @@
 #include "as_string.hpp"
 #include "custom_paths_window.hpp"
 #include "open_file_explorer.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <ff_8/SafeDir.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <optional>
 #include <span>
 namespace fme
@@ -297,7 +297,7 @@ void fme::batch::draw_queue()
           for (auto &&[index, pair] : queue | std::views::enumerate)
           {
                auto &&[name, settings, enabled] = pair;
-               const auto pop_id                = PushPopID();
+               const auto pop_id                = imgui_utils::ImGuiPushId();
                ImGui::TableNextRow();
                ImGui::TableNextColumn();
                if (ImGui::Checkbox(
@@ -767,7 +767,7 @@ void fme::batch::combo_load_map()
            [](const auto &key)
            { return gui_labels::input_map_tooltips[std::to_underlying(key)]; })
          | std::ranges::to<std::vector>();
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      const auto gcc    = fme::GenericCombo(
        gui_labels::batch_load_map, values, strings, tooltips,
        selections->get<ConfigKey::BatchInputLoadMap>());
@@ -848,7 +848,7 @@ void fme::batch::browse_input_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchInputPath>(),
             selections->get<ConfigKey::BatchInputRootPathType>());
@@ -920,7 +920,7 @@ void fme::batch::browse_input_map_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchInputMapPath>(),
             selections->get<ConfigKey::BatchInputMapRootPathType>());
@@ -987,7 +987,7 @@ void fme::batch::browse_output_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchOutputPath>(),
             selections->get<ConfigKey::BatchOutputRootPathType>());
@@ -1354,7 +1354,7 @@ bool fme::batch::draw_multi_column_list_box(
             = std::get<0>(zipped);// const auto& or auto& depending on the range
           auto      &enable     = std::get<1>(zipped);// mutable reference
 
-          const auto pop_id     = PushPopID();
+          const auto pop_id     = imgui_utils::ImGuiPushId();
           const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
           const auto selectable = [&]()
           {
@@ -1400,7 +1400,7 @@ void fme::batch::button_start()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto pop_id_right = PushPopID();
+     const auto pop_id_right = imgui_utils::ImGuiPushId();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      const auto end_function
        = glengine::ScopeGuard{ []()
@@ -1469,7 +1469,7 @@ void fme::batch::button_stop()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto pop_id_right = PushPopID();
+     const auto pop_id_right = imgui_utils::ImGuiPushId();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
      const auto end_function
@@ -1527,7 +1527,7 @@ bool fme::batch::browse_path(
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
      const float       button_width = button_size * 3.0F;
-     const auto        pop_id       = PushPopID();
+     const auto        pop_id       = imgui_utils::ImGuiPushId();
      // ImGui text box with browse button
      // Highlight text box red if the folder doesn't exist
      {

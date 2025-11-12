@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_IMGUIVIEWPORTWINDOW_HPP
 #define FIELD_MAP_EDITOR_IMGUIVIEWPORTWINDOW_HPP
-#include "ImGuiPushID.hpp"
 #include "ImGuiPushStyleVar.hpp"
 #include "OrthographicCameraController.hpp"
 #include <glengine/FrameBuffer.hpp>
 #include <glengine/FrameBufferBackup.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 namespace glengine
 {
 inline namespace impl
@@ -30,7 +30,7 @@ inline namespace impl
                const auto pop_style = ImGuiPushStyleVar(
                  ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
                {
-                    const auto pop_id_0 = ImGuiPushId();
+                    const auto pop_id_0 = imgui_utils::ImGuiPushId();
                     const auto pop_end  = ScopeGuard([]() { ImGui::End(); });
                     if (!ImGui::Begin(m_title))
                     {
@@ -45,7 +45,7 @@ inline namespace impl
                            = ImGui::IsWindowFocused();
                          // Using a Child allow to fill all the space of the
                          // window. It also allows customization
-                         const auto pop_id_1 = ImGuiPushId();
+                         const auto pop_id_1 = imgui_utils::ImGuiPushId();
                          ImGui::BeginChild(m_title);
                          const auto pop_child
                            = ScopeGuard([]() { ImGui::EndChild(); });

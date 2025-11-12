@@ -3,10 +3,10 @@
 //
 #include "Palettes.hpp"
 #include "imgui.h"
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 bool ff_8::Palettes::on_im_gui_update() const
 {
-     return glengine::GenericCombo("Palette", m_current, m_strings);
+     return imgui_utils::GenericCombo("Palette", m_current, m_strings);
 }
 ff_8::Palettes::operator std::uint8_t() const
 {

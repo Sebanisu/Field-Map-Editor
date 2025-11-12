@@ -8,9 +8,7 @@
 #include "Changed.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
-#include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"
-#include "ImGuiPushID.hpp"
 #include "ImGuiTileDisplayWindow.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
@@ -34,9 +32,11 @@
 #include <glengine/Event/EventDispatcher.hpp>
 #include <glengine/FrameBuffer.hpp>
 #include <glengine/FrameBufferBackup.hpp>
-#include <glengine/GenericCombo.hpp>
 #include <glengine/OrthographicCamera.hpp>
 #include <glengine/PixelBuffer.hpp>
+#include <imgui_utils/GenericCombo.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <source_location>
 #include <type_traits>
 namespace ff_8
@@ -261,7 +261,7 @@ class Map
                         = ConvertGliDtoImTextureId<std::uint64_t>(
                           sub_texture.id());
                       const auto uv     = sub_texture.im_gui_uv<ImVec2>();
-                      const auto id_pop = glengine::ImGuiPushId();
+                      const auto id_pop = imgui_utils::ImGuiPushId();
                       const auto color  = ImVec4(0.F, 0.F, 0.F, 0.F);
                       last_pos          = ImGui::GetCursorPos();
                       text_width        = ImGui::GetItemRectMax().x;
@@ -291,7 +291,7 @@ class Map
                  {
                       auto &local_tile_button_state = *tile_button_state;
                       using namespace open_viii::graphics::background;
-                      const auto id_pop_2    = glengine::ImGuiPushId();
+                      const auto id_pop_2    = imgui_utils::ImGuiPushId();
                       const auto sub_texture = tile_to_sub_texture(tile);
                       const auto increment
                         = glengine::ScopeGuard([&]() { ++i; });
@@ -414,9 +414,9 @@ class Map
      }
      void on_im_gui_update() const
      {
-          const auto pop_id = glengine::ImGuiPushId();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           {
-               const auto disable = glengine::ImGuiDisabled(
+               const auto disable = imgui_utils::ImGuiDisabled(
                  std::ranges::empty(GetMapHistory().path)
                  || std::ranges::empty(GetMim().path));
 

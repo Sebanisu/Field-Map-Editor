@@ -4,7 +4,7 @@
 #define B99BEDA4_8B05_47FE_B03E_4AC0C8FF90EE
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
-namespace fme
+namespace imgui_utils
 {
 [[nodiscard]] inline auto ImGuiDisabled(bool disabled) noexcept
 {
@@ -12,5 +12,5 @@ namespace fme
      ImGui::BeginDisabled(disabled);
      return glengine::ScopeGuard{ &ImGui::EndDisabled };
 }
-}// namespace fme
+}// namespace imgui_utils
 #endif /* B99BEDA4_8B05_47FE_B03E_4AC0C8FF90EE */

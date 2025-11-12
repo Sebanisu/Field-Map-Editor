@@ -22,7 +22,7 @@ class MapBlends
                {
                     changed = true;
                }
-               const auto pop = glengine::ImGuiPushId();
+               const auto pop = imgui_utils::ImGuiPushId();
                if (blend_combos(
                      m_add_parameter_selections, m_add_equation_selections))
                {
@@ -32,7 +32,7 @@ class MapBlends
           if (ImGui::CollapsingHeader("Subtract Blend"))
           {
                const auto un_indent = glengine::ImGuiIndent();
-               const auto pop       = glengine::ImGuiPushId();
+               const auto pop       = imgui_utils::ImGuiPushId();
                if (blend_combos(
                      m_subtract_parameter_selections,
                      m_subtract_equation_selections))

@@ -9,10 +9,10 @@
 #include "SimilarAdjustments.hpp"
 #include "VisitState.hpp"
 #include <ff_8/TileOperations.hpp>
-#include <glengine/GenericCombo.hpp>
 #include <glengine/SubTexture.hpp>
-#include <ImGuiDisabled.hpp>
-#include <ImGuiPushItemWidth.hpp>
+#include <imgui_utils/GenericCombo.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiPushItemWidth.hpp>
 namespace ff_8
 {
 template<typename TileFunctions>
@@ -42,7 +42,7 @@ class MapTileAdjustments
           ImGui::SameLine();
           {
                const auto disabled
-                 = glengine::ImGuiDisabled(!m_map_history.undo_enabled());
+                 = imgui_utils::ImGuiDisabled(!m_map_history.undo_enabled());
                if (ImGui::Button("Undo"))
                {
                     visit_state = VisitState::Undo;
@@ -203,7 +203,7 @@ class MapTileAdjustments
           checkbox_tool_tip("##matching bpp", "Matching BPP", m_matching.depth);
           const float width = ImGui::CalcItemWidth();
           const auto  pop_width
-            = glengine::ImGuiPushItemWidth(width - checkbox_width);
+            = imgui_utils::ImGuiPushItemWidth(width - checkbox_width);
           if (ImGui::Combo(
                 "BPP", &current_bpp_selection, bpp_options.data(), 3))
           {
@@ -258,8 +258,8 @@ class MapTileAdjustments
        int                step         = 1,
        std::optional<int> override_max = std::nullopt) const
      {
-          const auto pop_width = glengine::ImGuiPushItemWidth(width);
-          const auto pop_id    = glengine::ImGuiPushId();
+          const auto pop_width = imgui_utils::ImGuiPushItemWidth(width);
+          const auto pop_id    = imgui_utils::ImGuiPushId();
           if constexpr (!GroupT::read_only)
           {
                assert(step > 0);
@@ -411,7 +411,7 @@ class MapTileAdjustments
        bool        &changed) const
      {
 
-          const auto disabled = glengine::ImGuiDisabled(
+          const auto disabled = imgui_utils::ImGuiDisabled(
             !TileOperations::BlendMode::has_setter<TileT>);
           const auto blend_mode            = tile.blend_mode();
           int current_blend_mode_selection = static_cast<int>(blend_mode);
@@ -423,7 +423,7 @@ class MapTileAdjustments
             "##matching blend mode",
             "Matching Blend Mode",
             m_matching.blend_mode);
-          if (glengine::GenericCombo(
+          if (imgui_utils::GenericCombo(
                 "Blend Mode",
                 current_blend_mode_selection,
                 blend_mode_str,
@@ -457,11 +457,11 @@ class MapTileAdjustments
           using namespace open_viii::graphics::background;
           int        layer_id = tile.layer_id();
           const auto disabled
-            = glengine::ImGuiDisabled(!has_with_layer_id<TileT>);
+            = imgui_utils::ImGuiDisabled(!has_with_layer_id<TileT>);
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
           const auto  pop_width
-            = glengine::ImGuiPushItemWidth(width - checkbox_width);
+            = imgui_utils::ImGuiPushItemWidth(width - checkbox_width);
           checkbox_tool_tip(
             "##matching layer_id", "Matching Layer ID", m_matching.layer_id);
           if (ImGui::SliderInt(
@@ -500,7 +500,7 @@ class MapTileAdjustments
           const float checkbox_width  = get_checkbox_width(1U);
           const float width           = ImGui::CalcItemWidth();
           const auto  pop_width
-            = glengine::ImGuiPushItemWidth(width - checkbox_width);
+            = imgui_utils::ImGuiPushItemWidth(width - checkbox_width);
           checkbox_tool_tip(
             "##matching texture_page_id",
             "Matching Texture Page ID",
@@ -538,7 +538,7 @@ class MapTileAdjustments
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
           const auto  pop_width
-            = glengine::ImGuiPushItemWidth(width - checkbox_width);
+            = imgui_utils::ImGuiPushItemWidth(width - checkbox_width);
           checkbox_tool_tip(
             "##matching palette_id",
             "Matching Palette ID",
@@ -579,7 +579,7 @@ class MapTileAdjustments
           checkbox_tool_tip(
             "##matching blend other", "Matching Blend Other", m_matching.blend);
           const auto pop_width
-            = glengine::ImGuiPushItemWidth(width - checkbox_width);
+            = imgui_utils::ImGuiPushItemWidth(width - checkbox_width);
           if (ImGui::SliderInt(
                 "Blend Other",
                 &blend,
@@ -620,9 +620,9 @@ class MapTileAdjustments
             = generate_inner_width(2, checkbox_width);
           {
                const auto disabled
-                 = glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
+                 = imgui_utils::ImGuiDisabled(!has_with_animation_id<TileT>);
                const auto pop_width
-                 = glengine::ImGuiPushItemWidth(item_width.first);
+                 = imgui_utils::ImGuiPushItemWidth(item_width.first);
                if (ImGui::SliderInt(
                      "##Animation ID",
                      &animation_id,
@@ -658,9 +658,9 @@ class MapTileAdjustments
             m_matching.animation_state);
           {
                const auto disabled
-                 = glengine::ImGuiDisabled(!has_with_animation_state<TileT>);
+                 = imgui_utils::ImGuiDisabled(!has_with_animation_state<TileT>);
                const auto pop_width
-                 = glengine::ImGuiPushItemWidth(item_width.second);
+                 = imgui_utils::ImGuiPushItemWidth(item_width.second);
                if (ImGui::SliderInt(
                      "##Animation State",
                      &animation_state,
