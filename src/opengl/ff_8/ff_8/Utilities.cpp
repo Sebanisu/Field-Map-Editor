@@ -1,14 +1,14 @@
-#include "utilities.hpp"
+#include "Utilities.hpp"
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
-namespace fme
+namespace ff_8
 {
 // Explicit instantiation for specific types
-template bool sort_and_remove_duplicates(
+template bool ff_8::sort_and_remove_duplicates(
   std::vector<std::string> &,
   std::vector<bool> &);
-template bool sort_and_remove_duplicates(std::vector<std::string> &);
+template bool ff_8::sort_and_remove_duplicates(std::vector<std::string> &);
 
 bool          has_balanced_braces([[maybe_unused]] const std::string_view s)
 {
@@ -81,4 +81,4 @@ bool has_balanced_braces([[maybe_unused]] const std::u8string_view s)
 
      return true;
 }
-}// namespace fme
+}// namespace ff_8

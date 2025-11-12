@@ -8,9 +8,9 @@
 #include "filter.hpp"
 #include "formatters.hpp"
 #include "tile_sizes.hpp"
-#include "utilities.hpp"
 #include <ff_8/Colors.hpp>
 #include <ff_8/Configuration.hpp>
+#include <ff_8/Utilities.hpp>
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>

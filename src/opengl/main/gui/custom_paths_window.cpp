@@ -148,7 +148,7 @@ static const auto trim = [](const std::string &str) -> std::string
        std::to_underlying(fme::PatternSelector::End)>
        result{};
 
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -266,7 +266,7 @@ fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 
      bool found = false;
 
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -301,7 +301,7 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
           return nullptr;
      }
      std::string *result = nullptr;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -346,7 +346,7 @@ std::vector<std::string> *
           return nullptr;
      }
      std::vector<std::string> *result = nullptr;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -487,7 +487,7 @@ void fme::custom_paths_window::save_pattern() const
           return;
      }
      bool found = false;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()

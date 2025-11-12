@@ -8,13 +8,13 @@
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
-#include "utilities.hpp"
 #include <cstdint>
 #include <ff_8/Colors.hpp>
 #include <ff_8/Configuration.hpp>
 #include <ff_8/DrawBitT.hpp>
 #include <ff_8/PupuID.hpp>
 #include <ff_8/TileOperations.hpp>
+#include <ff_8/Utilities.hpp>
 #include <filesystem>
 #include <fmt/format.h>
 #include <glengine/concepts.hpp>
@@ -1315,7 +1315,7 @@ struct filters
      {
 
           FiltersArrayT result{};
-          fme::for_each_enum<FilterTag>(
+          ff_8::for_each_enum<FilterTag>(
             [&]<FilterTag Key>()
             {
                  result[std::to_underlying(Key)]
@@ -1456,7 +1456,7 @@ struct filters
 
      void reload(const toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          ff_8::for_each_enum<FilterTag>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1468,7 +1468,7 @@ struct filters
 
      void combine(const toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          ff_8::for_each_enum<FilterTag>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1480,7 +1480,7 @@ struct filters
 
      void update_table(toml::table &table)
      {
-          fme::for_each_enum<FilterTag>(
+          ff_8::for_each_enum<FilterTag>(
             [&]<FilterTag Key>()
             {
                  using ValueT = typename ConfigKeys<Key>::value_type;
@@ -1494,7 +1494,7 @@ struct filters
      {
 
           std::bitset<static_cast<std::size_t>(FilterTag::All)> results;
-          fme::for_each_enum<FilterTag>(
+          ff_8::for_each_enum<FilterTag>(
             [&]<FilterTag Key>()
             {
                  if constexpr (HasOperationType<Key>)

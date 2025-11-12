@@ -9,8 +9,7 @@
 #include <variant>
 #include <vector>
 
-
-namespace fme
+namespace ff_8
 {
 template<typename T>
 concept is_enum = std::is_enum_v<T>;
@@ -327,6 +326,6 @@ constexpr inline auto generate_combinations(const rangeT &pupu_ids)
      return CombinationRange{ generate_combinations_64bit(pupu_ids) };
 }
 
-}// namespace fme
+}// namespace ff_8
 
 #endif /* B24A24CC_B3E6_4D3F_AFB1_C86F174A1902 */

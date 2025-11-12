@@ -3,7 +3,7 @@
 //
 #include "Selections.hpp"
 #include "formatters.hpp"
-#include "utilities.hpp"
+#include <ff_8/Utilities.hpp>
 #include <spdlog/spdlog.h>
 
 fme::Selections::Selections(const ff_8::Configuration config)
@@ -71,14 +71,15 @@ void fme::Selections::sort_paths()
 
           bool changed = false;
           changed |= std::apply(
-            remove_empty_values<std::remove_cvref_t<decltype(get<Keys>())>...>,
+            ff_8::remove_empty_values<
+              std::remove_cvref_t<decltype(get<Keys>())>...>,
             args);
           changed |= std::apply(
-            remove_nonexistent_paths<
+            ff_8::remove_nonexistent_paths<
               std::remove_cvref_t<decltype(get<Keys>())>...>,
             args_with_bool);
           changed |= std::apply(
-            sort_and_remove_duplicates<
+            ff_8::sort_and_remove_duplicates<
               std::remove_cvref_t<decltype(get<Keys>())>...>,
             args);
 

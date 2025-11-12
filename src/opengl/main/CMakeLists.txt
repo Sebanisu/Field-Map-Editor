@@ -51,7 +51,7 @@ set(MAIN_SOURCES
     path_search.cpp
     save_image_pbo.cpp
     tile_sizes.cpp
-    utilities.cpp)
+)
 
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_executable(${PROJECT_NAME}_MAIN WIN32 ${MAIN_SOURCES})

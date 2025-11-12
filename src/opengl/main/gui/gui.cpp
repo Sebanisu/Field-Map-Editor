@@ -14,11 +14,11 @@
 #include "path_search.hpp"
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
-#include "utilities.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <ff_8/SafeDir.hpp>
+#include <ff_8/Utilities.hpp>
 #include <fmt/ranges.h>
 #include <ImGuizmo.h>
 #include <open_viii/paths/Paths.hpp>
@@ -361,7 +361,7 @@ void gui::render_dockspace()
           ImGui::SetNextWindowViewport(viewport->ID);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
-          window_flags = bitwise_or(
+          window_flags = ff_8::bitwise_or(
             window_flags,
             ImGuiWindowFlags_NoTitleBar,
             ImGuiWindowFlags_NoCollapse,
@@ -372,20 +372,21 @@ void gui::render_dockspace()
      }
      else
      {
-          dockspace_flags = bitwise_and(
+          dockspace_flags = ff_8::bitwise_and(
             dockspace_flags,
-            bitwise_not(ImGuiDockNodeFlags_PassthruCentralNode));
+            ff_8::bitwise_not(ImGuiDockNodeFlags_PassthruCentralNode));
      }
 
      // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
      // render our background and handle the pass-thru hole, so we ask Begin()
      // to not render a background.
      if (
-       bitwise_and(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode)
+       ff_8::bitwise_and(
+         dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode)
        != ImGuiDockNodeFlags{})
      {
           window_flags
-            = bitwise_or(window_flags, ImGuiWindowFlags_NoBackground);
+            = ff_8::bitwise_or(window_flags, ImGuiWindowFlags_NoBackground);
      }
 
      // Important: note that we proceed even if Begin() returns false (aka
@@ -418,17 +419,17 @@ void gui::render_dockspace()
           ImGui::PopStyleVar(2);
      }
 
-     dockspace_flags
-       = bitwise_or(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
-     dockspace_flags
-       = bitwise_and(dockspace_flags, bitwise_not(ImGuiDockNodeFlags_NoResize));
+     dockspace_flags = ff_8::bitwise_or(
+       dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
+     dockspace_flags = ff_8::bitwise_and(
+       dockspace_flags, ff_8::bitwise_not(ImGuiDockNodeFlags_NoResize));
      // Submit the DockSpace
      ImGuiIO &imgui_io                          = ImGui::GetIO();
      imgui_io.ConfigWindowsMoveFromTitleBarOnly = true;
 
 
      if (
-       bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable)
+       ff_8::bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable)
        != ImGuiConfigFlags{})
      {
           const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -4158,9 +4159,9 @@ gui::gui(GLFWwindow *const window)
      // 2. Configure ImGui (optional but common)
      ImGuiIO &imgui_io = ImGui::GetIO();
      imgui_io.ConfigFlags
-       = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
-     imgui_io.ConfigFlags
-       = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
+       = ff_8::bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
+     imgui_io.ConfigFlags = ff_8::bitwise_or(
+       imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
      std::error_code error_code = {};
 
      auto            temp_path  = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);

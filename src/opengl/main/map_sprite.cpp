@@ -6,10 +6,10 @@
 #include "gui/gui_labels.hpp"
 #include "map_operation.hpp"
 #include "save_image_pbo.hpp"
-#include "utilities.hpp"
 #include <bit>
 #include <expected>
 #include <ff_8/SafeDir.hpp>
+#include <ff_8/Utilities.hpp>
 #include <fmt/format.h>
 #include <glengine/BlendModeSettings.hpp>
 #include <glengine/DistanceBuffer.hpp>
@@ -2650,7 +2650,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
          | std::ranges::views::join       // Flatten the vectors into a single
                                           // range
          | std::ranges::to<std::vector>();// merge to vector;
-     sort_and_remove_duplicates(conflicting_palettes_flatten);
+     ff_8::sort_and_remove_duplicates(conflicting_palettes_flatten);
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures           = {};

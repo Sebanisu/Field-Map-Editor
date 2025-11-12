@@ -15,6 +15,7 @@ add_library(
   ff_8/PupuID.cpp
   ff_8/SafeDir.cpp
   ff_8/UniquifyPupu.cpp
+  ff_8/Utilities.cpp
   )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
