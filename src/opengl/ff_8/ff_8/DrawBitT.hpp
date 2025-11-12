@@ -4,6 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_DRAW_BIT_T_HPP
 #define FIELD_MAP_EDITOR_DRAW_BIT_T_HPP
+#include <fmt/format.h>
+#include <string_view>
 #include <utility>
 namespace ff_8
 {
@@ -38,4 +40,32 @@ static inline constexpr bool operator==(
 }
 
 };// namespace ff_8
+
+template<>
+struct fmt::formatter<ff_8::DrawBitT> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       ff_8::DrawBitT draw_bit_t,
+       FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (draw_bit_t)
+          {
+               case ff_8::DrawBitT::all:
+                    name = "all"sv;
+                    break;
+               case ff_8::DrawBitT::disabled:
+                    name = "disabled"sv;
+                    break;
+               case ff_8::DrawBitT::enabled:
+                    name = "enabled"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
 #endif

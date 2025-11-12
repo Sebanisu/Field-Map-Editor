@@ -1136,17 +1136,18 @@ void fme::batch::combo_compact_type_ffnx()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::compact_tooltip); } };
-     static constexpr auto values  = std::array{ compact_type::map_order_ffnx };
-     static const auto     strings = values | std::views::transform(AsString{})
+     static constexpr auto values
+       = std::array{ ff_8::CompactTypeT::map_order_ffnx };
+     static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
        = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
      static auto filter = []()
      {
-          ff_8::filter<ff_8::FilterTag::Compact> tmp_filter{
+          ff_8::Filter<ff_8::FilterTag::Compact> tmp_filter{
                ff_8::FilterSettings::All_Disabled
           };
-          tmp_filter.update(compact_type::map_order_ffnx).enable();
+          tmp_filter.update(ff_8::CompactTypeT::map_order_ffnx).enable();
           return tmp_filter;
      }();
 
@@ -1170,9 +1171,10 @@ void fme::batch::combo_compact_type()
                                { tool_tip(gui_labels::compact_tooltip); } };
 
      static const auto values
-       = std::array{ compact_type::rows, compact_type::all,
-                     compact_type::move_only_conflicts, compact_type::map_order,
-                     compact_type::map_order_ffnx };
+       = std::array{ ff_8::CompactTypeT::rows, ff_8::CompactTypeT::all,
+                     ff_8::CompactTypeT::move_only_conflicts,
+                     ff_8::CompactTypeT::map_order,
+                     ff_8::CompactTypeT::map_order_ffnx };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static const auto tool_tips
@@ -1204,7 +1206,7 @@ void fme::batch::combo_flatten_type_bpp()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::flatten_tooltip); } };
-     static constexpr auto values  = std::array{ flatten_type::bpp };
+     static constexpr auto values  = std::array{ ff_8::FlattenTypeT::bpp };
      static const auto     strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
@@ -1234,11 +1236,11 @@ void fme::batch::combo_flatten_type()
                                { tool_tip(gui_labels::flatten_tooltip); } };
      const bool all_or_only_palette
        = !selections->get<ConfigKey::BatchCompactEnabled>()
-         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order)
-         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx);
+         || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order)
+         || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx);
      static constexpr auto values
-       = std::array{ flatten_type::bpp, flatten_type::palette,
-                     flatten_type::both };
+       = std::array{ ff_8::FlattenTypeT::bpp, ff_8::FlattenTypeT::palette,
+                     ff_8::FlattenTypeT::both };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
@@ -1246,7 +1248,7 @@ void fme::batch::combo_flatten_type()
                      gui_labels::flatten_palette_tooltip,
                      gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette
-       = std::array{ flatten_type::palette };
+       = std::array{ ff_8::FlattenTypeT::palette };
      static const auto strings_only_palette
        = values_only_palette | std::views::transform(AsString{})
          | std::ranges::to<std::vector>();
@@ -1858,7 +1860,7 @@ void fme::batch::generate_map_sprite()
      assert(m_coo);
 
      // Initialize filters with default disabled state
-     ff_8::filters      filters         = { false };
+     ff_8::Filters      filters         = { false };
 
      // Enable specific filters depending on the input type
      const std::string &selected_string = get_selected_path(
@@ -1905,7 +1907,7 @@ void fme::batch::generate_map_sprite()
                  .enable();
                filters
                  .update<ff_8::FilterTag::CompactOnLoadOriginal>(
-                   compact_type::map_order_ffnx)
+                   ff_8::CompactTypeT::map_order_ffnx)
                  .enable();
                break;
           }
@@ -2033,19 +2035,19 @@ void fme::batch::compact()
           // type
           switch (selections->get<ConfigKey::BatchCompactType>())
           {
-               case compact_type::rows:
+               case ff_8::CompactTypeT::rows:
                     m_map_sprite.compact_rows();
                     break;
-               case compact_type::all:
+               case ff_8::CompactTypeT::all:
                     m_map_sprite.compact_all();
                     break;
-               case compact_type::move_only_conflicts:
+               case ff_8::CompactTypeT::move_only_conflicts:
                     m_map_sprite.compact_move_conflicts_only();
                     break;
-               case compact_type::map_order:
+               case ff_8::CompactTypeT::map_order:
                     m_map_sprite.compact_map_order();
                     break;
-               case compact_type::map_order_ffnx:
+               case ff_8::CompactTypeT::map_order_ffnx:
                     m_map_sprite.compact_map_order_ffnx();
                     break;
           }
@@ -2085,25 +2087,25 @@ void fme::batch::flatten()
      {
           switch (selections->get<ConfigKey::BatchFlattenType>())
           {
-               case flatten_type::bpp:
+               case ff_8::FlattenTypeT::bpp:
                     // Only flatten BPP if compact type isn't using map order
                     if (
                  !selections->get<ConfigKey::BatchCompactEnabled>()
-                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
+                 || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order && selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
                     break;
 
-               case flatten_type::palette:
+               case ff_8::FlattenTypeT::palette:
                     m_map_sprite.flatten_palette();
                     break;
 
-               case flatten_type::both:
+               case ff_8::FlattenTypeT::both:
                     // Only flatten BPP if not using map order
                     if (
                  !selections->get<ConfigKey::BatchCompactEnabled>()
-                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
+                 || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order && selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
@@ -2115,9 +2117,9 @@ void fme::batch::flatten()
           // If the compact strategy is not map-order-based, re-apply compaction
           if (
             selections->get<ConfigKey::BatchCompactType>()
-              != compact_type::map_order
+              != ff_8::CompactTypeT::map_order
             && selections->get<ConfigKey::BatchCompactType>()
-                 != compact_type::map_order_ffnx)
+                 != ff_8::CompactTypeT::map_order_ffnx)
           {
                compact();
           }

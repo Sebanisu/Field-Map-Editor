@@ -358,7 +358,7 @@ void compact_all(MapGroup::Map &map)
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const MapGroup::Map &map,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   const std::uint8_t  &texture_page,
   bool                 skip_filters,
@@ -373,7 +373,7 @@ void compact_all(MapGroup::Map &map)
 }
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
   const MapGroup::Map &map,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   bool                 skip_filters,
   bool                 find_all)

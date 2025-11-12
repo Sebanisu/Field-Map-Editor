@@ -35,7 +35,7 @@ namespace fme
 map_sprite::map_sprite(
   ff_8::MapGroup                         MapGroup,
   map_sprite_settings                    settings,
-  ff_8::filters                          in_filters,
+  ff_8::Filters                          in_filters,
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
@@ -121,19 +121,19 @@ void map_sprite::toggle_filter_compact_on_load_original(
      {
           switch (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>())
           {
-               case compact_type::rows:
+               case ff_8::CompactTypeT::rows:
                     compact_rows_original(skip_update);
                     break;
-               case compact_type::all:
+               case ff_8::CompactTypeT::all:
                     compact_all_original(skip_update);
                     break;
-               case compact_type::move_only_conflicts:
+               case ff_8::CompactTypeT::move_only_conflicts:
                     compact_move_conflicts_only_original(skip_update);
                     break;
-               case compact_type::map_order:
+               case ff_8::CompactTypeT::map_order:
                     compact_map_order_original(skip_update);
                     break;
-               case compact_type::map_order_ffnx:
+               case ff_8::CompactTypeT::map_order_ffnx:
                     compact_map_order_ffnx_original(skip_update);
                     break;
           }
@@ -161,26 +161,26 @@ void map_sprite::toggle_filter_flatten_on_load_original(
      {
           switch (m_filters.value<ff_8::FilterTag::FlattenOnLoadOriginal>())
           {
-               case flatten_type::bpp:
+               case ff_8::FlattenTypeT::bpp:
                     // Only flatten BPP if compact type isn't using map
                     // order
                     if (
                  !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
-                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
                     break;
 
-               case flatten_type::palette:
+               case ff_8::FlattenTypeT::palette:
                     flatten_palette_original(skip_update);
                     break;
 
-               case flatten_type::both:
+               case ff_8::FlattenTypeT::both:
                     // Only flatten BPP if not using map order
                     if (
                  !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
-                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
@@ -239,7 +239,7 @@ map_sprite map_sprite::with_field(
               m_selections, m_render_framebuffer };
 }
 
-map_sprite map_sprite::with_filters(ff_8::filters filters) const
+map_sprite map_sprite::with_filters(ff_8::Filters filters) const
 {
      return { m_map_group, m_settings, std::move(filters), m_selections,
               m_render_framebuffer };
@@ -1501,7 +1501,7 @@ void map_sprite::load_child_map_sprite_full_filename_texture() const
                 .require_coo    = m_settings.require_coo,
                 .force_loading  = true };
           m_child_map_sprite = std::make_unique<map_sprite>(
-            m_map_group, settings, ff_8::filters{ false }, m_selections);
+            m_map_group, settings, ff_8::Filters{ false }, m_selections);
           m_child_map_sprite->consume_now(true);
           // return;// return early here as the texture loading is placed
           // in
@@ -1707,7 +1707,7 @@ std::pair<
 
           const toml::table *file_table
             = get_deswizzle_combined_toml_table(filename);
-          ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
+          ff_8::Filter<ff_8::FilterTag::MultiPupu> multi_pupu
             = { ff_8::FilterSettings::All_Disabled };
           multi_pupu.reload(*file_table);
           if (!multi_pupu.enabled())
@@ -2229,11 +2229,11 @@ ff_8::all_unique_values_and_strings
        { return ff_8::all_unique_values_and_strings(tiles); });
 }
 
-const ff_8::filters &map_sprite::filter() const
+const ff_8::Filters &map_sprite::filter() const
 {
      return m_filters;
 }
-ff_8::filters &map_sprite::filter()
+ff_8::Filters &map_sprite::filter()
 {
      return m_filters;
 }
@@ -3042,7 +3042,7 @@ void map_sprite::save_deswizzle_generate_toml(
           m_filters, m_settings
           //, m_render_framebuffer.mutable_scale()
      };
-     backup.filters = ff_8::filters{ false };
+     backup.filters = ff_8::Filters{ false };
      backup.filters.value().get<ff_8::FilterTag::Swizzle>()
        = backup.filters.backup().get<ff_8::FilterTag::Swizzle>();
      backup.filters.value().get<ff_8::FilterTag::SwizzleAsOneImage>()
@@ -3324,7 +3324,7 @@ void map_sprite::save_deswizzle_generate_toml(
 
 void map_sprite::cache_pupuids(
   const std::string   &file_name_str,
-  const ff_8::filters &filters) const
+  const ff_8::Filters &filters) const
 {
      if (
        filters.enabled<ff_8::FilterTag::MultiPupu>()
@@ -3823,14 +3823,14 @@ void map_sprite::refresh_tooltip(const std::string &file_name)
 
 void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
   const std::string                              &file_name_key,
-  const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter)
+  const ff_8::Filter<ff_8::FilterTag::MultiPupu> &new_filter)
 {
      if (auto *table = get_deswizzle_combined_toml_table(file_name_key))
      {
           if (new_filter.enabled())
           {
                // Update in-memory filter state from the table
-               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::Filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
 
                copy_filter.combine(*table);
@@ -3838,10 +3838,10 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
           }
           else
           {
-               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::Filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = (ff_8::FilterSettings::Toggle_Enabled);
                copy_filter.reload(*table);
-               ff_8::filter<ff_8::FilterTag::MultiPupu>::value_type tempvec
+               ff_8::Filter<ff_8::FilterTag::MultiPupu>::value_type tempvec
                  = {};
 
                std::ranges::remove_copy_if(
@@ -3875,7 +3875,7 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
      {
           return nullptr;
      }
-     ff_8::filters tmp_filters = { false };
+     ff_8::Filters tmp_filters = { false };
      for (const std::string &file_name_str : file_names)
      {
           if (auto it_base = coo_table->find(file_name_str);

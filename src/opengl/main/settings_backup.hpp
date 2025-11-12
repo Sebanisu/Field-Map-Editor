@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_SETTINGS_BACKUP_HPP
 #define FIELD_MAP_EDITOR_SETTINGS_BACKUP_HPP
-#include "filter.hpp"
 #include <cstdint>
+#include <ff_8/Filter.hpp>
 namespace fme
 {
 struct map_sprite_settings
@@ -98,12 +98,12 @@ struct setting_backup
 struct settings_backup
 {
    public:
-     setting_backup<ff_8::filters>       filters;
+     setting_backup<ff_8::Filters>       filters;
      setting_backup<map_sprite_settings> settings;
      // setting_backup<std::int32_t>  scale;
 
      settings_backup(
-       ff_8::filters       &in_filters,
+       ff_8::Filters       &in_filters,
        map_sprite_settings &in_settings)
        : filters{ in_filters }
        , settings{ in_settings }

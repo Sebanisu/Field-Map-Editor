@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_OPERATION_HPP
 #define FIELD_MAP_EDITOR_MAP_OPERATION_HPP
-#include "filter.hpp"
+#include <ff_8/Filter.hpp>
 #include <ff_8/MapGroup.hpp>
 #include <ff_8/SourceTileConflicts.hpp>
 #include <glm/glm.hpp>
@@ -154,14 +154,14 @@ struct source_x_y_texture_page
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const MapGroup::Map &map,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   const std::uint8_t  &texture_page,
   bool                 skip_filters,
   bool                 find_all);
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
   const MapGroup::Map &map,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   bool                 skip_filters,
   bool                 find_all);
@@ -203,7 +203,7 @@ static inline void find_intersecting_get_indices(
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
   const tilesT        &tiles,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   const std::uint8_t  &texture_page,
   bool                 skip_filters = false,
@@ -286,7 +286,7 @@ template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t>
   find_intersecting_deswizzle(
     const tilesT        &tiles,
-    const ff_8::filters &filters,
+    const ff_8::Filters &filters,
     const glm::ivec2    &pixel_pos,
     bool                 skip_filters = false,
     bool                 find_all     = false)

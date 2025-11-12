@@ -188,7 +188,7 @@ void fme::filter_window::render() const
                     {
                          touched_editor = true;
                     }
-                    ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
+                    ff_8::Filter<ff_8::FilterTag::MultiPupu> multi_pupu
                       = { ff_8::FilterSettings::All_Disabled };
                     multi_pupu.reload(*file_table);
                     const auto optional_field_coo = [&]()
@@ -2759,7 +2759,7 @@ void fme::filter_window::process_combine(
                {
                     if (value.is_table())
                     {
-                         ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
+                         ff_8::Filter<ff_8::FilterTag::MultiPupu> temp_filter
                            = { ff_8::FilterSettings::All_Disabled };
                          toml::table &file_table = *value.as_table();
                          temp_filter.reload(file_table);
@@ -2816,7 +2816,7 @@ void fme::filter_window::process_combine(
                continue;
           }
 
-          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter{
+          ff_8::Filter<ff_8::FilterTag::MultiPupu> temp_filter{
                ff_8::FilterSettings::All_Disabled
           };
           toml::table &file_table = *value.as_table();

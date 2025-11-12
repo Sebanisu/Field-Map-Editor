@@ -1,11 +1,9 @@
 #include "import.hpp"
 #include "as_string.hpp"
 #include "collapsing_tile_info.hpp"
-#include "compact_type.hpp"
 #include "create_tile_button.hpp"
 #include "cstdint"
 #include "filebrowser.hpp"
-#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "generic_combo.hpp"
 #include "gui/ColorConversions.hpp"
@@ -15,7 +13,9 @@
 #include "tool_tip.hpp"
 #include <array>
 #include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/CompactTypeT.hpp>
 #include <ff_8/Configuration.hpp>
+#include <ff_8/Filter.hpp>
 #include <ff_8/SafeDir.hpp>
 #include <imgui.h>
 #include <open_viii/graphics/BPPT.hpp>

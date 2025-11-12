@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
-#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "gui/fa_icons.hpp"
 #include "gui/gui_labels.hpp"
@@ -12,6 +11,7 @@
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
 #include <algorithm>
+#include <ff_8/Filter.hpp>
 #include <ff_8/UniqueValues.hpp>
 #include <fmt/format.h>
 #include <functional>

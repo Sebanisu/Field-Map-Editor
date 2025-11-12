@@ -9,7 +9,6 @@
 // clang-format on
 #include "as_string.hpp"
 #include "batch.hpp"
-#include "compact_type.hpp"
 #include "create_tile_button.hpp"
 #include "custom_paths_window.hpp"
 #include "draw_window.hpp"
@@ -32,6 +31,7 @@
 #include <cstdint>
 #include <ff_8/ArchivesGroup.hpp>
 #include <ff_8/Colors.hpp>
+#include <ff_8/CompactTypeT.hpp>
 #include <ff_8/Configuration.hpp>
 #include <ff_8/SafeDir.hpp>
 #include <fmt/chrono.h>
@@ -192,18 +192,18 @@ struct gui
      void text_mouse_position() const;
      void combo_swizzle_path();
      bool
-       combo_swizzle_path(ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const;
+       combo_swizzle_path(ff_8::Filter<ff_8::FilterTag::Swizzle> &filter) const;
      void combo_swizzle_as_one_image_path();
      bool combo_swizzle_as_one_image_path(
-       ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
      void combo_deswizzle_path();
      bool combo_deswizzle_path(
-       ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::Deswizzle> &filter) const;
      void combo_full_filename_path();
      bool combo_full_filename_path(
-       ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::FullFileName> &filter) const;
      void combo_map_path();
-     bool combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const;
+     bool combo_map_path(ff_8::Filter<ff_8::FilterTag::Map> &filter) const;
      const open_viii::LangT &get_coo() const;
      file_dialog_mode        m_file_dialog_mode       = {};
      map_directory_mode      m_modified_directory_map = {};
@@ -211,7 +211,7 @@ struct gui
      std::filesystem::path   m_loaded_deswizzle_texture_path{};
      //     void popup_batch_reswizzle(); void popup_batch_deswizzle();
      // static void              popup_batch_common_filter_start(
-     //                ff_8::filter<std::filesystem::path> &filter,
+     //                ff_8::Filter<std::filesystem::path> &filter,
      //                std::string_view                         prefix,
      //                std::string_view                         base_name);
      // void popup_batch_embed();

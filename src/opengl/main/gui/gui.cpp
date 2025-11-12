@@ -2847,7 +2847,7 @@ void gui::menu_swizzle_as_one_image_paths()
             {
                  m_map_sprite->filter()
                    .update<ff_8::FilterTag::CompactOnLoadOriginal>(
-                     compact_type::map_order_ffnx);
+                     ff_8::CompactTypeT::map_order_ffnx);
                  m_map_sprite->toggle_filter_compact_on_load_original(true);
             }
             else
@@ -3383,7 +3383,7 @@ void gui::directory_browser_display()
                     {
                          m_map_sprite->filter()
                            .get<ff_8::FilterTag::CompactOnLoadOriginal>()
-                           .update(compact_type::map_order_ffnx);
+                           .update(ff_8::CompactTypeT::map_order_ffnx);
                          m_map_sprite->toggle_filter_compact_on_load_original(
                            true);
                     }
@@ -4370,7 +4370,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 std::shared_ptr<map_sprite> gui::get_map_sprite() const
 {
      //     map_sprite(ff_8::MapGroup MapGroup, bool draw_swizzle,
-     //     ff_8::filters in_filters, bool force_disable_blends, bool
+     //     ff_8::Filters in_filters, bool force_disable_blends, bool
      //     require_coo);
      map_sprite_settings settings = {
           .draw_swizzle   = m_selections->get<ConfigKey::DrawSwizzle>(),
@@ -4380,7 +4380,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
      return std::make_shared<map_sprite>(
        ff_8::MapGroup{ m_field, get_coo() },
        settings,
-       ff_8::filters{ true },
+       ff_8::Filters{ true },
        m_selections);
 }
 
@@ -4505,7 +4505,7 @@ void gui::combo_swizzle_as_one_image_path()
           m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
           m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
           m_map_sprite->filter().update<ff_8::FilterTag::CompactOnLoadOriginal>(
-            compact_type::map_order_ffnx);
+            ff_8::CompactTypeT::map_order_ffnx);
           m_map_sprite->toggle_filter_compact_on_load_original(true);
      }
      else
@@ -4722,7 +4722,7 @@ std::future<std::future<gui::PathsAndEnabled>>
 }
 
 bool gui::combo_swizzle_path(
-  ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const
+  ff_8::Filter<ff_8::FilterTag::Swizzle> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4740,7 +4740,7 @@ bool gui::combo_swizzle_path(
 
 
 bool gui::combo_swizzle_as_one_image_path(
-  ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
+  ff_8::Filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4757,7 +4757,7 @@ bool gui::combo_swizzle_as_one_image_path(
 }
 
 bool gui::combo_deswizzle_path(
-  ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const
+  ff_8::Filter<ff_8::FilterTag::Deswizzle> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4774,7 +4774,7 @@ bool gui::combo_deswizzle_path(
 }
 
 bool gui::combo_full_filename_path(
-  ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const
+  ff_8::Filter<ff_8::FilterTag::FullFileName> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4791,7 +4791,7 @@ bool gui::combo_full_filename_path(
      return m_field && gcc.render();
 }
 
-bool gui::combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const
+bool gui::combo_map_path(ff_8::Filter<ff_8::FilterTag::Map> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()

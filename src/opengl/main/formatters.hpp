@@ -294,38 +294,6 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
 
 
 template<>
-struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
-{// parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       fme::compact_type in_compact_type,
-       FormatContext    &ctx) const
-     {
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (in_compact_type)
-          {
-               case fme::compact_type::map_order_ffnx:
-                    name = fme::gui_labels::compact_map_order_ffnx2;
-                    break;
-               case fme::compact_type::map_order:
-                    name = fme::gui_labels::map_order;
-                    break;
-               case fme::compact_type::move_only_conflicts:
-                    name = fme::gui_labels::move_conflicts;
-                    break;
-               case fme::compact_type::rows:
-                    name = fme::gui_labels::rows;
-                    break;
-               case fme::compact_type::all:
-                    name = fme::gui_labels::all;
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
-
-template<>
 struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
@@ -422,33 +390,6 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                     break;
                case fme::output_types::csv:
                     name = ".csv";
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
-
-template<>
-struct fmt::formatter<fme::flatten_type> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       fme::flatten_type in_flatten_type,
-       FormatContext    &ctx) const
-     {
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (in_flatten_type)
-          {
-               case fme::flatten_type::bpp:
-                    name = fme::gui_labels::bpp;
-                    break;
-               case fme::flatten_type::palette:
-                    name = fme::gui_labels::palette;
-                    break;
-               case fme::flatten_type::both:
-                    name = fme::gui_labels::bpp_and_palette;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

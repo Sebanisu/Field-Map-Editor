@@ -4,8 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_FILTER_HPP
 #define FIELD_MAP_EDITOR_FILTER_HPP
-#include "formatters.hpp"
-#include "gui/compact_type.hpp"
+#include "CompactTypeT.hpp"
+#include "FlattenTypeT.hpp"
+#include "Formatters.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include <cstdint>
@@ -427,7 +428,7 @@ struct ConfigKeys<FilterTag::MultiBpp>
 template<>
 struct ConfigKeys<FilterTag::Compact>
 {
-     using value_type                           = fme::compact_type;
+     using value_type                           = ff_8::CompactTypeT;
      static constexpr std::string_view key_name = "batch_compact_type";
      static constexpr std::string_view enabled_key_name
        = "batch_compact_enabled";
@@ -436,7 +437,7 @@ struct ConfigKeys<FilterTag::Compact>
 template<>
 struct ConfigKeys<FilterTag::Flatten>
 {
-     using value_type                           = fme::flatten_type;
+     using value_type                           = FlattenTypeT;
      static constexpr std::string_view key_name = "batch_flatten_type";
      static constexpr std::string_view enabled_key_name
        = "batch_flatten_enabled";
@@ -445,7 +446,7 @@ struct ConfigKeys<FilterTag::Flatten>
 template<>
 struct ConfigKeys<FilterTag::CompactOnLoadOriginal>
 {
-     using value_type                           = fme::compact_type;
+     using value_type                           = CompactTypeT;
      static constexpr std::string_view key_name = "CompactOnLoad";
      static constexpr std::string_view enabled_key_name
        = "CompactOnLoadEnabled";
@@ -454,7 +455,7 @@ struct ConfigKeys<FilterTag::CompactOnLoadOriginal>
 template<>
 struct ConfigKeys<FilterTag::FlattenOnLoadOriginal>
 {
-     using value_type                           = fme::flatten_type;
+     using value_type                           = ff_8::FlattenTypeT;
      static constexpr std::string_view key_name = "FlattenOnLoad";
      static constexpr std::string_view enabled_key_name
        = "FlattenOnLoadEnabled";
@@ -656,7 +657,7 @@ concept HasOperationType
 
 
 template<FilterTag Tag>
-struct filter
+struct Filter
 {
    public:
      using value_type                            = ConfigKeys<Tag>::value_type;
@@ -667,17 +668,17 @@ struct filter
      FilterSettings m_settings = {};
 
    public:
-     filter(
+     Filter(
        value_type     value,
        FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter(
+     Filter(
        bool                       load_config,
        const ff_8::Configuration &config)
-       : filter(
+       : Filter(
            FilterLoadStrategy<value_type>::load_value(
              load_config,
              config,
@@ -689,8 +690,8 @@ struct filter
      {
      }
 
-     filter(FilterSettings settings)
-       : filter(
+     Filter(FilterSettings settings)
+       : Filter(
            HasFlag(
              settings,
              FilterSettings::Config_Enabled),
@@ -698,7 +699,7 @@ struct filter
      {
      }
 
-     filter &reload(const toml::table &table)
+     Filter &reload(const toml::table &table)
      {
           m_value = FilterLoadStrategy<value_type>::load_value(
             table, ConfigKeys<Tag>::key_name);
@@ -707,7 +708,7 @@ struct filter
           return *this;
      }
 
-     filter &reload()
+     Filter &reload()
      {
           if (HasFlag(m_settings, FilterSettings::Config_Enabled))
           {
@@ -717,7 +718,7 @@ struct filter
           return *this;
      }
 
-     filter &combine(const toml::table &table)
+     Filter &combine(const toml::table &table)
      {
           // Load temporary values
           const auto tmp_settings
@@ -753,7 +754,7 @@ struct filter
 
 
      template<typename U>
-     const filter &update([[maybe_unused]] U &&value) const
+     const Filter &update([[maybe_unused]] U &&value) const
           requires(std::same_as<
                    std::remove_cvref_t<U>,
                    toml::table>)
@@ -777,7 +778,7 @@ struct filter
           requires std::same_as<
             std::remove_cvref_t<U>,
             toml::table>
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           if (enabled())
           {
@@ -804,7 +805,7 @@ struct filter
             && std::indirectly_movable<
               std::ranges::iterator_t<std::remove_cvref_t<U>>,
               std::back_insert_iterator<value_type>>)
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
           {
@@ -833,7 +834,7 @@ struct filter
               value_type &,
               U>)
 
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           const bool not_same = [&]()
           {
@@ -875,7 +876,7 @@ struct filter
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
      }
-     filter &enable()
+     Filter &enable()
      {
           if (HasFlag(m_settings, FilterSettings::Toggle_Enabled))
           {
@@ -897,7 +898,7 @@ struct filter
           }
           return *this;
      }
-     filter &disable()
+     Filter &disable()
      {
           if (!HasFlag(m_settings, FilterSettings::Toggle_Enabled))
           {
@@ -951,7 +952,7 @@ struct filter
 };
 template<FilterTag Tag>
      requires(HasOperationType<Tag>)
-struct filter<Tag>
+struct Filter<Tag>
 {
    public:
      using value_type     = ConfigKeys<Tag>::value_type;
@@ -964,17 +965,17 @@ struct filter<Tag>
      static const inline operation_type s_operation = {};
 
    public:
-     filter(
+     Filter(
        value_type     value,
        FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter(
+     Filter(
        bool                       load_config,
        const ff_8::Configuration &config)
-       : filter(
+       : Filter(
            FilterLoadStrategy<value_type>::load_value(
              load_config,
              config,
@@ -985,8 +986,8 @@ struct filter<Tag>
              ConfigKeys<Tag>::enabled_key_name))
      {
      }
-     filter(FilterSettings settings)
-       : filter(
+     Filter(FilterSettings settings)
+       : Filter(
            HasFlag(
              settings,
              FilterSettings::Config_Enabled),
@@ -994,7 +995,7 @@ struct filter<Tag>
      {
      }
 
-     filter &reload(const toml::table &table)
+     Filter &reload(const toml::table &table)
      {
           m_value = FilterLoadStrategy<value_type>::load_value(
             table, ConfigKeys<Tag>::key_name);
@@ -1004,7 +1005,7 @@ struct filter<Tag>
      }
 
 
-     filter &combine(const toml::table &table)
+     Filter &combine(const toml::table &table)
      {
           // Load temporary values
           const auto tmp_settings
@@ -1038,7 +1039,7 @@ struct filter<Tag>
           return *this;
      }
 
-     filter &reload()
+     Filter &reload()
      {
           if (HasFlag(m_settings, FilterSettings::Config_Enabled))
           {
@@ -1048,7 +1049,7 @@ struct filter<Tag>
           return *this;
      }
      template<typename U>
-     const filter &update([[maybe_unused]] U &&value) const
+     const Filter &update([[maybe_unused]] U &&value) const
           requires(std::same_as<
                    std::remove_cvref_t<U>,
                    toml::table>)
@@ -1068,7 +1069,7 @@ struct filter<Tag>
           return *this;
      }
      template<typename U>
-     filter &update(U &&value)
+     Filter &update(U &&value)
           requires open_viii::graphics::background::is_tile<
             std::remove_cvref_t<U>>
      {
@@ -1079,7 +1080,7 @@ struct filter<Tag>
           requires std::same_as<
             std::remove_cvref_t<U>,
             toml::table>
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           if (enabled())
           {
@@ -1106,7 +1107,7 @@ struct filter<Tag>
             && std::indirectly_movable<
               std::ranges::iterator_t<std::remove_cvref_t<U>>,
               std::back_insert_iterator<value_type>>)
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
           {
@@ -1135,7 +1136,7 @@ struct filter<Tag>
               value_type &,
               U>)
 
-     filter &update(U &&value)
+     Filter &update(U &&value)
      {
           const bool not_same = [&]()
           {
@@ -1178,7 +1179,7 @@ struct filter<Tag>
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
      }
-     filter &enable()
+     Filter &enable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
           if constexpr (std::same_as<
@@ -1196,7 +1197,7 @@ struct filter<Tag>
           }
           return *this;
      }
-     filter &disable()
+     Filter &disable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
           if constexpr (std::same_as<
@@ -1293,13 +1294,13 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 
 using FilterVariant = decltype([] {
     return []<std::size_t... Is>(std::index_sequence<Is...>)
-        -> std::variant<std::monostate,filter<static_cast<FilterTag>(Is)>...>
+        -> std::variant<std::monostate,Filter<static_cast<FilterTag>(Is)>...>
     {
         return std::monostate{}; // default-constructed variant
     }(std::make_index_sequence<static_cast<std::size_t>(FilterTag::All)>{});
 }());
 
-struct filters
+struct Filters
 {
      using TileT = open_viii::graphics::background::Tile1;
 
@@ -1319,19 +1320,19 @@ struct filters
             [&]<FilterTag Key>()
             {
                  result[std::to_underlying(Key)]
-                   = FilterVariant{ std::in_place_type<filter<Key>>,
+                   = FilterVariant{ std::in_place_type<Filter<Key>>,
                                     load_config, config };
             });
           return result;
      }
 
-     filters(const filters &)                = default;
-     filters &operator=(const filters &)     = default;
+     Filters(const Filters &)                = default;
+     Filters &operator=(const Filters &)     = default;
 
-     filters(filters &&) noexcept            = default;
-     filters &operator=(filters &&) noexcept = default;
+     Filters(Filters &&) noexcept            = default;
+     Filters &operator=(Filters &&) noexcept = default;
 
-     filters(
+     Filters(
        bool                      load_config,
        ff_8::Configuration const config = {})
        : m_filters_array(load_filters_array(
@@ -1343,7 +1344,7 @@ struct filters
 
      template<FilterTag Tag>
           requires(FiltersSizeT > static_cast<std::size_t>(Tag))
-     filter<Tag> &get()
+     Filter<Tag> &get()
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
           // using ValueT = typename ConfigKeys<Tag>::value_type;
@@ -1367,13 +1368,13 @@ struct filters
                }
           }
 
-          return std::get<filter<Tag>>(m_filters_array[index]);
+          return std::get<Filter<Tag>>(m_filters_array[index]);
      }
 
 
      template<FilterTag Tag>
           requires(FiltersSizeT > static_cast<std::size_t>(Tag))
-     const filter<Tag> &get() const
+     const Filter<Tag> &get() const
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Tag);
           // using ValueT = typename ConfigKeys<Tag>::value_type;
@@ -1396,7 +1397,7 @@ struct filters
                }
           }
 
-          return std::get<filter<Tag>>(m_filters_array[index]);
+          return std::get<Filter<Tag>>(m_filters_array[index]);
      }
 
 
@@ -1425,7 +1426,7 @@ struct filters
             && !std::same_as<
                std::remove_cvref_t<TypeT>,
                toml::table>)
-     filter<Tag> &update(TypeT &&input)
+     Filter<Tag> &update(TypeT &&input)
      {
           return get<Tag>().update(std::forward<TypeT>(input));
      }
@@ -1442,14 +1443,14 @@ struct filters
 
      template<FilterTag Tag>
           requires(FiltersSizeT > static_cast<std::size_t>(Tag))
-     filter<Tag> &enable()
+     Filter<Tag> &enable()
      {
           return get<Tag>().enable();
      }
 
      template<FilterTag Tag>
           requires(FiltersSizeT > static_cast<std::size_t>(Tag))
-     filter<Tag> &disable()
+     Filter<Tag> &disable()
      {
           return get<Tag>().disable();
      }
@@ -1514,10 +1515,10 @@ namespace TileOperations
 {
      template<open_viii::graphics::background::is_tile tileT>
      bool fail_any_filters(
-       const ff_8::filters &filters,
+       const ff_8::Filters &Filters,
        const tileT         &tile)
      {
-          return !std::invoke(filters, tile);
+          return !std::invoke(Filters, tile);
      }
 }// namespace TileOperations
 }// namespace ff_8

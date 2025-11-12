@@ -3,13 +3,13 @@
 //
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
-#include "compact_type.hpp"
 #include "draw_mode.hpp"
-#include "filter.hpp"
 #include "formatters.hpp"
 #include "tile_sizes.hpp"
 #include <ff_8/Colors.hpp>
+#include <ff_8/CompactTypeT.hpp>
 #include <ff_8/Configuration.hpp>
+#include <ff_8/Filter.hpp>
 #include <ff_8/Utilities.hpp>
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
@@ -1450,7 +1450,7 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
 // For filters that are constructed with full context and do not support default
 // init
 template<ff_8::FilterTag Tag>
-struct SelectionLoadStrategy<ff_8::filter<Tag>>
+struct SelectionLoadStrategy<ff_8::Filter<Tag>>
 {
      // No loading: object is fully initialized elsewhere
      static bool load(auto &&...) noexcept
@@ -1566,7 +1566,7 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
 
 // Skip updating for filters — they update themselves
 template<ff_8::FilterTag Tag>
-struct SelectionUpdateStrategy<ff_8::filter<Tag>>
+struct SelectionUpdateStrategy<ff_8::Filter<Tag>>
 {
      static void update(auto &&...) noexcept
      {

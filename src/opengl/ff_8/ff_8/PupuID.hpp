@@ -7,6 +7,7 @@
 #include "open_viii/graphics/background/Map.hpp"
 #include <compare>
 #include <fmt/format.h>
+#include <string>
 namespace ff_8
 {
 struct PupuID

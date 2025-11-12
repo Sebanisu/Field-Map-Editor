@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
-#include "filter.hpp"
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
 #include "map_operation.hpp"
@@ -14,6 +13,7 @@
 #include "tile_sizes.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <ff_8/Filter.hpp>
 #include <ff_8/MapGroup.hpp>
 #include <ff_8/MapHistory.hpp>
 #include <ff_8/UniqueValues.hpp>
@@ -227,7 +227,7 @@ struct [[nodiscard]] map_sprite// final
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
                            m_child_textures_map = {};
-     mutable ff_8::filters m_filters
+     mutable ff_8::Filters m_filters
        = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>           m_selections             = {};
      bool                                m_using_imported_texture = {};
@@ -348,7 +348,7 @@ struct [[nodiscard]] map_sprite// final
      map_sprite(
        ff_8::MapGroup                         MapGroup,
        map_sprite_settings                    settings,
-       ff_8::filters                          in_filters,
+       ff_8::Filters                          in_filters,
        std::weak_ptr<Selections>              selections,
        std::shared_ptr<glengine::FrameBuffer> framebuffer
        = std::make_shared<glengine::FrameBuffer>());
@@ -423,9 +423,9 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] map_sprite    with_field(
           WeakField        field,
           open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite with_filters(ff_8::filters filters) const;
+     [[nodiscard]] map_sprite with_filters(ff_8::Filters filters) const;
      [[nodiscard]] bool       empty() const;
-     [[nodiscard]] const ff_8::filters &filter() const;
+     [[nodiscard]] const ff_8::Filters &filter() const;
      [[nodiscard]] map_sprite           update(
                  ff_8::MapGroup MapGroup,
                  bool           draw_swizzle) const;
@@ -435,7 +435,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] Rectangle          get_canvas() const;
      [[nodiscard]] bool               undo_enabled() const;
      [[nodiscard]] bool               redo_enabled() const;
-     [[nodiscard]] ff_8::filters     &filter();
+     [[nodiscard]] ff_8::Filters     &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const
      // BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] bool               fallback_textures() const;
@@ -488,7 +488,7 @@ struct [[nodiscard]] map_sprite// final
        const std::shared_ptr<Selections> &selections);
      void cache_pupuids(
        const std::string &,
-       const ff_8::filters &) const;
+       const ff_8::Filters &) const;
      [[nodiscard]] const std::map<
        std::string,
        std::string> &
@@ -528,7 +528,7 @@ struct [[nodiscard]] map_sprite// final
      void refresh_tooltip(const std::string &);
      void apply_multi_pupu_filter_deswizzle_combined_toml_table(
        const std::string                              &file_name_key,
-       const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter);
+       const ff_8::Filter<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(
        const std::vector<std::string> &,
        const std::string &);

@@ -5,7 +5,9 @@
 #include "NormalizedSourceTile.hpp"
 // #include "tile_sizes.hpp"
 #include "Colors.hpp"
+#include "CompactTypeT.hpp"
 #include "DrawBitT.hpp"
+#include "FlattenTypeT.hpp"
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -85,33 +87,6 @@ static constexpr auto to_hex(const tileT &tile)
 //      }
 // };
 
-template<>
-struct fmt::formatter<ff_8::DrawBitT> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       ff_8::DrawBitT draw_bit_t,
-       FormatContext &ctx) const
-     {
-          using namespace open_viii::graphics::background;
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (draw_bit_t)
-          {
-               case ff_8::DrawBitT::all:
-                    name = "all"sv;
-                    break;
-               case ff_8::DrawBitT::disabled:
-                    name = "disabled"sv;
-                    break;
-               case ff_8::DrawBitT::enabled:
-                    name = "enabled"sv;
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
 
 template<>
 struct fmt::formatter<open_viii::graphics::background::BlendModeT>
@@ -632,38 +607,6 @@ struct fmt::formatter<ff_8::Color>
 
 
 // template<>
-// struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
-// {// parse is inherited from formatter<string_view>.
-//      template<typename FormatContext>
-//      constexpr auto format(
-//        fme::compact_type in_compact_type,
-//        FormatContext    &ctx) const
-//      {
-//           using namespace std::string_view_literals;
-//           std::string_view name = {};
-//           switch (in_compact_type)
-//           {
-//                case fme::compact_type::map_order_ffnx:
-//                     name = fme::gui_labels::compact_map_order_ffnx2;
-//                     break;
-//                case fme::compact_type::map_order:
-//                     name = fme::gui_labels::map_order;
-//                     break;
-//                case fme::compact_type::move_only_conflicts:
-//                     name = fme::gui_labels::move_conflicts;
-//                     break;
-//                case fme::compact_type::rows:
-//                     name = fme::gui_labels::rows;
-//                     break;
-//                case fme::compact_type::all:
-//                     name = fme::gui_labels::all;
-//                     break;
-//           }
-//           return fmt::formatter<std::string_view>::format(name, ctx);
-//      }
-// };
-
-// template<>
 // struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 // {
 //      // parse is inherited from formatter<string_view>.
@@ -767,30 +710,4 @@ struct fmt::formatter<ff_8::Color>
 //      }
 // };
 
-// template<>
-// struct fmt::formatter<fme::flatten_type> : fmt::formatter<std::string_view>
-// {
-//      // parse is inherited from formatter<string_view>.
-//      template<typename FormatContext>
-//      constexpr auto format(
-//        fme::flatten_type in_flatten_type,
-//        FormatContext    &ctx) const
-//      {
-//           using namespace std::string_view_literals;
-//           std::string_view name = {};
-//           switch (in_flatten_type)
-//           {
-//                case fme::flatten_type::bpp:
-//                     name = fme::gui_labels::bpp;
-//                     break;
-//                case fme::flatten_type::palette:
-//                     name = fme::gui_labels::palette;
-//                     break;
-//                case fme::flatten_type::both:
-//                     name = fme::gui_labels::bpp_and_palette;
-//                     break;
-//           }
-//           return fmt::formatter<std::string_view>::format(name, ctx);
-//      }
-// };
 #endif /* ECF4A438_F519_4336_8557_5AD27FA11B10 */
