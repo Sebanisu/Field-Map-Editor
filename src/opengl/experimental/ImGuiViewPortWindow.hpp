@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_IMGUIVIEWPORTWINDOW_HPP
 #define FIELD_MAP_EDITOR_IMGUIVIEWPORTWINDOW_HPP
-#include "ImGuiPushStyleVar.hpp"
 #include "OrthographicCameraController.hpp"
 #include <glengine/FrameBuffer.hpp>
 #include <glengine/FrameBufferBackup.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
 #include <imgui_utils/ImGuiPushID.hpp>
+#include <imgui_utils/ImGuiPushStyleVar.hpp>
 namespace glengine
 {
 inline namespace impl
@@ -27,7 +27,7 @@ inline namespace impl
 
           void on_render(const std::invocable auto &&callable) const
           {
-               const auto pop_style = ImGuiPushStyleVar(
+               const auto pop_style = imgui_utils::ImGuiPushStyleVar(
                  ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
                {
                     const auto pop_id_0 = imgui_utils::ImGuiPushId();

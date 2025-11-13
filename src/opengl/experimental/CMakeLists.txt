@@ -29,7 +29,6 @@ add_executable(
   ff8/MapTileAdjustments.hpp
   ff8/SimilarAdjustments.cpp
   ff8/MenuSaveToggles.hpp
-  ImGuiPushStyleVar.cpp
   ImGuiViewPortWindow.cpp
   main.cpp
   Menu.cpp

@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_IMGUIPUSHSTYLEVAR_HPP
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
-namespace glengine
+namespace imgui_utils
 {
 
 [[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(
@@ -14,15 +14,15 @@ namespace glengine
   float         val) noexcept
 {
      ImGui::PushStyleVar(style, val);
-     return ScopeGuard{ []() { ImGui::PopStyleVar(); } };
+     return glengine::ScopeGuard{ []() { ImGui::PopStyleVar(); } };
 }
 [[maybe_unused]] [[nodiscard]] inline auto ImGuiPushStyleVar(
   ImGuiStyleVar style,
   const ImVec2 &val) noexcept
 {
      ImGui::PushStyleVar(style, val);
-     return ScopeGuard{ []() { ImGui::PopStyleVar(); } };
+     return glengine::ScopeGuard{ []() { ImGui::PopStyleVar(); } };
 }
 
-}// namespace glengine
+}// namespace imgui_utils
 #endif// FIELD_MAP_EDITOR_IMGUIPUSHSTYLEVAR_HPP
