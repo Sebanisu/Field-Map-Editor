@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_IMGUIINDENT_HPP
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
-namespace glengine
+namespace imgui_utils
 {
 [[nodiscard]] inline auto ImGuiIndent(float width = 0.F) noexcept
 
@@ -14,5 +14,5 @@ namespace glengine
      ImGui::Indent(width);
      return glengine::ScopeGuard{ [=]() { ImGui::Unindent(width); } };
 }
-}// namespace glengine
+}// namespace imgui_utils
 #endif// FIELD_MAP_EDITOR_IMGUIINDENT_HPP

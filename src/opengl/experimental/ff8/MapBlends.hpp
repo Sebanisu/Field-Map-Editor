@@ -4,10 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPBLENDS_HPP
 #define FIELD_MAP_EDITOR_MAPBLENDS_HPP
-#include "ImGuiIndent.hpp"
 #include <glengine/BlendModeEquations.hpp>
 #include <glengine/BlendModeParameters.hpp>
 #include <glengine/GLCheck.hpp>
+#include <imgui_utils/ImGuiIndent.hpp>
 class MapBlends
 {
    public:
@@ -16,7 +16,7 @@ class MapBlends
           bool changed = false;
           if (ImGui::CollapsingHeader("Add Blend"))
           {
-               const auto un_indent = glengine::ImGuiIndent();
+               const auto un_indent = imgui_utils::ImGuiIndent();
                if (ImGui::Checkbox(
                      "Percent Blends (50%,25%)", &m_enable_percent_blend))
                {
@@ -31,7 +31,7 @@ class MapBlends
           }
           if (ImGui::CollapsingHeader("Subtract Blend"))
           {
-               const auto un_indent = glengine::ImGuiIndent();
+               const auto un_indent = imgui_utils::ImGuiIndent();
                const auto pop       = imgui_utils::ImGuiPushId();
                if (blend_combos(
                      m_subtract_parameter_selections,

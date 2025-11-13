@@ -6,8 +6,8 @@
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #include "UniqueTileValues.hpp"
 #include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiIndent.hpp>
 #include <imgui_utils/ImGuiPushID.hpp>
-#include <ImGuiIndent.hpp>
 namespace ff_8
 {
 class MapFilters
@@ -62,7 +62,7 @@ class MapFilters
                  = glengine::ScopeGuard{ []() { ImGui::End(); } };
                if (ImGui::Begin("Map Filters"))
                {
-                    const auto        un_indent_0 = glengine::ImGuiIndent();
+                    const auto        un_indent_0 = imgui_utils::ImGuiIndent();
                     static const auto common
                       = [](
                           const char                            *label,
@@ -88,7 +88,8 @@ class MapFilters
                          const auto push_id_0 = imgui_utils::ImGuiPushId();
                          if (ImGui::CollapsingHeader(label))
                          {
-                              const auto un_indent_1 = glengine::ImGuiIndent();
+                              const auto un_indent_1
+                                = imgui_utils::ImGuiIndent();
 
                               auto boolptr = std::ranges::begin(bool_range);
                               const auto boolsent

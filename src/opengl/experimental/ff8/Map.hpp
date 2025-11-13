@@ -8,7 +8,6 @@
 #include "Changed.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
-#include "ImGuiIndent.hpp"
 #include "ImGuiTileDisplayWindow.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
@@ -36,6 +35,7 @@
 #include <glengine/PixelBuffer.hpp>
 #include <imgui_utils/GenericCombo.hpp>
 #include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiIndent.hpp>
 #include <imgui_utils/ImGuiPushID.hpp>
 #include <source_location>
 #include <type_traits>
