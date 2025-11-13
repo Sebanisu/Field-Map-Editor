@@ -7,12 +7,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-#include "archives_group.hpp"
 #include "as_string.hpp"
 #include "batch.hpp"
-#include "colors.hpp"
-#include "compact_type.hpp"
-#include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "custom_paths_window.hpp"
 #include "draw_window.hpp"
@@ -30,10 +26,14 @@
 #include "map_directory_mode.hpp"
 #include "mouse_positions.hpp"
 #include "RangeConsumer.hpp"
-#include "safedir.hpp"
 #include "Selections.hpp"
 #include "textures_window.hpp"
 #include <cstdint>
+#include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/Colors.hpp>
+#include <ff_8/CompactTypeT.hpp>
+#include <ff_8/Configuration.hpp>
+#include <ff_8/SafeDir.hpp>
 #include <fmt/chrono.h>
 #include <glengine/ScopeGuard.hpp>
 #include <glengine/TimeStep.hpp>
@@ -71,13 +71,13 @@ struct gui
      // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader
      // = {};
      static constexpr std::int8_t tile_size_px = { 16 };
-     static constexpr std::uint8_t   tile_size_px_unsigned = { 16U };
-     int                             m_field_index         = {};
-     float                           m_scale_width         = {};
-     glengine::TimeStep              m_delta_clock         = {};
-     float                           m_elapsed_time        = {};///< seconds
-     std::shared_ptr<archives_group> m_archives_group      = {};
-     batch                           m_batch_window        = {};
+     static constexpr std::uint8_t        tile_size_px_unsigned = { 16U };
+     int                                  m_field_index         = {};
+     float                                m_scale_width         = {};
+     glengine::TimeStep                   m_delta_clock         = {};
+     float                                m_elapsed_time   = {};///< seconds
+     std::shared_ptr<ff_8::ArchivesGroup> m_archives_group = {};
+     batch                                m_batch_window   = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
      std::array<float, 2>                               xy           = {};
      std::shared_ptr<mim_sprite>                        m_mim_sprite = {};
@@ -126,14 +126,14 @@ struct gui
 
      create_color_button   blue_color_button = {};
      create_color_button   green_color_button
-       = { { .button_color        = colors::ButtonGreen,
-             .button_hover_color  = colors::ButtonGreenHovered,
-             .button_active_color = colors::ButtonGreenActive } };
+       = { { .button_color        = ff_8::Colors::ButtonGreen,
+             .button_hover_color  = ff_8::Colors::ButtonGreenHovered,
+             .button_active_color = ff_8::Colors::ButtonGreenActive } };
 
      create_color_button pink_color_button
-       = { { .button_color        = colors::ButtonPink,
-             .button_hover_color  = colors::ButtonPinkHovered,
-             .button_active_color = colors::ButtonPinkActive } };
+       = { { .button_color        = ff_8::Colors::ButtonPink,
+             .button_hover_color  = ff_8::Colors::ButtonPinkHovered,
+             .button_active_color = ff_8::Colors::ButtonPinkActive } };
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };
@@ -148,7 +148,7 @@ struct gui
                                  m_future_of_future_consumer = {};
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
-     archives_group              get_archives_group() const;
+     ff_8::ArchivesGroup         get_archives_group() const;
      void                        update_path();
      void                        consume_one_future();
      std::shared_ptr<mim_sprite> get_mim_sprite() const;
@@ -192,18 +192,18 @@ struct gui
      void text_mouse_position() const;
      void combo_swizzle_path();
      bool
-       combo_swizzle_path(ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const;
+       combo_swizzle_path(ff_8::Filter<ff_8::FilterTag::Swizzle> &filter) const;
      void combo_swizzle_as_one_image_path();
      bool combo_swizzle_as_one_image_path(
-       ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
      void combo_deswizzle_path();
      bool combo_deswizzle_path(
-       ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::Deswizzle> &filter) const;
      void combo_full_filename_path();
      bool combo_full_filename_path(
-       ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const;
+       ff_8::Filter<ff_8::FilterTag::FullFileName> &filter) const;
      void combo_map_path();
-     bool combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const;
+     bool combo_map_path(ff_8::Filter<ff_8::FilterTag::Map> &filter) const;
      const open_viii::LangT &get_coo() const;
      file_dialog_mode        m_file_dialog_mode       = {};
      map_directory_mode      m_modified_directory_map = {};
@@ -211,7 +211,7 @@ struct gui
      std::filesystem::path   m_loaded_deswizzle_texture_path{};
      //     void popup_batch_reswizzle(); void popup_batch_deswizzle();
      // static void              popup_batch_common_filter_start(
-     //                ff_8::filter<std::filesystem::path> &filter,
+     //                ff_8::Filter<std::filesystem::path> &filter,
      //                std::string_view                         prefix,
      //                std::string_view                         base_name);
      // void popup_batch_embed();

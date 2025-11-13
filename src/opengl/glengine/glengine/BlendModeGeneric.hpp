@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_BLENDMODEGENERIC_HPP
 #define FIELD_MAP_EDITOR_BLENDMODEGENERIC_HPP
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 namespace glengine
 {
 template<typename SelectionsStringsLambdaT, typename SelectionsValuesLambdaT>
@@ -78,7 +78,7 @@ class BlendModeGenerics
           bool changed = false;
           for (std::size_t i = 0U; i != std::ranges::size(labels); ++i)
           {
-               if (glengine::GenericCombo(
+               if (imgui_utils::GenericCombo(
                      labels[i].data(),
                      m_selections[i],
                      UsedSelectionsT::selection_strings))

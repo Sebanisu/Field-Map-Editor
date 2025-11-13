@@ -141,7 +141,7 @@ std::future<void>
                 [](auto &&path) -> std::filesystem::path
                 { return std::forward<decltype(path)>(path); })
               | std::views::filter(
-                [](safedir path)
+                [](ff_8::SafeDir path)
                 { return path.is_exists() && !path.is_dir(); });
           if (filtered_paths.begin() == filtered_paths.end())
           {

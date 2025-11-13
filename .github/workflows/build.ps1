@@ -113,7 +113,7 @@ cmd.exe /c "call $vcpkgRoot\bootstrap-vcpkg.bat"
 vcpkg integrate install
 
 # Start the build
-cmake --preset "${env:_RELEASE_CONFIGURATION}"
+cmake --preset "${env:_RELEASE_CONFIGURATION}" -DCI_BUILD=ON
 cmake --build --preset "${env:_RELEASE_CONFIGURATION}"
 
 # Start the packaging

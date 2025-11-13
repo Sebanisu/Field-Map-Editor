@@ -1,0 +1,12 @@
+FF8_menu = [ false, true, true ]
+coo_index = 0
+coo_string = 'English'
+ff8_directory_paths = [
+    'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII',
+    'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII Remastered',
+    'D:\games\ff82000',
+    'd:\games\ff82000',
+    'd:\tim',
+    'e:\'
+]
+upscale_paths_vector = [ 'D:\Angelwing-Ultima_Remastered_v1-0-a\field_bg' ]

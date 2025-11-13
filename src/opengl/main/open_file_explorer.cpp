@@ -3,7 +3,7 @@
 //
 
 #include "open_file_explorer.hpp"
-#include "safedir.hpp"
+#include <ff_8/SafeDir.hpp>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -47,7 +47,7 @@ void open_directory(const std::filesystem::path &path)
 }
 void open_file_explorer(const std::filesystem::path &path)
 {
-     const auto safe = safedir{ path };
+     const auto safe = ff_8::SafeDir{ path };
      if (!safe.is_exists())
      {
           return;

@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #include "UniqueTileValues.hpp"
-#include <ImGuiDisabled.hpp>
-#include <ImGuiIndent.hpp>
-#include <ImGuiPushID.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiIndent.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 namespace ff_8
 {
 class MapFilters
@@ -55,13 +55,14 @@ class MapFilters
      {
           bool ret_changed = false;
           {
-               const auto push_id        = glengine::ImGuiPushId();
-               const auto filter_disable = glengine::ImGuiDisabled(m_disabled);
+               const auto push_id = imgui_utils::ImGuiPushId();
+               const auto filter_disable
+                 = imgui_utils::ImGuiDisabled(m_disabled);
                auto const window_end
                  = glengine::ScopeGuard{ []() { ImGui::End(); } };
                if (ImGui::Begin("Map Filters"))
                {
-                    const auto        un_indent_0 = glengine::ImGuiIndent();
+                    const auto        un_indent_0 = imgui_utils::ImGuiIndent();
                     static const auto common
                       = [](
                           const char                            *label,
@@ -84,10 +85,11 @@ class MapFilters
                          assert(
                            std::ranges::size(possible_value_range)
                            >= std::ranges::size(used_value_range));
-                         const auto push_id_0 = glengine::ImGuiPushId();
+                         const auto push_id_0 = imgui_utils::ImGuiPushId();
                          if (ImGui::CollapsingHeader(label))
                          {
-                              const auto un_indent_1 = glengine::ImGuiIndent();
+                              const auto un_indent_1
+                                = imgui_utils::ImGuiIndent();
 
                               auto boolptr = std::ranges::begin(bool_range);
                               const auto boolsent
@@ -108,11 +110,11 @@ class MapFilters
                                      used_value_range, *current_value);
 
                                    const auto disabled
-                                     = glengine::ImGuiDisabled(
+                                     = imgui_utils ::ImGuiDisabled(
                                        found
                                        == std::ranges::end(used_value_range));
 
-                                   const auto pop = glengine::ImGuiPushId();
+                                   const auto pop = imgui_utils::ImGuiPushId();
                                    const auto string
                                      = fmt::format("{:>4}", *current_string);
                                    auto size
@@ -126,7 +128,7 @@ class MapFilters
                                         ImGui::SameLine();
                                    {
                                         const auto push_id_1
-                                          = glengine::ImGuiPushId();
+                                          = imgui_utils::ImGuiPushId();
                                         if (ImGui::Selectable(
                                               string.c_str(),
                                               static_cast<bool>(*boolptr),
@@ -143,10 +145,10 @@ class MapFilters
                               }
                               ImGui::Dummy(ImVec2(2.F, 2.F));
                               {
-                                   const auto pop = glengine::ImGuiPushId();
+                                   const auto pop = imgui_utils::ImGuiPushId();
                                    {
                                         const auto push_id_2
-                                          = glengine::ImGuiPushId();
+                                          = imgui_utils::ImGuiPushId();
                                         if (ImGui::Button("All"))
                                         {
                                              std::ranges::fill(
@@ -161,10 +163,10 @@ class MapFilters
                               ImGui::Dummy(ImVec2(2.F, 2.F));
                               ImGui::SameLine();
                               {
-                                   const auto pop = glengine::ImGuiPushId();
+                                   const auto pop = imgui_utils::ImGuiPushId();
                                    {
                                         const auto push_id_3
-                                          = glengine::ImGuiPushId();
+                                          = imgui_utils::ImGuiPushId();
                                         if (ImGui::Button("None"))
                                         {
                                              std::ranges::fill(

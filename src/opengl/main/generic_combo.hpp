@@ -4,19 +4,19 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
-#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "gui/fa_icons.hpp"
 #include "gui/gui_labels.hpp"
-#include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
-#include "unique_values.hpp"
 #include <algorithm>
+#include <ff_8/Filter.hpp>
+#include <ff_8/UniqueValues.hpp>
 #include <fmt/format.h>
 #include <functional>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <ranges>
 #include <spdlog/spdlog.h>
 #include <string_view>
@@ -162,7 +162,7 @@ class GenericComboWithFilter
      }
      void renderCheckBox() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           if (bool checked = filter_.get().enabled();
               ImGui::Checkbox("", &checked))
           {
@@ -174,7 +174,7 @@ class GenericComboWithFilter
 
      void renderComboBox() const
      {
-          const auto  _            = PushPopID();
+          const auto  _            = imgui_utils::ImGuiPushId();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = [&]()
           {
@@ -218,7 +218,7 @@ class GenericComboWithFilter
                     // want, outside or inside your objects
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id = PushPopID();
+                         const auto pop_id = imgui_utils::ImGuiPushId();
                          const auto pop_column
                            = glengine::ScopeGuard{ &ImGui::NextColumn };
                          if (ImGui::Selectable(c_str_value, is_selected))
@@ -270,7 +270,7 @@ class GenericComboWithFilter
 
      void renderLeftButton() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const auto check_valid = [&]()
           {
@@ -295,7 +295,7 @@ class GenericComboWithFilter
 
      void renderRightButton() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const auto check_valid
             = [&]() { return (current_idx_ + 1 >= size_of_values()); };
@@ -323,7 +323,7 @@ class GenericComboWithFilter
           }
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
-          const auto  _           = PushPopID();
+          const auto  _           = imgui_utils::ImGuiPushId();
           if (ImGui::Button(
                 ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
@@ -480,7 +480,7 @@ class GenericComboWithToggle
 
      void renderCheckBox() const
      {
-          const auto _       = PushPopID();
+          const auto _       = imgui_utils::ImGuiPushId();
           bool       checked = enabled_.get();
           if (ImGui::Checkbox("", &checked))
           {
@@ -492,7 +492,7 @@ class GenericComboWithToggle
 
      void renderComboBox() const
      {
-          const auto  _            = PushPopID();
+          const auto  _            = imgui_utils::ImGuiPushId();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = [&]()
           {
@@ -527,7 +527,7 @@ class GenericComboWithToggle
                       = static_cast<decltype(current_idx_)>(index_raw);
                     const bool  is_selected = (index == current_idx_);
                     const char *c_str_value = std::ranges::data(string);
-                    const auto  pop_id      = PushPopID();
+                    const auto  pop_id      = imgui_utils::ImGuiPushId();
                     const auto  pop_column
                       = glengine::ScopeGuard{ &ImGui::NextColumn };
                     if (ImGui::Selectable(c_str_value, is_selected))
@@ -561,7 +561,7 @@ class GenericComboWithToggle
 
      void renderLeftButton() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const bool disabled = current_idx_ == 0;
           ImGui::BeginDisabled(disabled);
@@ -576,7 +576,7 @@ class GenericComboWithToggle
 
      void renderRightButton() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const bool disabled = current_idx_ + 1 >= size_of_values();
           ImGui::BeginDisabled(disabled);
@@ -596,7 +596,7 @@ class GenericComboWithToggle
 
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
-          const auto  _           = PushPopID();
+          const auto  _           = imgui_utils::ImGuiPushId();
           if (ImGui::Button(
                 ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
@@ -964,7 +964,7 @@ class GenericComboWithMultiFilter
      // }
      void renderCheckBox() const
      {
-          const auto _  = PushPopID();
+          const auto _  = imgui_utils::ImGuiPushId();
           bool disabled = std::ranges::none_of(current_idx_, std::identity{});
           if (disabled && filter_.get().enabled())
           {
@@ -985,7 +985,7 @@ class GenericComboWithMultiFilter
 
      void renderComboBox() const
      {
-          const auto  _            = PushPopID();
+          const auto  _            = imgui_utils::ImGuiPushId();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = [&]()
           {
@@ -1038,7 +1038,7 @@ class GenericComboWithMultiFilter
                     // want, outside or inside your objects
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id = PushPopID();
+                         const auto pop_id = imgui_utils::ImGuiPushId();
                          const auto pop_column
                            = glengine::ScopeGuard{ &ImGui::NextColumn };
                          if (ImGui::Selectable(
@@ -1092,7 +1092,7 @@ class GenericComboWithMultiFilter
 
                ImGui::SameLine(0, spacing_);
                const float button_size = ImGui::GetFrameHeight();
-               const auto  _           = PushPopID();
+               const auto  _           = imgui_utils::ImGuiPushId();
 
                if (ImGui::Button(
                      ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
@@ -1287,7 +1287,7 @@ class GenericComboWithFilterAndFixedToggles
           {
                return;
           }
-          const auto  _ = PushPopID();
+          const auto  _ = imgui_utils::ImGuiPushId();
           const auto &current_fixed_toggle
             = *getNext(fixed_toggles_.get(), current_idx_);
           ImGui::BeginDisabled(
@@ -1304,7 +1304,7 @@ class GenericComboWithFilterAndFixedToggles
 
      void renderComboBox() const
      {
-          const auto  _            = PushPopID();// RAII for ImGui ID stack
+          const auto  _ = imgui_utils::ImGuiPushId();// RAII for ImGui ID stack
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = [&]()
           {
@@ -1345,7 +1345,7 @@ class GenericComboWithFilterAndFixedToggles
                     const auto index
                       = static_cast<decltype(current_idx_)>(index_raw);
                     const bool is_selected = current_idx_ == index;
-                    const auto pop_id      = PushPopID();
+                    const auto pop_id      = imgui_utils::ImGuiPushId();
                     const auto pop_column
                       = glengine::ScopeGuard{ &ImGui::NextColumn };
 
@@ -1406,7 +1406,7 @@ class GenericComboWithFilterAndFixedToggles
 
      void renderLeftButton() const
      {
-          const auto _           = PushPopID();
+          const auto _           = imgui_utils::ImGuiPushId();
 
           const auto check_valid = [&]()
           {
@@ -1448,7 +1448,7 @@ class GenericComboWithFilterAndFixedToggles
 
      void renderRightButton() const
      {
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const auto check_valid
             = [&]() { return (current_idx_ + 1 >= size_of_values()); };
@@ -1490,7 +1490,7 @@ class GenericComboWithFilterAndFixedToggles
           }
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
-          const auto  _           = PushPopID();
+          const auto  _           = imgui_utils::ImGuiPushId();
           if (ImGui::Button(
                 ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {
@@ -1518,7 +1518,7 @@ class GenericComboWithFilterAndFixedToggles
           ImGui::SetCursorScreenPos(ImGui::GetItemRectMin());
 
           // Make invisible button the same size as the text
-          const auto _ = PushPopID();
+          const auto _ = imgui_utils::ImGuiPushId();
           ImGui::InvisibleButton("##hover_area", textSize);
           tool_tip(name_);
 
@@ -1671,7 +1671,7 @@ class GenericCombo
 
      void renderComboBox() const
      {
-          const auto  pop_id       = PushPopID();
+          const auto  pop_id       = imgui_utils::ImGuiPushId();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = [&]()
           {
@@ -1737,7 +1737,7 @@ class GenericCombo
                     }
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id2 = PushPopID();
+                         const auto pop_id2 = imgui_utils::ImGuiPushId();
                          const auto pop_column
                            = glengine::ScopeGuard{ &ImGui::NextColumn };
 
@@ -1781,7 +1781,7 @@ class GenericCombo
 
      void renderLeftButton() const
      {
-          const auto _            = PushPopID();
+          const auto _            = imgui_utils::ImGuiPushId();
           const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
           const auto check_valid = [&]()
@@ -1813,7 +1813,7 @@ class GenericCombo
 
      void renderRightButton() const
      {
-          const auto pop_id_right = PushPopID();
+          const auto pop_id_right = imgui_utils::ImGuiPushId();
           ImGui::SameLine(0, spacing_);
           const auto check_valid
             = [&]() { return (current_idx_ + 1 >= size_of_values()); };
@@ -1840,7 +1840,7 @@ class GenericCombo
           }
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
-          const auto  _           = PushPopID();
+          const auto  _           = imgui_utils::ImGuiPushId();
           if (ImGui::Button(
                 ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {

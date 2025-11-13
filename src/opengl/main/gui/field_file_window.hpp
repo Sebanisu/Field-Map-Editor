@@ -2,9 +2,9 @@
 #define FFE291E8_6AE6_403A_A4F4_7173F0D98EE5
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include "Selections.hpp"
 #include <glengine/ScopeGuard.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <open_viii/archive/FIFLFS.hpp>
 namespace fme
 {
@@ -89,7 +89,7 @@ struct field_file_window
           }
           for (const std::string_view path : paths)
           {
-               const auto pop_id = PushPopID();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                (void)ImGui::Selectable(path.data());
                if (ImGui::BeginPopupContextItem())// <-- use last item id as
                                                   // popup id
