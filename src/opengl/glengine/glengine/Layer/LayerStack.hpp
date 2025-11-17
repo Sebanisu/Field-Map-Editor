@@ -42,6 +42,7 @@ namespace Layer
           void emplace_overlays(T &&...args) const
           {
                m_layers.emplace_back(std::forward<T>(args)...);
+               end_of_layers = std::ranges::begin(m_layers);
           }
 
         private:
