@@ -35,8 +35,9 @@ namespace Layer
           class ItemModel final : public ItemConcept
           {
              public:
-               ItemModel(renderableT t)
-                 : m_renderable(std::move(t))
+               template<typename... Args>
+               ItemModel(Args &&...args)
+                 : m_renderable(std::forward<Args>(args)...)
                {
                }
                void on_update(float ts) const final
@@ -57,6 +58,16 @@ namespace Layer
                }
                ItemModel() = default;
 
+               auto *get()
+               {
+                    return &m_renderable;
+               }
+
+               const auto *get() const
+               {
+                    return &m_renderable;
+               }
+
              private:
                renderableT m_renderable;
           };
@@ -76,7 +87,7 @@ namespace Layer
             typename T,
             typename... argsT>
           Item(
-            std::in_place_type_t<T>,
+            const std::in_place_type_t<T> &,
             argsT &&...args)
             : m_impl(
                 std::make_unique<ItemModel<std::remove_cvref_t<T>>>(
@@ -95,8 +106,22 @@ namespace Layer
           Item &operator=(const Item &other)     = delete;
           Item(Item &&other) noexcept            = default;
           Item &operator=(Item &&other) noexcept = default;
-
                 operator bool() const;
+          // template<typename T>
+          // T *get()
+          // {
+          //      if (auto ptr = dynamic_cast<const ItemModel<T>
+          //      *>(m_impl.get()))
+          //           return ptr->get();
+          //      return nullptr;
+          // }
+          template<typename T>
+          const T *get() const
+          {
+               if (auto ptr = dynamic_cast<const ItemModel<T> *>(m_impl.get()))
+                    return ptr->get();
+               return nullptr;
+          }
      };
 }// namespace Layer
 }// namespace glengine

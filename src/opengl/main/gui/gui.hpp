@@ -35,6 +35,7 @@
 #include <ff_8/Configuration.hpp>
 #include <ff_8/SafeDir.hpp>
 #include <fmt/chrono.h>
+#include <glengine/Layer/LayerStack.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <glengine/TimeStep.hpp>
 #include <imgui.h>
@@ -77,13 +78,13 @@ struct gui
      glengine::TimeStep                   m_delta_clock         = {};
      float                                m_elapsed_time   = {};///< seconds
      std::shared_ptr<ff_8::ArchivesGroup> m_archives_group = {};
+     glengine::Layer::Stack               m_layers         = {};
      batch                                m_batch_window   = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
      std::array<float, 2>                               xy           = {};
      std::shared_ptr<mim_sprite>                        m_mim_sprite = {};
      std::shared_ptr<map_sprite>                        m_map_sprite = {};
-     filter_window m_filter_window = { m_selections, m_map_sprite };
-     draw_window   m_draw_window = { m_selections, m_mim_sprite, m_map_sprite };
+     filter_window             m_filter_window = { m_selections, m_map_sprite };
      custom_paths_window       m_custom_paths_window = { m_selections };
      field_file_window         m_field_file_window = { m_field, m_selections };
      keyboard_shortcuts_window m_keyboard_shortcuts_window = { m_selections };

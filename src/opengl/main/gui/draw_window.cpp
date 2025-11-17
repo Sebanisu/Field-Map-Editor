@@ -36,7 +36,7 @@ void fme::draw_window::update(std::weak_ptr<fme::map_sprite> in_map_sprite)
 {
      m_map_sprite = std::move(in_map_sprite);
 }
-void fme::draw_window::render() const
+void fme::draw_window::on_im_gui_update() const
 {
 
      const auto selections = m_selections.lock();
@@ -317,7 +317,7 @@ void fme::draw_window::render() const
 }
 
 
-void fme::draw_window::hovered_index(std::ptrdiff_t index)
+void fme::draw_window::hovered_index(std::ptrdiff_t index) const
 {
      m_hovered_index = index;
 }
@@ -329,7 +329,7 @@ const fme::MousePositions &fme::draw_window::mouse_positions() const
 {
      return m_mouse_positions;
 }
-void fme::draw_window::update_mouse_positions()
+void fme::draw_window::on_update(float) const
 {
      m_mouse_positions.update();
 }

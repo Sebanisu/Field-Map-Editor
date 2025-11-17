@@ -246,15 +246,14 @@ void gui::start(GLFWwindow *const window)
           m_changed = false;
           imgui_utils::ImGuiPushId.reset();// reset id counter
           m_elapsed_time = m_delta_clock;
+
           consume_one_future();
-          glfwPollEvents();// Input
-
-          m_draw_window.update_mouse_positions();
-
+          glfwPollEvents();// Input handling
           ImGui_ImplGlfw_NewFrame();
           ImGui_ImplOpenGL3_NewFrame();
           ImGui::NewFrame();
           ImGuizmo::BeginFrame();
+          m_layers.on_update(m_elapsed_time);
 
           if (m_selections->get<ConfigKey::ForceReloadingOfTextures>())
           {
@@ -291,7 +290,7 @@ void gui::start(GLFWwindow *const window)
           m_history_window.render();
           m_textures_window.render();
           m_filter_window.render();
-          m_draw_window.render();
+          m_layers.on_im_gui_update();
           //  m_mouse_positions.cover.setColor(clear_color);
           //  window.draw(m_mouse_positions.cover);
           ImGui::Render();
@@ -302,6 +301,7 @@ void gui::start(GLFWwindow *const window)
 
           // Clear and draw main viewport
           glengine::Renderer::Clear();
+          m_layers.on_render();
           ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
           ImGuiIO &io = ImGui::GetIO();
@@ -502,8 +502,12 @@ void gui::control_panel_window()
 }
 void gui::tile_conflicts_panel()
 {
-     m_draw_window.hovered_index(
-       -1);// reset to -1 and below we set to number if we're hovering.
+     if (auto *draw_window = m_layers.get<fme::draw_window>(); draw_window)
+     {
+          draw_window->hovered_index(-1);
+          // reset to -1 and below we set to number if we're hovering.
+     }
+
      if (!map_test())
      {
           return;
@@ -678,26 +682,31 @@ void gui::tile_conflicts_panel()
                                 {
                                      return options_hover;
                                 }
-                                if (
-                                  std::ranges::empty(
-                                    m_draw_window.hovered_tiles_indices())
-                                  || std::ranges::find(
-                                       m_draw_window.hovered_tiles_indices(),
-                                       static_cast<std::size_t>(index))
-                                       == std::ranges::end(
-                                         m_draw_window.hovered_tiles_indices())
-                                  || !m_draw_window.mouse_positions()
-                                        .mouse_enabled)
+                                if (auto *draw_window
+                                    = m_layers.get<fme::draw_window>();
+                                    draw_window)
                                 {
-                                     if (similar_over_1)
+                                     const auto &indices
+                                       = draw_window->hovered_tiles_indices();
+                                     if (
+                                       std::ranges::empty(indices)
+                                       || std::ranges::find(
+                                            indices,
+                                            static_cast<std::size_t>(index))
+                                            == std::ranges::end(indices)
+                                       || !draw_window->mouse_positions()
+                                             .mouse_enabled)
                                      {
-                                          return options_similar;
+                                          if (similar_over_1)
+                                          {
+                                               return options_similar;
+                                          }
+                                          if (animation_over_1)
+                                          {
+                                               return options_animation;
+                                          }
+                                          return options_regular;
                                      }
-                                     if (animation_over_1)
-                                     {
-                                          return options_animation;
-                                     }
-                                     return options_regular;
                                 }
                                 if (similar_over_1)
                                 {
@@ -714,7 +723,12 @@ void gui::tile_conflicts_panel()
                              m_map_sprite, original_tile, options);
                            if (ImGui::IsItemHovered())
                            {
-                                m_draw_window.hovered_index(index);
+                                if (auto *draw_window
+                                    = m_layers.get<fme::draw_window>();
+                                    draw_window)
+                                {
+                                     draw_window->hovered_index(index);
+                                }
                            }
                            // Ensure subsequent buttons are on the same row
                            std::string strtooltip = fmt::format(
@@ -736,14 +750,13 @@ void gui::tile_conflicts_panel()
 
 void gui::selected_tiles_panel()
 {
-
-
      if (!map_test())
      {
           return;
      }
-
-     if (std::ranges::empty(m_draw_window.clicked_tile_indices()))
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (
+       !draw_window || std::ranges::empty(draw_window->clicked_tile_indices()))
      {
           return;
      }
@@ -755,7 +768,7 @@ void gui::selected_tiles_panel()
             m_map_sprite->const_visit_working_tiles(
               [&](const auto &working_tiles)
               {
-                   for (const auto &i : m_draw_window.clicked_tile_indices())
+                   for (const auto &i : draw_window->clicked_tile_indices())
                    {
                         if (
                           i < std::ranges::size(original_tiles)
@@ -778,7 +791,7 @@ void gui::selected_tiles_panel()
        });
      if (remove_index.has_value())
      {
-          m_draw_window.remove_clicked_index(remove_index.value());
+          draw_window->remove_clicked_index(remove_index.value());
      }
 }
 void gui::control_panel_window_mim()
@@ -1073,8 +1086,13 @@ void gui::consume_one_future()
 void gui::text_mouse_position() const
 {
 
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (!draw_window)
+     {
+          return;
+     }
      // Display texture coordinates if they are set
-     if (!m_draw_window.mouse_positions().mouse_enabled)
+     if (!draw_window->mouse_positions().mouse_enabled)
      {
           format_imgui_text("{}", gui_labels::mouse_not_over);
           return;
@@ -1084,21 +1102,21 @@ void gui::text_mouse_position() const
           format_imgui_text(
             "{}: ({:4}, {:3})",
             gui_labels::mouse_pos,
-            m_draw_window.mouse_positions().pixel.x,
-            m_draw_window.mouse_positions().pixel.y);
+            draw_window->mouse_positions().pixel.x,
+            draw_window->mouse_positions().pixel.y);
           ImGui::SameLine();
           const int tile_size = 16;
           format_imgui_text(
             "{}: ({:2}, {:2})",
             gui_labels::tile_pos,
-            m_draw_window.mouse_positions().pixel.x / tile_size,
-            m_draw_window.mouse_positions().pixel.y / tile_size);
+            draw_window->mouse_positions().pixel.x / tile_size,
+            draw_window->mouse_positions().pixel.y / tile_size);
           if (m_selections->get<ConfigKey::DrawSwizzle>())
           {
                format_imgui_text(
                  "{}: {:2}",
                  gui_labels::page,
-                 m_draw_window.mouse_positions().texture_page);
+                 draw_window->mouse_positions().texture_page);
           }
      }
 }
@@ -1113,8 +1131,13 @@ void gui::hovered_tiles_panel()
      m_map_sprite->const_visit_tiles_both(
        [&](const auto &working_tiles, const auto &original_tiles)
        {
+            auto *draw_window = m_layers.get<fme::draw_window>();
+            if (!draw_window)
+            {
+                 return;
+            }
             const auto &hovered_tiles_indices
-              = m_draw_window.hovered_tiles_indices();
+              = draw_window->hovered_tiles_indices();
             format_imgui_text(
               "{} {:4}",
               gui_labels::number_of_tiles,
@@ -1123,7 +1146,7 @@ void gui::hovered_tiles_panel()
             {
                  return;
             }
-            if (!m_draw_window.mouse_positions().mouse_enabled)
+            if (!draw_window->mouse_positions().mouse_enabled)
             {
                  return;
             }
@@ -1380,7 +1403,12 @@ void gui::update_field()
      }
 
      // Clear clicked tile indices used for selection logic
-     m_draw_window.clear_clicked_tile_indices();
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (!draw_window)
+     {
+          return;
+     }
+     draw_window->clear_clicked_tile_indices();
 }
 
 void gui::refresh_map_swizzle()
@@ -3920,7 +3948,12 @@ void gui::bind_shortcuts()
      {
           if (!m_filter_window.shortcut(escapeChord))
           {
-               m_draw_window.clear_clicked_tile_indices();
+               auto *draw_window = m_layers.get<fme::draw_window>();
+               if (!draw_window)
+               {
+                    return;
+               }
+               draw_window->clear_clicked_tile_indices();
           }
      }
 
@@ -4223,8 +4256,11 @@ gui::gui(GLFWwindow *const window)
      m_field_file_window.refresh(m_field);
      m_mim_sprite = get_mim_sprite();
      m_map_sprite = get_map_sprite();
-     m_draw_window.update(m_mim_sprite);
-     m_draw_window.update(m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::draw_window>,
+       m_selections,
+       m_mim_sprite,
+       m_map_sprite);
      m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
      m_history_window.update(m_selections);
