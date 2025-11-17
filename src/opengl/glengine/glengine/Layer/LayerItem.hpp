@@ -41,19 +41,19 @@ namespace Layer
                }
                void on_update(float ts) const final
                {
-                    return m_renderable.on_update(ts);
+                    (void)OnUpdate(m_renderable, ts);
                }
                void on_render() const final
                {
-                    return m_renderable.on_render();
+                    (void)OnRender(m_renderable);
                }
                void on_im_gui_update() const final
                {
-                    return m_renderable.on_im_gui_update();
+                    (void)OnImGuiUpdate(m_renderable);
                }
                void on_event(const event::Item &e) const final
                {
-                    return m_renderable.on_event(e);
+                    (void)OnEvent(m_renderable, e);
                }
                ItemModel() = default;
 
