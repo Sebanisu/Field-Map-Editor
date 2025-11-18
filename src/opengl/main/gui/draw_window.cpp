@@ -1130,8 +1130,8 @@ void fme::draw_window::on_im_gui_window_menu() const
           return;
      }
      if (ImGui::MenuItem(
-           gui_labels::display_draw_window.data(),
-           "Control + W",
+           gui_labels::display_draw.data(),
+           "Control + D",
            &selections->get<ConfigKey::DisplayDrawWindow>()))
      {
           selections->update<ConfigKey::DisplayDrawWindow>();

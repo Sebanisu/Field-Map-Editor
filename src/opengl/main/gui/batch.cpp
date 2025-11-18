@@ -83,7 +83,7 @@ void fme::batch::draw_window()
           }
      };
      const auto end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::batch_operation_window.data(), &visible))
+     if (!ImGui::Begin(gui_labels::batch_operation.data(), &visible))
      {
           return;
      }

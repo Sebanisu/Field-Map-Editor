@@ -36,12 +36,14 @@ namespace Layer
           void   on_im_gui_window_menu() const;
           void   on_im_gui_help_menu() const;
           void   on_event(const event::Item &) const;
+          // emplace_front for layers
           template<typename... T>
           void emplace_layers(T &&...args) const
           {
                end_of_layers
                  = m_layers.emplace(end_of_layers, std::forward<T>(args)...);
           }
+          // emplace_back for overlays
           template<typename... T>
           void emplace_overlays(T &&...args) const
           {

@@ -88,7 +88,6 @@ struct gui
      custom_paths_window       m_custom_paths_window = { m_selections };
      field_file_window         m_field_file_window = { m_field, m_selections };
      keyboard_shortcuts_window m_keyboard_shortcuts_window = { m_selections };
-     ImageCompareWindow        m_image_compare_window      = { m_selections };
      float                     saved_window_width          = {};
      float                     saved_window_height         = {};
      fme::import               m_import                    = {};

@@ -23,5 +23,6 @@ class [[nodiscard]] history_window
      void update(const std::shared_ptr<Selections> &new_selections) const;
 };
 }// namespace fme
+static_assert(glengine::Renderable<fme::history_window>);
 
 #endif /* AB58D01A_1172_4330_A796_897047556559 */

@@ -276,7 +276,6 @@ void gui::start(GLFWwindow *const window)
           {
                m_batch_window.draw_window();
           }
-          m_image_compare_window.render();
           m_custom_paths_window.render();
           m_field_file_window.render();
           m_keyboard_shortcuts_window.render();
@@ -1670,19 +1669,19 @@ void gui::windows_menu()
      }
      const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (ImGui::MenuItem(
-           gui_labels::display_control_panel_window.data(),
+           gui_labels::display_control_panel.data(),
            "Control + P",
            &m_selections->get<ConfigKey::DisplayControlPanelWindow>()))
      {
           m_selections->update<ConfigKey::DisplayControlPanelWindow>();
      }
      if (ImGui::MenuItem(
-           "ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
+           "ImGui Demo Window", nullptr, &toggle_imgui_demo_window))
      {
      }
      ImGui::Separator();
      if (ImGui::MenuItem(
-           gui_labels::display_field_file_window.data(),
+           gui_labels::display_field_file.data(),
            "Control + F",
            &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
      {
@@ -1693,7 +1692,7 @@ void gui::windows_menu()
           return;
      }
      if (ImGui::MenuItem(
-           gui_labels::batch_operation_window.data(),
+           gui_labels::display_batch_operation.data(),
            "Control + B",
            &m_selections->get<ConfigKey::DisplayBatchWindow>()))
      {
@@ -1714,17 +1713,10 @@ void gui::windows_menu()
           m_selections->update<ConfigKey::DisplayTexturesWindow>();
      }
 
-     if (ImGui::MenuItem(
-           "Display Image Compare",
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayImageCompareWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayImageCompareWindow>();
-     }
      m_layers.on_im_gui_window_menu();
      ImGui::Separator();
      if (ImGui::MenuItem(
-           gui_labels::display_custom_paths_window.data(),
+           gui_labels::display_custom_paths.data(),
            "Control + U",
            &m_selections->get<ConfigKey::DisplayCustomPathsWindow>()))
      {
@@ -4246,6 +4238,9 @@ gui::gui(GLFWwindow *const window)
        m_map_sprite);
      m_layers.emplace_layers(
        std::in_place_type<fme::history_window>, m_selections, m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::ImageCompareWindow>, m_selections);
+
      m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
      m_textures_window.update(m_selections);
