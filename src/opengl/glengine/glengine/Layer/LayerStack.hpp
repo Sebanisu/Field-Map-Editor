@@ -31,6 +31,10 @@ namespace Layer
           void   on_update(float) const;
           void   on_render() const;
           void   on_im_gui_update() const;
+          void   on_im_gui_file_menu() const;
+          void   on_im_gui_edit_menu() const;
+          void   on_im_gui_window_menu() const;
+          void   on_im_gui_help_menu() const;
           void   on_event(const event::Item &) const;
           template<typename... T>
           void emplace_layers(T &&...args) const

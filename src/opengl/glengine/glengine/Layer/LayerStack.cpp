@@ -19,6 +19,34 @@ void Layer::Stack::on_im_gui_update() const
           layer.on_im_gui_update();
      }
 }
+void Layer::Stack::on_im_gui_file_menu() const
+{
+     for (const Item &layer : m_layers)
+     {
+          layer.on_im_gui_file_menu();
+     }
+}
+void Layer::Stack::on_im_gui_edit_menu() const
+{
+     for (const Item &layer : m_layers)
+     {
+          layer.on_im_gui_edit_menu();
+     }
+}
+void Layer::Stack::on_im_gui_window_menu() const
+{
+     for (const Item &layer : m_layers)
+     {
+          layer.on_im_gui_window_menu();
+     }
+}
+void Layer::Stack::on_im_gui_help_menu() const
+{
+     for (const Item &layer : m_layers)
+     {
+          layer.on_im_gui_help_menu();
+     }
+}
 void Layer::Stack::on_update(float delta_time) const
 {
      for (const Item &layer : m_layers)

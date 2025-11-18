@@ -29,6 +29,10 @@ namespace Layer
                virtual void on_update(float) const              = 0;
                virtual void on_render() const                   = 0;
                virtual void on_im_gui_update() const            = 0;
+               virtual void on_im_gui_file_menu() const         = 0;
+               virtual void on_im_gui_edit_menu() const         = 0;
+               virtual void on_im_gui_window_menu() const       = 0;
+               virtual void on_im_gui_help_menu() const         = 0;
                virtual void on_event(const event::Item &) const = 0;
           };
           template<glengine::Renderable renderableT>
@@ -51,6 +55,22 @@ namespace Layer
                void on_im_gui_update() const final
                {
                     (void)OnImGuiUpdate(m_renderable);
+               }
+               void on_im_gui_file_menu() const final
+               {
+                    (void)OnImGuiFileMenu(m_renderable);
+               }
+               void on_im_gui_edit_menu() const final
+               {
+                    (void)OnImGuiEditMenu(m_renderable);
+               }
+               void on_im_gui_window_menu() const final
+               {
+                    (void)OnImGuiWindowMenu(m_renderable);
+               }
+               void on_im_gui_help_menu() const final
+               {
+                    (void)OnImGuiHelpMenu(m_renderable);
                }
                void on_event(const event::Item &e) const final
                {
@@ -78,6 +98,10 @@ namespace Layer
           void on_update(float) const;
           void on_render() const;
           void on_im_gui_update() const;
+          void on_im_gui_file_menu() const;
+          void on_im_gui_edit_menu() const;
+          void on_im_gui_window_menu() const;
+          void on_im_gui_help_menu() const;
           void on_event(const event::Item &e) const;
           Item()
             : m_impl(nullptr)

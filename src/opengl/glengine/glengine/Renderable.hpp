@@ -34,9 +34,37 @@ concept HasOnImGuiUpdate = requires(const T &t) {
 };
 
 template<typename T>
+concept HasOnImGuiFileMenu = requires(const T &t) {
+     { t.on_im_gui_file_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_file_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiEditMenu = requires(const T &t) {
+     { t.on_im_gui_edit_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_edit_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiWindowMenu = requires(const T &t) {
+     { t.on_im_gui_window_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_window_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiHelpMenu = requires(const T &t) {
+     { t.on_im_gui_help_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_help_menu() } -> Void;
+};
+
+template<typename T>
 concept Renderable
   = std::default_initializable<T> && std::movable<T>
-    && (HasOnUpdate<T> || HasOnRender<T> || HasOnEvent<T> || HasOnImGuiUpdate<T>);
+    && (HasOnUpdate<T> || HasOnRender<T> || HasOnEvent<T> || HasOnImGuiUpdate<T> || HasOnImGuiFileMenu<T> || HasOnImGuiEditMenu<T> || HasOnImGuiWindowMenu<T> || HasOnImGuiHelpMenu<T>);
 
 
 // free function overloads for the member functions.
@@ -70,6 +98,34 @@ inline auto OnEvent(
 {
      if constexpr (HasOnEvent<T>)
           return t.on_event(e);
+}
+
+template<Renderable T>
+inline auto OnImGuiFileMenu(const T &t)
+{
+     if constexpr (HasOnImGuiFileMenu<T>)
+          return t.on_im_gui_file_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiEditMenu(const T &t)
+{
+     if constexpr (HasOnImGuiEditMenu<T>)
+          return t.on_im_gui_edit_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiWindowMenu(const T &t)
+{
+     if constexpr (HasOnImGuiWindowMenu<T>)
+          return t.on_im_gui_window_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiHelpMenu(const T &t)
+{
+     if constexpr (HasOnImGuiHelpMenu<T>)
+          return t.on_im_gui_help_menu();
 }
 
 }// namespace glengine
