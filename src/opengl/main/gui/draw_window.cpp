@@ -317,7 +317,7 @@ void fme::draw_window::on_im_gui_update() const
 }
 
 
-void fme::draw_window::hovered_index(std::ptrdiff_t index) const
+void fme::draw_window::hovered_index(std::ptrdiff_t index)
 {
      m_hovered_index = index;
 }
@@ -337,12 +337,12 @@ const std::vector<std::size_t> &fme::draw_window::clicked_tile_indices() const
 {
      return m_clicked_tile_indices;
 }
-void fme::draw_window::clear_clicked_tile_indices() const
+void fme::draw_window::clear_clicked_tile_indices()
 {
      m_clicked_tile_indices.clear();
 }
 
-void fme::draw_window::remove_clicked_index(std::size_t in_index) const
+void fme::draw_window::remove_clicked_index(std::size_t in_index)
 {
      const auto remove_result = std::ranges::remove_if(
        m_clicked_tile_indices,

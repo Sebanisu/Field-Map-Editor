@@ -67,15 +67,16 @@ struct [[nodiscard]] draw_window
      void update(std::weak_ptr<Selections> in_selections);
      void update(std::weak_ptr<const mim_sprite> in_mim_sprite);
      void update(std::weak_ptr<map_sprite> in_map_sprite);
-     void on_im_gui_update() const;
-     void hovered_index(std::ptrdiff_t index) const;
+
+     const std::vector<std::size_t> &clicked_tile_indices() const;
      const std::vector<std::size_t> &hovered_tiles_indices() const;
      const MousePositions           &mouse_positions() const;
-     const std::vector<std::size_t> &clicked_tile_indices() const;
-     void                            clear_clicked_tile_indices() const;
-     void                            remove_clicked_index(std::size_t) const;
+     void                            on_im_gui_update() const;
      void                            on_update(float) const;
      void                            on_im_gui_window_menu() const;
+     void                            hovered_index(std::ptrdiff_t index);
+     void                            clear_clicked_tile_indices();
+     void                            remove_clicked_index(std::size_t);
 
    private:
      std::weak_ptr<Selections>            m_selections                 = {};

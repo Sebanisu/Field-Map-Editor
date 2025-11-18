@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <functional>
+#include <glengine/Renderable.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
 #include <imgui_utils/ImGuiPushID.hpp>
@@ -329,5 +330,5 @@ struct custom_paths_window
      void                 render() const;
 };
 }// namespace fme
-
+// static_assert(glengine::Renderable<fme::custom_paths_window>);
 #endif /* A68AC487_FAA2_4B0F_9C15_BB16CD240B56 */

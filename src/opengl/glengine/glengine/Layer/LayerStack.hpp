@@ -50,6 +50,16 @@ namespace Layer
                m_layers.emplace_back(std::forward<T>(args)...);
                end_of_layers = std::ranges::begin(m_layers);
           }
+
+          template<typename T>
+          T *get()
+          {
+               for (auto &item : m_layers)
+                    if (auto ptr = item.get<T>())
+                         return ptr;
+               return nullptr;
+          }
+
           template<typename T>
           const T *get() const
           {

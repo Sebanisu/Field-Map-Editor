@@ -92,7 +92,7 @@ namespace Layer
                renderableT m_renderable;
           };
 
-          mutable std::unique_ptr<const ItemConcept> m_impl{ nullptr };
+          mutable std::unique_ptr<ItemConcept> m_impl{ nullptr };
 
         public:
           void on_update(float) const;
@@ -131,14 +131,13 @@ namespace Layer
           Item(Item &&other) noexcept            = default;
           Item &operator=(Item &&other) noexcept = default;
                 operator bool() const;
-          // template<typename T>
-          // T *get()
-          // {
-          //      if (auto ptr = dynamic_cast<const ItemModel<T>
-          //      *>(m_impl.get()))
-          //           return ptr->get();
-          //      return nullptr;
-          // }
+          template<typename T>
+          T *get()
+          {
+               if (auto ptr = dynamic_cast<ItemModel<T> *>(m_impl.get()))
+                    return ptr->get();
+               return nullptr;
+          }
           template<typename T>
           const T *get() const
           {

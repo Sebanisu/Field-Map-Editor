@@ -63,8 +63,10 @@ concept HasOnImGuiHelpMenu = requires(const T &t) {
 
 template<typename T>
 concept Renderable
-  = std::default_initializable<T> && std::movable<T>
+  = std::movable<T>
     && (HasOnUpdate<T> || HasOnRender<T> || HasOnEvent<T> || HasOnImGuiUpdate<T> || HasOnImGuiFileMenu<T> || HasOnImGuiEditMenu<T> || HasOnImGuiWindowMenu<T> || HasOnImGuiHelpMenu<T>);
+// std::default_initializable<T> &&
+// I donno if I really need this.
 
 
 // free function overloads for the member functions.
