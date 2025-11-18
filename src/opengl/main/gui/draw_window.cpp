@@ -1116,3 +1116,24 @@ void fme::draw_window::UseImGuizmo(
           t_map_sprite->end_multi_frame_working(std::move(history_entry));
      }
 }
+
+
+void fme::draw_window::on_im_gui_window_menu() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error(
+            "m_selections is no longer valid. File: {}, Line: {}",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (ImGui::MenuItem(
+           gui_labels::display_draw_window.data(),
+           "Control + W",
+           &selections->get<ConfigKey::DisplayDrawWindow>()))
+     {
+          selections->update<ConfigKey::DisplayDrawWindow>();
+     }
+}

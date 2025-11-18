@@ -5,7 +5,7 @@
 #include "tool_tip.hpp"
 #include <imgui_utils/ImGuiPushID.hpp>
 
-void fme::history_window::render() const
+void fme::history_window::on_im_gui_update() const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -250,6 +250,13 @@ void fme::history_window::draw_table() const
           }
      }
 }
+
+fme::history_window::history_window(
+  const std::shared_ptr<Selections> &new_selections,
+  const std::shared_ptr<map_sprite> &new_map_sprite)
+  : m_map_sprite{ new_map_sprite }
+  , m_selections{ new_selections } {};
+
 void fme::history_window::update(
   const std::shared_ptr<map_sprite> &new_map_sprite) const
 {
@@ -259,4 +266,23 @@ void fme::history_window::update(
   const std::shared_ptr<Selections> &new_selections) const
 {
      m_selections = new_selections;
+}
+void fme::history_window::on_im_gui_window_menu() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error(
+            "m_selections is no longer valid. File: {}, Line: {}",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (ImGui::MenuItem(
+           gui_labels::display_history.data(),
+           "Control + H",
+           &selections->get<ConfigKey::DisplayHistoryWindow>()))
+     {
+          selections->update<ConfigKey::DisplayHistoryWindow>();
+     }
 }

@@ -287,7 +287,6 @@ void gui::start(GLFWwindow *const window)
           }
           control_panel_window();
           m_import.render();
-          m_history_window.render();
           m_textures_window.render();
           m_filter_window.render();
           m_layers.on_im_gui_update();
@@ -1706,14 +1705,6 @@ void gui::windows_menu()
      //  {
      //       m_selections->update<ConfigKey::DisplayImportImageWindow>();
      //  }
-     ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_history.data(),
-           "Control + H",
-           &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayHistoryWindow>();
-     }
 
      if (ImGui::MenuItem(
            "Display Textures",
@@ -1730,15 +1721,7 @@ void gui::windows_menu()
      {
           m_selections->update<ConfigKey::DisplayImageCompareWindow>();
      }
-
-     ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_draw_window.data(),
-           "Control + D",
-           &m_selections->get<ConfigKey::DisplayDrawWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayDrawWindow>();
-     }
+     m_layers.on_im_gui_window_menu();
      ImGui::Separator();
      if (ImGui::MenuItem(
            gui_labels::display_custom_paths_window.data(),
@@ -4261,12 +4244,12 @@ gui::gui(GLFWwindow *const window)
        m_selections,
        m_mim_sprite,
        m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::history_window>, m_selections, m_map_sprite);
      m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
-     m_history_window.update(m_selections);
      m_textures_window.update(m_selections);
      m_import.update(m_map_sprite);
-     m_history_window.update(m_map_sprite);
      m_textures_window.update(m_map_sprite);
 
      m_filter_window.register_change_field_callback(

@@ -75,7 +75,7 @@ struct [[nodiscard]] draw_window
      void                            clear_clicked_tile_indices() const;
      void                            remove_clicked_index(std::size_t) const;
      void                            on_update(float) const;
-
+     void                            on_im_gui_window_menu() const;
 
    private:
      std::weak_ptr<Selections>            m_selections                 = {};
