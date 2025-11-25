@@ -981,7 +981,7 @@ struct [[nodiscard]] map_sprite// final
        const glm::uvec2 &destination_tile_size,
        const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const
+       const open_viii::graphics::background::is_tile auto &tile) const
      {
           return get_triangle_strip(
             source_tile_size,
@@ -996,7 +996,7 @@ struct [[nodiscard]] map_sprite// final
        const glm::uvec2 &destination_tile_size,
        const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile,
+       const open_viii::graphics::background::is_tile auto &tile,
        bool imported = false) const
      {
           const auto src = [this, &tile_const, &imported]()

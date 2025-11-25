@@ -90,20 +90,20 @@ void save_modified_map(
      return { tile_const.x(), tile_const.y() };
 }
 
-[[nodiscard]] static inline glm::ivec2
-  dest_coords_for_default(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::ivec2 dest_coords_for_default(
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return { tile.x(), tile.y() };
 }
 
 [[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle_disable_shift(
-  open_viii::graphics::background::is_tile auto &&tile)
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return { tile.source_x(), tile.source_y() };
 }
 
-[[nodiscard]] static inline glm::uvec2
-  dest_coords_for_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle(
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      using namespace open_viii::graphics::literals;
      using tile_type = std::remove_cvref_t<decltype(tile)>;
@@ -114,7 +114,7 @@ void save_modified_map(
 }
 
 [[nodiscard]] static inline glm::uvec2 source_coords_for_single_swizzle(
-  open_viii::graphics::background::is_tile auto &&tile)
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return dest_coords_for_swizzle(std::forward<decltype(tile)>(tile));
 }
