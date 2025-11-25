@@ -8,28 +8,28 @@ BatchGenerateWhiteOnBlackMask = false
 BatchInputLoadMap = 0
 BatchInputMapPath = ''
 BatchInputMapRootPathType = 0
-BatchInputPath = ''
+BatchInputPath = 'C:\Users\pcvii\Downloads'
 BatchInputRootPathType = 0
 BatchInputType = 0
-BatchMapListEnabled = '111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
+BatchMapListEnabled = '000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
 BatchOutputPath = ''
-BatchOutputRootPathType = 0
-BatchOutputSaveMap = true
+BatchOutputRootPathType = 2
+BatchOutputSaveMap = false
 BatchOutputType = 0
 BatchQueue = []
 BatchQueueEnabled = false
 BatchUpdateDelay = 0.029999999329447746
 BatchUpdateDelayEnabled = false
 Bpp = 0
-CacheDeswizzlePathsEnabled = '000000000000000'
-CacheFullFileNamePathsEnabled = '000000000000000'
-CacheMapPathsEnabled = '001000000000000'
-CacheSwizzleAsOneImagePathsEnabled = '001010000000000'
-CacheSwizzlePathsEnabled = '010000100000000'
+CacheDeswizzlePathsEnabled = '10100000000000'
+CacheFullFileNamePathsEnabled = '10100000000000'
+CacheMapPathsEnabled = '01000000000000'
+CacheSwizzleAsOneImagePathsEnabled = '01001000000000'
+CacheSwizzlePathsEnabled = '00000010000000'
 CacheTextureAndMapPaths = [
-    'D:/Angelwing-Ultima_Remastered_v1-0-a',
-    'D:/Angelwing-Ultima_Remastered_v1-0-a/field_bg',
+    'C:/Users/pcvii/Downloads/bdifrit1',
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1',
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/mods/Textures',
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/mods/Textures/field/mapdata/',
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered',
@@ -40,39 +40,40 @@ CacheTextureAndMapPaths = [
     'd:/games/ff82000',
     'd:/games/ff82000/mods/Textures',
     'd:/games/ff82000/mods/Textures/field/mapdata/',
-    'd:/tim',
     'e:/'
 ]
 Coo = 0
 CurrentPattern = 0
 CurrentPatternIndex = 0
-DeswizzlePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+DeswizzlePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1'
 DisplayBatchWindow = true
 DisplayControlPanelWindow = true
 DisplayCustomPathsWindow = true
 DisplayDrawWindow = true
 DisplayFieldFileWindow = true
 DisplayFiltersWindow = true
-DisplayHistoryWindow = true
+DisplayHistoryWindow = false
 DisplayImageCompareWindow = true
 DisplayImportImage = false
 DisplayKeyboardShortcutsWindow = false
 DisplayTexturesWindow = true
 DrawDisableBlending = false
-DrawGrid = false
+DrawGrid = true
 DrawMode = 1
 DrawPalette = false
 DrawPupuMask = false
-DrawSwizzle = false
+DrawSwizzle = true
 DrawTexturePageGrid = false
 DrawTileConflictRects = false
-ExternalTexturesAndMapsDirectoryPaths = [ 'D:/Angelwing-Ultima_Remastered_v1-0-a' ]
+ExternalTexturesAndMapsDirectoryPaths = [
+    'C:/Users/pcvii/Downloads/bdifrit1',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1'
+]
 FF8DirectoryPaths = [
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII',
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered',
     'D:/games/ff82000',
     'd:/games/ff82000',
-    'd:/tim',
     'e:/'
 ]
 FF8Path = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
@@ -84,16 +85,16 @@ ImageCompareWindowPath2 = ''
 ImportImageGrid = false
 ImportLoadImageDirectory = ''
 ImportSelectedTile = 0
-OutputDeswizzlePattern = '{selected_path}\deswizzle\{demaster}'
-OutputFullFileNamePattern = '{selected_path}\full_filename\{demaster_full}'
+OutputDeswizzlePattern = '{selected_path}\deswizzle\{ffnx_multi_texture}'
+OutputFullFileNamePattern = '{selected_path}\full_filename\{ffnx_multi_texture_full}'
 OutputImagePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
 OutputMapPath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
-OutputMapPatternForDeswizzle = '{selected_path}\deswizzle\{demaster}'
-OutputMapPatternForFullFileName = '{selected_path}\full_filename\{demaster}'
-OutputMapPatternForSwizzle = '{selected_path}\{demaster}'
+OutputMapPatternForDeswizzle = '{selected_path}\deswizzle\{ffnx_map}'
+OutputMapPatternForFullFileName = '{selected_path}\full_filename\{ffnx_map}'
+OutputMapPatternForSwizzle = '{selected_path}\{ffnx_map}'
 OutputMimPath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
-OutputSwizzleAsOneImagePattern = '{selected_path}\{demaster}'
-OutputSwizzlePattern = '{selected_path}\{demaster}'
+OutputSwizzleAsOneImagePattern = '{selected_path}\{ffnx_single_texture}'
+OutputSwizzlePattern = '{selected_path}\{ffnx_multi_texture}'
 OutputTomlPattern = '{{current_toml_path}?:{current_path}\res\deswizzle.toml:?}'
 Palette = 0
 PathPatternsWithFullFileName = [
@@ -190,9 +191,9 @@ PatternsCommonPrefixes = [
 ]
 PatternsCommonPrefixesForMaps = [ '{selected_path}/{ffnx_direct_mode_path}/field/mapdata/' ]
 RenderImportedImage = false
-StarterField = 'ecenter3'
+StarterField = 'bdifrit1'
 SwizzleAsOneImagePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
-SwizzlePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+SwizzlePath = 'C:/Users/pcvii/Downloads/bdifrit1'
 TOMLFailOverForEditor = 1
 TileSizeValue = 0
 TomlPath = ''
@@ -203,8 +204,13 @@ batch_compact_enabled = false
 batch_compact_type = 0
 batch_flatten_enabled = false
 batch_flatten_type = 0
-filter_deswizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_deswizzle = 'C:/Users/pcvii/Downloads/bdifrit1'
+filter_deswizzle_enabled = true
 filter_full_filename = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
 filter_map = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_multi_layer_id = [ 0 ]
+filter_multi_layer_id_enabled = false
+filter_multi_z = []
+filter_multi_z_enabled = false
 filter_swizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
 filter_swizzle_as_one_image = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
