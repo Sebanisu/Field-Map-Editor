@@ -8,14 +8,6 @@
 #include <optional>
 namespace fme
 {
-enum struct compact_type : std::uint8_t
-{
-     rows,
-     all,
-     move_only_conflicts,
-     map_order,
-     map_order_ffnx
-};
 enum struct input_types : std::uint8_t
 {
      mim,
@@ -82,12 +74,6 @@ enum struct output_types : std::uint8_t
                return std::nullopt;// input_types::mim has no mapping
      }
 }
-enum struct flatten_type : std::uint8_t
-{
-     bpp,
-     palette,
-     both,
-};
 enum struct root_path_types : std::uint8_t
 {
      selected_path,

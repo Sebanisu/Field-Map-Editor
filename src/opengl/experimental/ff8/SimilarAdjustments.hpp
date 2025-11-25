@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_SIMILARADJUSTMENTS_HPP
 #define FIELD_MAP_EDITOR_SIMILARADJUSTMENTS_HPP
-#include "tile_operations.hpp"
+#include <ff_8/TileOperations.hpp>
 namespace ff_8
 {
 struct SimilarAdjustments
@@ -29,29 +29,33 @@ struct SimilarAdjustments
      template<typename TileT>
      auto operator()(const TileT &tile) const
      {
-          using namespace tile_operations;
-          static constexpr auto xy_f = XY{};
-          static constexpr auto z_f  = Z{};
+
+          static constexpr auto xy_f = TileOperations::XY{};
+          static constexpr auto z_f  = TileOperations::Z{};
           return [=, this](const TileT &other_tile) -> bool
           {
                const auto compare = [&](bool toggle, auto &&op) -> bool
                { return !toggle || op(tile) == op(other_tile); };
                return std::ranges::all_of(
                  std::array{
-                   compare(x, X{}), compare(y, Y{}), compare(xy, xy_f),
+                   compare(x, TileOperations::X{}),
+                   compare(y, TileOperations::Y{}), compare(xy, xy_f),
                    compare(z, z_f),
                    compare(
                      xyz, [](const TileT &t)
                      { return std::make_pair(xy_f(t), z_f(t)); }),
-                   compare(source_x, SourceX{}), compare(source_y, SourceY{}),
-                   compare(source_xy, SourceXY{}),
-                   compare(texture_id, TextureId{}),
-                   compare(blend_mode, BlendMode{}), compare(blend, Blend{}),
-                   compare(draw, Draw{}), compare(depth, Depth{}),
-                   compare(layer_id, LayerId{}),
-                   compare(palette_id, PaletteId{}),
-                   compare(animation_id, AnimationId{}),
-                   compare(animation_state, AnimationState{}) },
+                   compare(source_x, TileOperations::SourceX{}),
+                   compare(source_y, TileOperations::SourceY{}),
+                   compare(source_xy, TileOperations::SourceXY{}),
+                   compare(texture_id, TileOperations::TextureId{}),
+                   compare(blend_mode, TileOperations::BlendMode{}),
+                   compare(blend, TileOperations::Blend{}),
+                   compare(draw, TileOperations::Draw{}),
+                   compare(depth, TileOperations::Depth{}),
+                   compare(layer_id, TileOperations::LayerId{}),
+                   compare(palette_id, TileOperations::PaletteId{}),
+                   compare(animation_id, TileOperations::AnimationId{}),
+                   compare(animation_state, TileOperations::AnimationState{}) },
                  std::identity{});
           };
      }

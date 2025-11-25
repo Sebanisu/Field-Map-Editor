@@ -3,14 +3,14 @@
 //
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
-#include "colors.hpp"
-#include "compact_type.hpp"
-#include "Configuration.hpp"
 #include "draw_mode.hpp"
-#include "filter.hpp"
 #include "formatters.hpp"
 #include "tile_sizes.hpp"
-#include "utilities.hpp"
+#include <ff_8/Colors.hpp>
+#include <ff_8/CompactTypeT.hpp>
+#include <ff_8/Configuration.hpp>
+#include <ff_8/Filter.hpp>
+#include <ff_8/Utilities.hpp>
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
@@ -722,21 +722,21 @@ struct SelectionInfo<ConfigKey::BackgroundCheckerboardScale>
 template<>
 struct SelectionInfo<ConfigKey::BackgroundColor>
 {
-     using value_type                     = color;
+     using value_type                     = ff_8::Color;
      static constexpr std::string_view id = "BackgroundColor";
      static inline value_type          default_value()
      {
-          return fme::colors::White;
+          return ff_8::Colors::White;
      }
 };
 template<>
 struct SelectionInfo<ConfigKey::BackgroundColor2>
 {
-     using value_type                     = color;
+     using value_type                     = ff_8::Color;
      static constexpr std::string_view id = "BackgroundColor2";
      static inline value_type          default_value()
      {
-          return fme::colors::White;
+          return ff_8::Colors::White;
      }
 };
 template<>
@@ -865,7 +865,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -896,7 +896,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPalette>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -927,7 +927,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithTexturePage>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -950,7 +950,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 
@@ -970,7 +970,7 @@ struct SelectionInfo<ConfigKey::PathPatternsWithFullFileName>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -999,7 +999,7 @@ struct SelectionInfo<ConfigKey::PatternsBase>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1047,7 +1047,7 @@ struct SelectionInfo<ConfigKey::PatternsCommonPrefixes>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1062,7 +1062,7 @@ struct SelectionInfo<ConfigKey::PatternsCommonPrefixesForMaps>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1077,7 +1077,7 @@ struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 
@@ -1095,7 +1095,7 @@ struct SelectionInfo<ConfigKey::TomlPaths>
      // static void post_load_operation([[maybe_unused]] const value_type
      // &value)
      // {
-     //      assert(has_balanced_braces(value));
+     //      assert(ff_8::has_balanced_braces(value));
      // }
 };
 
@@ -1113,7 +1113,7 @@ struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
-          assert(has_balanced_braces(value));
+          assert(ff_8::has_balanced_braces(value));
      }
 };
 template<>
@@ -1269,9 +1269,9 @@ struct SelectionLoadStrategy
           {
                value = config[id].value_or(value.u8string());
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
-               value = std::bit_cast<fme::color>(
+               value = std::bit_cast<ff_8::Color>(
                  config[id].value_or(std::bit_cast<std::uint32_t>(value)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
@@ -1288,7 +1288,7 @@ struct SelectionLoadStrategy
                if constexpr (std::is_enum_v<
                                glengine::vector_elem_type_t<ValueT>>)
                {
-                    return fme::Configuration::load_array<
+                    return ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::underlying_type_t<
                         glengine::vector_elem_type_t<ValueT>>>(
@@ -1298,13 +1298,13 @@ struct SelectionLoadStrategy
                                     glengine::vector_elem_type_t<ValueT>,
                                     ff_8::PupuID>)
                {
-                    return fme::Configuration::load_array<
+                    return ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint32_t>(config, id, value);
                }
                else
                {
-                    return fme::Configuration::load_array<
+                    return ff_8::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
@@ -1450,7 +1450,7 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
 // For filters that are constructed with full context and do not support default
 // init
 template<ff_8::FilterTag Tag>
-struct SelectionLoadStrategy<ff_8::filter<Tag>>
+struct SelectionLoadStrategy<ff_8::Filter<Tag>>
 {
      // No loading: object is fully initialized elsewhere
      static bool load(auto &&...) noexcept
@@ -1479,7 +1479,7 @@ struct SelectionUpdateStrategy
                  std::filesystem::path(str_val).string());
                config.insert_or_assign(id, str_val);
           }
-          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          else if constexpr (std::convertible_to<ValueT, ff_8::Color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
                config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
@@ -1496,17 +1496,17 @@ struct SelectionUpdateStrategy
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
           {
-               Configuration::update_array(config, id, value);
+               ff_8::Configuration::update_array(config, id, value);
           }
           else if constexpr (std::same_as<ValueT, std::vector<bool>>)
           {
-               Configuration::update_array(config, id, value);
+               ff_8::Configuration::update_array(config, id, value);
           }
           else if constexpr (std::same_as<
                                ValueT,
                                std::vector<std::filesystem::path>>)
           {
-               Configuration::update_array(config, id, value);
+               ff_8::Configuration::update_array(config, id, value);
           }
           else
           {
@@ -1566,7 +1566,7 @@ struct SelectionUpdateStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
 
 // Skip updating for filters — they update themselves
 template<ff_8::FilterTag Tag>
-struct SelectionUpdateStrategy<ff_8::filter<Tag>>
+struct SelectionUpdateStrategy<ff_8::Filter<Tag>>
 {
      static void update(auto &&...) noexcept
      {
@@ -1581,7 +1581,7 @@ struct Selection
      using value_type = typename SelectionInfo<Key>::value_type;
 
      value_type value;
-     Selection([[maybe_unused]] const Configuration &config)
+     Selection([[maybe_unused]] const ff_8::Configuration &config)
        : Selection(
            config,
            std::nullopt)
@@ -1589,8 +1589,8 @@ struct Selection
      }
 
      Selection(
-       [[maybe_unused]] const Configuration                &config,
-       [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
+       [[maybe_unused]] const ff_8::Configuration                &config,
+       [[maybe_unused]] const std::optional<ff_8::Configuration> &ffnx_config)
        : value(
            [&]()
            {
@@ -1623,9 +1623,9 @@ struct Selection
 
    private:
      static constexpr value_type
-       get_default_value([[maybe_unused]] const Configuration *config)
+       get_default_value([[maybe_unused]] const ff_8::Configuration *config)
      {
-          if constexpr (requires(const Configuration &c) {
+          if constexpr (requires(const ff_8::Configuration &c) {
                              SelectionInfo<Key>::default_value(c);
                         })
           {
@@ -1663,7 +1663,7 @@ struct Selection
           }
      }
 
-     void fail_to_load([[maybe_unused]] const Configuration &config)
+     void fail_to_load([[maybe_unused]] const ff_8::Configuration &config)
      {
           if constexpr (requires {
                              SelectionInfo<Key>::expensive_default_value();
@@ -1686,7 +1686,7 @@ struct Selection
           }
      }
 
-     void load(const Configuration &config)
+     void load(const ff_8::Configuration &config)
      {
           if (!SelectionLoadStrategy<value_type>::load(
                 config, SelectionInfo<Key>::id, value))
@@ -1705,8 +1705,8 @@ struct Selection
      // when we change directories we need to check for the ffnx config and
      // refresh the values from that config. go back to default value if
      // ffnx_config not there.
-     void
-       refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config)
+     void refresh(
+       [[maybe_unused]] const std::optional<ff_8::Configuration> &ffnx_config)
      {
           if constexpr (SelectionUseFFNXConfig<Key>::value)
           {
@@ -1723,7 +1723,7 @@ struct Selection
 
      // update skips over ffnx values as we're currently not writing to the
      // ffnx config file.
-     void update([[maybe_unused]] Configuration &config) const
+     void update([[maybe_unused]] ff_8::Configuration &config) const
      {
           if constexpr (!SelectionUseFFNXConfig<Key>::value)
           {
@@ -1800,10 +1800,10 @@ struct Selections
      static inline constexpr std::array<std::string_view, SelectionsSizeT>
                       s_selections_id_array = load_selections_id_array();
 
-     SelectionsArrayT load_selections_array(const Configuration &config)
+     SelectionsArrayT load_selections_array(const ff_8::Configuration &config)
      {
           // cache these values for use later on.
-          std::optional<Configuration>         ffnx_config{};
+          std::optional<ff_8::Configuration>   ffnx_config{};
           std::optional<std::filesystem::path> ff8_path{};
           return [&]<std::size_t... Is>(
                    std::index_sequence<Is...>) -> SelectionsArrayT
@@ -1857,15 +1857,15 @@ struct Selections
      // */
      // void                         refresh_ffnx_paths(const
      // std::filesystem::path &ff8_path);
-     std::optional<Configuration> get_ffnx_config() const;
-     std::optional<Configuration>
+     std::optional<ff_8::Configuration> get_ffnx_config() const;
+     std::optional<ff_8::Configuration>
        get_ffnx_config(const std::filesystem::path &ff8_path) const;
 
    public:
      /**
       * @brief Constructs a Selections object with default values.
       */
-     Selections(const Configuration config = {});
+     Selections(const ff_8::Configuration config = {});
 
      template<ConfigKey Key>
           requires(SelectionsSizeT > static_cast<std::size_t>(Key))
@@ -2007,7 +2007,7 @@ struct Selections
           }
           else
           {
-               const std::optional<Configuration> ffnx_config
+               const std::optional<ff_8::Configuration> ffnx_config
                  = get_ffnx_config();
                (
                  [&]<ConfigKey Key>
@@ -2045,7 +2045,7 @@ struct Selections
           }
           else
           {
-               Configuration config{};
+               ff_8::Configuration config{};
                (
                  [&]<ConfigKey Key>
                  {
@@ -2069,7 +2069,7 @@ struct Selections
 
      void reset_to_demaster()
      {
-          Configuration config{};
+          ff_8::Configuration config{};
           [&]<std::size_t... Is>(std::index_sequence<Is...>)
           {
                (
@@ -2089,7 +2089,7 @@ struct Selections
 
      void reset_to_ffnx()
      {
-          Configuration config{};
+          ff_8::Configuration config{};
           [&]<std::size_t... Is>(std::index_sequence<Is...>)
           {
                (

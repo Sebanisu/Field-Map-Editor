@@ -29,44 +29,79 @@ namespace Layer
                virtual void on_update(float) const              = 0;
                virtual void on_render() const                   = 0;
                virtual void on_im_gui_update() const            = 0;
+               virtual void on_im_gui_file_menu() const         = 0;
+               virtual void on_im_gui_edit_menu() const         = 0;
+               virtual void on_im_gui_window_menu() const       = 0;
+               virtual void on_im_gui_help_menu() const         = 0;
                virtual void on_event(const event::Item &) const = 0;
           };
           template<glengine::Renderable renderableT>
           class ItemModel final : public ItemConcept
           {
              public:
-               ItemModel(renderableT t)
-                 : m_renderable(std::move(t))
+               template<typename... Args>
+               ItemModel(Args &&...args)
+                 : m_renderable(std::forward<Args>(args)...)
                {
                }
                void on_update(float ts) const final
                {
-                    return m_renderable.on_update(ts);
+                    (void)OnUpdate(m_renderable, ts);
                }
                void on_render() const final
                {
-                    return m_renderable.on_render();
+                    (void)OnRender(m_renderable);
                }
                void on_im_gui_update() const final
                {
-                    return m_renderable.on_im_gui_update();
+                    (void)OnImGuiUpdate(m_renderable);
+               }
+               void on_im_gui_file_menu() const final
+               {
+                    (void)OnImGuiFileMenu(m_renderable);
+               }
+               void on_im_gui_edit_menu() const final
+               {
+                    (void)OnImGuiEditMenu(m_renderable);
+               }
+               void on_im_gui_window_menu() const final
+               {
+                    (void)OnImGuiWindowMenu(m_renderable);
+               }
+               void on_im_gui_help_menu() const final
+               {
+                    (void)OnImGuiHelpMenu(m_renderable);
                }
                void on_event(const event::Item &e) const final
                {
-                    return m_renderable.on_event(e);
+                    (void)OnEvent(m_renderable, e);
                }
                ItemModel() = default;
+
+               auto *get()
+               {
+                    return &m_renderable;
+               }
+
+               const auto *get() const
+               {
+                    return &m_renderable;
+               }
 
              private:
                renderableT m_renderable;
           };
 
-          mutable std::unique_ptr<const ItemConcept> m_impl{ nullptr };
+          mutable std::unique_ptr<ItemConcept> m_impl{ nullptr };
 
         public:
           void on_update(float) const;
           void on_render() const;
           void on_im_gui_update() const;
+          void on_im_gui_file_menu() const;
+          void on_im_gui_edit_menu() const;
+          void on_im_gui_window_menu() const;
+          void on_im_gui_help_menu() const;
           void on_event(const event::Item &e) const;
           Item()
             : m_impl(nullptr)
@@ -76,7 +111,7 @@ namespace Layer
             typename T,
             typename... argsT>
           Item(
-            std::in_place_type_t<T>,
+            const std::in_place_type_t<T> &,
             argsT &&...args)
             : m_impl(
                 std::make_unique<ItemModel<std::remove_cvref_t<T>>>(
@@ -95,8 +130,21 @@ namespace Layer
           Item &operator=(const Item &other)     = delete;
           Item(Item &&other) noexcept            = default;
           Item &operator=(Item &&other) noexcept = default;
-
                 operator bool() const;
+          template<typename T>
+          T *get()
+          {
+               if (auto ptr = dynamic_cast<ItemModel<T> *>(m_impl.get()))
+                    return ptr->get();
+               return nullptr;
+          }
+          template<typename T>
+          const T *get() const
+          {
+               if (auto ptr = dynamic_cast<const ItemModel<T> *>(m_impl.get()))
+                    return ptr->get();
+               return nullptr;
+          }
      };
 }// namespace Layer
 }// namespace glengine

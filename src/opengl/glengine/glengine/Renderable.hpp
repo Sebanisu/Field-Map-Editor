@@ -11,63 +11,124 @@ namespace event
      class Item;
 }
 template<typename T>
-concept Renderable =
-  std::default_initializable<T> && std::movable<T> &&(
-    requires(const T &t, const event::Item & e)
-    {
-      {
-        t.on_im_gui_update()
-        } -> std::same_as<bool>;
-      {
-        t.on_update(float{})
-        } -> Void;
-      {
-        t.on_render()
-        } -> Void;
-      {
-        t.on_event(e)
-        } -> Void;
-    } ||
-    requires(const T &t, const event::Item & e)
-    {
-      {
-        t.on_im_gui_update()
-        } -> Void;
-      {
-        t.on_update(float{})
-        } -> Void;
-      {
-        t.on_render()
-        } -> Void;
-      {
-        t.on_event(e)
-        } -> Void;
-    });
+concept HasOnUpdate = requires(const T &t, float ts) {
+     { t.on_update(ts) } -> Void;
+};
+
+template<typename T>
+concept HasOnRender = requires(const T &t) {
+     { t.on_render() } -> Void;
+};
+
+template<typename T>
+concept HasOnEvent = requires(const T &t, const event::Item &e) {
+     { t.on_event(e) } -> Void;
+};
+
+
+template<typename T>
+concept HasOnImGuiUpdate = requires(const T &t) {
+     { t.on_im_gui_update() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_update() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiFileMenu = requires(const T &t) {
+     { t.on_im_gui_file_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_file_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiEditMenu = requires(const T &t) {
+     { t.on_im_gui_edit_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_edit_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiWindowMenu = requires(const T &t) {
+     { t.on_im_gui_window_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_window_menu() } -> Void;
+};
+
+template<typename T>
+concept HasOnImGuiHelpMenu = requires(const T &t) {
+     { t.on_im_gui_help_menu() } -> std::same_as<bool>;
+} || requires(const T &t) {
+     { t.on_im_gui_help_menu() } -> Void;
+};
+
+template<typename T>
+concept Renderable
+  = std::movable<T>
+    && (HasOnUpdate<T> || HasOnRender<T> || HasOnEvent<T> || HasOnImGuiUpdate<T> || HasOnImGuiFileMenu<T> || HasOnImGuiEditMenu<T> || HasOnImGuiWindowMenu<T> || HasOnImGuiHelpMenu<T>);
+// std::default_initializable<T> &&
+// I donno if I really need this.
+
 
 // free function overloads for the member functions.
 template<Renderable T>
 inline auto OnImGuiUpdate(const T &t)
 {
-     return t.on_im_gui_update();
+     if constexpr (HasOnImGuiUpdate<T>)
+          return t.on_im_gui_update();
 }
+
 template<Renderable T>
 inline auto OnUpdate(
-  const T    &t,
-  const float ts)
+  const T &t,
+  float    ts)
 {
-     return t.on_update(ts);
+     if constexpr (HasOnUpdate<T>)
+          return t.on_update(ts);
 }
+
 template<Renderable T>
 inline auto OnRender(const T &t)
 {
-     return t.on_render();
+     if constexpr (HasOnRender<T>)
+          return t.on_render();
 }
+
 template<Renderable T>
 inline auto OnEvent(
   const T           &t,
   const event::Item &e)
 {
-     return t.on_event(e);
+     if constexpr (HasOnEvent<T>)
+          return t.on_event(e);
 }
+
+template<Renderable T>
+inline auto OnImGuiFileMenu(const T &t)
+{
+     if constexpr (HasOnImGuiFileMenu<T>)
+          return t.on_im_gui_file_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiEditMenu(const T &t)
+{
+     if constexpr (HasOnImGuiEditMenu<T>)
+          return t.on_im_gui_edit_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiWindowMenu(const T &t)
+{
+     if constexpr (HasOnImGuiWindowMenu<T>)
+          return t.on_im_gui_window_menu();
+}
+
+template<Renderable T>
+inline auto OnImGuiHelpMenu(const T &t)
+{
+     if constexpr (HasOnImGuiHelpMenu<T>)
+          return t.on_im_gui_help_menu();
+}
+
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_RENDERABLE_HPP

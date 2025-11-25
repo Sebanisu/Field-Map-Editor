@@ -1,12 +1,11 @@
 #include "history_window.hpp"
-#include "colors.hpp"
 #include "format_imgui_text.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
-#include "gui/push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <imgui_utils/ImGuiPushID.hpp>
 
-
-void fme::history_window::render() const
+void fme::history_window::on_im_gui_update() const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -84,15 +83,17 @@ void fme::history_window::draw_table() const
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{ colors::TableDarkGray });// Dark gray
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableDarkGray));// Dark gray
                       }
                       else
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{
-                               colors::TableLightDarkGray });// Slightly lighter
-                                                             // gray
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableLightDarkGray));// Slightly
+                                                                  // lighter
+                                                                  // gray
                       }
                       ++i;
 
@@ -116,11 +117,15 @@ void fme::history_window::draw_table() const
                            }
                       };
 
-                      const auto pop_id = PushPopID();
+                      const auto pop_id = imgui_utils::ImGuiPushId();
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderHovered, colors::TableDarkGrayHovered);
+                        ImGuiCol_HeaderHovered,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkGrayHovered));
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderActive, colors::TableDarkGrayActive);
+                        ImGuiCol_HeaderActive,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkGrayActive));
                       if (ImGui::Selectable(
                             "##undo_history",
                             false,
@@ -175,15 +180,17 @@ void fme::history_window::draw_table() const
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{ colors::TableDarkRed });// Dark red
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableDarkRed));// Dark red
                       }
                       else
                       {
                            ImGui::TableSetBgColor(
                              ImGuiTableBgTarget_RowBg0,
-                             ImU32{
-                               colors::TableLightDarkRed });// Slightly lighter
-                                                            // dark red
+                             ff_8::Colors::to_imU32(
+                               ff_8::Colors::TableLightDarkRed));// Slightly
+                                                                 // lighter dark
+                                                                 // red
                       }
                       ++i;
 
@@ -206,12 +213,16 @@ void fme::history_window::draw_table() const
                                 format_imgui_text("{}", text);
                            }
                       };
-                      const auto pop_id = PushPopID();
+                      const auto pop_id = imgui_utils::ImGuiPushId();
 
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
+                        ImGuiCol_HeaderHovered,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkRedHovered));
                       ImGui::PushStyleColor(
-                        ImGuiCol_HeaderActive, colors::TableDarkRedActive);
+                        ImGuiCol_HeaderActive,
+                        ff_8::Colors::to_imvec4(
+                          ff_8::Colors::TableDarkRedActive));
                       if (ImGui::Selectable(
                             "##redo history",
                             false,
@@ -239,6 +250,13 @@ void fme::history_window::draw_table() const
           }
      }
 }
+
+fme::history_window::history_window(
+  const std::shared_ptr<Selections> &new_selections,
+  const std::shared_ptr<map_sprite> &new_map_sprite)
+  : m_map_sprite{ new_map_sprite }
+  , m_selections{ new_selections } {};
+
 void fme::history_window::update(
   const std::shared_ptr<map_sprite> &new_map_sprite) const
 {
@@ -248,4 +266,23 @@ void fme::history_window::update(
   const std::shared_ptr<Selections> &new_selections) const
 {
      m_selections = new_selections;
+}
+void fme::history_window::on_im_gui_window_menu() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error(
+            "m_selections is no longer valid. File: {}, Line: {}",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (ImGui::MenuItem(
+           gui_labels::display_history.data(),
+           "Control + H",
+           &selections->get<ConfigKey::DisplayHistoryWindow>()))
+     {
+          selections->update<ConfigKey::DisplayHistoryWindow>();
+     }
 }

@@ -4,9 +4,9 @@
 
 #include "TestBatchQuads.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
 #include <glengine/Renderer.hpp>
 #include <glengine/Vertex.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 
 static constinit bool FitWidth  = true;
 static constinit bool FitHeight = true;
@@ -95,13 +95,13 @@ void test::TestBatchQuads::on_im_gui_update() const
      const float            window_height
        = window_width / m_imgui_viewport_window.view_port_aspect_ratio();
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
 
           ImGui::Checkbox("fit Height", &FitHeight);
           ImGui::Checkbox("fit Width", &FitWidth);
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "View Offset", &view_offset.x, -window_width, window_width))
           {
@@ -110,7 +110,7 @@ void test::TestBatchQuads::on_im_gui_update() const
           }
      }
      {
-          const auto pop_3 = glengine::ImGuiPushId();
+          const auto pop_3 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderInt2("Quad (X, Y)", std::data(m_count), 0, 256))
           {
           }

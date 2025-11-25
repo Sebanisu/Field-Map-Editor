@@ -3,8 +3,8 @@
 //
 #include "TestBatchRendering.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
 #include <glengine/Vertex.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 static constinit bool Preview = false;
 static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::on_im_gui_update() const
@@ -16,7 +16,7 @@ void test::TestBatchRendering::on_im_gui_update() const
      constexpr float clamp_width  = window_width / 2.F - 1.F;
      const float     clamp_height = window_height / 2.F - 1.F;
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "View Offset", &view_offset.x, -clamp_width, clamp_width))
           {

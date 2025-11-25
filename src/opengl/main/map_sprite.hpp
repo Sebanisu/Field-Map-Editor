@@ -4,22 +4,19 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
-#include "filter.hpp"
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
-#include "map_group.hpp"
 #include "map_operation.hpp"
-#include "MapHistory.hpp"
-#include "open_viii/archive/Archives.hpp"
-#include "open_viii/graphics/background/Map.hpp"
-#include "open_viii/graphics/background/Mim.hpp"
 #include "path_search.hpp"
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
 #include "tile_sizes.hpp"
-#include "unique_values.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <ff_8/Filter.hpp>
+#include <ff_8/MapGroup.hpp>
+#include <ff_8/MapHistory.hpp>
+#include <ff_8/UniqueValues.hpp>
 #include <fmt/format.h>
 #include <glengine/BatchRenderer.hpp>
 #include <glengine/CompShader.hpp>
@@ -30,6 +27,9 @@
 #include <glengine/PaletteBuffer.hpp>
 #include <glengine/Shader.hpp>
 #include <glengine/Texture.hpp>
+#include <open_viii/archive/Archives.hpp>
+#include <open_viii/graphics/background/Map.hpp>
+#include <open_viii/graphics/background/Mim.hpp>
 #include <set>
 #include <utility>
 
@@ -221,13 +221,13 @@ struct [[nodiscard]] map_sprite// final
        = {};
      mutable std::map<std::string, std::vector<ff_8::PupuID>>
                                          m_cache_framebuffer_pupuids = {};
-     mutable ff_8::map_group             m_map_group                 = {};
+     mutable ff_8::MapGroup              m_map_group                 = {};
      map_sprite_settings                 m_settings                  = {};
 
      mutable std::unique_ptr<map_sprite> m_child_map_sprite = { nullptr };
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>
                            m_child_textures_map = {};
-     mutable ff_8::filters m_filters
+     mutable ff_8::Filters m_filters
        = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>           m_selections             = {};
      bool                                m_using_imported_texture = {};
@@ -326,7 +326,7 @@ struct [[nodiscard]] map_sprite// final
        glengine::PaletteBuffer,
        glengine::HistogramBuffer,
        glengine::DistanceBuffer>
-       initialize_buffers(const std::vector<glm::vec4> &palette) const;
+       initialize_buffers(const std::vector<ff_8::Color> &palette) const;
 
      std::pair<
        std::vector<PupuOpEntry>,
@@ -346,9 +346,9 @@ struct [[nodiscard]] map_sprite// final
    public:
      map_sprite() = default;
      map_sprite(
-       ff_8::map_group                        map_group,
+       ff_8::MapGroup                         MapGroup,
        map_sprite_settings                    settings,
-       ff_8::filters                          in_filters,
+       ff_8::Filters                          in_filters,
        std::weak_ptr<Selections>              selections,
        std::shared_ptr<glengine::FrameBuffer> framebuffer
        = std::make_shared<glengine::FrameBuffer>());
@@ -402,16 +402,15 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &working_unique_pupu() const;
      [[nodiscard]] std::vector<std::tuple<
-       glm::vec4,
+       ff_8::Color,
        ff_8::PupuID>>
        working_unique_color_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &
        original_unique_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &original_pupu() const;
      [[nodiscard]] const std::vector<ff_8::PupuID> &working_pupu() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts &
-       original_conflicts() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts &working_conflicts() const;
+     [[nodiscard]] const ff_8::SourceTileConflicts &original_conflicts() const;
+     [[nodiscard]] const ff_8::SourceTileConflicts &working_conflicts() const;
      [[nodiscard]] const ff_8::MapHistory::nst_map &
        working_similar_counts() const;
      [[nodiscard]] const ff_8::MapHistory::nsat_map                           &
@@ -424,19 +423,19 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] map_sprite    with_field(
           WeakField        field,
           open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite with_filters(ff_8::filters filters) const;
+     [[nodiscard]] map_sprite with_filters(ff_8::Filters filters) const;
      [[nodiscard]] bool       empty() const;
-     [[nodiscard]] const ff_8::filters &filter() const;
+     [[nodiscard]] const ff_8::Filters &filter() const;
      [[nodiscard]] map_sprite           update(
-                 ff_8::map_group map_group,
-                 bool            draw_swizzle) const;
+                 ff_8::MapGroup MapGroup,
+                 bool           draw_swizzle) const;
      [[nodiscard]] ff_8::all_unique_values_and_strings
                                       get_all_unique_values_and_strings() const;
      [[nodiscard]] glm::uvec2         get_tile_texture_size_for_import() const;
      [[nodiscard]] Rectangle          get_canvas() const;
      [[nodiscard]] bool               undo_enabled() const;
      [[nodiscard]] bool               redo_enabled() const;
-     [[nodiscard]] ff_8::filters     &filter();
+     [[nodiscard]] ff_8::Filters     &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const
      // BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] bool               fallback_textures() const;
@@ -489,7 +488,7 @@ struct [[nodiscard]] map_sprite// final
        const std::shared_ptr<Selections> &selections);
      void cache_pupuids(
        const std::string &,
-       const ff_8::filters &) const;
+       const ff_8::Filters &) const;
      [[nodiscard]] const std::map<
        std::string,
        std::string> &
@@ -529,7 +528,7 @@ struct [[nodiscard]] map_sprite// final
      void refresh_tooltip(const std::string &);
      void apply_multi_pupu_filter_deswizzle_combined_toml_table(
        const std::string                              &file_name_key,
-       const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter);
+       const ff_8::Filter<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(
        const std::vector<std::string> &,
        const std::string &);
@@ -906,12 +905,12 @@ struct [[nodiscard]] map_sprite// final
      auto find_conflicting_tiles(const TilesT &tiles) const
      {
           using TileT = std::ranges::range_value_t<std::remove_cvref_t<TilesT>>;
-          using TextureIdT = ff_8::tile_operations::TextureIdT<TileT>;
-          using PaletteIdT = ff_8::tile_operations::PaletteIdT<TileT>;
-          static constexpr auto SourceX   = ff_8::tile_operations::SourceX{};
-          static constexpr auto SourceY   = ff_8::tile_operations::SourceY{};
-          static constexpr auto TextureId = ff_8::tile_operations::TextureId{};
-          static constexpr auto PaletteId = ff_8::tile_operations::PaletteId{};
+          using TextureIdT = ff_8::TileOperations::TextureId::value_type<TileT>;
+          using PaletteIdT = ff_8::TileOperations::PaletteId::value_type<TileT>;
+          static constexpr auto SourceX   = ff_8::TileOperations::SourceX{};
+          static constexpr auto SourceY   = ff_8::TileOperations::SourceY{};
+          static constexpr auto TextureId = ff_8::TileOperations::TextureId{};
+          static constexpr auto PaletteId = ff_8::TileOperations::PaletteId{};
           std::map<TextureIdT, std::vector<PaletteIdT>> conflicts;
 
           // Process each pair of matching tiles and insert their palette IDs
@@ -982,7 +981,7 @@ struct [[nodiscard]] map_sprite// final
        const glm::uvec2 &destination_tile_size,
        const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const
+       const open_viii::graphics::background::is_tile auto &tile) const
      {
           return get_triangle_strip(
             source_tile_size,
@@ -997,7 +996,7 @@ struct [[nodiscard]] map_sprite// final
        const glm::uvec2 &destination_tile_size,
        const glm::uvec2 &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile,
+       const open_viii::graphics::background::is_tile auto &tile,
        bool imported = false) const
      {
           const auto src = [this, &tile_const, &imported]()

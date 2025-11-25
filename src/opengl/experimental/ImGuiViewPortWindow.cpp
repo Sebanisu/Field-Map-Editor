@@ -141,14 +141,14 @@ inline namespace impl
      void ImGuiViewPortWindow::on_im_gui_update() const
      {
           {
-               const auto push_id = ImGuiPushId();
+               const auto push_id = imgui_utils::ImGuiPushId();
                if (ImGui::Checkbox("Enable Debug Text", &m_debug_text))
                {
                     // changed
                }
           }
           {
-               const auto pop_id = glengine::ImGuiPushId();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                if (ImGui::ColorEdit3("Clear Color", &m_background_color.r))
                {
                     m_clear_impl.Color(m_background_color);

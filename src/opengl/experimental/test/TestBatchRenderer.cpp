@@ -3,7 +3,7 @@
 //
 #include "TestBatchRenderer.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
+#include <imgui_utils/ImGuiPushID.hpp>
 static constinit bool FitWidth  = true;
 static constinit bool FitHeight = true;
 static constinit bool Preview   = false;
@@ -86,13 +86,13 @@ void test::TestBatchRenderer::on_im_gui_update() const
      float       window_height
        = window_width / m_imgui_viewport_window.view_port_aspect_ratio();
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
 
           ImGui::Checkbox("fit Height", &FitHeight);
           ImGui::Checkbox("fit Width", &FitWidth);
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "View Offset", &view_offset.x, -window_width, window_width))
           {
@@ -102,7 +102,7 @@ void test::TestBatchRenderer::on_im_gui_update() const
      }
 
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderInt2(
                 "Quad Axis Count (X, Y)", std::data(m_count), 0, 256))
           {

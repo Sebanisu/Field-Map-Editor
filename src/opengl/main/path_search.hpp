@@ -2,8 +2,8 @@
 #define D32D9952_25B7_4925_A5EB_B8672C65F70C
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
-#include "PupuID.hpp"
-#include "unique_values.hpp"
+#include <ff_8/PupuID.hpp>
+#include <ff_8/UniqueValues.hpp>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -24,10 +24,9 @@ struct path_search
      std::filesystem::path     filters_map_value_string                    = {};
      std::vector<ff_8::PupuID> working_unique_pupu                         = {};
      std::vector<std::string>  current_filenames                           = {};
-     std::
-       map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>>
-                                             bpp_palette     = {};
-     unique_values_and_strings<std::uint8_t> texture_page_id = {};
+     std::map<open_viii::graphics::BPPT, UniqueValues<std::uint8_t>> bpp_palette
+       = {};
+     UniqueValues<std::uint8_t> texture_page_id = {};
 
 
      [[nodiscard]] std::vector<std::filesystem::path>
