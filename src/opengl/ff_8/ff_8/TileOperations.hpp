@@ -531,12 +531,12 @@ namespace SwizzleAsOneImage
                     return std::unexpected("SwizzleAsOneImage: map not set");
                }
 
-               std::size_t index{};
-               std::size_t total_size{};
 
-               map->visit_tiles(
-                 [&](auto &&tiles)
+               return map->visit_tiles(
+                 [&](auto &&tiles) -> std::expected<index_and_size, std::string>
                  {
+                      std::size_t index{};
+                      std::size_t total_size{};
                       using VecT  = std::remove_cvref_t<decltype(tiles)>;
                       using ElemT = typename VecT::value_type;
 
@@ -546,6 +546,10 @@ namespace SwizzleAsOneImage
                              = tiles | std::views::filter(NotInvalidTile{});
                            total_size = std::ranges::distance(filtered);
                            index      = index_of(tiles, tile);
+
+                           return std::expected<index_and_size, std::string>{
+                                std::in_place, index, total_size
+                           };
                       }
                       else
                       {
@@ -553,10 +557,6 @@ namespace SwizzleAsOneImage
                              "SwizzleAsOneImage: Tile type mismatch");
                       }
                  });
-
-               return std::expected<index_and_size, std::string>{ std::in_place,
-                                                                  index,
-                                                                  total_size };
           }
      };
 
