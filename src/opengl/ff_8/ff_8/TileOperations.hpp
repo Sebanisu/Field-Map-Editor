@@ -544,8 +544,9 @@ namespace SwizzleAsOneImage
                       {
                            auto filtered
                              = tiles | std::views::filter(NotInvalidTile{});
-                           total_size = std::ranges::distance(filtered);
-                           index      = index_of(tiles, tile);
+                           total_size = static_cast<std::size_t>(
+                             std::ranges::distance(filtered));
+                           index = index_of(tiles, tile);
 
                            return std::expected<index_and_size, std::string>{
                                 std::in_place, index, total_size
