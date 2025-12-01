@@ -251,7 +251,7 @@ TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s);
 struct MapOperationSettings
 {
      template<class Variant>
-     consteval auto all_labels()
+     static consteval auto all_labels()
      {
           return []<std::size_t... Is>(std::index_sequence<Is...>)
           {
@@ -268,7 +268,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     consteval auto all_descriptions()
+     static consteval auto all_descriptions()
      {
           return []<std::size_t... Is>(std::index_sequence<Is...>)
           {
@@ -285,7 +285,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     consteval auto all_values()
+     static consteval auto all_values()
      {
           return []<std::size_t... Is>(std::index_sequence<Is...>)
           {
