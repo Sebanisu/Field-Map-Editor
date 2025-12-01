@@ -32,6 +32,12 @@ struct TileOperation
      template<open_viii::graphics::background::is_tile TileT>
      using value_type = std::invoke_result_t<get_fn_t, TileT>;
 
+     // noop set_map
+     [[nodiscard]] std::monostate
+       set_map(const open_viii::graphics::background::Map & /*m*/)
+     {
+          return {};
+     }
 
      template<typename ValueT>
      struct nested_type
@@ -448,7 +454,7 @@ namespace SwizzleAsOneImage
      {
           static constexpr int                        TILE_SIZE          = 16;
           static constexpr int                        TEXTURE_PAGE_WIDTH = 256;
-          const open_viii::graphics::background::Map &map;
+          const open_viii::graphics::background::Map *map = nullptr;
 
           static int tiles_per_row(std::size_t size)
           {
@@ -468,11 +474,50 @@ namespace SwizzleAsOneImage
                return static_cast<std::size_t>(
                  std::distance(std::begin(tiles), std::addressof(tile)));
           }
+
           struct index_and_size
           {
                std::size_t index{};
                std::size_t size{};
           };
+
+          struct guard
+          {
+               const open_viii::graphics::background::Map **map_ptr = nullptr;
+               explicit guard(const open_viii::graphics::background::Map *&map)
+                 : map_ptr(&map)
+               {
+               }
+               ~guard()
+               {
+                    if (map_ptr && *map_ptr)
+                    {
+                         *map_ptr = nullptr;
+                    }
+               }
+               // Movable
+               guard(guard &&other) noexcept
+                 : map_ptr(other.map_ptr)
+               {
+                    other.map_ptr = nullptr;
+               }
+               guard &operator=(guard &&other) noexcept
+               {
+                    if (this != &other)
+                    {
+                         map_ptr       = other.map_ptr;
+                         other.map_ptr = nullptr;
+                    }
+                    return *this;
+               }
+          };
+
+          [[nodiscard]] guard
+            set_map(const open_viii::graphics::background::Map &m)
+          {
+               map = &m;
+               return guard{ map };
+          }
 
         protected:
           template<typename TileT>
