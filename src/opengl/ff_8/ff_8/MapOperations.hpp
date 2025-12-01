@@ -8,7 +8,7 @@ enum struct TileInputStrategy : std::uint8_t
      MimSwizzle,
      ExternalSwizzle,
      ExternalDeswizzle,
-     ExternalSwizzleAsOneImage,
+     // ExternalSwizzleAsOneImage,
      All
 };
 
@@ -16,7 +16,7 @@ enum struct TileOutputStrategy : std::uint8_t
 {
      Swizzle,
      Deswizzle,
-     SwizzleAsOneImage,
+     // SwizzleAsOneImage,
      All
 };
 
@@ -88,26 +88,27 @@ struct TileInputFunction<TileInputStrategy::ExternalDeswizzle>
          "prevents data loss due to overlapping tiles.";
 };
 
-template<>
-struct TileInputFunction<TileInputStrategy::ExternalSwizzleAsOneImage>
-{
-     using X              = TileOperations::SwizzleAsOneImage::X;
-     using Y              = TileOperations::SwizzleAsOneImage::Y;
-     using TexturePage    = TileOperations::SwizzleAsOneImage::TextureId;
-     using UseTexturePage = std::true_type;
-     using Lossless       = std::true_type;
-     using External       = std::true_type;
-     using StrategyType   = TileInputStrategy;
-     static constexpr TileInputStrategy strategy
-       = TileInputStrategy::ExternalSwizzleAsOneImage;
-     static constexpr std::string_view label
-       = "Input (External Swizzle As One Image)";
-     static constexpr std::string_view description
-       = "Inputs all tiles from a single swizzled image file. The tiles come "
-         "in sequential order, so the texture page and source coordinates are "
-         "calculated based on the tile index. This prevents data loss due to "
-         "overlapping tiles.";
-};
+// template<>
+// struct TileInputFunction<TileInputStrategy::ExternalSwizzleAsOneImage>
+// {
+//      using X              = TileOperations::SwizzleAsOneImage::X;
+//      using Y              = TileOperations::SwizzleAsOneImage::Y;
+//      using TexturePage    = TileOperations::SwizzleAsOneImage::TextureId;
+//      using UseTexturePage = std::true_type;
+//      using Lossless       = std::true_type;
+//      using External       = std::true_type;
+//      using StrategyType   = TileInputStrategy;
+//      static constexpr TileInputStrategy strategy
+//        = TileInputStrategy::ExternalSwizzleAsOneImage;
+//      static constexpr std::string_view label
+//        = "Input (External Swizzle As One Image)";
+//      static constexpr std::string_view description
+//        = "Inputs all tiles from a single swizzled image file. The tiles come
+//        "
+//          "in sequential order, so the texture page and source coordinates are
+//          " "calculated based on the tile index. This prevents data loss due
+//          to " "overlapping tiles.";
+// };
 
 template<>
 struct TileOutputFunction<TileOutputStrategy::Swizzle>
@@ -147,25 +148,24 @@ struct TileOutputFunction<TileOutputStrategy::Deswizzle>
          "tile to generate a unique ID where tiles aren't overlapping.";
 };
 
-template<>
-struct TileOutputFunction<TileOutputStrategy::SwizzleAsOneImage>
-{
-     using X                   = TileOperations::SwizzleAsOneImage::X;
-     using Y                   = TileOperations::SwizzleAsOneImage::Y;
-     using TexturePage         = TileOperations::SwizzleAsOneImage::TextureId;
-     using UseTexturePage      = std::true_type;
-     using UseBlendingOnRender = std::false_type;
-     using Lossless            = std::true_type;
-     using StrategyType        = TileOutputStrategy;
-     static constexpr TileOutputStrategy strategy
-       = TileOutputStrategy::SwizzleAsOneImage;
-     static constexpr std::string_view label = "Output (Swizzle As One Image)";
-     static constexpr std::string_view description
-       = "Outputs all tiles into a single swizzled image file. "
-         "This also reorderes the tiles to be in sequential order. This will "
-         "prevent data loss. Because it's impossible for the tiles to overlap "
-         "when using this method.";
-};
+// template<>
+// struct TileOutputFunction<TileOutputStrategy::SwizzleAsOneImage>
+// {
+//      using X                   = TileOperations::SwizzleAsOneImage::X;
+//      using Y                   = TileOperations::SwizzleAsOneImage::Y;
+//      using TexturePage         =
+//      TileOperations::SwizzleAsOneImage::TextureId; using UseTexturePage =
+//      std::true_type; using UseBlendingOnRender = std::false_type; using
+//      Lossless            = std::true_type; using StrategyType        =
+//      TileOutputStrategy; static constexpr TileOutputStrategy strategy
+//        = TileOutputStrategy::SwizzleAsOneImage;
+//      static constexpr std::string_view label = "Output (Swizzle As One
+//      Image)"; static constexpr std::string_view description
+//        = "Outputs all tiles into a single swizzled image file. "
+//          "This also reorderes the tiles to be in sequential order. This will
+//          " "prevent data loss. Because it's impossible for the tiles to
+//          overlap " "when using this method.";
+// };
 
 template<class Strategy>
 struct TileFunction
@@ -204,17 +204,33 @@ struct TileFunction
      // Optional trait:
      // External  (input-only trait) indicates if the tile data comes from
      // external files and not the original MIM files.
-     static constexpr bool             External
-       = requires { typename S::External; } ? S::External::value : false;
+     static constexpr bool             External    = []
+     {
+          if constexpr (requires { typename S::External; })
+          {
+               return S::External::value;
+          }
+          else
+          {
+               return false;
+          }
+     }();
 
      // Optional trait:
      // UseBlendingOnRender (output-only trait) forced to false for outputting
      // to files. But when true and rendering to screen its used for a default.
      // That can be toggled on and off. When false it cannot be toggled.
-     static constexpr bool UseBlendingOnRender = requires {
-          typename S::UseBlendingOnRender;
-     } ? S::UseBlendingOnRender::value : false;
-
+     static constexpr bool UseBlendingOnRender = []
+     {
+          if constexpr (requires { typename S::UseBlendingOnRender; })
+          {
+               return S::UseBlendingOnRender::value;
+          }
+          else
+          {
+               return false;
+          }
+     }();
 
      // X cordinate getter, use X(tile) to get value
      XType                 X{};
