@@ -4,6 +4,11 @@
 
 #include <ostream>
 
+std::size_t count_valid_tiles(const open_viii::graphics::background::Map &map)
+{
+     return map.visit_tiles([&](const auto &tiles) { return tiles.size(); });
+}
+
 namespace open_viii::graphics::background
 {
 
@@ -159,4 +164,155 @@ int main()
      "Uniform TileOperations on Tile1"_test = [&]() { test_tile(t1); };
      "Uniform TileOperations on Tile2"_test = [&]() { test_tile(t2); };
      "Uniform TileOperations on Tile3"_test = [&]() { test_tile(t3); };
+
+     "SwizzleAsOneImage operations (using variant constructor)"_test = [&]
+     {
+          using namespace open_viii::graphics::background;
+          using namespace SwizzleAsOneImage;
+
+          // Helper to build a map from a sequence of tiles using the variant
+          // constructor
+          const auto make_map = [](auto &&...tiles_pack)
+          {
+               // Capture tiles in a vector first so we can return them by
+               // lambda
+               auto tile_vector
+                 = std::vector<std::decay_t<decltype(tiles_pack)>...>{
+                        tiles_pack...
+                   };
+
+               return Map(
+                 [&, index = std::size_t{}]() mutable -> Map::variant_tile
+                 {
+                      if (index < tile_vector.size())
+                      {
+                           return tile_vector[index++];
+                      }
+                      return std::monostate{};
+                 });
+          };
+
+          // Build a small map with known order: t1 (Tile1), t2 (Tile2), t3
+          // (Tile3) Note: even though types differ, the constructor will reject
+          // mixed types! So we build three separate homogeneous maps instead.
+
+          const Map          map1 = make_map(t1);// only Tile1
+          const Map          map2 = make_map(t2);// only Tile2
+          const Map          map3 = make_map(t3);// only Tile3
+
+          // But for swizzle testing, we really want multiple tiles of the
+          // *same* type Let's create a realistic test map with 25 valid Tile1s
+          std::vector<Tile1> many_tiles;
+          many_tiles.reserve(25);
+          for (int i = 0; i < 25; ++i)
+          {
+               auto &tmp = many_tiles.emplace_back();
+
+               tmp       = tmp.with_x(static_cast<std::int16_t>(i % 5) * 50)
+                       .with_y(static_cast<std::int16_t>(i / 5) * 50)
+                       .with_texture_id(0)
+                       .with_palette_id(0);
+          }
+
+          const Map big_map = [&many_tiles]()
+          {
+               return Map(
+                 [&, index = std::size_t{}]() mutable -> Map::variant_tile
+                 {
+                      if (index < many_tiles.size())
+                      {
+                           return many_tiles[index++];
+                      }
+                      return std::monostate{};
+                 });
+          }();
+
+          // Expected layout:
+          // 25 tiles → 25 × 16 = 400 px wide → 2 texture pages (256 + 144)
+          // tiles per row = ceil(400 / 16) = 25
+          // But texture page width = 256 → 16 tiles fit in first page (0..15)
+          // So tile 16 → x = 0, texture page = 1
+
+          expect(eq(count_valid_tiles(big_map), 25u))
+            << "Map should have 25 valid tiles";
+
+          SwizzleAsOneImage::X         x_op;
+          SwizzleAsOneImage::Y         y_op;
+          SwizzleAsOneImage::TextureId tp_op;
+
+          {
+               auto gx  = x_op.set_map(big_map);
+               auto gy  = y_op.set_map(big_map);
+               auto gtp = tp_op.set_map(big_map);
+
+               // Test tile index 0
+               expect(eq(x_op(many_tiles[0]), 0)) << "swizzle X[0]";
+               expect(eq(y_op(many_tiles[0]), 0)) << "swizzle Y[0]";
+               expect(eq(tp_op(many_tiles[0]), 0u)) << "texture page[0]";
+
+               // Test tile index 15 (last in first page)
+               expect(eq(x_op(many_tiles[15]), 15 * 16))
+                 << "swizzle X[15]";// 240
+               expect(eq(y_op(many_tiles[15]), 0)) << "swizzle Y[15]";
+               expect(eq(tp_op(many_tiles[15]), 0u)) << "texture page[15]";
+
+               // Test tile index 16 → wraps to page 1, x resets to 0
+               expect(eq(x_op(many_tiles[16]), 0)) << "swizzle X[16] (wrapped)";
+               expect(eq(y_op(many_tiles[16]), 16))
+                 << "swizzle Y[16] (second row)";
+               expect(eq(tp_op(many_tiles[16]), 1u)) << "texture page[16]";
+
+               // Test tile index 24
+               expect(eq(x_op(many_tiles[24]), 8 * 16))
+                 << "swizzle X[24]";// 128
+               expect(eq(y_op(many_tiles[24]), 16)) << "swizzle Y[24]";
+               expect(eq(tp_op(many_tiles[24]), 1u)) << "texture page[24]";
+          }
+
+          // Negative test: map not set → should log error and return 0
+          {
+               SwizzleAsOneImage::X clean_op;
+               expect(eq(clean_op(many_tiles[0]), 0))
+                 << "X without map should return 0";
+               // Note: spdlog is set to err, so error should be printed if
+               // logging enabled
+          }
+
+          // Test with empty map (no valid tiles)
+          {
+               const Map empty_map
+                 = Map([]() -> Map::variant_tile { return std::monostate{}; });
+
+               SwizzleAsOneImage::X op;
+               auto                 guard = op.set_map(empty_map);
+
+               // get_index_and_size should fail → return 0
+               expect(eq(op(many_tiles[0]), 0))
+                 << "Swizzle on empty map should return 0";
+          }
+
+          //           // Test that mixed tile types are rejected at
+          //           construction time
+          //           static_assert(!std::is_constructible_v<Map, decltype([]()
+          //           -> Map::variant_tile {
+          //         static int i = 0;
+          //         return i++ == 0 ? Map::variant_tile(Tile1{}) :
+          //         Map::variant_tile(Tile2{});
+          //     })>); // Should not compile if mixed types were allowed — but
+          //     we can't test compile-time here
+
+          // So instead, runtime check:
+          expect(
+            throws<std::bad_variant_access>(
+              []
+              {
+                   Map bad_map(
+                     [index = std::size_t{}]() mutable -> Map::variant_tile
+                     {
+                          return (index++ == 0) ? Map::variant_tile(Tile1{})
+                                                : Map::variant_tile(Tile2{});
+                     });
+              }))
+            << "Map constructor should reject mixed tile types";
+     };
 }
