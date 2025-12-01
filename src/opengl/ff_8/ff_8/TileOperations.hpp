@@ -521,12 +521,20 @@ namespace SwizzleAsOneImage
 
         protected:
           template<typename TileT>
-          index_and_size get_index_and_size(const TileT &tile) const
+          std::expected<
+            index_and_size,
+            std::string>
+            get_index_and_size(const TileT &tile) const
           {
+               if (!map)
+               {
+                    return std::unexpected("SwizzleAsOneImage: map not set");
+               }
+
                std::size_t index{};
                std::size_t total_size{};
 
-               map.visit_tiles(
+               map->visit_tiles(
                  [&](auto &&tiles)
                  {
                       using VecT  = std::remove_cvref_t<decltype(tiles)>;
@@ -539,9 +547,14 @@ namespace SwizzleAsOneImage
                            total_size = std::ranges::distance(filtered);
                            index      = index_of(tiles, tile);
                       }
+                      else
+                      {
+                           return std::unexpected(
+                             "SwizzleAsOneImage: Tile type mismatch");
+                      }
                  });
 
-               return { index, total_size };
+               return { std::in_place, index, total_size };
           }
      };
 
@@ -552,7 +565,18 @@ namespace SwizzleAsOneImage
           template<open_viii::graphics::background::is_tile TileT>
           auto operator()(const TileT &tile) const
           {
-               const auto &[index, total_size] = get_index_and_size(tile);
+               const auto result = get_index_and_size(tile);
+               if (!result)
+               {
+                    spdlog::error(
+                      "[{}:{}] SwizzleAsOneImage::X: {}",
+                      __FILE__,
+                      __LINE__,
+                      result.error());
+                    return ff_8::TileOperations::SourceX::value_type<TileT>{};
+               }
+
+               const auto &[index, total_size] = *result;
 
                const int tpr                   = tiles_per_row(total_size);
                const int x     = (static_cast<int>(index) % tpr) * TILE_SIZE;
@@ -571,7 +595,18 @@ namespace SwizzleAsOneImage
           template<open_viii::graphics::background::is_tile TileT>
           auto operator()(const TileT &tile) const
           {
-               const auto &[index, total_size] = get_index_and_size(tile);
+               const auto result = get_index_and_size(tile);
+               if (!result)
+               {
+                    spdlog::error(
+                      "[{}:{}] SwizzleAsOneImage::Y: {}",
+                      __FILE__,
+                      __LINE__,
+                      result.error());
+                    return ff_8::TileOperations::SourceY::value_type<TileT>{};
+               }
+
+               const auto &[index, total_size] = *result;
 
                const int tpr                   = tiles_per_row(total_size);
                const int y = (static_cast<int>(index) / tpr) * TILE_SIZE;
@@ -586,9 +621,20 @@ namespace SwizzleAsOneImage
           using Base::Base;
 
           template<open_viii::graphics::background::is_tile TileT>
-          auto operator()(const TileT &tile) const
+          std::uint8_t operator()(const TileT &tile) const
           {
-               const auto &[index, total_size] = get_index_and_size(tile);
+               auto result = get_index_and_size(tile);
+               if (!result)
+               {
+                    spdlog::error(
+                      "[{}:{}] SwizzleAsOneImage::TextureId: {}",
+                      __FILE__,
+                      __LINE__,
+                      result.error());
+                    return {};
+               }
+
+               const auto &[index, total_size] = *result;
 
                const int tpr                   = tiles_per_row(total_size);
                const int x  = (static_cast<int>(index) % tpr) * TILE_SIZE;
