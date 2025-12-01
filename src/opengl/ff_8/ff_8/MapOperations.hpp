@@ -261,7 +261,7 @@ using TileOutputFunctionVariant = decltype([] {
 namespace MapOperationSettings
 {
      template<class Variant>
-     inline constexpr std::array<
+     inline consteval std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_labels()
@@ -281,7 +281,7 @@ namespace MapOperationSettings
      }
 
      template<class Variant>
-     inline constexpr std::array<
+     inline consteval std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_descriptions()
@@ -301,7 +301,7 @@ namespace MapOperationSettings
      }
 
      template<class Variant>
-     inline constexpr std::array<
+     inline consteval std::array<
        Variant,
        std::variant_size_v<Variant>>
        all_values()
@@ -312,17 +312,17 @@ namespace MapOperationSettings
                  std::variant_alternative_t<Is, Variant>{} }... };
           }(std::make_index_sequence<std::variant_size_v<Variant>>{});
      }
-     static constexpr inline auto input_labels
+     inline constexpr auto input_labels
        = all_labels<TileInputFunctionVariant>();
-     static constexpr inline auto input_descriptions
+     inline constexpr auto input_descriptions
        = all_descriptions<TileInputFunctionVariant>();
-     static constexpr inline auto input_values
+     inline constexpr auto input_values
        = all_values<TileInputFunctionVariant>();
-     static constexpr inline auto output_labels
+     inline constexpr auto output_labels
        = all_labels<TileOutputFunctionVariant>();
-     static constexpr inline auto output_descriptions
+     inline constexpr auto output_descriptions
        = all_descriptions<TileOutputFunctionVariant>();
-     static constexpr inline auto output_values
+     inline constexpr auto output_values
        = all_values<TileOutputFunctionVariant>();
 }// namespace MapOperationSettings
 
