@@ -262,10 +262,10 @@ using TileOutputFunctionVariant = decltype([] {
 }());
 
 
-struct MapOperationSettings
+namespace MapOperationSettings
 {
      template<class Variant>
-     static constexpr std::array<
+     inline constexpr std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_labels()
@@ -285,7 +285,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     static constexpr std::array<
+     inline constexpr std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_descriptions()
@@ -305,7 +305,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     static constexpr std::array<
+     inline constexpr std::array<
        Variant,
        std::variant_size_v<Variant>>
        all_values()
@@ -328,7 +328,7 @@ struct MapOperationSettings
        = all_descriptions<TileOutputFunctionVariant>();
      static constexpr inline auto output_values
        = all_values<TileOutputFunctionVariant>();
-};
+}// namespace MapOperationSettings
 
 TileInputFunctionVariant  MakeTileInputFunction(TileInputStrategy s);
 TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s);
