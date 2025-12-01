@@ -228,12 +228,6 @@ struct TileFunction
      std::filesystem::path Path{};
 };
 
-template<TileInputStrategy Strategy>
-TileFunction(TileInputStrategy) -> TileFunction<TileInputFunction<Strategy>>;
-
-template<TileOutputStrategy Strategy>
-TileFunction(TileOutputStrategy) -> TileFunction<TileOutputFunction<Strategy>>;
-
 
 using TileInputFunctionVariant = decltype([] {
     return []<std::size_t... Is>(std::index_sequence<Is...>)
@@ -250,6 +244,10 @@ using TileOutputFunctionVariant = decltype([] {
         return std::monostate{}; // default-constructed variant
     }(std::make_index_sequence<static_cast<std::size_t>(TileOutputStrategy::All)>{});
 }());
+
+TileInputFunctionVariant  MakeTileInputFunction(TileInputStrategy s);
+TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s);
+
 struct MapOperationSettings
 {
      template<class Variant>

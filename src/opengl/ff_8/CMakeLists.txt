@@ -12,6 +12,7 @@ add_library(
   ff_8/Configuration.cpp
   ff_8/MapGroup.cpp
   ff_8/MapHistory.cpp
+  ff_8/MapOperations.cpp
   ff_8/PupuID.cpp
   ff_8/SafeDir.cpp
   ff_8/UniquifyPupu.cpp
