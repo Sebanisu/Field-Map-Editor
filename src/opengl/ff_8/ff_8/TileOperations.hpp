@@ -472,7 +472,7 @@ namespace SwizzleAsOneImage
             const auto    &tile)
           {
                return static_cast<std::size_t>(
-                 std::distance(std::begin(tiles), std::addressof(tile)));
+                 std::distance(std::data(tiles), std::addressof(tile)));
           }
 
           struct index_and_size
@@ -554,7 +554,9 @@ namespace SwizzleAsOneImage
                       }
                  });
 
-               return { std::in_place, index, total_size };
+               return std::expected<index_and_size, std::string>{ std::in_place,
+                                                                  index,
+                                                                  total_size };
           }
      };
 
