@@ -245,13 +245,11 @@ using TileOutputFunctionVariant = decltype([] {
     }(std::make_index_sequence<static_cast<std::size_t>(TileOutputStrategy::All)>{});
 }());
 
-TileInputFunctionVariant  MakeTileInputFunction(TileInputStrategy s);
-TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s);
 
 struct MapOperationSettings
 {
      template<class Variant>
-     static consteval std::array<
+     static constexpr std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_labels()
@@ -271,7 +269,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     static consteval std::array<
+     static constexpr std::array<
        std::string_view,
        std::variant_size_v<Variant>>
        all_descriptions()
@@ -291,7 +289,7 @@ struct MapOperationSettings
      }
 
      template<class Variant>
-     static consteval std::array<
+     static constexpr std::array<
        Variant,
        std::variant_size_v<Variant>>
        all_values()
@@ -316,5 +314,7 @@ struct MapOperationSettings
        = all_values<TileOutputFunctionVariant>();
 };
 
+TileInputFunctionVariant  MakeTileInputFunction(TileInputStrategy s);
+TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s);
 }// namespace ff_8
 #endif /* B2E1701E_178B_463A_A598_6CB97968CE39 */
