@@ -233,15 +233,11 @@ struct TileFunction
      }();
 
      // X cordinate getter, use X(tile) to get value
-     XType                 X{};
+     XType           X{};
      // Y cordinate getter, use Y(tile) to get value
-     YType                 Y{};
+     YType           Y{};
      // Texture page getter, use TexturePage(tile) to get value
-     TexturePageType       TexturePage{};
-
-     // Path to the images used for this operation (input-only)
-     // Though this is currently stored in the filters so we might not use this.
-     std::filesystem::path Path{};
+     TexturePageType TexturePage{};
 };
 
 
