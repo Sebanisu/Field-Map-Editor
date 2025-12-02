@@ -205,26 +205,28 @@ int main()
           // *same* type Let's create a realistic test map with 25 valid Tile1s
 
 
-          const Map big_map = [many_tiles =
-                                 []()
-                               {
-                                    std::vector<Tile1> tiles;
-                                    tiles.reserve(25);
-                                    for (int i = 0; i < 25; ++i)
-                                    {
-                                         tiles.emplace_back();
-                                    }
-                                    return tiles;
-                               }()]() -> Map
+          const Map big_map = []() -> Map
           {
                return Map(
                  [&, index = std::size_t{}]() mutable -> Map::variant_tile
                  {
-                      if (index < many_tiles.size())
+                      if (index++ < 25)
                       {
-                           return many_tiles[index++];
+                           return Tile1{};
                       }
-                      index = {};
+                      return std::monostate{};
+                 });
+          }();
+
+          const Map bigger_map = []() -> Map
+          {
+               return Map(
+                 [&, index = std::size_t{}]() mutable -> Map::variant_tile
+                 {
+                      if (index++ < 513)
+                      {
+                           return Tile1{};
+                      }
                       return std::monostate{};
                  });
           }();
@@ -275,6 +277,64 @@ int main()
                  expect(eq(+tp_op(tiles[24]), 0)) << "Tile 24 Texture Page ";
             });
 
+          // SwizzleAsOneImage with column-major + max 16 rows — now with
+          // bigger_map (513 tiles)
+          bigger_map.visit_tiles(
+            [&](const auto &tiles)
+            {
+                 auto gx  = x_op.set_map(bigger_map);
+                 auto gy  = y_op.set_map(bigger_map);
+                 auto gtp = tp_op.set_map(bigger_map);
+
+                 // Tile 0: top-left of first page
+                 expect(eq(+x_op(tiles[0]), 0)) << "BigMap Tile 0 X";
+                 expect(eq(+y_op(tiles[0]), 0)) << "BigMap Tile 0 Y";
+                 expect(eq(+tp_op(tiles[0]), 0))
+                   << "BigMap Tile 0 Texture Page";
+
+                 // Tile 1: second column, same row
+                 expect(eq(+x_op(tiles[1]), 16)) << "BigMap Tile 1 X";
+                 expect(eq(+y_op(tiles[1]), 0)) << "BigMap Tile 1 Y";
+                 expect(eq(+tp_op(tiles[1]), 0)) << "BigMap Tile 1 TP";
+
+                 // Tile 31: last tile of first texture page (bottom-right of
+                 // page 0)
+                 expect(eq(+x_op(tiles[31]), 240))
+                   << "BigMap Tile 31 X (end of page 0)";
+                 expect(eq(+y_op(tiles[31]), 0)) << "BigMap Tile 31 Y (15*16)";
+                 expect(eq(+tp_op(tiles[31]), 1)) << "BigMap Tile 31 TP";
+
+                 // Tile 32: first tile of second texture page
+                 expect(eq(+x_op(tiles[32]), 0))
+                   << "BigMap Tile 32 X (start page 1)";
+                 expect(eq(+y_op(tiles[32]), 0)) << "BigMap Tile 32 Y";
+                 expect(eq(+tp_op(tiles[32]), 2))
+                   << "BigMap Tile 32 Texture Page";
+
+                 // Tile 256: somewhere in the middle (page 8, first column)
+                 expect(eq(+x_op(tiles[256]), 144)) << "BigMap Tile 256 X";
+                 expect(eq(+y_op(tiles[256]), 112)) << "BigMap Tile 256 Y";
+                 expect(eq(+tp_op(tiles[256]), 1))
+                   << "BigMap Tile 256 Texture Page (256/32 = 8)";
+
+                 // Tile 511: very last tile of the 16th full page (page index
+                 // 15)
+                 expect(eq(+x_op(tiles[511]), 0)) << "BigMap Tile 511 X";
+                 expect(eq(+y_op(tiles[511]), 240)) << "BigMap Tile 511 Y";
+                 expect(eq(+tp_op(tiles[511]), 1))
+                   << "BigMap Tile 511 Texture Page (511/32 = 15 full pages)";
+
+                 // Tile 512: the 513th tile → first (and only) tile on the 17th
+                 // texture page
+                 expect(eq(+x_op(tiles[512]), 16))
+                   << "BigMap Tile 512 X (new page, only tile)";
+                 expect(eq(+y_op(tiles[512]), 240)) << "BigMap Tile 512 Y";
+                 expect(eq(+tp_op(tiles[512]), 1))
+                   << "BigMap Tile 512 Texture Page (17th page, index 16)";
+
+                 // Optional: double-check total number of tiles
+                 expect(eq(tiles.size(), 513u)) << "BigMap total tile count";
+            });
 
           // Negative test: map not set → should log error and return 0
           big_map.visit_tiles(
