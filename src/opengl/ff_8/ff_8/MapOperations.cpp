@@ -4,9 +4,9 @@ namespace ff_8
 {
 TileInputFunctionVariant MakeTileInputFunction(TileInputStrategy s)
 {
-     std::size_t i = 1 + static_cast<std::size_t>(s);
+     std::size_t i = static_cast<std::size_t>(s);
 
-     if (i >= MapOperationSettings::input_values.size())
+     if (i >= MapOperationSettings::input_values.size()) [[unlikely]]
           return {};// monostate
 
      return MapOperationSettings::input_values[i];
@@ -14,9 +14,9 @@ TileInputFunctionVariant MakeTileInputFunction(TileInputStrategy s)
 
 TileOutputFunctionVariant MakeTileOutputFunction(TileOutputStrategy s)
 {
-     std::size_t i = 1 + static_cast<std::size_t>(s);
+     std::size_t i = static_cast<std::size_t>(s);
 
-     if (i >= MapOperationSettings::output_values.size())
+     if (i >= MapOperationSettings::output_values.size()) [[unlikely]]
           return {};// monostate
 
      return MapOperationSettings::output_values[i];
