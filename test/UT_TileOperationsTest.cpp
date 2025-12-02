@@ -208,8 +208,8 @@ int main()
           {
                auto &tmp = many_tiles.emplace_back();
 
-               tmp       = tmp.with_x(static_cast<std::int16_t>(i % 5) * 50)
-                       .with_y(static_cast<std::int16_t>(i / 5) * 50)
+               tmp       = tmp.with_x(static_cast<std::int16_t>((i % 5) * 50))
+                       .with_y(static_cast<std::int16_t>((i / 5) * 50))
                        .with_texture_id(0)
                        .with_palette_id(0);
           }
