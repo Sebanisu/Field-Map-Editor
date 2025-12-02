@@ -207,12 +207,7 @@ int main()
           many_tiles.reserve(25);
           for (int i = 0; i < 25; ++i)
           {
-               auto &tmp = many_tiles.emplace_back();
-
-               tmp       = tmp.with_x(static_cast<std::int16_t>((i % 5) * 50))
-                       .with_y(static_cast<std::int16_t>((i / 5) * 50))
-                       .with_texture_id(0)
-                       .with_palette_id(0);
+               many_tiles.emplace_back();
           }
 
           const Map big_map = [&many_tiles]()
