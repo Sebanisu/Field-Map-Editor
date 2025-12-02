@@ -5,6 +5,7 @@ namespace ff_8
 {
 enum struct TileInputStrategy : std::uint8_t
 {
+     None,
      MimSwizzle,
      ExternalSwizzle,
      ExternalDeswizzle,
@@ -14,6 +15,7 @@ enum struct TileInputStrategy : std::uint8_t
 
 enum struct TileOutputStrategy : std::uint8_t
 {
+     None,
      Swizzle,
      Deswizzle,
      SwizzleAsOneImage,
@@ -232,6 +234,13 @@ struct TileFunction
           }
      }();
 
+     [[nodiscard]] auto set_map(const open_viii::graphics::background::Map &m)
+     {
+          // set the map for the operations and return all the guards in a tuple
+          // so they reset on destruction.
+          return std::tuple{ X(m), Y(m), TexturePage(m) };
+     }
+
      // X cordinate getter, use X(tile) to get value
      XType           X{};
      // Y cordinate getter, use Y(tile) to get value
@@ -243,18 +252,18 @@ struct TileFunction
 
 using TileInputFunctionVariant = decltype([] {
     return []<std::size_t... Is>(std::index_sequence<Is...>)
-        -> std::variant<std::monostate,TileFunction<TileInputFunction<static_cast<TileInputStrategy>(Is)>>...>
+        -> std::variant<std::monostate,TileFunction<TileInputFunction<static_cast<TileInputStrategy>(Is + 1)>>...>
     {
         return std::monostate{}; // default-constructed variant
-    }(std::make_index_sequence<static_cast<std::size_t>(TileInputStrategy::All)>{});
+    }(std::make_index_sequence<static_cast<std::size_t>(TileInputStrategy::All) - 1>{});
 }());
 
 using TileOutputFunctionVariant = decltype([] {
     return []<std::size_t... Is>(std::index_sequence<Is...>)
-        -> std::variant<std::monostate,TileFunction<TileOutputFunction<static_cast<TileOutputStrategy>(Is)>>...>
+        -> std::variant<std::monostate,TileFunction<TileOutputFunction<static_cast<TileOutputStrategy>(Is + 1)>>...>
     {
         return std::monostate{}; // default-constructed variant
-    }(std::make_index_sequence<static_cast<std::size_t>(TileOutputStrategy::All)>{});
+    }(std::make_index_sequence<static_cast<std::size_t>(TileOutputStrategy::All) - 1>{});
 }());
 
 
