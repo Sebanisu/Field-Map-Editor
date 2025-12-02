@@ -33,7 +33,7 @@ target_compile_definitions(
 add_test(NAME ${PROJECT_NAME}_UT_source_tile_conflicts_test
          COMMAND ${PROJECT_NAME}_UT_source_tile_conflicts_test)
 
-# TileOperationsTest -----------------------------------------------------
+# MapOperationTest -----------------------------------------------------
          add_executable(${PROJECT_NAME}_UT_TileOperationsTest
     UT_TileOperationsTest.cpp
 )
@@ -47,11 +47,6 @@ target_compile_features(${PROJECT_NAME}_UT_TileOperationsTest
     PRIVATE cxx_std_23
 )
 
-target_compile_definitions(${PROJECT_NAME}_UT_TileOperationsTest
-    PRIVATE UT_TileOperationsTest
-    # PRIVATE NDEBUG   # uncomment if you want release asserts off
-)
-
 add_test(
     NAME ${PROJECT_NAME}_UT_TileOperationsTest
     COMMAND ${PROJECT_NAME}_UT_TileOperationsTest
@@ -62,3 +57,23 @@ add_test(
 #     FAIL_REGULAR_EXPRESSION "failed"
 #     PASS_REGULAR_EXPRESSION "[Aa]ll tests passed"
 # )
+
+
+# MapOperations -----------------------------------------------------
+         add_executable(${PROJECT_NAME}_UT_MapOperations
+    UT_MapOperations.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_UT_MapOperations
+    PRIVATE "${boost_namespace}::ut"
+    PRIVATE ${PROJECT_NAME}_ff_8
+)
+
+target_compile_features(${PROJECT_NAME}_UT_MapOperations
+    PRIVATE cxx_std_23
+)
+
+add_test(
+    NAME ${PROJECT_NAME}_UT_MapOperations
+    COMMAND ${PROJECT_NAME}_UT_MapOperations
+)
