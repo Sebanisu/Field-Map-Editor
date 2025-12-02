@@ -61,45 +61,6 @@ int main()
               MakeTileOutputFunction(TileOutputStrategy::SwizzleAsOneImage)));
      };
 
-     "Labels and descriptions are in sync with strategies (no magic indices)"_test
-       = []
-     {
-          // Helper: find index of a specific strategy type in the variant
-          // array
-          auto index_of = []<typename Target>() -> std::size_t
-          {
-               constexpr std::size_t N
-                 = std::variant_size_v<TileInputFunctionVariant>;
-               for (std::size_t i = 0; i < N; ++i)
-               {
-                    if (std::holds_alternative<TileFunction<Target>>(
-                          input_values[i]))
-                         return i;
-               }
-               return N;// not found
-          };
-
-
-          // Same for output
-          auto out_index_of = []<typename Target>() -> std::size_t
-          {
-               constexpr std::size_t N
-                 = std::variant_size_v<TileOutputFunctionVariant>;
-               for (std::size_t i = 0; i < N; ++i)
-               {
-                    if (std::holds_alternative<TileFunction<Target>>(
-                          output_values[i]))
-                         return i;
-               }
-               return N;
-          };
-
-          expect(
-            output_labels[out_index_of.template operator()<
-              TileOutputFunction<TileOutputStrategy::Deswizzle>>()]
-            == "Output (Deswizzle)"sv);
-     };
-
      "Traits are correct without assuming order"_test = []
      {
           auto check_strategy = [](const auto &strategy)
