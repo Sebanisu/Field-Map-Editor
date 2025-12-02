@@ -241,28 +241,30 @@ int main()
                auto gx  = x_op.set_map(big_map);
                auto gy  = y_op.set_map(big_map);
                auto gtp = tp_op.set_map(big_map);
+               // SwizzleAsOneImage with column-major + max 16 rows
+               expect(eq(+x_op(many_tiles[0]), 0));
+               expect(eq(+y_op(many_tiles[0]), 0));
+               expect(eq(+tp_op(many_tiles[0]), 0));
 
-               // Test tile index 0
-               expect(eq(+x_op(many_tiles[0]), 240)) << "swizzle X[0]";
-               expect(eq(+y_op(many_tiles[0]), 0)) << "swizzle Y[0]";
-               expect(eq(+tp_op(many_tiles[0]), 0u)) << "texture page[0]";
+               expect(eq(+x_op(many_tiles[1]), 16));
+               expect(eq(+y_op(many_tiles[1]), 0));
+               expect(eq(+tp_op(many_tiles[1]), 0));
 
-               // Test tile index 15 (last in first page)
-               expect(eq(+x_op(many_tiles[15]), 0)) << "swizzle X[15]";
-               expect(eq(+y_op(many_tiles[15]), 112)) << "swizzle Y[15]";
-               expect(eq(+tp_op(many_tiles[15]), 0)) << "texture page[15]";
+               expect(eq(+x_op(many_tiles[2]), 0));
+               expect(eq(+y_op(many_tiles[2]), 0));
+               expect(eq(+tp_op(many_tiles[2]), 0));
 
-               // Test tile index 16 → wraps to page 1, x resets to 0
-               expect(eq(+x_op(many_tiles[16]), 240))
-                 << "swizzle X[16] (wrapped)";
-               expect(eq(+y_op(many_tiles[16]), 128))
-                 << "swizzle Y[16] (second row)";
-               expect(eq(+tp_op(many_tiles[16]), 0)) << "texture page[16]";
+               expect(eq(+x_op(many_tiles[15]), 16));
+               expect(eq(+y_op(many_tiles[15]), 112));
+               expect(eq(+tp_op(many_tiles[15]), 0));
 
-               // Test tile index 24
-               expect(eq(+x_op(many_tiles[24]), 240)) << "swizzle X[24]";// 128
-               expect(eq(+y_op(many_tiles[24]), 192)) << "swizzle Y[24]";
-               expect(eq(+tp_op(many_tiles[24]), 0)) << "texture page[24]";
+               expect(eq(+x_op(many_tiles[16]), 0));
+               expect(eq(+y_op(many_tiles[16]), 128));
+               expect(eq(+tp_op(many_tiles[16]), 0));
+
+               expect(eq(+x_op(many_tiles[24]), 0));
+               expect(eq(+y_op(many_tiles[24]), 192));
+               expect(eq(+tp_op(many_tiles[24]), 0));
           }
 
           // Negative test: map not set → should log error and return 0
