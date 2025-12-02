@@ -4,16 +4,16 @@
 
 #include "map_operation.hpp"
 #include "formatters.hpp"
-#include "tile_operations.hpp"
 #include <algorithm>
+#include <ff_8/TileOperations.hpp>
 #include <functional>
 #include <glm/common.hpp>
 #include <glm/glm.hpp>
 #include <ranges>
 namespace ff_8
 {
-static constexpr auto not_invalid = tile_operations::NotInvalidTile{};
-void                  flatten_bpp(map_group::Map &map)
+static constexpr auto not_invalid = TileOperations::NotInvalidTile{};
+void                  flatten_bpp(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &tiles)
@@ -32,7 +32,7 @@ void                  flatten_bpp(map_group::Map &map)
               });
        });
 }
-void flatten_palette(map_group::Map &map)
+void flatten_palette(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &tiles)
@@ -50,7 +50,7 @@ void flatten_palette(map_group::Map &map)
               });
        });
 }
-void compact_map_order_ffnx(map_group::Map &map)
+void compact_map_order_ffnx(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &&tiles)
@@ -64,10 +64,9 @@ void compact_map_order_ffnx(map_group::Map &map)
             const auto size_of_tiles  = std::ranges::distance(filtered_tiles);
             using tile_t              = std::remove_cvref_t<
                            std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+            const auto with_depth_operation = ff_8::TileOperations::Depth::With{
+                 open_viii::graphics::BPPT::BPP4_CONST()
+            };
             for (auto &&[tile_index, tile] : filtered_and_enumerated_tiles)
             {
 
@@ -78,19 +77,20 @@ void compact_map_order_ffnx(map_group::Map &map)
                  const auto new_pos
                    = dest_coords_for_horizontal_tile_index_swizzle(
                      tile_index, size_of_tiles);
-                 const auto source_x
-                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
-                     new_pos.source_xy.x);
-                 const auto source_y
-                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
-                     new_pos.source_xy.y);
+                 const auto source_x = static_cast<
+                   ff_8::TileOperations::SourceX::value_type<tile_t>>(
+                   new_pos.source_xy.x);
+                 const auto source_y = static_cast<
+                   ff_8::TileOperations::SourceY::value_type<tile_t>>(
+                   new_pos.source_xy.y);
                  const auto with_texture_id_operation
-                   = ff_8::tile_operations::WithTextureId<tile_t>{
+                   = ff_8::TileOperations::TextureId::With{
                           new_pos.texture_page
                      };
                  const auto with_source_xy_operation
-                   = ff_8::tile_operations::WithSourceXY<tile_t>{
-                          { source_x, source_y }
+                   = ff_8::TileOperations::SourceXY::With{
+                          ff_8::TileOperations::SourceXY::value_type<tile_t>{
+                            source_x, source_y }
                      };
                  tile = tile | with_depth_operation | with_source_xy_operation
                         | with_texture_id_operation;
@@ -99,14 +99,14 @@ void compact_map_order_ffnx(map_group::Map &map)
 }
 
 void compact_move_conflicts_only(
-  map_group::Map              &map,
-  const source_tile_conflicts &conflicts)
+  MapGroup::Map             &map,
+  const SourceTileConflicts &conflicts)
 {
 
      map.visit_tiles(
        [&conflicts](auto &&tiles)
        {
-            std::vector<ff_8::source_tile_conflicts::location> empty_locations
+            std::vector<ff_8::SourceTileConflicts::location> empty_locations
               = conflicts.range_of_empty_locations()
                 | std::ranges::to<std::vector>();
             auto range_of_conflicts = conflicts.range_of_conflicts();
@@ -114,10 +114,9 @@ void compact_move_conflicts_only(
             // std::views::filter(not_invalid);
             using tile_t            = std::remove_cvref_t<
                          std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+            const auto with_depth_operation = ff_8::TileOperations::Depth::With{
+                 open_viii::graphics::BPPT::BPP4_CONST()
+            };
 
             for (const auto &indieces : range_of_conflicts)
             {
@@ -139,20 +138,25 @@ void compact_move_conflicts_only(
                                 // filter out any locations you don't want here.
 
                                 const auto texture_page = static_cast<
-                                  ff_8::tile_operations::TextureIdT<tile_t>>(
-                                  location.t);
-                                const auto source_x = static_cast<
-                                  ff_8::tile_operations::SourceXT<tile_t>>(
-                                  location.x);
-                                const auto source_y = static_cast<
-                                  ff_8::tile_operations::SourceYT<tile_t>>(
-                                  location.y);
+                                  ff_8::TileOperations::TextureId::value_type<
+                                    tile_t>>(location.t);
+                                const auto source_x
+                                  = static_cast<ff_8::TileOperations::SourceX::
+                                                  value_type<tile_t>>(
+                                    location.x);
+                                const auto source_y
+                                  = static_cast<ff_8::TileOperations::SourceY::
+                                                  value_type<tile_t>>(
+                                    location.y);
                                 const auto with_texture_id_operation
-                                  = ff_8::tile_operations::WithTextureId<
-                                    tile_t>{ texture_page };
+                                  = ff_8::TileOperations::TextureId::With{
+                                         texture_page
+                                    };
                                 const auto with_source_xy_operation
-                                  = ff_8::tile_operations::WithSourceXY<tile_t>{
-                                         { source_x, source_y }
+                                  = ff_8::TileOperations::SourceXY::With{
+                                         ff_8::TileOperations::SourceXY::
+                                           value_type<tile_t>{ source_x,
+                                                               source_y }
                                     };
                                 tile = tile | with_depth_operation
                                        | with_source_xy_operation
@@ -171,7 +175,7 @@ void compact_move_conflicts_only(
             }
        });
 }
-void compact_map_order(map_group::Map &map)
+void compact_map_order(MapGroup::Map &map)
 {
      map.visit_tiles(
        [](auto &&tiles)
@@ -179,32 +183,30 @@ void compact_map_order(map_group::Map &map)
             auto filtered_tiles = tiles | std::views::filter(not_invalid);
             using tile_t        = std::remove_cvref_t<
                      std::ranges::range_value_t<decltype(tiles)>>;
-            const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+            const auto with_depth_operation = ff_8::TileOperations::Depth::With{
+                 open_viii::graphics::BPPT::BPP4_CONST()
+            };
             for (std::size_t tile_index = {}; tile_t &tile : filtered_tiles)
             {
-                 const auto texture_page
-                   = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(
-                     tile_index / 256);
+                 const auto texture_page = static_cast<
+                   ff_8::TileOperations::TextureId::value_type<tile_t>>(
+                   tile_index / 256);
                  const auto file_tile_index = tile_index % 256;
-                 const auto source_x
-                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
-                     (file_tile_index % ff_8::map_group::TILE_SIZE)
-                     * ff_8::map_group::TILE_SIZE);
-                 const auto source_y
-                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
-                     (file_tile_index / ff_8::map_group::TILE_SIZE)
-                     * ff_8::map_group::TILE_SIZE);
+                 const auto source_x        = static_cast<
+                          ff_8::TileOperations::SourceX::value_type<tile_t>>(
+                   (file_tile_index % ff_8::MapGroup::TILE_SIZE)
+                   * ff_8::MapGroup::TILE_SIZE);
+                 const auto source_y = static_cast<
+                   ff_8::TileOperations::SourceY::value_type<tile_t>>(
+                   (file_tile_index / ff_8::MapGroup::TILE_SIZE)
+                   * ff_8::MapGroup::TILE_SIZE);
                  ++tile_index;
                  const auto with_texture_id_operation
-                   = ff_8::tile_operations::WithTextureId<tile_t>{
-                          texture_page
-                     };
+                   = ff_8::TileOperations::TextureId::With{ texture_page };
                  const auto with_source_xy_operation
-                   = ff_8::tile_operations::WithSourceXY<tile_t>{
-                          { source_x, source_y }
+                   = ff_8::TileOperations::SourceXY::With{
+                          ff_8::TileOperations::SourceXY::value_type<tile_t>{
+                            source_x, source_y }
                      };
                  tile = tile | with_depth_operation | with_source_xy_operation
                         | with_texture_id_operation;
@@ -255,7 +257,7 @@ template<
   typename key_lambdaT,
   typename weight_lambdaT>
 [[maybe_unused]] static void compact_generic(
-  map_group::Map  &map,
+  MapGroup::Map   &map,
   key_lambdaT    &&key_lambda,
   weight_lambdaT &&weight_lambda,
   int              passes = 2)
@@ -279,11 +281,11 @@ template<
                       const auto weight = weight_lambda(key, tps);
 
                       if (
-                        std::cmp_greater_equal(col, ff_8::map_group::TILE_SIZE)
+                        std::cmp_greater_equal(col, ff_8::MapGroup::TILE_SIZE)
                         || std::cmp_greater_equal(
-                          row_weight, ff_8::map_group::TILE_SIZE)
+                          row_weight, ff_8::MapGroup::TILE_SIZE)
                         || std::cmp_greater(
-                          row_weight + weight, ff_8::map_group::TILE_SIZE))
+                          row_weight + weight, ff_8::MapGroup::TILE_SIZE))
                       {
                            ++row;
                            col        = {};
@@ -291,7 +293,7 @@ template<
                       }
 
                       if (std::cmp_greater_equal(
-                            row, ff_8::map_group::TILE_SIZE))
+                            row, ff_8::MapGroup::TILE_SIZE))
                       {
                            ++page;
                            row = {};
@@ -305,9 +307,9 @@ template<
                            *tp
                              = tp->with_source_xy(
                                    static_cast<decltype(tile_t{}.source_x())>(
-                                     col * ff_8::map_group::TILE_SIZE),
+                                     col * ff_8::MapGroup::TILE_SIZE),
                                    static_cast<decltype(tile_t{}.source_y())>(
-                                     row * ff_8::map_group::TILE_SIZE))
+                                     row * ff_8::MapGroup::TILE_SIZE))
                                  .with_texture_id(
                                    static_cast<decltype(tile_t{}.texture_id())>(
                                      page));
@@ -320,7 +322,7 @@ template<
        });
 }
 
-void compact_rows(map_group::Map &map)
+void compact_rows(MapGroup::Map &map)
 {
      compact_generic(
        map,
@@ -336,7 +338,7 @@ void compact_rows(map_group::Map &map)
        [](const auto &key, const auto &)
        { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
 }
-void compact_all(map_group::Map &map)
+void compact_all(MapGroup::Map &map)
 {
      compact_generic(
        map,
@@ -355,12 +357,12 @@ void compact_all(map_group::Map &map)
 
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  const std::uint8_t   &texture_page,
-  bool                  skip_filters,
-  bool                  find_all)
+  const MapGroup::Map &map,
+  const ff_8::Filters &filters,
+  const glm::ivec2    &pixel_pos,
+  const std::uint8_t  &texture_page,
+  bool                 skip_filters,
+  bool                 find_all)
 {
      return map.visit_tiles(
        [&](const auto &tiles)
@@ -370,11 +372,11 @@ void compact_all(map_group::Map &map)
        });
 }
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  bool                  skip_filters,
-  bool                  find_all)
+  const MapGroup::Map &map,
+  const ff_8::Filters &filters,
+  const glm::ivec2    &pixel_pos,
+  bool                 skip_filters,
+  bool                 find_all)
 {
      return map.visit_tiles(
        [&](const auto &tiles)
@@ -394,10 +396,10 @@ QuadStrip get_triangle_strip(
      // source_position and destination_position are in TILE_SIZE cordinates.
      // TILE_SIZE default is 16x16. So we pass in the scaled up source_tile_size
      // and destination_tile_size and do the conversion.
-     constexpr static auto tile_size = static_cast<float>(map_group::TILE_SIZE);     
+     constexpr static auto tile_size = static_cast<float>(MapGroup::TILE_SIZE);
      const glm::vec2       base_source = source_position / tile_size;
-     return { .uv_min
-              = (base_source * source_tile_size) / source_texture_size,
+
+     return { .uv_min = (base_source * source_tile_size) / source_texture_size,
               .uv_max = ((base_source + glm::vec2(1)) * source_tile_size)
                         / source_texture_size,
               .draw_pos
@@ -405,8 +407,8 @@ QuadStrip get_triangle_strip(
 }
 bool test_if_map_same(
   const std::filesystem::path &saved_path,
-  const map_group::WeakField  &weak_field,
-  const map_group::MimType    &type)
+  const MapGroup::WeakField   &weak_field,
+  const MapGroup::MimType     &type)
 {
      bool       return_value = false;
      const auto field        = weak_field.lock();
@@ -415,12 +417,12 @@ bool test_if_map_same(
           spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return return_value;
      }
-     const auto raw_map = map_group::Map{
+     const auto raw_map = MapGroup::Map{
           type, field->get_entry_data({ saved_path.filename().string() }), false
      };
      auto saved_map
-       = map_group::Map{ type, open_viii::tools::read_entire_file(saved_path),
-                         false };
+       = MapGroup::Map{ type, open_viii::tools::read_entire_file(saved_path),
+                        false };
 
      raw_map.visit_tiles(
        [&](const auto &raw_tiles)
@@ -492,9 +494,9 @@ bool test_if_map_same(
 }
 void save_modified_map(
   const std::filesystem::path &dest_path,
-  const map_group::Map        &map_const,
-  const map_group::Map        &map_changed,
-  const map_group::Map *const  imported)
+  const MapGroup::Map         &map_const,
+  const MapGroup::Map         &map_changed,
+  const MapGroup::Map *const   imported)
 {
      const auto path = dest_path.string();
      spdlog::info("Saving modified map: {}", path);

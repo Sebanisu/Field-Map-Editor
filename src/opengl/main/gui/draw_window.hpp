@@ -12,13 +12,15 @@ namespace fme
 {
 struct [[nodiscard]] draw_window
 {
+     draw_window() = default;
+
      draw_window(
-       std::weak_ptr<Selections>       in_selections,
-       std::weak_ptr<const mim_sprite> in_mim_sprite,
-       std::weak_ptr<map_sprite>       in_map_sprite)
-       : m_selections(std::move(in_selections))
-       , m_mim_sprite(std::move(in_mim_sprite))
-       , m_map_sprite(std::move(in_map_sprite))
+       const std::shared_ptr<Selections> &in_selections,
+       const std::shared_ptr<mim_sprite> &in_mim_sprite,
+       const std::shared_ptr<map_sprite> &in_map_sprite)
+       : m_selections(in_selections)
+       , m_mim_sprite(in_mim_sprite)
+       , m_map_sprite(in_map_sprite)
        , m_checkerboard_batchrenderer{
             4,
             []() -> std::filesystem::path
@@ -65,14 +67,16 @@ struct [[nodiscard]] draw_window
      void update(std::weak_ptr<Selections> in_selections);
      void update(std::weak_ptr<const mim_sprite> in_mim_sprite);
      void update(std::weak_ptr<map_sprite> in_map_sprite);
-     void render() const;
-     void hovered_index(std::ptrdiff_t index);
+
+     const std::vector<std::size_t> &clicked_tile_indices() const;
      const std::vector<std::size_t> &hovered_tiles_indices() const;
      const MousePositions           &mouse_positions() const;
-     void                            update_mouse_positions();
-     const std::vector<std::size_t> &clicked_tile_indices() const;
-     void                            clear_clicked_tile_indices() const;
-     void                            remove_clicked_index(std::size_t) const;
+     void                            on_im_gui_update() const;
+     void                            on_update(float) const;
+     void                            on_im_gui_window_menu() const;
+     void                            hovered_index(std::ptrdiff_t index);
+     void                            clear_clicked_tile_indices();
+     void                            remove_clicked_index(std::size_t);
 
    private:
      std::weak_ptr<Selections>            m_selections                 = {};
@@ -84,7 +88,7 @@ struct [[nodiscard]] draw_window
      mutable glengine::OrthographicCamera m_fixed_render_camera        = {};
      mutable std::vector<std::size_t>     m_clicked_tile_indices       = {};
      mutable std::vector<std::size_t>     m_hovered_tiles_indices      = {};
-     std::ptrdiff_t                       m_hovered_index              = { -1 };
+     mutable std::ptrdiff_t               m_hovered_index              = { -1 };
      mutable glm::ivec2                   m_location_backup            = {};
      mutable bool                         m_translation_in_progress = { false };
      void update_hover_and_mouse_button_status_for_map(
@@ -114,5 +118,8 @@ struct [[nodiscard]] draw_window
        const ImVec2 &screen_pos) const;
 };
 }// namespace fme
+static_assert(
+  glengine::Renderable<fme::draw_window>,
+  "draw_window must satisfy Renderable concept");
 
 #endif /* A047A03B_B70D_4490_89A6_07E5D157223D */

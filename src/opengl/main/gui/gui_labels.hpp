@@ -47,8 +47,18 @@ struct gui_labels
        = { "Full Filename Path (.toml)" };
      static constexpr std::string_view map_path        = { ".map Path" };
      static constexpr std::string_view processing      = { "Processing" };
-     static constexpr std::string_view display_history = { "History" };
      static constexpr std::string_view history         = { "History" };
+     static constexpr std::string_view display_history = { "History" };
+     static constexpr std::string_view display_image_compare
+       = { "Image Compare" };
+     static constexpr std::string_view display_draw = { "Draw" };
+     static constexpr std::string_view display_control_panel
+       = { "Control Panel" };
+     static constexpr std::string_view display_custom_paths
+       = { "Custom Paths" };
+     static constexpr std::string_view display_field_file = { "Field File" };
+     static constexpr std::string_view display_batch_operation
+       = { "Batch Operation" };
      static constexpr std::string_view animation_state = { "Animation State" };
      static constexpr std::string_view z               = { "Z" };
      static constexpr std::string_view blend_other     = { "Blend Other" };
@@ -159,9 +169,7 @@ struct gui_labels
      static constexpr std::string_view compact_flatten
        = { "Compact and Flatten" };
      static constexpr std::string_view batch_operation = { "Batch Operation" };
-     static constexpr std::string_view batch_operation_window
-       = { "Batch Swizzle/Deswizzle" };
-     static constexpr std::string_view explore = { "Explore" };
+     static constexpr std::string_view explore         = { "Explore" };
      static constexpr std::string_view forced_on_while_swizzled
        = { "Forced on while Swizzled..." };
 
@@ -185,10 +193,7 @@ struct gui_labels
      static constexpr std::string_view output_path    = { "Output Path" };
      static constexpr std::string_view select_none    = { "Select None" };
      static constexpr std::string_view select_all     = { "Select All" };
-     static constexpr std::string_view draw_window_title   = { "Draw" };
-     static constexpr std::string_view display_draw_window = { "Draw" };
-     static constexpr std::string_view display_control_panel_window
-       = { "Control Panel" };
+     static constexpr std::string_view draw_window_title = { "Draw" };
      static constexpr std::string_view render_imported_image
        = { "Render Imported Image" };
      static constexpr std::string_view mouse_not_over
@@ -223,10 +228,6 @@ struct gui_labels
        = { "Generate Colorful Masks" };
      static constexpr std::string_view BatchGenerateWhiteOnBlackMask
        = { "Generate White On Black Masks" };
-     static constexpr std::string_view display_custom_paths_window
-       = { "Display Custom Paths Window" };
-     static constexpr std::string_view display_field_file_window
-       = { "Display Field File Window" };
 
      static constexpr std::string_view field_file_window
        = { "Field File Window" };

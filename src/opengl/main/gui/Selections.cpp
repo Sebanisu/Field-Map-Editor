@@ -3,10 +3,10 @@
 //
 #include "Selections.hpp"
 #include "formatters.hpp"
-#include "utilities.hpp"
+#include <ff_8/Utilities.hpp>
 #include <spdlog/spdlog.h>
 
-fme::Selections::Selections(const Configuration config)
+fme::Selections::Selections(const ff_8::Configuration config)
   : m_selections_array(load_selections_array(config))
 {
      sort_paths();
@@ -21,12 +21,12 @@ fme::Selections::Selections(const Configuration config)
      }
 }
 
-std::optional<fme::Configuration> fme::Selections::get_ffnx_config() const
+std::optional<ff_8::Configuration> fme::Selections::get_ffnx_config() const
 {
      return get_ffnx_config(get<ConfigKey::FF8Path>());
 }
 
-std::optional<fme::Configuration>
+std::optional<ff_8::Configuration>
   fme::Selections::get_ffnx_config(const std::filesystem::path &ff8_path) const
 {
      const auto      ffnx_settings_toml = ff8_path / "FFNx.toml";
@@ -71,14 +71,15 @@ void fme::Selections::sort_paths()
 
           bool changed = false;
           changed |= std::apply(
-            remove_empty_values<std::remove_cvref_t<decltype(get<Keys>())>...>,
+            ff_8::remove_empty_values<
+              std::remove_cvref_t<decltype(get<Keys>())>...>,
             args);
           changed |= std::apply(
-            remove_nonexistent_paths<
+            ff_8::remove_nonexistent_paths<
               std::remove_cvref_t<decltype(get<Keys>())>...>,
             args_with_bool);
           changed |= std::apply(
-            sort_and_remove_duplicates<
+            ff_8::sort_and_remove_duplicates<
               std::remove_cvref_t<decltype(get<Keys>())>...>,
             args);
 

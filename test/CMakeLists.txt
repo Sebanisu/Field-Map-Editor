@@ -1,3 +1,6 @@
+# --------------------------------------------------------------
+#  Boost.UT – tests
+# --------------------------------------------------------------
 find_package(ut REQUIRED CONFIG)
 
 set(boost_namespace Boost)
@@ -5,10 +8,14 @@ if(ut_VERSION VERSION_LESS "1.1.9")
   set(boost_namespace boost)
 endif()
 
+# source_tile_conflicts_test -----------------------------------------------
+
 add_executable(${PROJECT_NAME}_UT_source_tile_conflicts_test
                UT_source_tile_conflicts_test.cpp)
 target_link_libraries(${PROJECT_NAME}_UT_source_tile_conflicts_test
-                      PRIVATE "${boost_namespace}::ut")
+    PRIVATE "${boost_namespace}::ut"
+    PRIVATE ${PROJECT_NAME}_ff_8
+)
 target_compile_features(
   ${PROJECT_NAME}_UT_source_tile_conflicts_test
   PRIVATE cxx_std_23
@@ -25,3 +32,48 @@ target_compile_definitions(
 # Register the test with CTest
 add_test(NAME ${PROJECT_NAME}_UT_source_tile_conflicts_test
          COMMAND ${PROJECT_NAME}_UT_source_tile_conflicts_test)
+
+# MapOperationTest -----------------------------------------------------
+         add_executable(${PROJECT_NAME}_UT_TileOperationsTest
+    UT_TileOperationsTest.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_UT_TileOperationsTest
+    PRIVATE "${boost_namespace}::ut"
+    PRIVATE ${PROJECT_NAME}_ff_8
+)
+
+target_compile_features(${PROJECT_NAME}_UT_TileOperationsTest
+    PRIVATE cxx_std_23
+)
+
+add_test(
+    NAME ${PROJECT_NAME}_UT_TileOperationsTest
+    COMMAND ${PROJECT_NAME}_UT_TileOperationsTest
+)
+
+# # optional – nicer ctest output
+# set_tests_properties(${PROJECT_NAME}_UT_TileOperationsTest PROPERTIES
+#     FAIL_REGULAR_EXPRESSION "failed"
+#     PASS_REGULAR_EXPRESSION "[Aa]ll tests passed"
+# )
+
+
+# MapOperations -----------------------------------------------------
+         add_executable(${PROJECT_NAME}_UT_MapOperations
+    UT_MapOperations.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_UT_MapOperations
+    PRIVATE "${boost_namespace}::ut"
+    PRIVATE ${PROJECT_NAME}_ff_8
+)
+
+target_compile_features(${PROJECT_NAME}_UT_MapOperations
+    PRIVATE cxx_std_23
+)
+
+add_test(
+    NAME ${PROJECT_NAME}_UT_MapOperations
+    COMMAND ${PROJECT_NAME}_UT_MapOperations
+)

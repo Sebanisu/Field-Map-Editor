@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
 #include "MapHistory.hpp"
-#include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueValues.hpp"
+#include <ff_8/TileOperations.hpp>
 #include <open_viii/graphics/background/Map.hpp>
 namespace ff_8
 {
@@ -17,11 +17,12 @@ struct UniqueTileValues
      using MapT = MapHistory;
      static auto filtered(const auto &tiles)
      {
-          return tiles | std::views::filter(tile_operations::NotInvalidTile{});
+          return tiles | std::views::filter(TileOperations::NotInvalidTile{});
      };
+     template<typename TransformT>
      static auto visit(
-       const MapT &map,
-       auto      &&transform)
+       const MapT  &map,
+       TransformT &&transform)
      {
           return map.front().visit_tiles(
             [&](const auto &f_tiles)
@@ -30,7 +31,7 @@ struct UniqueTileValues
                    [&](const auto &b_tiles)
                    {
                         return TransformedSortedUniqueCopy(
-                          std::forward<decltype(transform)>(transform),
+                          std::forward<TransformT>(transform),
                           {},
                           {},
                           {},
@@ -63,41 +64,41 @@ struct UniqueTileValues
      }
      static auto gen_z(const MapT &map)
      {
-          return visit(map, tile_operations::Z{});
+          return visit(map, TileOperations::Z{});
      }
      static auto gen_layer_id(const MapT &map)
      {
-          return visit(map, tile_operations::LayerId{});
+          return visit(map, TileOperations::LayerId{});
      }
      static auto gen_palette_id(const MapT &map)
      {
-          return visit(map, tile_operations::PaletteId{});
+          return visit(map, TileOperations::PaletteId{});
      }
      static auto gen_texture_page_id(const MapT &map)
      {
-          return visit(map, tile_operations::TextureId{});
+          return visit(map, TileOperations::TextureId{});
      }
      static auto gen_animation_id(const MapT &map)
      {
-          return visit(map, tile_operations::AnimationId{});
+          return visit(map, TileOperations::AnimationId{});
      }
      static auto gen_animation_frame(const MapT &map)
      {
-          return visit(map, tile_operations::AnimationState{});
+          return visit(map, TileOperations::AnimationState{});
      }
      static auto gen_blend_other(const MapT &map)
      {
-          return visit(map, tile_operations::Blend{});
+          return visit(map, TileOperations::Blend{});
      }
      static auto gen_blend_mode(const MapT &map)
      {
           return UniqueValues<open_viii::graphics::background::BlendModeT>(
-            visit(map, tile_operations::BlendMode{}), blendmode_to_string);
+            visit(map, TileOperations::BlendMode{}), blendmode_to_string);
      }
      static auto gen_bpp(const MapT &map)
      {
           return UniqueValues<open_viii::graphics::BPPT>(
-            visit(map, tile_operations::Depth{}), bpp_to_string);
+            visit(map, TileOperations::Depth{}), bpp_to_string);
      }
      static void refresh(
        const MapT &map,

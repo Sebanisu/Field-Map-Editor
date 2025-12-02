@@ -1,23 +1,25 @@
 //
 // Created by pcvii on 9/7/2021.
 //
+#ifndef DEFAULT_IMGUI_INI_PATH
+#define DEFAULT_IMGUI_INI_PATH "imgui.ini"// fallback, just in case
+#endif
 #include "gui.hpp"
 #include "collapsing_tile_info.hpp"
-#include "colors.hpp"
 #include "EmptyStringIterator.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "imgui_color.hpp"
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
 #include "path_search.hpp"
-#include "push_pop_id.hpp"
-#include "safedir.hpp"
 #include "tool_tip.hpp"
-#include "utilities.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <ff_8/SafeDir.hpp>
+#include <ff_8/Utilities.hpp>
 #include <fmt/ranges.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <ImGuizmo.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
@@ -241,18 +243,17 @@ void gui::start(GLFWwindow *const window)
      (void)icons_font();
      do
      {
-          m_changed      = false;
-          get_imgui_id() = {};// reset id counter
+          m_changed = false;
+          imgui_utils::ImGuiPushId.reset();// reset id counter
           m_elapsed_time = m_delta_clock;
+
           consume_one_future();
-          glfwPollEvents();// Input
-
-          m_draw_window.update_mouse_positions();
-
+          glfwPollEvents();// Input handling
           ImGui_ImplGlfw_NewFrame();
           ImGui_ImplOpenGL3_NewFrame();
           ImGui::NewFrame();
           ImGuizmo::BeginFrame();
+          m_layers.on_update(m_elapsed_time);
 
           if (m_selections->get<ConfigKey::ForceReloadingOfTextures>())
           {
@@ -275,7 +276,6 @@ void gui::start(GLFWwindow *const window)
           {
                m_batch_window.draw_window();
           }
-          m_image_compare_window.render();
           m_custom_paths_window.render();
           m_field_file_window.render();
           m_keyboard_shortcuts_window.render();
@@ -286,10 +286,9 @@ void gui::start(GLFWwindow *const window)
           }
           control_panel_window();
           m_import.render();
-          m_history_window.render();
           m_textures_window.render();
           m_filter_window.render();
-          m_draw_window.render();
+          m_layers.on_im_gui_update();
           //  m_mouse_positions.cover.setColor(clear_color);
           //  window.draw(m_mouse_positions.cover);
           ImGui::Render();
@@ -300,6 +299,7 @@ void gui::start(GLFWwindow *const window)
 
           // Clear and draw main viewport
           glengine::Renderer::Clear();
+          m_layers.on_render();
           ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
           ImGuiIO &io = ImGui::GetIO();
@@ -359,7 +359,7 @@ void gui::render_dockspace()
           ImGui::SetNextWindowViewport(viewport->ID);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
           ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
-          window_flags = bitwise_or(
+          window_flags = ff_8::bitwise_or(
             window_flags,
             ImGuiWindowFlags_NoTitleBar,
             ImGuiWindowFlags_NoCollapse,
@@ -370,20 +370,21 @@ void gui::render_dockspace()
      }
      else
      {
-          dockspace_flags = bitwise_and(
+          dockspace_flags = ff_8::bitwise_and(
             dockspace_flags,
-            bitwise_not(ImGuiDockNodeFlags_PassthruCentralNode));
+            ff_8::bitwise_not(ImGuiDockNodeFlags_PassthruCentralNode));
      }
 
      // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
      // render our background and handle the pass-thru hole, so we ask Begin()
      // to not render a background.
      if (
-       bitwise_and(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode)
+       ff_8::bitwise_and(
+         dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode)
        != ImGuiDockNodeFlags{})
      {
           window_flags
-            = bitwise_or(window_flags, ImGuiWindowFlags_NoBackground);
+            = ff_8::bitwise_or(window_flags, ImGuiWindowFlags_NoBackground);
      }
 
      // Important: note that we proceed even if Begin() returns false (aka
@@ -416,17 +417,17 @@ void gui::render_dockspace()
           ImGui::PopStyleVar(2);
      }
 
-     dockspace_flags
-       = bitwise_or(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
-     dockspace_flags
-       = bitwise_and(dockspace_flags, bitwise_not(ImGuiDockNodeFlags_NoResize));
+     dockspace_flags = ff_8::bitwise_or(
+       dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
+     dockspace_flags = ff_8::bitwise_and(
+       dockspace_flags, ff_8::bitwise_not(ImGuiDockNodeFlags_NoResize));
      // Submit the DockSpace
      ImGuiIO &imgui_io                          = ImGui::GetIO();
      imgui_io.ConfigWindowsMoveFromTitleBarOnly = true;
 
 
      if (
-       bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable)
+       ff_8::bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable)
        != ImGuiConfigFlags{})
      {
           const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -499,8 +500,12 @@ void gui::control_panel_window()
 }
 void gui::tile_conflicts_panel()
 {
-     m_draw_window.hovered_index(
-       -1);// reset to -1 and below we set to number if we're hovering.
+     if (auto *draw_window = m_layers.get<fme::draw_window>(); draw_window)
+     {
+          draw_window->hovered_index(-1);
+          // reset to -1 and below we set to number if we're hovering.
+     }
+
      if (!map_test())
      {
           return;
@@ -523,11 +528,12 @@ void gui::tile_conflicts_panel()
             const auto &animation_counts
               = m_map_sprite->working_animation_counts();
 
-            const auto pop_table_id = PushPopID();
+            const auto pop_table_id = imgui_utils::ImGuiPushId();
             // Default hover options for ImGuiCol_ButtonHovered
             const auto options_hover
               = tile_button_options{ .size = { buttonWidth, buttonWidth },
-                                     .button_color = colors::ButtonHovered };
+                                     .button_color
+                                     = ff_8::Colors::ButtonHovered };
 
             // Default regular options for ImGuiCol_Button
             const auto options_regular
@@ -537,30 +543,32 @@ void gui::tile_conflicts_panel()
             // tint)
             const auto options_similar = tile_button_options{
                  .size                = { buttonWidth, buttonWidth },
-                 .button_color        = colors::ButtonGreen,
-                 .button_hover_color  = colors::ButtonGreenHovered,
-                 .button_active_color = colors::ButtonGreenActive
+                 .button_color        = ff_8::Colors::ButtonGreen,
+                 .button_hover_color  = ff_8::Colors::ButtonGreenHovered,
+                 .button_active_color = ff_8::Colors::ButtonGreenActive
             };
 
             // New hover options for similar tiles (green hover)
             const auto options_similar_hover = tile_button_options{
-                 .size         = { buttonWidth, buttonWidth },
-                 .button_color = colors::ButtonGreenHovered// Green hover tint
+                 .size = { buttonWidth, buttonWidth },
+                 .button_color
+                 = ff_8::Colors::ButtonGreenHovered// Green hover tint
             };
 
             // New options for when the animation count is greater than 1 (pink
             // tint)
             const auto options_animation = tile_button_options{
                  .size                = { buttonWidth, buttonWidth },
-                 .button_color        = colors::ButtonPink,
-                 .button_hover_color  = colors::ButtonPinkHovered,
-                 .button_active_color = colors::ButtonPinkActive
+                 .button_color        = ff_8::Colors::ButtonPink,
+                 .button_hover_color  = ff_8::Colors::ButtonPinkHovered,
+                 .button_active_color = ff_8::Colors::ButtonPinkActive
             };
 
             // New hover options for animation tiles (pink hover)
             const auto options_animation_hover = tile_button_options{
-                 .size         = { buttonWidth, buttonWidth },
-                 .button_color = colors::ButtonPinkHovered// pink hover tint
+                 .size = { buttonWidth, buttonWidth },
+                 .button_color
+                 = ff_8::Colors::ButtonPinkHovered// pink hover tint
             };
 
             format_imgui_text("{}", "Legend: ");
@@ -598,7 +606,7 @@ void gui::tile_conflicts_panel()
                         first_tile.source_x(),
                         first_tile.source_x()
                           + first_tile.texture_id()
-                              * ff_8::source_tile_conflicts::GRID_SIZE,
+                              * ff_8::SourceTileConflicts::GRID_SIZE,
                         first_tile.source_y(),
                         first_tile.texture_id());
                  }
@@ -672,26 +680,31 @@ void gui::tile_conflicts_panel()
                                 {
                                      return options_hover;
                                 }
-                                if (
-                                  std::ranges::empty(
-                                    m_draw_window.hovered_tiles_indices())
-                                  || std::ranges::find(
-                                       m_draw_window.hovered_tiles_indices(),
-                                       static_cast<std::size_t>(index))
-                                       == std::ranges::end(
-                                         m_draw_window.hovered_tiles_indices())
-                                  || !m_draw_window.mouse_positions()
-                                        .mouse_enabled)
+                                if (auto *draw_window
+                                    = m_layers.get<fme::draw_window>();
+                                    draw_window)
                                 {
-                                     if (similar_over_1)
+                                     const auto &indices
+                                       = draw_window->hovered_tiles_indices();
+                                     if (
+                                       std::ranges::empty(indices)
+                                       || std::ranges::find(
+                                            indices,
+                                            static_cast<std::size_t>(index))
+                                            == std::ranges::end(indices)
+                                       || !draw_window->mouse_positions()
+                                             .mouse_enabled)
                                      {
-                                          return options_similar;
+                                          if (similar_over_1)
+                                          {
+                                               return options_similar;
+                                          }
+                                          if (animation_over_1)
+                                          {
+                                               return options_animation;
+                                          }
+                                          return options_regular;
                                      }
-                                     if (animation_over_1)
-                                     {
-                                          return options_animation;
-                                     }
-                                     return options_regular;
                                 }
                                 if (similar_over_1)
                                 {
@@ -708,7 +721,12 @@ void gui::tile_conflicts_panel()
                              m_map_sprite, original_tile, options);
                            if (ImGui::IsItemHovered())
                            {
-                                m_draw_window.hovered_index(index);
+                                if (auto *draw_window
+                                    = m_layers.get<fme::draw_window>();
+                                    draw_window)
+                                {
+                                     draw_window->hovered_index(index);
+                                }
                            }
                            // Ensure subsequent buttons are on the same row
                            std::string strtooltip = fmt::format(
@@ -730,14 +748,13 @@ void gui::tile_conflicts_panel()
 
 void gui::selected_tiles_panel()
 {
-
-
      if (!map_test())
      {
           return;
      }
-
-     if (std::ranges::empty(m_draw_window.clicked_tile_indices()))
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (
+       !draw_window || std::ranges::empty(draw_window->clicked_tile_indices()))
      {
           return;
      }
@@ -749,7 +766,7 @@ void gui::selected_tiles_panel()
             m_map_sprite->const_visit_working_tiles(
               [&](const auto &working_tiles)
               {
-                   for (const auto &i : m_draw_window.clicked_tile_indices())
+                   for (const auto &i : draw_window->clicked_tile_indices())
                    {
                         if (
                           i < std::ranges::size(original_tiles)
@@ -772,7 +789,7 @@ void gui::selected_tiles_panel()
        });
      if (remove_index.has_value())
      {
-          m_draw_window.remove_clicked_index(remove_index.value());
+          draw_window->remove_clicked_index(remove_index.value());
      }
 }
 void gui::control_panel_window_mim()
@@ -1067,8 +1084,13 @@ void gui::consume_one_future()
 void gui::text_mouse_position() const
 {
 
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (!draw_window)
+     {
+          return;
+     }
      // Display texture coordinates if they are set
-     if (!m_draw_window.mouse_positions().mouse_enabled)
+     if (!draw_window->mouse_positions().mouse_enabled)
      {
           format_imgui_text("{}", gui_labels::mouse_not_over);
           return;
@@ -1078,21 +1100,21 @@ void gui::text_mouse_position() const
           format_imgui_text(
             "{}: ({:4}, {:3})",
             gui_labels::mouse_pos,
-            m_draw_window.mouse_positions().pixel.x,
-            m_draw_window.mouse_positions().pixel.y);
+            draw_window->mouse_positions().pixel.x,
+            draw_window->mouse_positions().pixel.y);
           ImGui::SameLine();
           const int tile_size = 16;
           format_imgui_text(
             "{}: ({:2}, {:2})",
             gui_labels::tile_pos,
-            m_draw_window.mouse_positions().pixel.x / tile_size,
-            m_draw_window.mouse_positions().pixel.y / tile_size);
+            draw_window->mouse_positions().pixel.x / tile_size,
+            draw_window->mouse_positions().pixel.y / tile_size);
           if (m_selections->get<ConfigKey::DrawSwizzle>())
           {
                format_imgui_text(
                  "{}: {:2}",
                  gui_labels::page,
-                 m_draw_window.mouse_positions().texture_page);
+                 draw_window->mouse_positions().texture_page);
           }
      }
 }
@@ -1107,8 +1129,13 @@ void gui::hovered_tiles_panel()
      m_map_sprite->const_visit_tiles_both(
        [&](const auto &working_tiles, const auto &original_tiles)
        {
+            auto *draw_window = m_layers.get<fme::draw_window>();
+            if (!draw_window)
+            {
+                 return;
+            }
             const auto &hovered_tiles_indices
-              = m_draw_window.hovered_tiles_indices();
+              = draw_window->hovered_tiles_indices();
             format_imgui_text(
               "{} {:4}",
               gui_labels::number_of_tiles,
@@ -1117,7 +1144,7 @@ void gui::hovered_tiles_panel()
             {
                  return;
             }
-            if (!m_draw_window.mouse_positions().mouse_enabled)
+            if (!draw_window->mouse_positions().mouse_enabled)
             {
                  return;
             }
@@ -1162,32 +1189,32 @@ void gui::hovered_tiles_panel()
                              && std::cmp_greater(
                                similar_counts.at(working_tile), 1))
                            {
-                                return colors::ButtonGreenHovered;
+                                return ff_8::Colors::ButtonGreenHovered;
                            }
                            if (
                              animation_counts.contains(working_tile)
                              && std::cmp_greater(
                                animation_counts.at(working_tile), 1))
                            {
-                                return colors::ButtonPinkHovered;
+                                return ff_8::Colors::ButtonPinkHovered;
                            }
-                           return colors::ButtonHovered;
+                           return ff_8::Colors::ButtonHovered;
                       }
 
                       if (
                         similar_counts.contains(working_tile)
                         && std::cmp_greater(similar_counts.at(working_tile), 1))
                       {
-                           return colors::ButtonGreen;
+                           return ff_8::Colors::ButtonGreen;
                       }
                       if (
                         animation_counts.contains(working_tile)
                         && std::cmp_greater(
                           animation_counts.at(working_tile), 1))
                       {
-                           return colors::ButtonPink;
+                           return ff_8::Colors::ButtonPink;
                       }
-                      return colors::Button;
+                      return ff_8::Colors::Button;
                  }();
                  const auto options
                    = tile_button_options{ .size = { buttonWidth, buttonWidth },
@@ -1374,7 +1401,12 @@ void gui::update_field()
      }
 
      // Clear clicked tile indices used for selection logic
-     m_draw_window.clear_clicked_tile_indices();
+     auto *draw_window = m_layers.get<fme::draw_window>();
+     if (!draw_window)
+     {
+          return;
+     }
+     draw_window->clear_clicked_tile_indices();
 }
 
 void gui::refresh_map_swizzle()
@@ -1637,19 +1669,19 @@ void gui::windows_menu()
      }
      const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (ImGui::MenuItem(
-           gui_labels::display_control_panel_window.data(),
+           gui_labels::display_control_panel.data(),
            "Control + P",
            &m_selections->get<ConfigKey::DisplayControlPanelWindow>()))
      {
           m_selections->update<ConfigKey::DisplayControlPanelWindow>();
      }
      if (ImGui::MenuItem(
-           "ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
+           "ImGui Demo Window", nullptr, &toggle_imgui_demo_window))
      {
      }
      ImGui::Separator();
      if (ImGui::MenuItem(
-           gui_labels::display_field_file_window.data(),
+           gui_labels::display_field_file.data(),
            "Control + F",
            &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
      {
@@ -1660,7 +1692,7 @@ void gui::windows_menu()
           return;
      }
      if (ImGui::MenuItem(
-           gui_labels::batch_operation_window.data(),
+           gui_labels::display_batch_operation.data(),
            "Control + B",
            &m_selections->get<ConfigKey::DisplayBatchWindow>()))
      {
@@ -1672,14 +1704,6 @@ void gui::windows_menu()
      //  {
      //       m_selections->update<ConfigKey::DisplayImportImageWindow>();
      //  }
-     ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_history.data(),
-           "Control + H",
-           &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayHistoryWindow>();
-     }
 
      if (ImGui::MenuItem(
            "Display Textures",
@@ -1689,25 +1713,10 @@ void gui::windows_menu()
           m_selections->update<ConfigKey::DisplayTexturesWindow>();
      }
 
-     if (ImGui::MenuItem(
-           "Display Image Compare",
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayImageCompareWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayImageCompareWindow>();
-     }
-
+     m_layers.on_im_gui_window_menu();
      ImGui::Separator();
      if (ImGui::MenuItem(
-           gui_labels::display_draw_window.data(),
-           "Control + D",
-           &m_selections->get<ConfigKey::DisplayDrawWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayDrawWindow>();
-     }
-     ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_custom_paths_window.data(),
+           gui_labels::display_custom_paths.data(),
            "Control + U",
            &m_selections->get<ConfigKey::DisplayCustomPathsWindow>()))
      {
@@ -2058,7 +2067,7 @@ void gui::edit_menu()
 
                float sz       = ImGui::GetTextLineHeight();
                auto  zip_view = std::ranges::views::zip(
-                 fme::colors::ColorValues, fme::colors::ColorNames);
+                 ff_8::Colors::ColorValues, ff_8::Colors::ColorNames);
                constexpr int columns = 2;
                format_imgui_wrapped_text(
                  "Hold Control to set Secondary Background Color");
@@ -2378,10 +2387,10 @@ void gui::file_menu()
                          refresh_path();
                     }
                     ImGui::TableNextColumn();
-                    const auto  pop_id      = PushPopID();
+                    const auto  pop_id      = imgui_utils::ImGuiPushId();
 
                     const float button_size = ImGui::GetFrameHeight();
-                    const auto  _           = PushPopID();
+                    const auto  _           = imgui_utils::ImGuiPushId();
                     if (ImGui::Button(
                           ICON_FA_FOLDER_OPEN,
                           ImVec2{ button_size, button_size }))
@@ -2541,29 +2550,32 @@ void gui::file_menu()
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{ colors::TableDarkGray.fade(-.6F).fade_alpha(
-                             -.4F) });
+                           ImU32{
+                             ff_8::Colors::TableDarkGray.fade(-.6F).fade_alpha(
+                               -.4F) });
                     }
                     else
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{
-                             colors::TableLightDarkGray.fade(-.6F).fade_alpha(
-                               -.4F) });
+                           ImU32{ ff_8::Colors::TableLightDarkGray.fade(-.6F)
+                                    .fade_alpha(-.4F) });
                     }
                     ImGui::TableNextColumn();
                     ImGui::PushStyleColor(
-                      ImGuiCol_HeaderHovered, colors::ButtonHovered);
+                      ImGuiCol_HeaderHovered,
+                      ff_8::Colors::to_imvec4(ff_8::Colors::ButtonHovered));
                     ImGui::PushStyleColor(
-                      ImGuiCol_HeaderActive, colors::ButtonActive);
+                      ImGuiCol_HeaderActive,
+                      ff_8::Colors::to_imvec4(ff_8::Colors::ButtonActive));
                     const bool checked = std::cmp_equal(m_field_index, index);
                     if (checked)
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_CellBg,
-                           ImU32{ colors::Button });// Make the selected field
-                                                    // stand out more.
+                           ImU32{
+                             ff_8::Colors::Button });// Make the selected field
+                                                     // stand out more.
                     }
                     if (ImGui::MenuItem(
                           str.c_str(),
@@ -2684,7 +2696,7 @@ void gui::file_menu()
                               m_custom_paths_window.refresh();
                          }
                          ImGui::TableNextColumn();
-                         const auto _ = PushPopID();
+                         const auto _ = imgui_utils::ImGuiPushId();
                          if (ImGui::Button(
                                ICON_FA_TRASH,
                                ImVec2{ button_size, button_size }))
@@ -2838,7 +2850,7 @@ void gui::menu_swizzle_as_one_image_paths()
             {
                  m_map_sprite->filter()
                    .update<ff_8::FilterTag::CompactOnLoadOriginal>(
-                     compact_type::map_order_ffnx);
+                     ff_8::CompactTypeT::map_order_ffnx);
                  m_map_sprite->toggle_filter_compact_on_load_original(true);
             }
             else
@@ -3071,7 +3083,7 @@ void gui::menu_map_paths()
 
 std::ptrdiff_t gui::add_delete_button(const std::ptrdiff_t index)
 {
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::Button(ICON_FA_TRASH))
      {
           ImGui::CloseCurrentPopup();
@@ -3096,7 +3108,7 @@ std::ptrdiff_t gui::add_delete_button(
      if (it != std::ranges::end(transformed_paths))
      {
           const auto &index  = std::get<0>(*it);
-          const auto  pop_id = PushPopID();
+          const auto  pop_id = imgui_utils::ImGuiPushId();
           if (ImGui::Button(ICON_FA_TRASH))
           {
                ImGui::CloseCurrentPopup();
@@ -3374,7 +3386,7 @@ void gui::directory_browser_display()
                     {
                          m_map_sprite->filter()
                            .get<ff_8::FilterTag::CompactOnLoadOriginal>()
-                           .update(compact_type::map_order_ffnx);
+                           .update(ff_8::CompactTypeT::map_order_ffnx);
                          m_map_sprite->toggle_filter_compact_on_load_original(
                            true);
                     }
@@ -3798,7 +3810,7 @@ void gui::refresh_draw_mode()
                break;
           case draw_mode::draw_map:
                *m_map_sprite = m_map_sprite->update(
-                 ff_8::map_group(m_field, get_coo()),
+                 ff_8::MapGroup(m_field, get_coo()),
                  m_selections->get<ConfigKey::DrawSwizzle>());
                // m_draw_window.update(m_map_sprite);
                // m_import.update(m_map_sprite);
@@ -3911,7 +3923,12 @@ void gui::bind_shortcuts()
      {
           if (!m_filter_window.shortcut(escapeChord))
           {
-               m_draw_window.clear_clicked_tile_indices();
+               auto *draw_window = m_layers.get<fme::draw_window>();
+               if (!draw_window)
+               {
+                    return;
+               }
+               draw_window->clear_clicked_tile_indices();
           }
      }
 
@@ -4110,7 +4127,7 @@ float gui::scaled_menubar_gap() const
 //      scaled_gap), m_scale_width, std::round(img_height +
 //      //     scaled_gap))));
 // }
-archives_group gui::get_archives_group() const
+ff_8::ArchivesGroup gui::get_archives_group() const
 {
      if (!std::ranges::empty(m_selections->get<ConfigKey::FF8Path>()))
      {
@@ -4121,7 +4138,7 @@ archives_group gui::get_archives_group() const
 }
 void gui::update_path()
 {
-     m_archives_group = std::make_shared<archives_group>(
+     m_archives_group = std::make_shared<ff_8::ArchivesGroup>(
        m_archives_group->with_path(m_selections->get<ConfigKey::FF8Path>()));
      m_batch_window = m_archives_group;
      m_custom_paths_window.refresh();
@@ -4148,16 +4165,37 @@ gui::gui(GLFWwindow *const window)
      IM_ASSERT(ImGui::GetCurrentContext() != nullptr);
 
      // 2. Configure ImGui (optional but common)
-     ImGuiIO          &imgui_io   = ImGui::GetIO();
-     std::error_code   error_code = {};
-     static const auto path = (std::filesystem::current_path(error_code) / "res"
-                               / "field-map-editor_imgui.ini")
-                                .string();
+     ImGuiIO &imgui_io = ImGui::GetIO();
      imgui_io.ConfigFlags
-       = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
-     imgui_io.ConfigFlags
-       = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
-     imgui_io.IniFilename = path.c_str();
+       = ff_8::bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
+     imgui_io.ConfigFlags = ff_8::bitwise_or(
+       imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
+     std::error_code error_code = {};
+
+     auto            temp_path  = std::filesystem::path(DEFAULT_IMGUI_INI_PATH);
+     static std::string path;
+     try
+     {
+          if (temp_path.is_relative())
+          {
+               temp_path = (std::filesystem::current_path(error_code) / path);
+          }
+          temp_path.make_preferred();
+          path                 = temp_path.string();
+          imgui_io.IniFilename = path.c_str();
+          spdlog::info("ImGui ini path: {}", imgui_io.IniFilename);
+          ImGui::LoadIniSettingsFromDisk(imgui_io.IniFilename);
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "Filesystem error while constructing config path: {}", e.what());
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Unexpected error while constructing config path: {}", e.what());
+     }
      if (error_code)
      {
           spdlog::warn(
@@ -4169,7 +4207,6 @@ gui::gui(GLFWwindow *const window)
             path);
           error_code.clear();
      }
-     ImGui::LoadIniSettingsFromDisk(path.c_str());
 
      // 3. Set ImGui style (optional)
      ImGui::StyleColorsDark();// or Light(), Classic()
@@ -4187,20 +4224,27 @@ gui::gui(GLFWwindow *const window)
                                              // ImGuiIO::Fonts
 
      // 6. MISC
-     m_archives_group = std::make_shared<archives_group>(get_archives_group());
-     m_batch_window   = fme::batch{ m_selections, m_archives_group };
-     m_field          = init_field();
+     m_archives_group
+       = std::make_shared<ff_8::ArchivesGroup>(get_archives_group());
+     m_batch_window = fme::batch{ m_selections, m_archives_group };
+     m_field        = init_field();
      m_field_file_window.refresh(m_field);
      m_mim_sprite = get_mim_sprite();
      m_map_sprite = get_map_sprite();
-     m_draw_window.update(m_mim_sprite);
-     m_draw_window.update(m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::draw_window>,
+       m_selections,
+       m_mim_sprite,
+       m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::history_window>, m_selections, m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::ImageCompareWindow>, m_selections);
+
      m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
-     m_history_window.update(m_selections);
      m_textures_window.update(m_selections);
      m_import.update(m_map_sprite);
-     m_history_window.update(m_map_sprite);
      m_textures_window.update(m_map_sprite);
 
      m_filter_window.register_change_field_callback(
@@ -4339,8 +4383,8 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 
 std::shared_ptr<map_sprite> gui::get_map_sprite() const
 {
-     //     map_sprite(ff_8::map_group map_group, bool draw_swizzle,
-     //     ff_8::filters in_filters, bool force_disable_blends, bool
+     //     map_sprite(ff_8::MapGroup MapGroup, bool draw_swizzle,
+     //     ff_8::Filters in_filters, bool force_disable_blends, bool
      //     require_coo);
      map_sprite_settings settings = {
           .draw_swizzle   = m_selections->get<ConfigKey::DrawSwizzle>(),
@@ -4348,9 +4392,9 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
           .require_coo    = false,
      };
      return std::make_shared<map_sprite>(
-       ff_8::map_group{ m_field, get_coo() },
+       ff_8::MapGroup{ m_field, get_coo() },
        settings,
-       ff_8::filters{ true },
+       ff_8::Filters{ true },
        m_selections);
 }
 
@@ -4475,7 +4519,7 @@ void gui::combo_swizzle_as_one_image_path()
           m_map_sprite->filter().disable<ff_8::FilterTag::Deswizzle>();
           m_map_sprite->filter().disable<ff_8::FilterTag::FullFileName>();
           m_map_sprite->filter().update<ff_8::FilterTag::CompactOnLoadOriginal>(
-            compact_type::map_order_ffnx);
+            ff_8::CompactTypeT::map_order_ffnx);
           m_map_sprite->toggle_filter_compact_on_load_original(true);
      }
      else
@@ -4692,7 +4736,7 @@ std::future<std::future<gui::PathsAndEnabled>>
 }
 
 bool gui::combo_swizzle_path(
-  ff_8::filter<ff_8::FilterTag::Swizzle> &filter) const
+  ff_8::Filter<ff_8::FilterTag::Swizzle> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4710,7 +4754,7 @@ bool gui::combo_swizzle_path(
 
 
 bool gui::combo_swizzle_as_one_image_path(
-  ff_8::filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
+  ff_8::Filter<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4727,7 +4771,7 @@ bool gui::combo_swizzle_as_one_image_path(
 }
 
 bool gui::combo_deswizzle_path(
-  ff_8::filter<ff_8::FilterTag::Deswizzle> &filter) const
+  ff_8::Filter<ff_8::FilterTag::Deswizzle> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4744,7 +4788,7 @@ bool gui::combo_deswizzle_path(
 }
 
 bool gui::combo_full_filename_path(
-  ff_8::filter<ff_8::FilterTag::FullFileName> &filter) const
+  ff_8::Filter<ff_8::FilterTag::FullFileName> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
@@ -4761,7 +4805,7 @@ bool gui::combo_full_filename_path(
      return m_field && gcc.render();
 }
 
-bool gui::combo_map_path(ff_8::filter<ff_8::FilterTag::Map> &filter) const
+bool gui::combo_map_path(ff_8::Filter<ff_8::FilterTag::Map> &filter) const
 {
      const auto strings
        = m_selections->get<ConfigKey::CacheTextureAndMapPaths>()
