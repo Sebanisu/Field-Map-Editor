@@ -467,12 +467,21 @@ namespace SwizzleAsOneImage
           }
 
           template<typename TileVec>
-          static std::size_t index_of(
+          static std::optional<std::size_t> index_of(
             const TileVec &tiles,
             const auto    &tile)
           {
+               auto it = std::ranges::find_if(
+                 tiles,
+                 [&](const auto &t)
+                 { return std::addressof(t) == std::addressof(tile); });
+
+               if (tiles.end() == it)
+               {
+                    return std::nullopt;
+               }
                return static_cast<std::size_t>(
-                 std::distance(std::data(tiles), std::addressof(tile)));
+                 std::distance(std::begin(tiles), it));
           }
 
           struct index_and_size
@@ -535,21 +544,28 @@ namespace SwizzleAsOneImage
                return map->visit_tiles(
                  [&](auto &&tiles) -> std::expected<index_and_size, std::string>
                  {
-                      std::size_t index{};
-                      std::size_t total_size{};
                       using VecT  = std::remove_cvref_t<decltype(tiles)>;
                       using ElemT = typename VecT::value_type;
 
                       if constexpr (std::is_same_v<ElemT, TileT>)
                       {
-                           auto filtered
+                           std::optional<std::size_t> index{};
+                           std::size_t                total_size{};
+
+                           auto                       filtered
                              = tiles | std::views::filter(NotInvalidTile{});
                            total_size = static_cast<std::size_t>(
                              std::ranges::distance(filtered));
                            index = index_of(tiles, tile);
 
+                           if (!index.has_value())
+                           {
+                                return std::unexpected(
+                                  "SwizzleAsOneImage: Tile not found in map");
+                           }
+
                            return std::expected<index_and_size, std::string>{
-                                std::in_place, index, total_size
+                                std::in_place, *index, total_size
                            };
                       }
                       else
@@ -581,9 +597,13 @@ namespace SwizzleAsOneImage
 
                const auto &[index, total_size] = *result;
 
-               const int tpr                   = tiles_per_row(total_size);
-               const int x     = (static_cast<int>(index) % tpr) * TILE_SIZE;
-               const int tp    = x / TEXTURE_PAGE_WIDTH;
+               assert(index < total_size && "Index out of range");
+
+               const int tpr = tiles_per_row(total_size);
+               const int x   = (static_cast<int>(index) % tpr) * TILE_SIZE;
+               assert(x >= 0 && "X coordinate negative");
+               const int tp = x / TEXTURE_PAGE_WIDTH;
+               assert(tp >= 0 && "Texture page negative");
                const int src_x = x - tp * TEXTURE_PAGE_WIDTH;
 
                return static_cast<

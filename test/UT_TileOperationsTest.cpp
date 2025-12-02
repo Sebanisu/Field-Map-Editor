@@ -197,20 +197,25 @@ int main()
           // (Tile3) Note: even though types differ, the constructor will reject
           // mixed types! So we build three separate homogeneous maps instead.
 
-          const Map          map1 = make_map(t1);// only Tile1
-          const Map          map2 = make_map(t2);// only Tile2
-          const Map          map3 = make_map(t3);// only Tile3
+          const Map map1    = make_map(t1);// only Tile1
+          const Map map2    = make_map(t2);// only Tile2
+          const Map map3    = make_map(t3);// only Tile3
 
           // But for swizzle testing, we really want multiple tiles of the
           // *same* type Let's create a realistic test map with 25 valid Tile1s
-          std::vector<Tile1> many_tiles;
-          many_tiles.reserve(25);
-          for (int i = 0; i < 25; ++i)
-          {
-               many_tiles.emplace_back();
-          }
 
-          const Map big_map = [&many_tiles]()
+
+          const Map big_map = [many_tiles =
+                                 []()
+                               {
+                                    std::vector<Tile1> tiles;
+                                    tiles.reserve(25);
+                                    for (int i = 0; i < 25; ++i)
+                                    {
+                                         tiles.emplace_back();
+                                    }
+                                    return tiles;
+                               }()]() -> Map
           {
                return Map(
                  [&, index = std::size_t{}]() mutable -> Map::variant_tile
@@ -237,57 +242,67 @@ int main()
           SwizzleAsOneImage::Y         y_op;
           SwizzleAsOneImage::TextureId tp_op;
 
-          {
-               auto gx  = x_op.set_map(big_map);
-               auto gy  = y_op.set_map(big_map);
-               auto gtp = tp_op.set_map(big_map);
-               // SwizzleAsOneImage with column-major + max 16 rows
-               expect(eq(+x_op(many_tiles[0]), 0)) << "Tile 0 X ";
-               expect(eq(+y_op(many_tiles[0]), 0)) << "Tile 0 Y ";
-               expect(eq(+tp_op(many_tiles[0]), 0)) << "Tile 0 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[1]), 16)) << "Tile 1 X ";
-               expect(eq(+y_op(many_tiles[1]), 0)) << "Tile 1 Y ";
-               expect(eq(+tp_op(many_tiles[1]), 0)) << "Tile 1 Texture Page ";
+          // SwizzleAsOneImage with column-major + max 16 rows
+          big_map.visit_tiles(
+            [&](const auto &tiles)
+            {
+                 auto gx  = x_op.set_map(big_map);
+                 auto gy  = y_op.set_map(big_map);
+                 auto gtp = tp_op.set_map(big_map);
+                 expect(eq(+x_op(tiles[0]), 0)) << "Tile 0 X ";
+                 expect(eq(+y_op(tiles[0]), 0)) << "Tile 0 Y ";
+                 expect(eq(+tp_op(tiles[0]), 0)) << "Tile 0 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[2]), 0)) << "Tile 2 X ";
-               expect(eq(+y_op(many_tiles[2]), 0)) << "Tile 2 Y ";
-               expect(eq(+tp_op(many_tiles[2]), 0)) << "Tile 2 Texture Page ";
+                 expect(eq(+x_op(tiles[1]), 16)) << "Tile 1 X ";
+                 expect(eq(+y_op(tiles[1]), 0)) << "Tile 1 Y ";
+                 expect(eq(+tp_op(tiles[1]), 0)) << "Tile 1 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[15]), 16)) << "Tile 15 X ";
-               expect(eq(+y_op(many_tiles[15]), 112)) << "Tile 15 Y ";
-               expect(eq(+tp_op(many_tiles[15]), 0)) << "Tile 15 Texture Page ";
+                 expect(eq(+x_op(tiles[2]), 0)) << "Tile 2 X ";
+                 expect(eq(+y_op(tiles[2]), 16)) << "Tile 2 Y ";
+                 expect(eq(+tp_op(tiles[2]), 0)) << "Tile 2 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[16]), 0)) << "Tile 16 X ";
-               expect(eq(+y_op(many_tiles[16]), 128)) << "Tile 16 Y ";
-               expect(eq(+tp_op(many_tiles[16]), 0)) << "Tile 16 Texture Page ";
+                 expect(eq(+x_op(tiles[15]), 16)) << "Tile 15 X ";
+                 expect(eq(+y_op(tiles[15]), 112)) << "Tile 15 Y ";
+                 expect(eq(+tp_op(tiles[15]), 0)) << "Tile 15 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[24]), 0)) << "Tile 24 X ";
-               expect(eq(+y_op(many_tiles[24]), 192)) << "Tile 24 Y ";
-               expect(eq(+tp_op(many_tiles[24]), 0)) << "Tile 24 Texture Page ";
-          }
+                 expect(eq(+x_op(tiles[16]), 0)) << "Tile 16 X ";
+                 expect(eq(+y_op(tiles[16]), 128)) << "Tile 16 Y ";
+                 expect(eq(+tp_op(tiles[16]), 0)) << "Tile 16 Texture Page ";
+
+                 expect(eq(+x_op(tiles[24]), 0)) << "Tile 24 X ";
+                 expect(eq(+y_op(tiles[24]), 192)) << "Tile 24 Y ";
+                 expect(eq(+tp_op(tiles[24]), 0)) << "Tile 24 Texture Page ";
+            });
+
 
           // Negative test: map not set → should log error and return 0
-          {
-               SwizzleAsOneImage::X clean_op;
-               expect(eq(+clean_op(many_tiles[0]), 0))
-                 << "X without map should return 0";
-               // Note: spdlog is set to err, so error should be printed if
-               // logging enabled
-          }
+          big_map.visit_tiles(
+            [&](const auto &tiles)
+            {
+                 SwizzleAsOneImage::X clean_op;
+                 expect(eq(+clean_op(tiles[0]), 0))
+                   << "X without map should return 0";
+                 // Note: spdlog is set to err, so error should be printed
+                 // if logging enabled
+            });
+
 
           // Test with empty map (no valid tiles)
-          {
-               const Map empty_map
-                 = Map([]() -> Map::variant_tile { return std::monostate{}; });
+          big_map.visit_tiles(
+            [&](const auto &tiles)
+            {
+                 const Map empty_map = Map(
+                   []() -> Map::variant_tile { return std::monostate{}; });
 
-               SwizzleAsOneImage::X op;
-               auto                 guard = op.set_map(empty_map);
+                 SwizzleAsOneImage::X op;
+                 auto                 guard = op.set_map(empty_map);
 
-               // get_index_and_size should fail → return 0
-               expect(eq(+op(many_tiles[0]), 0))
-                 << "Swizzle on empty map should return 0";
-          }
+                 // get_index_and_size should fail → return 0
+                 expect(eq(+op(tiles[0]), 0))
+                   << "Swizzle on empty map should return 0";
+            });
+
 
           //           // Test that mixed tile types are rejected at
           //           construction time
