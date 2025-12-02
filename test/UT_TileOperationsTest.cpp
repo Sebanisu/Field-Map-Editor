@@ -242,29 +242,29 @@ int main()
                auto gy  = y_op.set_map(big_map);
                auto gtp = tp_op.set_map(big_map);
                // SwizzleAsOneImage with column-major + max 16 rows
-               expect(eq(+x_op(many_tiles[0]), 0));
-               expect(eq(+y_op(many_tiles[0]), 0));
-               expect(eq(+tp_op(many_tiles[0]), 0));
+               expect(eq(+x_op(many_tiles[0]), 0)) << "Tile 0 X ";
+               expect(eq(+y_op(many_tiles[0]), 0)) << "Tile 0 Y ";
+               expect(eq(+tp_op(many_tiles[0]), 0)) << "Tile 0 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[1]), 16));
-               expect(eq(+y_op(many_tiles[1]), 0));
-               expect(eq(+tp_op(many_tiles[1]), 0));
+               expect(eq(+x_op(many_tiles[1]), 16)) << "Tile 1 X ";
+               expect(eq(+y_op(many_tiles[1]), 0)) << "Tile 1 Y ";
+               expect(eq(+tp_op(many_tiles[1]), 0)) << "Tile 1 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[2]), 0));
-               expect(eq(+y_op(many_tiles[2]), 0));
-               expect(eq(+tp_op(many_tiles[2]), 0));
+               expect(eq(+x_op(many_tiles[2]), 0)) << "Tile 2 X ";
+               expect(eq(+y_op(many_tiles[2]), 0)) << "Tile 2 Y ";
+               expect(eq(+tp_op(many_tiles[2]), 0)) << "Tile 2 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[15]), 16));
-               expect(eq(+y_op(many_tiles[15]), 112));
-               expect(eq(+tp_op(many_tiles[15]), 0));
+               expect(eq(+x_op(many_tiles[15]), 16)) << "Tile 15 X ";
+               expect(eq(+y_op(many_tiles[15]), 112)) << "Tile 15 Y ";
+               expect(eq(+tp_op(many_tiles[15]), 0)) << "Tile 15 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[16]), 0));
-               expect(eq(+y_op(many_tiles[16]), 128));
-               expect(eq(+tp_op(many_tiles[16]), 0));
+               expect(eq(+x_op(many_tiles[16]), 0)) << "Tile 16 X ";
+               expect(eq(+y_op(many_tiles[16]), 128)) << "Tile 16 Y ";
+               expect(eq(+tp_op(many_tiles[16]), 0)) << "Tile 16 Texture Page ";
 
-               expect(eq(+x_op(many_tiles[24]), 0));
-               expect(eq(+y_op(many_tiles[24]), 192));
-               expect(eq(+tp_op(many_tiles[24]), 0));
+               expect(eq(+x_op(many_tiles[24]), 0)) << "Tile 24 X ";
+               expect(eq(+y_op(many_tiles[24]), 192)) << "Tile 24 Y ";
+               expect(eq(+tp_op(many_tiles[24]), 0)) << "Tile 24 Texture Page ";
           }
 
           // Negative test: map not set → should log error and return 0
