@@ -188,6 +188,7 @@ int main()
                       {
                            return tile_vector[index++];
                       }
+                      index = {};
                       return std::monostate{};
                  });
           };
@@ -223,6 +224,7 @@ int main()
                       {
                            return many_tiles[index++];
                       }
+                      index = {};
                       return std::monostate{};
                  });
           }();
