@@ -84,7 +84,6 @@ struct gui
      std::array<float, 2>                               xy           = {};
      std::shared_ptr<mim_sprite>                        m_mim_sprite = {};
      std::shared_ptr<map_sprite>                        m_map_sprite = {};
-     filter_window             m_filter_window = { m_selections, m_map_sprite };
      custom_paths_window       m_custom_paths_window = { m_selections };
      field_file_window         m_field_file_window = { m_field, m_selections };
      keyboard_shortcuts_window m_keyboard_shortcuts_window = { m_selections };

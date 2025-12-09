@@ -287,7 +287,6 @@ void gui::start(GLFWwindow *const window)
           control_panel_window();
           m_import.render();
           m_textures_window.render();
-          m_filter_window.render();
           m_layers.on_im_gui_update();
           //  m_mouse_positions.cover.setColor(clear_color);
           //  window.draw(m_mouse_positions.cover);
@@ -821,7 +820,12 @@ void gui::control_panel_window_map()
      m_changed = m_import.checkbox_render_imported_image() || m_changed;
      checkbox_map_disable_blending();
      compact_flatten_buttons();
-     m_filter_window.collapsing_header_filters();
+
+     if (const auto *filter_window = m_layers.get<fme::filter_window>();
+         filter_window)
+     {
+          filter_window->collapsing_header_filters();
+     }
      // if (m_changed)
      // {
      //      scale_window();
@@ -2248,7 +2252,13 @@ void gui::edit_menu()
                };
                if (map_test())
                {
-                    m_filter_window.menu();
+
+                    if (const auto *filter_window
+                        = m_layers.get<fme::filter_window>();
+                        filter_window)
+                    {
+                         filter_window->menu();
+                    }
                }
                if (mim_test())
                {
@@ -3921,14 +3931,14 @@ void gui::bind_shortcuts()
          ImGui::Shortcut(escapeChord, flags)
          || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
      {
-          if (!m_filter_window.shortcut(escapeChord))
+          if (auto *filter_window = m_layers.get<fme::filter_window>();
+              !filter_window || !filter_window->shortcut(escapeChord))
           {
-               auto *draw_window = m_layers.get<fme::draw_window>();
-               if (!draw_window)
+               if (auto *draw_window = m_layers.get<fme::draw_window>();
+                   draw_window)
                {
-                    return;
+                    draw_window->clear_clicked_tile_indices();
                }
-               draw_window->clear_clicked_tile_indices();
           }
      }
 
@@ -4036,7 +4046,8 @@ void gui::bind_shortcuts()
      else if (const ImGuiKeyChord selectAllChord = (ImGuiMod_Ctrl | ImGuiKey_A);
               ImGui::Shortcut(selectAllChord, flags))
      {
-          if (!m_filter_window.shortcut(selectAllChord))
+          if (auto *filter_window = m_layers.get<fme::filter_window>();
+              !filter_window || !filter_window->shortcut(selectAllChord))
           {
                // select all action for draw window? seems a bit extreme
           }
@@ -4045,7 +4056,8 @@ void gui::bind_shortcuts()
      else if (const ImGuiKeyChord invertChord = (ImGuiMod_Ctrl | ImGuiKey_I);
               ImGui::Shortcut(invertChord, flags))
      {
-          if (!m_filter_window.shortcut(invertChord))
+          if (auto *filter_window = m_layers.get<fme::filter_window>();
+              !filter_window || !filter_window->shortcut(invertChord))
           {
                // todo fix imports in new branch.
                // m_selections->display_import_image_window ^= true;
@@ -4240,65 +4252,70 @@ gui::gui(GLFWwindow *const window)
        std::in_place_type<fme::history_window>, m_selections, m_map_sprite);
      m_layers.emplace_layers(
        std::in_place_type<fme::ImageCompareWindow>, m_selections);
-
-     m_filter_window.update(m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::filter_window>, m_selections, m_map_sprite);
      m_import.update(m_selections);
      m_textures_window.update(m_selections);
      m_import.update(m_map_sprite);
      m_textures_window.update(m_map_sprite);
 
-     m_filter_window.register_change_field_callback(
-       [&](const std::string &in)
-       {
-            // Get a reference to the map data (field name list)
-            const auto &maps = m_archives_group->mapdata();
-
-            const auto  it   = std::ranges::find(maps, in);
-            if (it == maps.end())
-            {
-                 return;
-            }
-            m_field_index
-              = static_cast<int>(std::ranges::distance(maps.begin(), it));
-
-            // Update the starter_field name based on the current field index
-            m_selections->get<ConfigKey::StarterField>() = *it;
-
-            // Save the selected field name to the configuration
-            m_selections->update<ConfigKey::StarterField>();
-
-            // Apply the updated field selection
-            update_field();
-       });
-
-
-     m_filter_window.register_change_coo_callback(
-       [&](const std::string &in)
-       {
-            // Get a reference to the map data (field name list)
-            open_viii::LangT lang
-              = open_viii::LangCommon::from_string_3_char(in);
-
-            if (m_selections->get<ConfigKey::Coo>() != lang)
-            {
-                 m_selections->get<ConfigKey::Coo>() = lang;
-                 // hmm this refreshes the field too bah. So could have double
-                 // work done in some cases.
-                 refresh_coo();
-            }
-       });
-
-     m_filter_window.register_is_remaster_callback(
-       [this]() -> bool { return m_field->is_remaster_from_fl_paths(); });
-
-     if (m_field)
+     if (auto *filter_window = m_layers.get<fme::filter_window>();
+         filter_window)
      {
-          m_future_of_future_paths_consumer
-            += generate_external_texture_paths();
-          m_future_of_future_paths_consumer += generate_external_map_paths();
-          m_future_of_future_paths_consumer += generate_sort_paths();
-     }
+          filter_window->register_change_field_callback(
+            [&](const std::string &in)
+            {
+                 // Get a reference to the map data (field name list)
+                 const auto &maps = m_archives_group->mapdata();
 
+                 const auto  it   = std::ranges::find(maps, in);
+                 if (it == maps.end())
+                 {
+                      return;
+                 }
+                 m_field_index
+                   = static_cast<int>(std::ranges::distance(maps.begin(), it));
+
+                 // Update the starter_field name based on the current field
+                 // index
+                 m_selections->get<ConfigKey::StarterField>() = *it;
+
+                 // Save the selected field name to the configuration
+                 m_selections->update<ConfigKey::StarterField>();
+
+                 // Apply the updated field selection
+                 update_field();
+            });
+
+
+          filter_window->register_change_coo_callback(
+            [&](const std::string &in)
+            {
+                 // Get a reference to the map data (field name list)
+                 open_viii::LangT lang
+                   = open_viii::LangCommon::from_string_3_char(in);
+
+                 if (m_selections->get<ConfigKey::Coo>() != lang)
+                 {
+                      m_selections->get<ConfigKey::Coo>() = lang;
+                      // hmm this refreshes the field too bah. So could have
+                      // double work done in some cases.
+                      refresh_coo();
+                 }
+            });
+
+          filter_window->register_is_remaster_callback(
+            [this]() -> bool { return m_field->is_remaster_from_fl_paths(); });
+
+          if (m_field)
+          {
+               m_future_of_future_paths_consumer
+                 += generate_external_texture_paths();
+               m_future_of_future_paths_consumer
+                 += generate_external_map_paths();
+               m_future_of_future_paths_consumer += generate_sort_paths();
+          }
+     }
      m_custom_paths_window.register_callback(
        [&](const ConfigKey key)
        {

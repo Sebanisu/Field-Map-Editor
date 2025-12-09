@@ -108,7 +108,7 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
      }
      return false;
 }
-void fme::filter_window::render() const
+void fme::filter_window::on_im_gui_update() const
 {
      m_changed                  = false;
      const auto lock_selections = m_selections.lock();

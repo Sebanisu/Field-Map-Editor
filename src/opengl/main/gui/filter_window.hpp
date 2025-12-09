@@ -31,7 +31,7 @@ struct filter_window
        std::weak_ptr<map_sprite>);
      void               collapsing_header_filters() const;
      [[nodiscard]] bool shortcut(const ImGuiKeyChord);
-     void               render() const;
+     void               on_im_gui_update() const;
      void               menu() const;
      void               update(std::weak_ptr<Selections>);
      void               update(std::weak_ptr<map_sprite>);
