@@ -65,6 +65,26 @@ template<typename T>
 concept Renderable
   = std::movable<T>
     && (HasOnUpdate<T> || HasOnRender<T> || HasOnEvent<T> || HasOnImGuiUpdate<T> || HasOnImGuiFileMenu<T> || HasOnImGuiEditMenu<T> || HasOnImGuiWindowMenu<T> || HasOnImGuiHelpMenu<T>);
+
+template<typename T>
+struct inplace_type_extract
+{
+     using type = void;
+};
+
+template<typename U>
+struct inplace_type_extract<std::in_place_type_t<U>>
+{
+     using type = U;
+};
+
+template<typename T>
+concept RenderableOrInplaceRenderable
+  = (std::is_void_v<typename inplace_type_extract<std::remove_cvref_t<T>>::type>
+     && glengine::Renderable<std::remove_cvref_t<T>>)
+    || (requires {
+            typename inplace_type_extract<std::remove_cvref_t<T>>::type;
+       } && glengine::Renderable<std::remove_cvref_t<typename inplace_type_extract<std::remove_cvref_t<T>>::type>>);
 // std::default_initializable<T> &&
 // I donno if I really need this.
 
