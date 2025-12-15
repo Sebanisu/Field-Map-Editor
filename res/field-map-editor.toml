@@ -21,10 +21,10 @@ BatchQueueEnabled = false
 BatchUpdateDelay = 0.029999999329447746
 BatchUpdateDelayEnabled = false
 Bpp = 0
-CacheDeswizzlePathsEnabled = '0100000000000'
-CacheFullFileNamePathsEnabled = '0100000000000'
+CacheDeswizzlePathsEnabled = '0000000000000'
+CacheFullFileNamePathsEnabled = '0000000000000'
 CacheMapPathsEnabled = '1000000000000'
-CacheSwizzleAsOneImagePathsEnabled = '1001000000000'
+CacheSwizzleAsOneImagePathsEnabled = '0000000000000'
 CacheSwizzlePathsEnabled = '0000010000000'
 CacheTextureAndMapPaths = [
     'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII',
@@ -42,7 +42,7 @@ CacheTextureAndMapPaths = [
     'e:/'
 ]
 CompactOnLoad = 4
-CompactOnLoadEnabled = true
+CompactOnLoadEnabled = false
 Coo = 0
 CurrentPattern = 0
 CurrentPatternIndex = 0
@@ -189,7 +189,7 @@ PatternsCommonPrefixes = [
 ]
 PatternsCommonPrefixesForMaps = [ '{selected_path}/{ffnx_direct_mode_path}/field/mapdata/' ]
 RenderImportedImage = false
-StarterField = 'bdifrit1'
+StarterField = 'bdin1'
 SwizzleAsOneImagePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
 SwizzlePath = 'C:/Users/pcvii/Downloads/bdifrit1'
 TOMLFailOverForEditor = 1
@@ -210,6 +210,7 @@ filter_multi_layer_id = [ 0 ]
 filter_multi_layer_id_enabled = false
 filter_multi_z = []
 filter_multi_z_enabled = false
-filter_swizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_swizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered/DEMASTER_EXP/textures/field_bg'
 filter_swizzle_as_one_image = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
-filter_swizzle_as_one_image_enabled = true
+filter_swizzle_as_one_image_enabled = false
+filter_swizzle_enabled = true

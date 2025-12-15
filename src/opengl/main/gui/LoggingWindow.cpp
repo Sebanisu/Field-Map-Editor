@@ -21,13 +21,27 @@ void fme::LoggingWindow::on_update(float ts) const
 
 void fme::LoggingWindow::on_im_gui_update() const
 {
-     if (!m_open)
-          return;
 
+     if (!m_memory_sink)
+     {
+          return;
+     }
+     if (!m_open)
+     {
+          return;
+     }
      if (!ImGui::Begin("Logging Window", &m_open))
      {
           ImGui::End();
           return;
+     }
+
+     auto cmb = fme::GenericCombo(
+       "Log level", level_values, level_names, m_current_level);
+     if (cmb.render())
+     {
+          // m_memory_sink->set_level(m_current_level);
+          spdlog::set_level(m_current_level);
      }
 
      ImGui::Checkbox("Auto-scroll", &m_auto_scroll);

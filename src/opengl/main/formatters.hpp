@@ -20,6 +20,49 @@
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/strings/LangCommon.hpp>
 
+
+template<>
+struct fmt::formatter<spdlog::level::level_enum>
+  : fmt::formatter<std::string_view>
+{
+     //  parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(
+       spdlog::level::level_enum level_t,
+       FormatContext            &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (level_t)
+          {
+               case spdlog::level::trace:
+                    name = "Trace"sv;
+                    break;
+               case spdlog::level::debug:
+                    name = "Debug"sv;
+                    break;
+               case spdlog::level::info:
+                    name = "Info"sv;
+                    break;
+               case spdlog::level::warn:
+                    name = "Warn"sv;
+                    break;
+               case spdlog::level::err:
+                    name = "Error"sv;
+                    break;
+               case spdlog::level::critical:
+                    name = "Critical"sv;
+                    break;
+               case spdlog::level::off:
+                    name = "Off"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+
 template<>
 struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
 {

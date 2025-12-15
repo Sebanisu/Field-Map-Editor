@@ -186,6 +186,7 @@ static std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> initialize_logger()
 
           // Now log anywhere
           spdlog::info("App started");
+          spdlog::info("Log file created at: {}", path);
           return memory_sink;
      }
      catch (const spdlog::spdlog_ex &ex)
