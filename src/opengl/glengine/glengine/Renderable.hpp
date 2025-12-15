@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_RENDERABLE_HPP
 #define FIELD_MAP_EDITOR_RENDERABLE_HPP
+#include "concepts.hpp"
 namespace glengine
 {
 namespace event

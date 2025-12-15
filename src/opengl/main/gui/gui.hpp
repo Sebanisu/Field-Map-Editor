@@ -27,6 +27,7 @@
 #include "mouse_positions.hpp"
 #include "RangeConsumer.hpp"
 #include "Selections.hpp"
+#include "spdlog/sinks/ringbuffer_sink.h"
 #include "textures_window.hpp"
 #include <cstdint>
 #include <ff_8/ArchivesGroup.hpp>
@@ -48,11 +49,15 @@ namespace fme
 struct gui
 {
    public:
-     gui(GLFWwindow *const window);
+     gui(
+       GLFWwindow *const                                  window,
+       std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> memory_sink);
      void start(GLFWwindow *const window);
      ~gui();
 
    private:
+     GLFWwindow *const                                  m_window;
+     std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> m_memory_sink;
      using variant_tile_t = std::variant<
        open_viii::graphics::background::Tile1,
        open_viii::graphics::background::Tile2,

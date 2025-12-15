@@ -34,6 +34,7 @@ set(MAIN_SOURCES
     gui/keyboard_shortcuts_window.cpp
     gui/image_compare_window.cpp
     gui/import.cpp
+    gui/LoggingWindow.cpp
     gui/main_menu_paths.cpp
     gui/mouse_positions.cpp
     gui/Selections.cpp

@@ -8,6 +8,7 @@
 #include "collapsing_tile_info.hpp"
 #include "EmptyStringIterator.hpp"
 #include "gui/ColorConversions.hpp"
+#include "gui/LoggingWindow.hpp"
 #include "gui_labels.hpp"
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
@@ -4166,7 +4167,11 @@ std::shared_ptr<mim_sprite> gui::get_mim_sprite() const
        get_coo(),
        m_selections->get<ConfigKey::DrawPalette>());
 }
-gui::gui(GLFWwindow *const window)
+gui::gui(
+  GLFWwindow *const                                  window,
+  std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> sink)
+  : m_window(std::move(window))
+  , m_memory_sink(std::move(sink))
 {
      // 0. Set the debug callback function
      glDebugMessageCallback(DebugCallback, nullptr);
@@ -4254,6 +4259,8 @@ gui::gui(GLFWwindow *const window)
        std::in_place_type<fme::ImageCompareWindow>, m_selections);
      m_layers.emplace_layers(
        std::in_place_type<fme::filter_window>, m_selections, m_map_sprite);
+     m_layers.emplace_layers(
+       std::in_place_type<fme::LoggingWindow>, m_memory_sink, m_selections);
      m_import.update(m_selections);
      m_textures_window.update(m_selections);
      m_import.update(m_map_sprite);
