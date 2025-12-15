@@ -57,6 +57,9 @@ struct fmt::formatter<spdlog::level::level_enum>
                case spdlog::level::off:
                     name = "Off"sv;
                     break;
+               default:
+                    name = "Unknown"sv;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
