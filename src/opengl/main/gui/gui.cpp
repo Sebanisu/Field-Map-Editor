@@ -1206,7 +1206,7 @@ void gui::hovered_tiles_panel()
 }
 void gui::combo_coo()
 {
-     bool remaster = m_field->is_remaster_from_fl_paths();
+     bool remaster = m_field && m_field->is_remaster_from_fl_paths();
      if (!remaster)
      {
           return;
@@ -2447,7 +2447,7 @@ void gui::file_menu()
      {
           return;
      }
-     bool remaster = m_field->is_remaster_from_fl_paths();
+     bool remaster = m_field && m_field->is_remaster_from_fl_paths();
      if (remaster && ImGui::BeginMenu(gui_labels::language.data()))
      {
           const auto end_menu1         = glengine::ScopeGuard(&ImGui::EndMenu);
@@ -4245,7 +4245,8 @@ gui::gui(GLFWwindow *const window)
        });
 
      m_filter_window.register_is_remaster_callback(
-       [this]() -> bool { return m_field->is_remaster_from_fl_paths(); });
+       [this]() -> bool
+       { return m_field && m_field->is_remaster_from_fl_paths(); });
 
      if (m_field)
      {
