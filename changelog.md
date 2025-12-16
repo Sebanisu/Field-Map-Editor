@@ -2,7 +2,7 @@
 
 All notable changes to the Field-Map-Editor project will be documented in this file, based on the available tags from the GitHub repository. Versions are sorted from the largest to the smallest number, with Canary representing the unreleased changes.
 
-## [canary] - To be 1.0.4
+## [canary] - To be 1.0.5
 
 [Release](https://github.com/Sebanisu/Field-Map-Editor/releases/tag/canary)
 

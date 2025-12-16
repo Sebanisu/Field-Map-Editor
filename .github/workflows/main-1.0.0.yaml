@@ -1,6 +1,6 @@
 name: Field-Map-Editor
 
-run-name: 1.0.4.${{ github.run_number }}
+run-name: 1.0.5.${{ github.run_number }}
 
 on:
   workflow_dispatch:
@@ -52,7 +52,7 @@ jobs:
       run: ".github/workflows/build.ps1"
       shell: pwsh
       env:
-        _BUILD_VERSION: "1.0.4.${{ github.run_number }}"
+        _BUILD_VERSION: "1.0.5.${{ github.run_number }}"
         GITHUB_PACKAGES_PAT: ${{ secrets.GITHUB_TOKEN }}
     - name: Test
       working-directory: ${{github.workspace}}\.build
