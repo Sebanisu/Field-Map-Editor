@@ -1733,7 +1733,7 @@ class GenericCombo
                     // want, outside or inside your objects
                     if (std::ranges::empty(string))
                     {
-                         return;
+                         continue;
                     }
                     const char *c_str_value = std::ranges::data(string);
                     {

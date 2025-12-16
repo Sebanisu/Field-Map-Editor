@@ -87,12 +87,47 @@ concept erasable_range = std::ranges::range<R> && requires(R &r) {
      } -> std::same_as<typename R::iterator>;
 };
 
+inline std::filesystem::path
+  normalize_for_compare(const std::filesystem::path &p)
+{
+     auto norm = p.lexically_normal();
+
+#if defined(_WIN32)
+
+     // Windows: case-insensitive
+     auto s = norm.native();
+     std::ranges::transform(
+       s,
+       s.begin(),
+       [](const auto ch)
+       {
+            return static_cast<std::remove_cvref_t<decltype(ch)>>(
+              std::tolower(ch));
+       });
+     return std::filesystem::path{ s };
+#else
+     // Linux / others: case-sensitive
+     return norm;
+#endif
+}
+
 template<erasable_range... R>
 constexpr inline bool sort_and_remove_duplicates(R &...ranges) noexcept
 {
-     bool       changed = false;
-     const auto projection
-       = [](const auto &values) { return std::get<0>(values); };
+     bool       changed    = false;
+     const auto projection = [](const auto &values)
+     {
+          using value_t = std::remove_cvref_t<decltype(std::get<0>(values))>;
+
+          if constexpr (std::is_same_v<value_t, std::filesystem::path>)
+          {
+               return normalize_for_compare(std::get<0>(values));
+          }
+          else
+          {
+               return std::get<0>(values);
+          }
+     };
      auto zip_view = std::ranges::views::zip(ranges...);
      if (!std::ranges::is_sorted(zip_view, {}, projection))
      {
