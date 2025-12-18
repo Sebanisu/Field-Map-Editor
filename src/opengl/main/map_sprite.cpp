@@ -2437,15 +2437,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Adjust scale based on texture height or deswizzle state.
      std::int32_t height = static_cast<std::int32_t>(get_max_texture_height());
 
-     // If there’s only one bpp and at most one palette, nothing needs
-     // saving.
-     if (
-       unique_bpp.size() == 1U
-       && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
-     {
-          return {};
-     }
-
      // Prepare for gathering palette conflicts.
      using map_type = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                       = typename map_type::mapped_type;
@@ -2630,15 +2621,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const std::int32_t width
        = ((256 * static_cast<std::int32_t>(max_texture_page_id)) + max_source_x)
          * m_render_framebuffer->scale();
-
-     // If there’s only one bpp and at most one palette, nothing needs
-     // saving.
-     if (
-       unique_bpp.size() == 1U
-       && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
-     {
-          return {};
-     }
 
      // Prepare for gathering palette conflicts.
      const auto conflicting_palettes_map = get_conflicting_palettes();
