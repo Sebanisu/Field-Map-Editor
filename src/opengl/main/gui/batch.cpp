@@ -103,6 +103,7 @@ void fme::batch::draw_window()
                auto config = Configuration(config_path);
                config.save();
           }
+          spdlog::info("Batch operation completed.");
      }
      prev_disabled = disabled;
 
@@ -1425,6 +1426,7 @@ void fme::batch::button_start()
      {
           return;
      }
+     spdlog::info("Starting batch operation.");
      if (
        selections->get<ConfigKey::BatchOutputType>()
        == output_types::deswizzle_generate_toml)
@@ -2431,6 +2433,7 @@ void fme::batch::stop()
      m_field.reset();
      m_coo.reset();
      m_status.clear();
+     spdlog::info("Stopping batch operation.");
 }
 
 fme::batch::batch(
