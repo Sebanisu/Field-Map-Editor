@@ -5,7 +5,6 @@
 #include "generic_combo.hpp"
 #include "gui_labels.hpp"
 #include "key_value_data.hpp"
-#include "push_pop_id.hpp"
 #include "Selections.hpp"
 #include "tool_tip.hpp"
 #include <array>
@@ -14,8 +13,10 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <functional>
+#include <glengine/Renderable.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <imgui.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <open_viii/strings/LangCommon.hpp>
 #include <optional>
 #include <ranges>
@@ -329,5 +330,5 @@ struct custom_paths_window
      void                 render() const;
 };
 }// namespace fme
-
+// static_assert(glengine::Renderable<fme::custom_paths_window>);
 #endif /* A68AC487_FAA2_4B0F_9C15_BB16CD240B56 */

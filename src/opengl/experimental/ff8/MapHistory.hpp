@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "MouseToTilePos.h"
 #include "SimilarAdjustments.hpp"
-#include "UniquifyPupu.hpp"
+#include <ff_8/UniquifyPupu.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <source_location>
 namespace ff_8

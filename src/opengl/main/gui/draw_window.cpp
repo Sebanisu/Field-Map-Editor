@@ -1,11 +1,13 @@
 #include "draw_window.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <glengine/FrameBuffer.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
 #include <glm/gtc/type_ptr.hpp>        // for glm::value_ptr
 #include <IconsFontAwesome6.h>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <ImGuizmo.h>
 static ImVec2 operator+(
   const ImVec2 &a,
@@ -34,7 +36,7 @@ void fme::draw_window::update(std::weak_ptr<fme::map_sprite> in_map_sprite)
 {
      m_map_sprite = std::move(in_map_sprite);
 }
-void fme::draw_window::render() const
+void fme::draw_window::on_im_gui_update() const
 {
 
      const auto selections = m_selections.lock();
@@ -74,8 +76,8 @@ void fme::draw_window::render() const
                                                       const ImVec2 &window_pos,
                                                       const ImVec2 &window_size,
                                                       float         tile_size,
-                                                      color         color1,
-                                                      color         color2)
+                                                      ff_8::Color   color1,
+                                                      ff_8::Color   color2)
      {
           if (
             window_size.x < 1.f || window_size.y < 1.f
@@ -119,15 +121,15 @@ void fme::draw_window::render() const
           //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(),
           //     m_checkerboard_framebuffer.height() });
           m_checkerboard_batchrenderer.shader().set_uniform(
-            "color1", glm::vec4{ color1 });
+            "color1", ff_8::Colors::to_vec4(color1));
           m_checkerboard_batchrenderer.shader().set_uniform(
-            "color2", glm::vec4{ color2 });
+            "color2", ff_8::Colors::to_vec4(color2));
           m_checkerboard_batchrenderer.shader().set_uniform(
             "u_MVP", m_fixed_render_camera.view_projection_matrix());
           m_checkerboard_batchrenderer.clear();
           m_checkerboard_batchrenderer.draw_quad(
             glm::vec3{},
-            fme::colors::White,
+            ff_8::Colors::to_vec4(ff_8::Colors::White),
             glm::vec2{ m_checkerboard_framebuffer.width(),
                        m_checkerboard_framebuffer.height() });
           m_checkerboard_batchrenderer.draw();
@@ -179,7 +181,7 @@ void fme::draw_window::render() const
           const auto pop_style0
             = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0 = PushPopID();
+          const auto pop_id0 = imgui_utils::ImGuiPushId();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() {
           // ImGui::PopStyleColor(); });
@@ -210,7 +212,7 @@ void fme::draw_window::render() const
             selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
             selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
 
-          const auto pop_id1 = PushPopID();
+          const auto pop_id1 = imgui_utils::ImGuiPushId();
 
           ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
@@ -228,7 +230,7 @@ void fme::draw_window::render() const
           const auto pop_style0
             = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0 = PushPopID();
+          const auto pop_id0 = imgui_utils::ImGuiPushId();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() {
           // ImGui::PopStyleColor(); });
@@ -290,7 +292,7 @@ void fme::draw_window::render() const
             color1,
             color2);
 
-          const auto pop_id1 = PushPopID();
+          const auto pop_id1 = imgui_utils::ImGuiPushId();
           ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
               framebuffer.color_attachment_id(
@@ -327,7 +329,7 @@ const fme::MousePositions &fme::draw_window::mouse_positions() const
 {
      return m_mouse_positions;
 }
-void fme::draw_window::update_mouse_positions()
+void fme::draw_window::on_update(float) const
 {
      m_mouse_positions.update();
 }
@@ -335,12 +337,12 @@ const std::vector<std::size_t> &fme::draw_window::clicked_tile_indices() const
 {
      return m_clicked_tile_indices;
 }
-void fme::draw_window::clear_clicked_tile_indices() const
+void fme::draw_window::clear_clicked_tile_indices()
 {
      m_clicked_tile_indices.clear();
 }
 
-void fme::draw_window::remove_clicked_index(std::size_t in_index) const
+void fme::draw_window::remove_clicked_index(std::size_t in_index)
 {
      const auto remove_result = std::ranges::remove_if(
        m_clicked_tile_indices,
@@ -590,7 +592,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(
                         = 16.0f * scale
                           * static_cast<float>(framebuffer.scale());
                       const auto [c, thickness]
-                        = [&]() -> std::pair<color, float>
+                        = [&]() -> std::pair<ff_8::Color, float>
                       {
                            const auto default_thickness = 3.F;
                            const auto hover_thickeness  = 4.5F;
@@ -611,37 +613,44 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(
                                 {
                                      if (similar_over_1)
                                      {
-                                          return { colors::ButtonGreen.opaque()
+                                          return { ff_8::Colors::ButtonGreen
+                                                     .opaque()
                                                      .fade(-.2F),
                                                    default_thickness };
                                      }
                                      if (animation_over_1)
                                      {
-                                          return { colors::ButtonPink.opaque()
+                                          return { ff_8::Colors::ButtonPink
+                                                     .opaque()
                                                      .fade(-.2F),
                                                    default_thickness };
                                      }
-                                     return { colors::Button.opaque().fade(
-                                                -.2F),
+                                     return { ff_8::Colors::Button.opaque()
+                                                .fade(-.2F),
                                               default_thickness };
                                 }
                                 if (m_mouse_positions.left)
                                 {
                                      if (similar_over_1)
                                      {
-                                          return { colors::ButtonGreenActive
-                                                     .opaque()
-                                                     .fade(-.2F),
-                                                   default_thickness };
+                                          return {
+                                               ff_8::Colors::ButtonGreenActive
+                                                 .opaque()
+                                                 .fade(-.2F),
+                                               default_thickness
+                                          };
                                      }
                                      if (animation_over_1)
                                      {
-                                          return { colors::ButtonPinkActive
-                                                     .opaque()
-                                                     .fade(-.2F),
-                                                   default_thickness };
+                                          return {
+                                               ff_8::Colors::ButtonPinkActive
+                                                 .opaque()
+                                                 .fade(-.2F),
+                                               default_thickness
+                                          };
                                      }
-                                     return { colors::ButtonActive.opaque()
+                                     return { ff_8::Colors::ButtonActive
+                                                .opaque()
                                                 .fade(-.2F),
                                               default_thickness };
                                 }
@@ -671,16 +680,20 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(
                            }
                            if (similar_over_1)
                            {
-                                return { colors::ButtonGreenHovered.opaque(),
-                                         hover_thickeness };
+                                return {
+                                     ff_8::Colors::ButtonGreenHovered.opaque(),
+                                     hover_thickeness
+                                };
                            }
 
                            if (animation_over_1)
                            {
-                                return { colors::ButtonPinkHovered.opaque(),
-                                         hover_thickeness };
+                                return {
+                                     ff_8::Colors::ButtonPinkHovered.opaque(),
+                                     hover_thickeness
+                                };
                            }
-                           return { colors::ButtonHovered.opaque(),
+                           return { ff_8::Colors::ButtonHovered.opaque(),
                                     hover_thickeness };
                       }();
 
@@ -1101,5 +1114,26 @@ void fme::draw_window::UseImGuizmo(
             delta.x,
             delta.y);
           t_map_sprite->end_multi_frame_working(std::move(history_entry));
+     }
+}
+
+
+void fme::draw_window::on_im_gui_window_menu() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error(
+            "m_selections is no longer valid. File: {}, Line: {}",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (ImGui::MenuItem(
+           gui_labels::display_draw.data(),
+           "Control + D",
+           &selections->get<ConfigKey::DisplayDrawWindow>()))
+     {
+          selections->update<ConfigKey::DisplayDrawWindow>();
      }
 }

@@ -25,6 +25,34 @@ void Layer::Item::on_im_gui_update() const
           return m_impl->on_im_gui_update();
      }
 }
+void Layer::Item::on_im_gui_file_menu() const
+{
+     if (m_impl)
+     {
+          return m_impl->on_im_gui_file_menu();
+     }
+}
+void Layer::Item::on_im_gui_edit_menu() const
+{
+     if (m_impl)
+     {
+          return m_impl->on_im_gui_edit_menu();
+     }
+}
+void Layer::Item::on_im_gui_window_menu() const
+{
+     if (m_impl)
+     {
+          return m_impl->on_im_gui_window_menu();
+     }
+}
+void Layer::Item::on_im_gui_help_menu() const
+{
+     if (m_impl)
+     {
+          return m_impl->on_im_gui_help_menu();
+     }
+}
 void Layer::Item::on_event(const event::Item &e) const
 {
      if (m_impl)

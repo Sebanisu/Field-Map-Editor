@@ -226,7 +226,8 @@ struct main_menu_paths
                                      0,
                                      max_display_chars - display_text.size());
                               }
-                              const auto pop_id_menu_item = PushPopID();
+                              const auto pop_id_menu_item
+                                = imgui_utils::ImGuiPushId();
                               ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
                               bool   selected   = ImGui::MenuItem(
                                 "##menu_item", nullptr, &is_checked);
@@ -355,7 +356,7 @@ struct main_menu_paths
        const std::ptrdiff_t index,
        const std::ptrdiff_t delete_me) const
      {
-          const auto  pop_id      = PushPopID();
+          const auto  pop_id      = imgui_utils::ImGuiPushId();
           const float button_size = ImGui::GetFrameHeight();
           ImGui::SameLine();
           if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
@@ -383,7 +384,7 @@ struct main_menu_paths
           if (it != std::ranges::end(transformed_paths))
 
           {
-               const auto  pop_id      = PushPopID();
+               const auto  pop_id      = imgui_utils::ImGuiPushId();
                const float button_size = ImGui::GetFrameHeight();
                ImGui::SameLine();
                if (ImGui::Button(
@@ -404,7 +405,7 @@ struct main_menu_paths
      void add_explore_button(const std::filesystem::path &path) const
      {
           const float button_size = ImGui::GetFrameHeight();
-          const auto  _           = PushPopID();
+          const auto  _           = imgui_utils::ImGuiPushId();
           if (ImGui::Button(
                 ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
           {

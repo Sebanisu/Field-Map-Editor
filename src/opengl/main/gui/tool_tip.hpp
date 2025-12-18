@@ -1,9 +1,9 @@
 #ifndef B4F3B564_D2A3_4C2C_992A_95E9DAEA83EF
 #define B4F3B564_D2A3_4C2C_992A_95E9DAEA83EF
 #include "format_imgui_text.hpp"
-#include "push_pop_id.hpp"
 #include <concepts>
 #include <functional>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <string_view>
 namespace fme
 {
@@ -30,7 +30,7 @@ void tool_tip(
           return;
      }
 
-     // const auto pop_id       = PushPopID();
+     // const auto pop_id       = imgui_utils::ImGuiPushId();
      if (ImGui::BeginTooltip())
      {
           const auto pop_tool_tip = glengine::ScopeGuard{ &ImGui::EndTooltip };
@@ -67,7 +67,7 @@ static inline void tool_tip(
           return;
      }
 
-     // const auto pop_id       = PushPopID();
+     // const auto pop_id       = imgui_utils::ImGuiPushId();
      if (ImGui::BeginTooltip())
      {
           const auto pop_tool_tip = glengine::ScopeGuard{ &ImGui::EndTooltip };

@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_OPERATION_HPP
 #define FIELD_MAP_EDITOR_MAP_OPERATION_HPP
-#include "filter.hpp"
-#include "map_group.hpp"
-#include "source_tile_conflicts.hpp"
+#include <ff_8/Filter.hpp>
+#include <ff_8/MapGroup.hpp>
+#include <ff_8/SourceTileConflicts.hpp>
 #include <glm/glm.hpp>
 namespace ff_8
 {
@@ -17,24 +17,24 @@ struct QuadStrip
      glm::vec2 draw_pos;
 };
 
-void flatten_bpp(map_group::Map &map);
-void flatten_palette(map_group::Map &map);
+void flatten_bpp(MapGroup::Map &map);
+void flatten_palette(MapGroup::Map &map);
 void compact_move_conflicts_only(
-  map_group::Map              &map,
-  const source_tile_conflicts &conflicts);
-void compact_map_order(map_group::Map &map);
-void compact_map_order_ffnx(map_group::Map &map);
-void compact_rows(map_group::Map &map);
-void compact_all(map_group::Map &map);
+  MapGroup::Map             &map,
+  const SourceTileConflicts &conflicts);
+void compact_map_order(MapGroup::Map &map);
+void compact_map_order_ffnx(MapGroup::Map &map);
+void compact_rows(MapGroup::Map &map);
+void compact_all(MapGroup::Map &map);
 bool test_if_map_same(
   const std::filesystem::path &saved_path,
-  const map_group::WeakField  &field,
-  const map_group::MimType    &type);
+  const MapGroup::WeakField   &field,
+  const MapGroup::MimType     &type);
 void save_modified_map(
   const std::filesystem::path &dest_path,
-  const map_group::Map        &map_const,
-  const map_group::Map        &map_changed,
-  const map_group::Map *const  imported = nullptr);
+  const MapGroup::Map         &map_const,
+  const MapGroup::Map         &map_changed,
+  const MapGroup::Map *const   imported = nullptr);
 
 /**
  * @brief Computes a triangle strip (quad) with correct UV coordinates and draw
@@ -90,20 +90,20 @@ void save_modified_map(
      return { tile_const.x(), tile_const.y() };
 }
 
-[[nodiscard]] static inline glm::ivec2
-  dest_coords_for_default(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::ivec2 dest_coords_for_default(
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return { tile.x(), tile.y() };
 }
 
 [[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle_disable_shift(
-  open_viii::graphics::background::is_tile auto &&tile)
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return { tile.source_x(), tile.source_y() };
 }
 
-[[nodiscard]] static inline glm::uvec2
-  dest_coords_for_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle(
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      using namespace open_viii::graphics::literals;
      using tile_type = std::remove_cvref_t<decltype(tile)>;
@@ -114,7 +114,7 @@ void save_modified_map(
 }
 
 [[nodiscard]] static inline glm::uvec2 source_coords_for_single_swizzle(
-  open_viii::graphics::background::is_tile auto &&tile)
+  const open_viii::graphics::background::is_tile auto &tile)
 {
      return dest_coords_for_swizzle(std::forward<decltype(tile)>(tile));
 }
@@ -153,18 +153,18 @@ struct source_x_y_texture_page
 }
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  const std::uint8_t   &texture_page,
-  bool                  skip_filters,
-  bool                  find_all);
+  const MapGroup::Map &map,
+  const ff_8::Filters &filters,
+  const glm::ivec2    &pixel_pos,
+  const std::uint8_t  &texture_page,
+  bool                 skip_filters,
+  bool                 find_all);
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
-  const map_group::Map &map,
-  const ff_8::filters  &filters,
-  const glm::ivec2     &pixel_pos,
-  bool                  skip_filters,
-  bool                  find_all);
+  const MapGroup::Map &map,
+  const ff_8::Filters &filters,
+  const glm::ivec2    &pixel_pos,
+  bool                 skip_filters,
+  bool                 find_all);
 
 template<
   std::integral input_t,
@@ -203,7 +203,7 @@ static inline void find_intersecting_get_indices(
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
   const tilesT        &tiles,
-  const ff_8::filters &filters,
+  const ff_8::Filters &filters,
   const glm::ivec2    &pixel_pos,
   const std::uint8_t  &texture_page,
   bool                 skip_filters = false,
@@ -222,7 +222,7 @@ template<std::ranges::range tilesT>
            {
                 if (
                   !skip_filters
-                  && ff_8::tile_operations::fail_any_filters(filters, tile))
+                  && ff_8::TileOperations::fail_any_filters(filters, tile))
                 {
                      return false;
                 }
@@ -233,14 +233,14 @@ template<std::ranges::range tilesT>
                            pixel_pos.x % max_texture_page_dim,
                            tile.source_x(),
                            tile.source_x()
-                             + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                             + static_cast<int>(ff_8::MapGroup::TILE_SIZE)))
                      {
                           if (find_intersecting_in_bounds(
                                 pixel_pos.y % max_texture_page_dim,
                                 tile.source_y(),
                                 tile.source_y()
                                   + static_cast<int>(
-                                    ff_8::map_group::TILE_SIZE)))
+                                    ff_8::MapGroup::TILE_SIZE)))
                           {
                                return true;
                           }
@@ -286,7 +286,7 @@ template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t>
   find_intersecting_deswizzle(
     const tilesT        &tiles,
-    const ff_8::filters &filters,
+    const ff_8::Filters &filters,
     const glm::ivec2    &pixel_pos,
     bool                 skip_filters = false,
     bool                 find_all     = false)
@@ -303,20 +303,20 @@ template<std::ranges::range tilesT>
            {
                 if (
                   !skip_filters
-                  && ff_8::tile_operations::fail_any_filters(filters, tile))
+                  && ff_8::TileOperations::fail_any_filters(filters, tile))
                 {
                      return false;
                 }
                 if (find_intersecting_in_bounds(
                       pixel_pos.x,
                       tile.x(),
-                      tile.x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                      tile.x() + static_cast<int>(ff_8::MapGroup::TILE_SIZE)))
                 {
                      if (find_intersecting_in_bounds(
                            pixel_pos.y,
                            tile.y(),
                            tile.y()
-                             + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                             + static_cast<int>(ff_8::MapGroup::TILE_SIZE)))
                      {
                           return true;
                      }

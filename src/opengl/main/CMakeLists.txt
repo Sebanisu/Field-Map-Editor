@@ -34,33 +34,24 @@ set(MAIN_SOURCES
     gui/keyboard_shortcuts_window.cpp
     gui/image_compare_window.cpp
     gui/import.cpp
+    gui/LoggingWindow.cpp
     gui/main_menu_paths.cpp
     gui/mouse_positions.cpp
-    gui/push_pop_id.cpp
     gui/Selections.cpp
     gui/textures_window.cpp
     gui/tool_tip.cpp
-    archives_group.cpp
-    Configuration.cpp
     formatters.cpp
     future_operations.cpp
     generic_combo.cpp
     main.cpp
-    map_group.cpp
     map_operation.cpp
-    MapHistory.cpp
     map_sprite.cpp
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
-    PupuID.cpp
-    safedir.cpp
     save_image_pbo.cpp
-    source_tile_conflicts.cpp
     tile_sizes.cpp
-    unique_values.cpp
-    UniquifyPupu.cpp
-    utilities.cpp)
+)
 
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_executable(${PROJECT_NAME}_MAIN WIN32 ${MAIN_SOURCES})
@@ -69,7 +60,6 @@ else()
 endif()
 
 # set_property(TARGET ${PROJECT_NAME}_MAIN PROPERTY CXX_STANDARD 20)
-find_package(tomlplusplus CONFIG REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -84,9 +74,15 @@ target_include_directories(${PROJECT_NAME}_MAIN_COMMON
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 string(TOLOWER "${PROJECT_NAME}" main_exec)
-
 set_target_properties(${PROJECT_NAME}_MAIN PROPERTIES OUTPUT_NAME
                                                       "${main_exec}")
+target_compile_definitions(
+  ${PROJECT_NAME}_MAIN
+  PUBLIC NOMINMAX # imgui uses unguarded min and max.
+  PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}.toml"
+  PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}_imgui.ini"
+  PUBLIC DEFAULT_LOG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${main_exec}.log"
+  )
 target_link_libraries(
   ${PROJECT_NAME}_MAIN
   PRIVATE project_warnings
@@ -96,6 +92,8 @@ target_link_libraries(
   PRIVATE glfw
   PRIVATE OpenGL::GL
   PRIVATE glengine
+  PRIVATE ${PROJECT_NAME}_ff_8
+  PRIVATE ${PROJECT_NAME}_imgui_utils
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
@@ -108,10 +106,6 @@ target_link_libraries(
   PRIVATE clip::clip
   PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 
-target_compile_definitions(
-  ${PROJECT_NAME}_MAIN
-  PUBLIC NOMINMAX # imgui uses unguarded min and max.
-  PUBLIC TOML_EXCEPTIONS=0)
 
 target_compile_features(
   ${PROJECT_NAME}_MAIN

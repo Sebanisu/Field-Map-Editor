@@ -1,9 +1,12 @@
-
+#ifndef DEFAULT_LOG_PATH
+#define DEFAULT_LOG_PATH "res/field-map-editor.log"// fallback, just in case
+#endif
 // clang-format off
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 // clang-format on
 #include "gui/gui.hpp"
+#include "spdlog/sinks/ringbuffer_sink.h"
 #include <glengine/BlendModeSettings.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
@@ -74,8 +77,8 @@ static void setWindowIcon(GLFWwindow *const window)
 static GLFWwindow *create_glfw_window()
 {
      using namespace fme;
-     const Configuration config = {};
-     const int           window_height
+     const ff_8::Configuration config = {};
+     const int                 window_height
        = config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(
          SelectionInfo<ConfigKey::WindowHeight>::default_value());
      const int window_width
@@ -113,20 +116,63 @@ static GLFWwindow *create_glfw_window()
      glfwSwapInterval(1);// Enable vsync
      return window;
 }
-int main(
-  [[maybe_unused]] int    argc,
-  [[maybe_unused]] char **argv)
+
+static std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> initialize_logger()
 {
+
+     std::error_code error_code = {};
+
+     auto            temp_path  = std::filesystem::path(DEFAULT_LOG_PATH);
+     std::string     path;
+     try
+     {
+          if (temp_path.is_relative())
+          {
+               temp_path = (std::filesystem::current_path(error_code) / path);
+          }
+          temp_path.make_preferred();
+          spdlog::info("log path: {}", temp_path);
+          path = temp_path.string();
+     }
+     catch (const std::filesystem::filesystem_error &e)
+     {
+          spdlog::error(
+            "Filesystem error while constructing config path: {}", e.what());
+     }
+     catch (const std::exception &e)
+     {
+          spdlog::error(
+            "Unexpected error while constructing config path: {}", e.what());
+     }
+     if (error_code)
+     {
+          spdlog::warn(
+            "{}:{} - {}: {} path: \"{}\"",
+            __FILE__,
+            __LINE__,
+            error_code.value(),
+            error_code.message(),
+            path);
+          error_code.clear();
+     }
      try
      {
           // Create file logger and set as default
-          auto file_logger = spdlog::basic_logger_mt(
-            "file_logger", "res/field_map_editor.log", true);
+          auto file_sink
+            = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, true);
+          auto memory_sink
+            = std::make_shared<spdlog::sinks::ringbuffer_sink_mt>(2000);
+
 
           // Remove logger name from output pattern
-          file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
+          file_sink->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
+          memory_sink->set_pattern(R"([%H:%M:%S] [%^%l%$] %v)");
 
-          spdlog::set_default_logger(file_logger);
+
+          std::vector<spdlog::sink_ptr> sinks{ file_sink, memory_sink };
+          auto logger = std::make_shared<spdlog::logger>(
+            "multi", sinks.begin(), sinks.end());
+          spdlog::set_default_logger(logger);
 
           // Set log level based on build type
           // #ifndef NDEBUG
@@ -140,12 +186,26 @@ int main(
 
           // Now log anywhere
           spdlog::info("App started");
+          spdlog::info("Log file created at: {}", path);
+          return memory_sink;
      }
      catch (const spdlog::spdlog_ex &ex)
      {
           std::cerr << "Log init failed: " << ex.what() << std::endl;
      }
-     GLFWwindow *const window = create_glfw_window();
+     catch (const std::exception &ex)
+     {
+          std::cerr << "Unexpected error: " << ex.what() << std::endl;
+     }
+     return nullptr;
+}
+
+int main(
+  [[maybe_unused]] int    argc,
+  [[maybe_unused]] char **argv)
+{
+     auto              memory_sink = initialize_logger();
+     GLFWwindow *const window      = create_glfw_window();
      if (!window)
           return 0;
      setWindowIcon(window);
@@ -179,9 +239,8 @@ int main(
      // Enable debug output
      glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT);
      glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
      {
-          auto the_gui = fme::gui{ window };
+          auto the_gui = fme::gui{ window, std::move(memory_sink) };
           the_gui.start(window);
      }
 

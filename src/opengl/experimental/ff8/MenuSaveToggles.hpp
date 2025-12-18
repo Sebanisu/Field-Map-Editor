@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_MENUSAVETOGGLES_HPP
 #define FIELD_MAP_EDITOR_MENUSAVETOGGLES_HPP
-#include "Configuration.hpp"
 #include "Menu.hpp"
+#include <ff_8/Configuration.hpp>
 #include <fmt/format.h>
 #include <ranges>
 static inline void MenuSaveToggles(
   const glengine::Menu &menu,
-  Configuration        &config)
+  ff_8::Configuration  &config)
 {
      const auto  string = fmt::format("{}_menu", menu.title());
      toml::array array{};
@@ -25,12 +25,12 @@ static inline void MenuSaveToggles(
 }
 static inline void MenuSaveToggles(const glengine::Menu &menu)
 {
-     Configuration config{};
+     ff_8::Configuration config{};
      MenuSaveToggles(menu, config);
 }
 static inline void MenuLoadToggles(
-  glengine::Menu &menu,
-  Configuration  &config)
+  glengine::Menu      &menu,
+  ff_8::Configuration &config)
 {
      const auto string = fmt::format("{}_menu", menu.title());
      if (config->contains(string))
@@ -50,7 +50,7 @@ static inline void MenuLoadToggles(
 }
 static inline void MenuLoadToggles(glengine::Menu &menu)
 {
-     Configuration config{};
+     ff_8::Configuration config{};
      MenuLoadToggles(menu, config);
 }
 

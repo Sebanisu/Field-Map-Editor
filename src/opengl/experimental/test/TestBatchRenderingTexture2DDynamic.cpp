@@ -3,9 +3,9 @@
 //
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "Application.hpp"
-#include "ImGuiPushID.hpp"
 #include <glengine/Renderer.hpp>
 #include <glengine/Vertex.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 static constinit bool FitWidth  = true;
 static constinit bool FitHeight = true;
 static constinit bool Preview   = false;
@@ -68,13 +68,13 @@ void test::TestBatchRenderingTexture2DDynamic::on_im_gui_update() const
      const float clamp_width  = window_width / 2.F - 1.F;
      const float clamp_height = window_height / 2.F - 1.F;
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
 
           ImGui::Checkbox("fit Height", &FitHeight);
           ImGui::Checkbox("fit Width", &FitWidth);
      }
      {
-          const auto pop = glengine::ImGuiPushId();
+          const auto pop = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "View Offset", &view_offset.x, -clamp_width, clamp_width))
           {
@@ -83,7 +83,7 @@ void test::TestBatchRenderingTexture2DDynamic::on_im_gui_update() const
           }
      }
      {
-          const auto pop_2 = glengine::ImGuiPushId();
+          const auto pop_2 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "Model Offset 1", &model_offset_1.x, -clamp_width, clamp_width))
           {
@@ -92,7 +92,7 @@ void test::TestBatchRenderingTexture2DDynamic::on_im_gui_update() const
           }
      }
      {
-          const auto pop_3 = glengine::ImGuiPushId();
+          const auto pop_3 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "Model Offset 2", &model_offset_2.x, -clamp_width, clamp_width))
           {
@@ -101,7 +101,7 @@ void test::TestBatchRenderingTexture2DDynamic::on_im_gui_update() const
           }
      }
      {
-          const auto pop_4 = glengine::ImGuiPushId();
+          const auto pop_4 = imgui_utils::ImGuiPushId();
           if (ImGui::SliderFloat2(
                 "Model Offset 3", &model_offset_3.x, -clamp_width, clamp_width))
           {

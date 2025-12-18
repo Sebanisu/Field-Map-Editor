@@ -2,13 +2,14 @@
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include "future_operations.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui/gui_labels.hpp"
 #include "map_operation.hpp"
-#include "safedir.hpp"
 #include "save_image_pbo.hpp"
-#include "utilities.hpp"
 #include <bit>
 #include <expected>
+#include <ff_8/SafeDir.hpp>
+#include <ff_8/Utilities.hpp>
 #include <fmt/format.h>
 #include <glengine/BlendModeSettings.hpp>
 #include <glengine/DistanceBuffer.hpp>
@@ -32,16 +33,16 @@ namespace fme
 {
 
 map_sprite::map_sprite(
-  ff_8::map_group                        map_group,
+  ff_8::MapGroup                         MapGroup,
   map_sprite_settings                    settings,
-  ff_8::filters                          in_filters,
+  ff_8::Filters                          in_filters,
   std::weak_ptr<Selections>              selections,
   std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
       !settings.require_coo
-          || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic)
-        ? std::move(map_group)
-        : ff_8::map_group{})
+          || (MapGroup.opt_coo && MapGroup.opt_coo.value() != open_viii::LangT::generic)
+        ? std::move(MapGroup)
+        : ff_8::MapGroup{})
   , m_settings(settings)
   , m_filters(std::move(in_filters))
   , m_selections(selections)
@@ -120,19 +121,19 @@ void map_sprite::toggle_filter_compact_on_load_original(
      {
           switch (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>())
           {
-               case compact_type::rows:
+               case ff_8::CompactTypeT::rows:
                     compact_rows_original(skip_update);
                     break;
-               case compact_type::all:
+               case ff_8::CompactTypeT::all:
                     compact_all_original(skip_update);
                     break;
-               case compact_type::move_only_conflicts:
+               case ff_8::CompactTypeT::move_only_conflicts:
                     compact_move_conflicts_only_original(skip_update);
                     break;
-               case compact_type::map_order:
+               case ff_8::CompactTypeT::map_order:
                     compact_map_order_original(skip_update);
                     break;
-               case compact_type::map_order_ffnx:
+               case ff_8::CompactTypeT::map_order_ffnx:
                     compact_map_order_ffnx_original(skip_update);
                     break;
           }
@@ -160,26 +161,26 @@ void map_sprite::toggle_filter_flatten_on_load_original(
      {
           switch (m_filters.value<ff_8::FilterTag::FlattenOnLoadOriginal>())
           {
-               case flatten_type::bpp:
+               case ff_8::FlattenTypeT::bpp:
                     // Only flatten BPP if compact type isn't using map
                     // order
                     if (
                  !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
-                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
                     break;
 
-               case flatten_type::palette:
+               case ff_8::FlattenTypeT::palette:
                     flatten_palette_original(skip_update);
                     break;
 
-               case flatten_type::both:
+               case ff_8::FlattenTypeT::both:
                     // Only flatten BPP if not using map order
                     if (
                  !m_filters.enabled<ff_8::FilterTag::CompactOnLoadOriginal>()
-                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != compact_type::map_order_ffnx))
+                 || (m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order && m_filters.value<ff_8::FilterTag::CompactOnLoadOriginal>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          flatten_bpp_original(skip_update);
                     }
@@ -226,7 +227,7 @@ map_sprite::operator ff_8::path_search() const
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
 
-     return { ff_8::map_group{ m_map_group.field, coo }, m_settings, m_filters,
+     return { ff_8::MapGroup{ m_map_group.field, coo }, m_settings, m_filters,
               m_selections, m_render_framebuffer };
 }
 
@@ -234,11 +235,11 @@ map_sprite map_sprite::with_field(
   map_sprite::WeakField  field,
   const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo }, m_settings, m_filters,
+     return { ff_8::MapGroup{ std::move(field), coo }, m_settings, m_filters,
               m_selections, m_render_framebuffer };
 }
 
-map_sprite map_sprite::with_filters(ff_8::filters filters) const
+map_sprite map_sprite::with_filters(ff_8::Filters filters) const
 {
      return { m_map_group, m_settings, std::move(filters), m_selections,
               m_render_framebuffer };
@@ -1064,7 +1065,7 @@ void map_sprite::update_position(
                return;
           }
 
-          if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+          if (ff_8::TileOperations::fail_any_filters(m_filters, tile))
           {
                failures.emplace(DrawError::FilteredOut);
                return;
@@ -1271,7 +1272,7 @@ void map_sprite::update_position(
      //                return;
      //           }
      //      }
-     //      if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+     //      if (ff_8::TileOperations::fail_any_filters(m_filters, tile))
      //      {
      //           return;
      //      }
@@ -1383,7 +1384,7 @@ void map_sprite::clear_toml_cached_framebuffers() const
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      config.save(true);
      m_cache_framebuffer.clear();
      m_cache_framebuffer_tooltips.clear();
@@ -1500,7 +1501,7 @@ void map_sprite::load_child_map_sprite_full_filename_texture() const
                 .require_coo    = m_settings.require_coo,
                 .force_loading  = true };
           m_child_map_sprite = std::make_unique<map_sprite>(
-            m_map_group, settings, ff_8::filters{ false }, m_selections);
+            m_map_group, settings, ff_8::Filters{ false }, m_selections);
           m_child_map_sprite->consume_now(true);
           // return;// return early here as the texture loading is placed
           // in
@@ -1600,7 +1601,7 @@ std::tuple<
   glengine::PaletteBuffer,
   glengine::HistogramBuffer,
   glengine::DistanceBuffer>
-  map_sprite::initialize_buffers(const std::vector<glm::vec4> &palette) const
+  map_sprite::initialize_buffers(const std::vector<ff_8::Color> &palette) const
 {
      std::tuple<
        glengine::PaletteBuffer, glengine::HistogramBuffer,
@@ -1609,7 +1610,8 @@ std::tuple<
             glengine::HistogramBuffer{ std::ranges::size(palette) },
             glengine::DistanceBuffer{ std::ranges::size(palette) } };
      auto &[pb, hb, db] = ret;
-     pb.initialize(palette);
+     pb.initialize(
+       palette | ff_8::Colors::as_vec4 | std::ranges::to<std::vector>());
      if (!pb.id())
           spdlog::critical("PaletteBuffer initialization failed, aborting");
 
@@ -1705,7 +1707,7 @@ std::pair<
 
           const toml::table *file_table
             = get_deswizzle_combined_toml_table(filename);
-          ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
+          ff_8::Filter<ff_8::FilterTag::MultiPupu> multi_pupu
             = { ff_8::FilterSettings::All_Disabled };
           multi_pupu.reload(*file_table);
           if (!multi_pupu.enabled())
@@ -1801,7 +1803,7 @@ std::pair<
                            "Index {:>3}, Color {}, Pupu {}, Count {:>6}, "
                            "Distance {}",
                            index,
-                           fme::color{ color },
+                           color,
                            pupu,
                            count,
                            distance);
@@ -2069,7 +2071,7 @@ bool map_sprite::fail() const
 }
 void map_sprite::save_map(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo
+     ff_8::MapGroup::OptCoo coo
        = m_map_group.opt_coo;// copy because coo is modified
      const auto map = ff_8::load_map(
        m_map_group.field, coo, m_map_group.mim, nullptr, false);
@@ -2227,21 +2229,21 @@ ff_8::all_unique_values_and_strings
        { return ff_8::all_unique_values_and_strings(tiles); });
 }
 
-const ff_8::filters &map_sprite::filter() const
+const ff_8::Filters &map_sprite::filter() const
 {
      return m_filters;
 }
-ff_8::filters &map_sprite::filter()
+ff_8::Filters &map_sprite::filter()
 {
      return m_filters;
 }
 map_sprite map_sprite::update(
-  ff_8::map_group map_group,
-  bool            draw_swizzle) const
+  ff_8::MapGroup MapGroup,
+  bool           draw_swizzle) const
 {
      auto settings         = m_settings;
      settings.draw_swizzle = draw_swizzle;
-     return { std::move(map_group), settings, m_filters, m_selections };
+     return { std::move(MapGroup), settings, m_filters, m_selections };
 }
 const ff_8::all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -2270,7 +2272,7 @@ const std::vector<ff_8::PupuID> &map_sprite::working_unique_pupu() const
 }
 
 std::vector<std::tuple<
-  glm::vec4,
+  ff_8::Color,
   ff_8::PupuID>>
   map_sprite::working_unique_color_pupu() const
 {
@@ -2290,7 +2292,7 @@ const std::vector<ff_8::PupuID> &map_sprite::original_unique_pupu() const
 }
 
 
-const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
+const ff_8::SourceTileConflicts &map_sprite::original_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_original_all();
@@ -2298,11 +2300,11 @@ const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
      {
           return m_map_group.maps.original_conflicts();
      }
-     static const ff_8::source_tile_conflicts blank{};
+     static const ff_8::SourceTileConflicts blank{};
      return blank;
 }
 
-const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
+const ff_8::SourceTileConflicts &map_sprite::working_conflicts() const
 {
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
@@ -2310,7 +2312,7 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
      {
           return m_map_group.maps.working_conflicts();
      }
-     static const ff_8::source_tile_conflicts blank{};
+     static const ff_8::SourceTileConflicts blank{};
      return blank;
 }
 
@@ -2630,7 +2632,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
          | std::ranges::views::join       // Flatten the vectors into a single
                                           // range
          | std::ranges::to<std::vector>();// merge to vector;
-     sort_and_remove_duplicates(conflicting_palettes_flatten);
+     ff_8::sort_and_remove_duplicates(conflicting_palettes_flatten);
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures           = {};
@@ -3022,7 +3024,7 @@ void map_sprite::save_deswizzle_generate_toml(
           m_filters, m_settings
           //, m_render_framebuffer.mutable_scale()
      };
-     backup.filters = ff_8::filters{ false };
+     backup.filters = ff_8::Filters{ false };
      backup.filters.value().get<ff_8::FilterTag::Swizzle>()
        = backup.filters.backup().get<ff_8::FilterTag::Swizzle>();
      backup.filters.value().get<ff_8::FilterTag::SwizzleAsOneImage>()
@@ -3116,8 +3118,8 @@ void map_sprite::save_deswizzle_generate_toml(
                       = out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
                     spdlog::debug(
                       "Queued image save: mask='{}'", mask_path.string());
-                    const auto colors_to_pupu =
-                      [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>>
+                    const auto colors_to_pupu = [&]()
+                      -> std::vector<std::tuple<ff_8::Color, ff_8::PupuID>>
                     {
                          if (selections->get<
                                ConfigKey::BatchGenerateWhiteOnBlackMask>())
@@ -3304,7 +3306,7 @@ void map_sprite::save_deswizzle_generate_toml(
 
 void map_sprite::cache_pupuids(
   const std::string   &file_name_str,
-  const ff_8::filters &filters) const
+  const ff_8::Filters &filters) const
 {
      if (
        filters.enabled<ff_8::FilterTag::MultiPupu>()
@@ -3406,7 +3408,7 @@ open_viii::LangT
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
 
-     auto         config      = Configuration(config_path);
+     auto         config      = ff_8::Configuration(config_path);
      toml::table &root_table  = config;
 
      toml::table *field_table = nullptr;
@@ -3471,7 +3473,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(
      const key_value_data config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        selections->get<ConfigKey::OutputTomlPattern>(), selections);
-     auto         config     = Configuration(config_path);
+     auto         config     = ff_8::Configuration(config_path);
      toml::table &root_table = config;
 
      const auto   coo_opt    = [&]()
@@ -3803,14 +3805,14 @@ void map_sprite::refresh_tooltip(const std::string &file_name)
 
 void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
   const std::string                              &file_name_key,
-  const ff_8::filter<ff_8::FilterTag::MultiPupu> &new_filter)
+  const ff_8::Filter<ff_8::FilterTag::MultiPupu> &new_filter)
 {
      if (auto *table = get_deswizzle_combined_toml_table(file_name_key))
      {
           if (new_filter.enabled())
           {
                // Update in-memory filter state from the table
-               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::Filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
 
                copy_filter.combine(*table);
@@ -3818,10 +3820,10 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
           }
           else
           {
-               ff_8::filter<ff_8::FilterTag::MultiPupu> copy_filter
+               ff_8::Filter<ff_8::FilterTag::MultiPupu> copy_filter
                  = (ff_8::FilterSettings::Toggle_Enabled);
                copy_filter.reload(*table);
-               ff_8::filter<ff_8::FilterTag::MultiPupu>::value_type tempvec
+               ff_8::Filter<ff_8::FilterTag::MultiPupu>::value_type tempvec
                  = {};
 
                std::ranges::remove_copy_if(
@@ -3855,7 +3857,7 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
      {
           return nullptr;
      }
-     ff_8::filters tmp_filters = { false };
+     ff_8::Filters tmp_filters = { false };
      for (const std::string &file_name_str : file_names)
      {
           if (auto it_base = coo_table->find(file_name_str);

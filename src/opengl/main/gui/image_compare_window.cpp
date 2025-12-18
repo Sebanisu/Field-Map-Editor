@@ -1,8 +1,8 @@
 #include "image_compare_window.hpp"
 #include "format_imgui_text.hpp"
-#include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <execution>
+#include <ff_8/SafeDir.hpp>
 #include <glengine/ScopeGuard.hpp>
 #include <IconsFontAwesome6.h>
 #include <numeric>
@@ -56,7 +56,7 @@ static bool safe_copy_string(
        std::ranges::begin(src), src_size, std::ranges::data(dst));
      dst[static_cast<size_t>(src_size)] = '\0';
 
-     const auto tmp                     = safedir(std::ranges::data(dst));
+     const auto tmp                     = ff_8::SafeDir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
 ImageCompareWindow::DiffResult::operator toml::table() const
@@ -90,7 +90,7 @@ ImageCompareWindow::ImageCompareWindow(
 }
 
 
-void ImageCompareWindow::button_input_browse()
+void ImageCompareWindow::button_input_browse() const
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle("Path A");
@@ -102,7 +102,7 @@ void ImageCompareWindow::button_input_browse()
      m_directory_browser_mode = directory_mode::input_mode;
 };
 
-void ImageCompareWindow::button_output_browse()
+void ImageCompareWindow::button_output_browse() const
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle("Path B");
@@ -114,7 +114,7 @@ void ImageCompareWindow::button_output_browse()
      m_directory_browser_mode = directory_mode::output_mode;
 };
 
-void ImageCompareWindow::display_save_browser()
+void ImageCompareWindow::display_save_browser() const
 {
 
      if (m_diff_results.empty())
@@ -165,7 +165,7 @@ void ImageCompareWindow::display_save_browser()
      }
 }
 
-void ImageCompareWindow::open_directory_browser()
+void ImageCompareWindow::open_directory_browser() const
 {
      m_directory_browser.Display();
      if (!m_directory_browser.HasSelected())
@@ -183,7 +183,7 @@ void ImageCompareWindow::open_directory_browser()
      const std::string &selected_path
        = m_directory_browser.GetDirectory().string();
      // todo check if the directory is valid.
-     // const auto         tmp           = safedir(selected_path);
+     // const auto         tmp           = ff_8::SafeDir(selected_path);
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode:
@@ -206,7 +206,7 @@ void ImageCompareWindow::open_directory_browser()
      }
 }
 
-void ImageCompareWindow::render()
+void ImageCompareWindow::on_im_gui_update() const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -246,7 +246,7 @@ void ImageCompareWindow::render()
      const float       button_width = button_size * 3.0F;
      ImGui::BeginDisabled(!m_consumer.done() || !m_future_consumer.done());
      {
-          const auto  popid = PushPopID();
+          const auto  popid = imgui_utils::ImGuiPushId();
           const float width = ImGui::CalcItemWidth();
           ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
           const auto pop_item_width
@@ -274,7 +274,7 @@ void ImageCompareWindow::render()
             });
           if (ImGui::InputText("##Path A", m_path1.data(), m_path1.size()))
           {
-               const auto tmp = safedir(m_path1.data());
+               const auto tmp = ff_8::SafeDir(m_path1.data());
                m_path1_valid  = tmp.is_dir() && tmp.is_exists();
                if (m_path1_valid)
                {
@@ -303,7 +303,7 @@ void ImageCompareWindow::render()
           format_imgui_wrapped_text("{}", "Path A");
      }
      {
-          const auto  popid = PushPopID();
+          const auto  popid = imgui_utils::ImGuiPushId();
           const float width = ImGui::CalcItemWidth();
           ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
           const auto pop_item_width
@@ -331,7 +331,7 @@ void ImageCompareWindow::render()
             });
           if (ImGui::InputText("##Path B", m_path2.data(), m_path2.size()))
           {
-               const auto tmp = safedir(m_path2.data());
+               const auto tmp = ff_8::SafeDir(m_path2.data());
                m_path2_valid  = tmp.is_dir() && tmp.is_exists();
                if (m_path2_valid)
                {
@@ -415,7 +415,7 @@ void ImageCompareWindow::render()
        });
 }
 
-void ImageCompareWindow::diff_results_table()
+void ImageCompareWindow::diff_results_table() const
 {
      if (m_diff_results.empty())
      {
@@ -528,7 +528,7 @@ void ImageCompareWindow::diff_results_table()
                format_imgui_text("{:0.2f}", difference_percentage * 100.0);
                ImGui::TableNextColumn();// Copy
                {
-                    const auto pop_id_buttons = PushPopID();
+                    const auto pop_id_buttons = imgui_utils::ImGuiPushId();
                     if (ImGui::SmallButton(ICON_FA_COPY))
                     {
                          ImGui::SetClipboardText(path1.string().c_str());
@@ -559,7 +559,7 @@ void ImageCompareWindow::diff_results_table()
                format_imgui_text("{:0.2f}", difference_percentage * 100.0);
                ImGui::TableNextColumn();// Copy
                {
-                    const auto pop_id_buttons = PushPopID();
+                    const auto pop_id_buttons = imgui_utils::ImGuiPushId();
                     if (ImGui::SmallButton(ICON_FA_COPY))
                     {
                          ImGui::SetClipboardText(path1.string().c_str());
@@ -578,7 +578,7 @@ void ImageCompareWindow::diff_results_table()
      }
 }
 
-void ImageCompareWindow::handle_table_sorting()
+void ImageCompareWindow::handle_table_sorting() const
 {
      if (!m_consumer.done() || !m_future_consumer.done())
      {
@@ -678,7 +678,7 @@ void ImageCompareWindow::handle_table_sorting()
      sort_specs->SpecsDirty = false;
 }
 
-void ImageCompareWindow::CompareDirectoriesStart()
+void ImageCompareWindow::CompareDirectoriesStart() const
 {
      if (!m_path1_valid || !m_path2_valid)
      {
@@ -722,7 +722,7 @@ void ImageCompareWindow::CompareDirectoriesStart()
      }
 }
 
-void ImageCompareWindow::CompareDirectoriesStep()
+void ImageCompareWindow::CompareDirectoriesStep() const
 {
 
      if (m_consumer.done())
@@ -783,7 +783,7 @@ void ImageCompareWindow::CompareDirectoriesStep()
      }
 }
 
-void ImageCompareWindow::export_button()
+void ImageCompareWindow::export_button() const
 {
      if (ImGui::Button("Export Diff Results"))
      {
@@ -795,7 +795,7 @@ void ImageCompareWindow::export_button()
      }
 }
 
-void ImageCompareWindow::CompareDirectoriesStop()
+void ImageCompareWindow::CompareDirectoriesStop() const
 {
      m_consumer.stop();
      m_future_consumer.stop();
@@ -881,5 +881,23 @@ ImageCompareWindow::DiffResult ImageCompareWindow::CompareImage(
          / static_cast<double>((std::max)(total_pixels1, total_pixels2));
      return result;
 }
-
+void ImageCompareWindow::on_im_gui_window_menu() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error(
+            "m_selections is no longer valid. File: {}, Line: {}",
+            __FILE__,
+            __LINE__);
+          return;
+     }
+     if (ImGui::MenuItem(
+           gui_labels::display_image_compare.data(),
+           nullptr,
+           &selections->get<ConfigKey::DisplayImageCompareWindow>()))
+     {
+          selections->update<ConfigKey::DisplayImageCompareWindow>();
+     }
+}
 }// namespace fme

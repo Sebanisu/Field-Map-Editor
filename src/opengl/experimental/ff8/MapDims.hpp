@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPDIMS_HPP
 #define FIELD_MAP_EDITOR_MAPDIMS_HPP
-#include "tile_operations.hpp"
+#include <ff_8/TileOperations.hpp>
 #include <glm/glm.hpp>
 namespace ff_8
 {
@@ -54,7 +54,7 @@ class MapDims
                  {
                       auto f_tiles = tiles
                                      | std::views::filter(
-                                       tile_operations::NotInvalidTile{});
+                                       TileOperations::NotInvalidTile{});
                       get_x(f_tiles);
                       get_y(f_tiles);
                       get_true_x(f_tiles);
@@ -121,7 +121,7 @@ class MapDims
      template<std::ranges::range TilesR>
      void get_true_x(TilesR &&f_tiles)
      {
-          static constexpr tile_operations::X true_x = {};
+          static constexpr TileOperations::X true_x = {};
           const auto [true_i_min_x, true_i_max_x]
             = std::ranges::minmax_element(f_tiles, {}, true_x);
           if (true_i_min_x == true_i_max_x)
@@ -134,7 +134,7 @@ class MapDims
      template<std::ranges::range TilesR>
      void get_true_y(TilesR &&f_tiles)
      {
-          static constexpr tile_operations::Y true_y = {};
+          static constexpr TileOperations::Y true_y = {};
           const auto [true_i_min_y, true_i_max_y]
             = std::ranges::minmax_element(f_tiles, {}, true_y);
           if (true_i_min_y == true_i_max_y)

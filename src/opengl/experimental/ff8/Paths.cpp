@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 #include "Paths.hpp"
-#include "Configuration.hpp"
-#include <glengine/GenericCombo.hpp>
+#include <ff_8/Configuration.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 #include <open_viii/paths/Paths.hpp>
 static constexpr auto ff8_directory_paths
   = std::string_view{ "ff8_directory_paths" };
@@ -11,7 +11,7 @@ static constexpr auto ff8_directory_path_index
   = std::string_view{ "ff8_directory_path_index" };
 bool ff_8::Paths::on_im_gui_update() const
 {
-     if (glengine::GenericCombo(
+     if (imgui_utils::GenericCombo(
            "Path",
            m_current,
            m_paths
@@ -22,7 +22,7 @@ bool ff_8::Paths::on_im_gui_update() const
                }))// todo filter by if is directory check
      )
      {
-          auto config = Configuration{};
+          auto config = ff_8::Configuration{};
           config->insert_or_assign(ff8_directory_path_index, m_current);
           config.save();
           return true;
@@ -39,7 +39,7 @@ const std::string &ff_8::Paths::string() const
      const static auto empty = std::string("");
      return empty;
 }
-ff_8::Paths::Paths(Configuration config)
+ff_8::Paths::Paths(ff_8::Configuration config)
   : m_paths(
       [&]()
       {
@@ -68,6 +68,6 @@ ff_8::Paths::operator std::filesystem::path() const
      return string();
 }
 ff_8::Paths::Paths()
-  : Paths(Configuration{})
+  : Paths(ff_8::Configuration{})
 {
 }

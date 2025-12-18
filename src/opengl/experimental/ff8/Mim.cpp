@@ -4,7 +4,6 @@
 
 #include "Mim.hpp"
 #include "Application.hpp"
-#include "ImGuiDisabled.hpp"
 #include "ImGuiTileDisplayWindow.hpp"
 #include "OrthographicCameraController.hpp"
 #include <glengine/BlendModeSettings.hpp>
@@ -12,6 +11,7 @@
 #include <glengine/FrameBuffer.hpp>
 #include <glengine/FrameBufferBackup.hpp>
 #include <glengine/PixelBuffer.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
 namespace ff_8
 {
 static const Bpps               Bpp         = {};
@@ -74,10 +74,10 @@ void ff_8::Mim::on_render() const
 }
 void ff_8::Mim::on_im_gui_update() const
 {
-     const auto  pop_id        = glengine::ImGuiPushId();
+     const auto  pop_id        = imgui_utils::ImGuiPushId();
      const auto &local_texture = current_texture();
      {
-          const auto disable = glengine::ImGuiDisabled(
+          const auto disable = imgui_utils ::ImGuiDisabled(
             local_texture.height() == 0 || local_texture.width() == 0);
 
 

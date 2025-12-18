@@ -1,10 +1,11 @@
 #include "filter_window.hpp"
 #include "as_string.hpp"
 #include "generic_combo.hpp"
-#include "gui/ImGuiDisabled.hpp"
+#include "gui/ColorConversions.hpp"
 #include "gui_labels.hpp"
-#include "push_pop_id.hpp"
 #include <ctre.hpp>
+#include <imgui_utils/ImGuiDisabled.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <set>
 
 fme::filter_window::filter_window(
@@ -107,7 +108,7 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
      }
      return false;
 }
-void fme::filter_window::render() const
+void fme::filter_window::on_im_gui_update() const
 {
      m_changed                  = false;
      const auto lock_selections = m_selections.lock();
@@ -187,7 +188,7 @@ void fme::filter_window::render() const
                     {
                          touched_editor = true;
                     }
-                    ff_8::filter<ff_8::FilterTag::MultiPupu> multi_pupu
+                    ff_8::Filter<ff_8::FilterTag::MultiPupu> multi_pupu
                       = { ff_8::FilterSettings::All_Disabled };
                     multi_pupu.reload(*file_table);
                     const auto optional_field_coo = [&]()
@@ -396,7 +397,7 @@ toml::table *fme::filter_window::get_root_table(
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      return &(config.operator toml::table &());
 }
 
@@ -422,7 +423,7 @@ void fme::filter_window::root_table_to_imgui_tree(
           const auto label = std::string{ key };
           if (val.is_table())
           {
-               const auto pop_id = PushPopID();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                // if skip_search we already found a match.
                if (!skip_search && !contains_key_recursive(val.as_table()))
                {
@@ -845,7 +846,7 @@ void fme::filter_window::save_config(
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path = config_path_values.replace_tags(
        lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
-     auto config = Configuration(config_path);
+     auto config = ff_8::Configuration(config_path);
      config.save();
 }
 
@@ -1332,7 +1333,7 @@ void fme::filter_window::draw_thumbnail_label(
      ImGui::SetCursorScreenPos(ImVec2(
        text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x,
        text_start_pos.y));
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (ImGui::Button(ICON_FA_TRASH, button_size))
      {
           m_remove_queue.push_back(file_name);
@@ -1574,9 +1575,9 @@ void fme::filter_window::draw_filename_controls(
      ImGui::EndDisabled();
      ImGui::SameLine();
      {
-          const auto pop_id   = PushPopID();
+          const auto pop_id   = imgui_utils::ImGuiPushId();
           const bool has_prev = m_previous_file_name.has_value();
-          const auto disabled = ImGuiDisabled(!has_prev);
+          const auto disabled = imgui_utils::ImGuiDisabled(!has_prev);
 
           const bool activate_prev
             = ImGui::ArrowButton("##l", ImGuiDir_Left)
@@ -1592,9 +1593,9 @@ void fme::filter_window::draw_filename_controls(
      }
      ImGui::SameLine();
      {
-          const auto pop_id   = PushPopID();
+          const auto pop_id   = imgui_utils::ImGuiPushId();
           const bool has_next = m_next_file_name.has_value();
-          const auto disabled = ImGuiDisabled(!has_next);
+          const auto disabled = imgui_utils::ImGuiDisabled(!has_next);
 
           const bool activate_next
             = ImGui::ArrowButton("##l", ImGuiDir_Right)
@@ -2079,8 +2080,8 @@ void fme::filter_window::combo_filtered_draw_bit(
 {
      using namespace std::string_view_literals;
      static constexpr auto values
-       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
-                     ff_8::draw_bitT::disabled };
+       = std::array{ ff_8::DrawBitT::all, ff_8::DrawBitT::enabled,
+                     ff_8::DrawBitT::disabled };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tooltips
@@ -2202,7 +2203,7 @@ void fme::filter_window::menu_filtered_palettes(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto unique_palettes = ff_8::unique_values_and_strings<std::uint8_t>(
+     const auto unique_palettes = ff_8::UniqueValues<std::uint8_t>(
        value_string_pairs
          | std::views::transform([&](const auto &pair)
                                  { return std::get<0>(pair); })
@@ -2346,16 +2347,15 @@ void fme::filter_window::menu_filtered_animation_states(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto unique_animation_state
-       = ff_8::unique_values_and_strings<std::uint8_t>(
-         value_string_pairs
-           | std::views::transform([&](const auto &pair)
-                                   { return std::get<0>(pair); })
-           | std::ranges::to<std::vector>(),
-         value_string_pairs
-           | std::views::transform([&](const auto &pair)
-                                   { return std::get<1>(pair); })
-           | std::ranges::to<std::vector>());
+     const auto unique_animation_state = ff_8::UniqueValues<std::uint8_t>(
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<0>(pair); })
+         | std::ranges::to<std::vector>(),
+       value_string_pairs
+         | std::views::transform([&](const auto &pair)
+                                 { return std::get<1>(pair); })
+         | std::ranges::to<std::vector>());
 
      GenericMenuWithMultiFilter(
        gui_labels::animation_state,
@@ -2386,8 +2386,8 @@ struct map_draw_bit
 {
    private:
      static constexpr auto m_values
-       = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
-                     ff_8::draw_bitT::disabled };
+       = std::array{ ff_8::DrawBitT::all, ff_8::DrawBitT::enabled,
+                     ff_8::DrawBitT::disabled };
      static constexpr auto m_tooltips
        = std::array{ fme::gui_labels::draw_bit_all_tooltip,
                      fme::gui_labels::draw_bit_enabled_tooltip,
@@ -2447,7 +2447,7 @@ void fme::filter_window::draw_thumbnail(
      }
      else
      {
-          const auto pop_id = PushPopID();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           ImVec2     padded_thumb_size
             = { m_thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
                 m_thumb_size_width * m_aspect_ratio
@@ -2515,11 +2515,15 @@ void fme::filter_window::render_thumbnail_button(
                                } };
      if (selected)
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+            ImGuiCol_Button,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreen));
           ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+            ImGuiCol_ButtonHovered,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenHovered));
+          ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive,
+            ff_8::Colors::to_imvec4(ff_8::Colors::ButtonGreenActive));
      }
 
      if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
@@ -2533,7 +2537,7 @@ void fme::filter_window::render_thumbnail_popup(
   const std::shared_ptr<map_sprite> &lock_map_sprite,
   const std::string                 &file_name) const
 {
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      if (!ImGui::BeginPopupContextItem(
            file_name.c_str()))// right-click menu for this button
      {
@@ -2755,7 +2759,7 @@ void fme::filter_window::process_combine(
                {
                     if (value.is_table())
                     {
-                         ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter
+                         ff_8::Filter<ff_8::FilterTag::MultiPupu> temp_filter
                            = { ff_8::FilterSettings::All_Disabled };
                          toml::table &file_table = *value.as_table();
                          temp_filter.reload(file_table);
@@ -2812,7 +2816,7 @@ void fme::filter_window::process_combine(
                continue;
           }
 
-          ff_8::filter<ff_8::FilterTag::MultiPupu> temp_filter{
+          ff_8::Filter<ff_8::FilterTag::MultiPupu> temp_filter{
                ff_8::FilterSettings::All_Disabled
           };
           toml::table &file_table = *value.as_table();

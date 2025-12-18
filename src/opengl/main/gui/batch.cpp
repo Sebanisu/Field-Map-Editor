@@ -6,8 +6,9 @@
 #include "as_string.hpp"
 #include "custom_paths_window.hpp"
 #include "open_file_explorer.hpp"
-#include "push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <ff_8/SafeDir.hpp>
+#include <imgui_utils/ImGuiPushID.hpp>
 #include <optional>
 #include <span>
 namespace fme
@@ -59,7 +60,7 @@ static bool safe_copy_string(
        std::ranges::begin(src), src_size, std::ranges::data(dst));
      dst[static_cast<size_t>(src_size)] = '\0';
 
-     const auto tmp                     = safedir(std::ranges::data(dst));
+     const auto tmp                     = ff_8::SafeDir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
 
@@ -82,7 +83,7 @@ void fme::batch::draw_window()
           }
      };
      const auto end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::batch_operation_window.data(), &visible))
+     if (!ImGui::Begin(gui_labels::batch_operation.data(), &visible))
      {
           return;
      }
@@ -100,7 +101,7 @@ void fme::batch::draw_window()
                const std::filesystem::path config_path
                  = config_path_values.replace_tags(
                    selections->get<ConfigKey::OutputTomlPattern>(), selections);
-               auto config = Configuration(config_path);
+               auto config = ff_8::Configuration(config_path);
                config.save();
           }
           spdlog::info("Batch operation completed.");
@@ -297,7 +298,7 @@ void fme::batch::draw_queue()
           for (auto &&[index, pair] : queue | std::views::enumerate)
           {
                auto &&[name, settings, enabled] = pair;
-               const auto pop_id                = PushPopID();
+               const auto pop_id                = imgui_utils::ImGuiPushId();
                ImGui::TableNextRow();
                ImGui::TableNextColumn();
                if (ImGui::Checkbox(
@@ -767,7 +768,7 @@ void fme::batch::combo_load_map()
            [](const auto &key)
            { return gui_labels::input_map_tooltips[std::to_underlying(key)]; })
          | std::ranges::to<std::vector>();
-     const auto pop_id = PushPopID();
+     const auto pop_id = imgui_utils::ImGuiPushId();
      const auto gcc    = fme::GenericCombo(
        gui_labels::batch_load_map, values, strings, tooltips,
        selections->get<ConfigKey::BatchInputLoadMap>());
@@ -848,7 +849,7 @@ void fme::batch::browse_input_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchInputPath>(),
             selections->get<ConfigKey::BatchInputRootPathType>());
@@ -920,7 +921,7 @@ void fme::batch::browse_input_map_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchInputMapPath>(),
             selections->get<ConfigKey::BatchInputMapRootPathType>());
@@ -987,7 +988,7 @@ void fme::batch::browse_output_path()
      {
           const float        button_size     = ImGui::GetFrameHeight();
           const float        button_width    = button_size * 3.0F;
-          const auto         pop_id          = PushPopID();
+          const auto         pop_id          = imgui_utils::ImGuiPushId();
           const std::string &selected_string = get_selected_path(
             selections->get<ConfigKey::BatchOutputPath>(),
             selections->get<ConfigKey::BatchOutputRootPathType>());
@@ -1136,17 +1137,18 @@ void fme::batch::combo_compact_type_ffnx()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::compact_tooltip); } };
-     static constexpr auto values  = std::array{ compact_type::map_order_ffnx };
-     static const auto     strings = values | std::views::transform(AsString{})
+     static constexpr auto values
+       = std::array{ ff_8::CompactTypeT::map_order_ffnx };
+     static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
        = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
      static auto filter = []()
      {
-          ff_8::filter<ff_8::FilterTag::Compact> tmp_filter{
+          ff_8::Filter<ff_8::FilterTag::Compact> tmp_filter{
                ff_8::FilterSettings::All_Disabled
           };
-          tmp_filter.update(compact_type::map_order_ffnx).enable();
+          tmp_filter.update(ff_8::CompactTypeT::map_order_ffnx).enable();
           return tmp_filter;
      }();
 
@@ -1170,9 +1172,10 @@ void fme::batch::combo_compact_type()
                                { tool_tip(gui_labels::compact_tooltip); } };
 
      static const auto values
-       = std::array{ compact_type::rows, compact_type::all,
-                     compact_type::move_only_conflicts, compact_type::map_order,
-                     compact_type::map_order_ffnx };
+       = std::array{ ff_8::CompactTypeT::rows, ff_8::CompactTypeT::all,
+                     ff_8::CompactTypeT::move_only_conflicts,
+                     ff_8::CompactTypeT::map_order,
+                     ff_8::CompactTypeT::map_order_ffnx };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static const auto tool_tips
@@ -1204,7 +1207,7 @@ void fme::batch::combo_flatten_type_bpp()
      const auto tool_tip_pop
        = glengine::ScopeGuard{ [&]()
                                { tool_tip(gui_labels::flatten_tooltip); } };
-     static constexpr auto values  = std::array{ flatten_type::bpp };
+     static constexpr auto values  = std::array{ ff_8::FlattenTypeT::bpp };
      static const auto     strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
@@ -1234,11 +1237,11 @@ void fme::batch::combo_flatten_type()
                                { tool_tip(gui_labels::flatten_tooltip); } };
      const bool all_or_only_palette
        = !selections->get<ConfigKey::BatchCompactEnabled>()
-         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order)
-         || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx);
+         || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order)
+         || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx);
      static constexpr auto values
-       = std::array{ flatten_type::bpp, flatten_type::palette,
-                     flatten_type::both };
+       = std::array{ ff_8::FlattenTypeT::bpp, ff_8::FlattenTypeT::palette,
+                     ff_8::FlattenTypeT::both };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
      static constexpr auto tool_tips
@@ -1246,7 +1249,7 @@ void fme::batch::combo_flatten_type()
                      gui_labels::flatten_palette_tooltip,
                      gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette
-       = std::array{ flatten_type::palette };
+       = std::array{ ff_8::FlattenTypeT::palette };
      static const auto strings_only_palette
        = values_only_palette | std::views::transform(AsString{})
          | std::ranges::to<std::vector>();
@@ -1352,7 +1355,7 @@ bool fme::batch::draw_multi_column_list_box(
             = std::get<0>(zipped);// const auto& or auto& depending on the range
           auto      &enable     = std::get<1>(zipped);// mutable reference
 
-          const auto pop_id     = PushPopID();
+          const auto pop_id     = imgui_utils::ImGuiPushId();
           const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
           const auto selectable = [&]()
           {
@@ -1398,7 +1401,7 @@ void fme::batch::button_start()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto pop_id_right = PushPopID();
+     const auto pop_id_right = imgui_utils::ImGuiPushId();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      const auto end_function
        = glengine::ScopeGuard{ []()
@@ -1435,7 +1438,7 @@ void fme::batch::button_start()
           const std::filesystem::path config_path
             = config_path_values.replace_tags(
               selections->get<ConfigKey::OutputTomlPattern>(), selections);
-          auto config = Configuration(config_path);
+          auto config = ff_8::Configuration(config_path);
           config->clear();
      }
      m_fields_consumer = archives_group->fields();
@@ -1468,7 +1471,7 @@ void fme::batch::button_stop()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto pop_id_right = PushPopID();
+     const auto pop_id_right = imgui_utils::ImGuiPushId();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
      const auto end_function
@@ -1526,7 +1529,7 @@ bool fme::batch::browse_path(
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
      const float       button_width = button_size * 3.0F;
-     const auto        pop_id       = PushPopID();
+     const auto        pop_id       = imgui_utils::ImGuiPushId();
      // ImGui text box with browse button
      // Highlight text box red if the folder doesn't exist
      {
@@ -1559,7 +1562,7 @@ bool fme::batch::browse_path(
                 "##Empty", path_buffer.data(), path_buffer.size()))
           {
                // Check if the folder path exists when the text box changes
-               const auto tmp = safedir(path_buffer.data());
+               const auto tmp = ff_8::SafeDir(path_buffer.data());
                valid_path     = tmp.is_exists() && tmp.is_dir();
                changed        = true;
           }
@@ -1859,7 +1862,7 @@ void fme::batch::generate_map_sprite()
      assert(m_coo);
 
      // Initialize filters with default disabled state
-     ff_8::filters      filters         = { false };
+     ff_8::Filters      filters         = { false };
 
      // Enable specific filters depending on the input type
      const std::string &selected_string = get_selected_path(
@@ -1906,7 +1909,7 @@ void fme::batch::generate_map_sprite()
                  .enable();
                filters
                  .update<ff_8::FilterTag::CompactOnLoadOriginal>(
-                   compact_type::map_order_ffnx)
+                   ff_8::CompactTypeT::map_order_ffnx)
                  .enable();
                break;
           }
@@ -1950,7 +1953,7 @@ void fme::batch::generate_map_sprite()
                break;
           }
      }
-     ff_8::map_group map_group = { m_field, *m_coo };
+     ff_8::MapGroup MapGroup = { m_field, *m_coo };
      // Create the map sprite with appropriate settings
      if (m_coo.has_value() && m_coo.value() != open_viii::LangT::generic)
      {
@@ -1963,11 +1966,11 @@ void fme::batch::generate_map_sprite()
                .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
-            map_group.opt_coo.has_value()
-            && map_group.opt_coo.value() != open_viii::LangT::generic)
+            MapGroup.opt_coo.has_value()
+            && MapGroup.opt_coo.value() != open_viii::LangT::generic)
           {
                // Both are non-generic and present → okay
-               m_map_sprite = map_sprite{ std::move(map_group), settings,
+               m_map_sprite = map_sprite{ std::move(MapGroup), settings,
                                           filters, m_selections };
                return;
           }
@@ -1982,11 +1985,11 @@ void fme::batch::generate_map_sprite()
                .force_loading  = selections->get<ConfigKey::BatchForceLoading>()
           };
           if (
-            !map_group.opt_coo.has_value()
-            || map_group.opt_coo.value() == open_viii::LangT::generic)
+            !MapGroup.opt_coo.has_value()
+            || MapGroup.opt_coo.value() == open_viii::LangT::generic)
           {
                // Both are generic or not set → okay
-               m_map_sprite = map_sprite{ std::move(map_group), settings,
+               m_map_sprite = map_sprite{ std::move(MapGroup), settings,
                                           filters, m_selections };
                return;
           }
@@ -2034,19 +2037,19 @@ void fme::batch::compact()
           // type
           switch (selections->get<ConfigKey::BatchCompactType>())
           {
-               case compact_type::rows:
+               case ff_8::CompactTypeT::rows:
                     m_map_sprite.compact_rows();
                     break;
-               case compact_type::all:
+               case ff_8::CompactTypeT::all:
                     m_map_sprite.compact_all();
                     break;
-               case compact_type::move_only_conflicts:
+               case ff_8::CompactTypeT::move_only_conflicts:
                     m_map_sprite.compact_move_conflicts_only();
                     break;
-               case compact_type::map_order:
+               case ff_8::CompactTypeT::map_order:
                     m_map_sprite.compact_map_order();
                     break;
-               case compact_type::map_order_ffnx:
+               case ff_8::CompactTypeT::map_order_ffnx:
                     m_map_sprite.compact_map_order_ffnx();
                     break;
           }
@@ -2086,25 +2089,25 @@ void fme::batch::flatten()
      {
           switch (selections->get<ConfigKey::BatchFlattenType>())
           {
-               case flatten_type::bpp:
+               case ff_8::FlattenTypeT::bpp:
                     // Only flatten BPP if compact type isn't using map order
                     if (
                  !selections->get<ConfigKey::BatchCompactEnabled>()
-                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
+                 || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order && selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
                     break;
 
-               case flatten_type::palette:
+               case ff_8::FlattenTypeT::palette:
                     m_map_sprite.flatten_palette();
                     break;
 
-               case flatten_type::both:
+               case ff_8::FlattenTypeT::both:
                     // Only flatten BPP if not using map order
                     if (
                  !selections->get<ConfigKey::BatchCompactEnabled>()
-                 || (selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>() != compact_type::map_order_ffnx))
+                 || (selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order && selections->get<ConfigKey::BatchCompactType>() != ff_8::CompactTypeT::map_order_ffnx))
                     {
                          m_map_sprite.flatten_bpp();
                     }
@@ -2116,9 +2119,9 @@ void fme::batch::flatten()
           // If the compact strategy is not map-order-based, re-apply compaction
           if (
             selections->get<ConfigKey::BatchCompactType>()
-              != compact_type::map_order
+              != ff_8::CompactTypeT::map_order
             && selections->get<ConfigKey::BatchCompactType>()
-                 != compact_type::map_order_ffnx)
+                 != ff_8::CompactTypeT::map_order_ffnx)
           {
                compact();
           }
@@ -2338,7 +2341,7 @@ void fme::batch::open_directory_browser()
      const std::string &selected_path
        = m_directory_browser.GetDirectory().string();
      // todo check if the directory is valid.
-     // const auto         tmp           = safedir(selected_path);
+     // const auto         tmp           = ff_8::SafeDir(selected_path);
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode:
@@ -2365,7 +2368,7 @@ void fme::batch::open_directory_browser()
      }
 }
 
-fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
+fme::batch &fme::batch::operator=(std::weak_ptr<ff_8::ArchivesGroup> new_group)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2437,8 +2440,8 @@ void fme::batch::stop()
 }
 
 fme::batch::batch(
-  std::weak_ptr<Selections>     existing_selections,
-  std::weak_ptr<archives_group> existing_group)
+  std::weak_ptr<Selections>          existing_selections,
+  std::weak_ptr<ff_8::ArchivesGroup> existing_group)
 {
      operator=(std::move(existing_selections));
      operator=(std::move(existing_group));

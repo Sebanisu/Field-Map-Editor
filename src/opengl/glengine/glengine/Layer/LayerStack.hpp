@@ -31,17 +31,54 @@ namespace Layer
           void   on_update(float) const;
           void   on_render() const;
           void   on_im_gui_update() const;
+          void   on_im_gui_file_menu() const;
+          void   on_im_gui_edit_menu() const;
+          void   on_im_gui_window_menu() const;
+          void   on_im_gui_help_menu() const;
           void   on_event(const event::Item &) const;
-          template<typename... T>
-          void emplace_layers(T &&...args) const
+          // emplace_front for layers
+          template<
+            RenderableOrInplaceRenderable FirstT,
+            typename... T>
+          void emplace_layers(
+            FirstT &&first,
+            T &&...args) const
           {
-               end_of_layers
-                 = m_layers.emplace(end_of_layers, std::forward<T>(args)...);
+               end_of_layers = m_layers.emplace(
+                 end_of_layers,
+                 std::forward<FirstT>(first),
+                 std::forward<T>(args)...);
           }
-          template<typename... T>
-          void emplace_overlays(T &&...args) const
+          // emplace_back for overlays
+
+          template<
+            RenderableOrInplaceRenderable FirstT,
+            typename... T>
+          void emplace_overlays(
+            FirstT &&first,
+            T &&...args) const
           {
-               m_layers.emplace_back(std::forward<T>(args)...);
+               m_layers.emplace_back(
+                 std::forward<FirstT>(first), std::forward<T>(args)...);
+               end_of_layers = std::ranges::begin(m_layers);
+          }
+
+          template<typename T>
+          T *get()
+          {
+               for (auto &item : m_layers)
+                    if (auto ptr = item.get<T>())
+                         return ptr;
+               return nullptr;
+          }
+
+          template<typename T>
+          const T *get() const
+          {
+               for (auto &item : m_layers)
+                    if (auto ptr = item.get<T>())
+                         return ptr;
+               return nullptr;
           }
 
         private:

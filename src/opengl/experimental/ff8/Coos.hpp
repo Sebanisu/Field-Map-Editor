@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <glengine/Event/EventItem.hpp>
 #include <glengine/Renderable.hpp>
 #include <glengine/ScopeGuard.hpp>
@@ -23,8 +23,9 @@ class Coos
      [[nodiscard]] operator std::string_view() const;
 
    private:
-     static constexpr auto m_coos = open_viii::LangCommon::to_string_array();
-     mutable int           m_current{};
+     static constexpr auto m_coos
+       = open_viii::LangCommon::to_string_array_full();
+     mutable int m_current{};
 };
 static_assert(glengine::Renderable<Coos>);
 }// namespace ff_8

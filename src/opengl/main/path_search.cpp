@@ -1,5 +1,5 @@
 #include "path_search.hpp"
-#include "safedir.hpp"
+#include <ff_8/SafeDir.hpp>
 #include <fmt/core.h>
 namespace ff_8
 {
@@ -248,7 +248,7 @@ bool path_search::has_deswizzle_path(
          .pupu_id = pupu.raw() },
        selections);
      //   ||
-     //   safedir(cpm.replace_tags(get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
+     //   ff_8::SafeDir(cpm.replace_tags(get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
      //   selections, filter_path)).is_exists();
 }
 
@@ -279,7 +279,7 @@ bool path_search::has_full_filename_path(
              : std::nullopt },
        selections);
      //   ||
-     //   safedir(cpm.replace_tags(get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
+     //   ff_8::SafeDir(cpm.replace_tags(get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
      //   selections, filter_path)).is_exists();
 }
 
@@ -374,7 +374,7 @@ bool path_search::has_swizzle_path(
          .texture_page = texture_page },
        selections);
      //   ||
-     //   safedir(cpm.replace_tags(get<fme::ConfigKey::OutputSwizzlePattern>(),
+     //   ff_8::SafeDir(cpm.replace_tags(get<fme::ConfigKey::OutputSwizzlePattern>(),
      //   selections, filter_path)).is_exists();
 }
 
@@ -469,7 +469,7 @@ bool path_search::has_map_path(
      }
      auto temp
        = cpm.replace_tags(secondary_output_pattern, selections, filter_path);
-     const auto test = safedir{ temp };
+     const auto test = ff_8::SafeDir{ temp };
      return !test.is_dir() && test.is_exists();
 }
 
@@ -506,7 +506,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
           }
           auto temp
             = cpm.replace_tags(*output_pattern, selections, filter_path);
-          if (const auto test = safedir{ temp };
+          if (const auto test = ff_8::SafeDir{ temp };
               !test.is_dir() && test.is_exists())
           {
                paths.push_back(std::move(temp));
@@ -729,7 +729,7 @@ std::vector<std::filesystem::path> path_search::get_paths(
        = [&](const std::string &pattern) -> std::filesystem::path
      { return data.replace_tags(pattern, selections, root); };
      const auto filter_dir
-       = [](safedir path) { return path.is_exists() && path.is_dir(); };
+       = [](ff_8::SafeDir path) { return path.is_exists() && path.is_dir(); };
 
 
      return selections->get<fme::ConfigKey::PatternsCommonPrefixes>()
@@ -754,7 +754,7 @@ std::vector<std::filesystem::path> path_search::get_map_paths(
        = [&](const std::string &pattern) -> std::filesystem::path
      { return data.replace_tags(pattern, selections, root); };
      const auto filter_dir
-       = [](safedir path) { return path.is_exists() && path.is_dir(); };
+       = [](ff_8::SafeDir path) { return path.is_exists() && path.is_dir(); };
 
 
      auto transformed_paths

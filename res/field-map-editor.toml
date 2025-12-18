@@ -1,0 +1,216 @@
+BackgroundCheckerboardScale = 4
+BackgroundColor = 4294967295
+BackgroundColor2 = 4294967295
+BackgroundSettings = 0
+BatchForceLoading = true
+BatchGenerateColorfulMask = true
+BatchGenerateWhiteOnBlackMask = false
+BatchInputLoadMap = 0
+BatchInputMapPath = ''
+BatchInputMapRootPathType = 0
+BatchInputPath = 'C:\Users\pcvii\Downloads'
+BatchInputRootPathType = 0
+BatchInputType = 0
+BatchMapListEnabled = '000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+BatchOutputPath = ''
+BatchOutputRootPathType = 2
+BatchOutputSaveMap = false
+BatchOutputType = 0
+BatchQueue = []
+BatchQueueEnabled = false
+BatchUpdateDelay = 0.029999999329447746
+BatchUpdateDelayEnabled = false
+Bpp = 0
+CacheDeswizzlePathsEnabled = '0000000000000'
+CacheFullFileNamePathsEnabled = '0000000000000'
+CacheMapPathsEnabled = '1000000000000'
+CacheSwizzleAsOneImagePathsEnabled = '0000000000000'
+CacheSwizzlePathsEnabled = '0000010000000'
+CacheTextureAndMapPaths = [
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/mods/Textures',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/mods/Textures/field/mapdata/',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered/DEMASTER_EXP/textures/field_bg',
+    'D:/games/ff82000',
+    'D:/games/ff82000/mods/Textures',
+    'D:/games/ff82000/mods/Textures/field/mapdata/',
+    'd:/games/ff82000',
+    'd:/games/ff82000/mods/Textures',
+    'd:/games/ff82000/mods/Textures/field/mapdata/',
+    'e:/'
+]
+CompactOnLoad = 4
+CompactOnLoadEnabled = false
+Coo = 0
+CurrentPattern = 0
+CurrentPatternIndex = 0
+DeswizzlePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1'
+DisplayBatchWindow = true
+DisplayControlPanelWindow = true
+DisplayCustomPathsWindow = true
+DisplayDrawWindow = true
+DisplayFieldFileWindow = true
+DisplayFiltersWindow = true
+DisplayHistoryWindow = false
+DisplayImageCompareWindow = true
+DisplayImportImage = false
+DisplayKeyboardShortcutsWindow = false
+DisplayTexturesWindow = true
+DrawDisableBlending = false
+DrawGrid = true
+DrawMode = 1
+DrawPalette = false
+DrawPupuMask = false
+DrawSwizzle = true
+DrawTexturePageGrid = false
+DrawTileConflictRects = false
+ExternalTexturesAndMapsDirectoryPaths = [ 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII/deswizzle/mods/Textures/field/mapdata/bd/bdifrit1' ]
+FF8DirectoryPaths = [
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII',
+    'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered',
+    'D:/games/ff82000',
+    'd:/games/ff82000',
+    'e:/'
+]
+FF8Path = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+ForceReloadingOfTextures = false
+ForceRenderingOfMap = false
+FullFileNamePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+ImageCompareWindowPath1 = ''
+ImageCompareWindowPath2 = ''
+ImportImageGrid = false
+ImportLoadImageDirectory = ''
+ImportSelectedTile = 0
+OutputDeswizzlePattern = '{selected_path}\deswizzle\{ffnx_multi_texture}'
+OutputFullFileNamePattern = '{selected_path}\full_filename\{ffnx_multi_texture_full}'
+OutputImagePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+OutputMapPath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+OutputMapPatternForDeswizzle = '{selected_path}\deswizzle\{ffnx_map}'
+OutputMapPatternForFullFileName = '{selected_path}\full_filename\{ffnx_map}'
+OutputMapPatternForSwizzle = '{selected_path}\{ffnx_map}'
+OutputMimPath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+OutputSwizzleAsOneImagePattern = '{selected_path}\{ffnx_single_texture}'
+OutputSwizzlePattern = '{selected_path}\{ffnx_multi_texture}'
+OutputTomlPattern = '{{current_toml_path}?:{current_path}\res\deswizzle.toml:?}'
+Palette = 0
+PathPatternsWithFullFileName = [
+    '{selected_path}/{full_filename}',
+    '{selected_path}/{field_name}/{full_filename}',
+    '{selected_path}/{field_prefix}/{field_name}/{full_filename}'
+]
+PathPatternsWithPalette = [
+    '{selected_path}/{field_name}{_{2_letter_lang}}_0{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}',
+    '{selected_path}/{field_name}_0{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}_0{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_0{palette}{ext}',
+    '{selected_path}/{field_name}{_{2_letter_lang}}_{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}',
+    '{selected_path}/{field_name}_{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}_{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_{palette}{ext}'
+]
+PathPatternsWithPaletteAndTexturePage = [
+    '{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}',
+    '{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}',
+    '{selected_path}/{field_name}_{texture_page}_{palette}{ext}',
+    '{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}'
+]
+PathPatternsWithPupuID = [
+    '{selected_path}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}',
+    '{selected_path}/{field_name}_{pupu_id}{ext}',
+    '{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}'
+]
+PathPatternsWithTexturePage = [
+    '{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}',
+    '{selected_path}/{field_name}_0{texture_page}{ext}',
+    '{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}',
+    '{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}',
+    '{selected_path}/{field_name}_{texture_page}{ext}',
+    '{selected_path}/{field_name}/{field_name}_{texture_page}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}'
+]
+PatternsBase = [
+    '{selected_path}/{field_name}{_{2_letter_lang}}{ext}',
+    '{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}',
+    '{selected_path}/{field_name}{ext}',
+    '{selected_path}/{field_name}/{field_name}{ext}',
+    '{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}',
+    '{selected_path}/{demaster}',
+    '{selected_path}/{ffnx_multi_texture}',
+    '{selected_path}/{ffnx_single_texture}',
+    '{selected_path}/{ffnx_map}'
+]
+PatternsCommonPrefixes = [
+    '{selected_path}',
+    '{selected_path}/{ffnx_mod_path}/field/mapdata/',
+    '{selected_path}/mods/Textures',
+    '{selected_path}/{demaster_mod_path}/textures/field_bg',
+    '{selected_path}/field_bg',
+    '{selected_path}/textures/fields',
+    '{selected_path}/textures',
+    '{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata',
+    '{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{eng}/field/mapdata',
+    '{selected_path}/ff8/Data/{eng}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{fre}/field/mapdata',
+    '{selected_path}/ff8/Data/{fre}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{ger}/field/mapdata',
+    '{selected_path}/ff8/Data/{ger}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{ita}/field/mapdata',
+    '{selected_path}/ff8/Data/{ita}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{spa}/field/mapdata',
+    '{selected_path}/ff8/Data/{spa}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{jp}/field/mapdata',
+    '{selected_path}/ff8/Data/{jp}/FIELD/mapdata',
+    '{selected_path}/ff8/Data/{x}/field/mapdata',
+    '{selected_path}/ff8/Data/{x}/FIELD/mapdata'
+]
+PatternsCommonPrefixesForMaps = [ '{selected_path}/{ffnx_direct_mode_path}/field/mapdata/' ]
+RenderImportedImage = false
+StarterField = 'bdin1'
+SwizzleAsOneImagePath = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+SwizzlePath = 'C:/Users/pcvii/Downloads/bdifrit1'
+TOMLFailOverForEditor = 1
+TileSizeValue = 0
+TomlPath = ''
+TomlPaths = []
+WindowHeight = 720
+WindowWidth = 1280
+batch_compact_enabled = false
+batch_compact_type = 0
+batch_flatten_enabled = false
+batch_flatten_type = 0
+filter_deswizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_deswizzle_enabled = false
+filter_full_filename = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_map = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_multi_layer_id = [ 0 ]
+filter_multi_layer_id_enabled = false
+filter_multi_z = []
+filter_multi_z_enabled = false
+filter_swizzle = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII Remastered/DEMASTER_EXP/textures/field_bg'
+filter_swizzle_as_one_image = 'D:/SteamLibrary/steamapps/common/FINAL FANTASY VIII'
+filter_swizzle_as_one_image_enabled = false
+filter_swizzle_enabled = true

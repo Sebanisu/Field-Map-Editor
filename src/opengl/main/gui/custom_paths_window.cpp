@@ -1,5 +1,6 @@
 #include "custom_paths_window.hpp"
 #include "as_string.hpp"
+#include "ColorConversions.hpp"
 #include "fa_icons.hpp"
 #include "formatters.hpp"
 #include <functional>
@@ -147,7 +148,7 @@ static const auto trim = [](const std::string &str) -> std::string
        std::to_underlying(fme::PatternSelector::End)>
        result{};
 
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -265,7 +266,7 @@ fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 
      bool found = false;
 
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -300,7 +301,7 @@ std::string *fme::custom_paths_window::get_current_string_value_mutable() const
           return nullptr;
      }
      std::string *result = nullptr;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -345,7 +346,7 @@ std::vector<std::string> *
           return nullptr;
      }
      std::vector<std::string> *result = nullptr;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -486,7 +487,7 @@ void fme::custom_paths_window::save_pattern() const
           return;
      }
      bool found = false;
-     fme::for_each_enum<
+     ff_8::for_each_enum<
        fme::PatternSelector,
        std::to_underlying(fme::PatternSelector::End)>(
        [&]<fme::PatternSelector Key>()
@@ -597,14 +598,16 @@ bool fme::custom_paths_window::vector_pattern() const
           {
                ImGui::TableSetBgColor(
                  ImGuiTableBgTarget_RowBg0,
-                 ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+                 ff_8::Colors::to_imU32(
+                   ff_8::Colors::TableDarkTeal.fade(-0.4F)));// Dark red
           }
           else
           {
                ImGui::TableSetBgColor(
                  ImGuiTableBgTarget_RowBg0,
-                 ImU32{ colors::TableLightDarkTeal.fade(
-                   -0.4F) });// Slightly lighter dark red
+                 ff_8::Colors::to_imU32(
+                   ff_8::Colors::TableLightDarkTeal.fade(
+                     -0.4F)));// Slightly lighter dark red
           }
           bg_color = !bg_color;
           ImGui::TableNextColumn();
@@ -659,7 +662,7 @@ bool fme::custom_paths_window::vector_pattern() const
             selections->get<ConfigKey::CurrentPatternIndex>()
             != static_cast<int>(index))
           {
-               const auto pop_id = PushPopID();
+               const auto pop_id = imgui_utils::ImGuiPushId();
                // Edit button
                if (ImGui::Button(
                      fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
@@ -720,14 +723,16 @@ bool fme::custom_paths_window::vector_pattern() const
      {
           ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0,
-            ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+            ff_8::Colors::to_imU32(
+              ff_8::Colors::TableDarkTeal.fade(-0.4F)));// Dark red
      }
      else
      {
           ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0,
-            ImU32{ colors::TableLightDarkTeal.fade(
-              -0.4F) });// Slightly lighter dark red
+            ff_8::Colors::to_imU32(
+              ff_8::Colors::TableLightDarkTeal.fade(
+                -0.4F)));// Slightly lighter dark red
      }
      ImGui::TableNextColumn();
      const char *add        = "Add New Pattern";
@@ -893,20 +898,22 @@ bool fme::custom_paths_window::child_keys() const
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{
-                             colors::TableDarkRed.fade(-0.4F) });// Dark red
+                           ff_8::Colors::to_imU32(
+                             ff_8::Colors::TableDarkRed.fade(
+                               -0.4F)));// Dark red
                     }
                     else
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_RowBg0,
-                           ImU32{ colors::TableLightDarkRed.fade(
-                             -0.4F) });// Slightly lighter dark red
+                           ff_8::Colors::to_imU32(
+                             ff_8::Colors::TableLightDarkRed.fade(
+                               -0.4F)));// Slightly lighter dark red
                     }
                     bg_color = !bg_color;
                }
                ImGui::TableNextColumn();
-               const auto  pop_id       = PushPopID();
+               const auto  pop_id       = imgui_utils::ImGuiPushId();
                std::string key_brackets = fmt::format("{{{}}}", key);
                if (ImGui::Selectable(key_brackets.data()))
                {
@@ -1023,19 +1030,21 @@ bool fme::custom_paths_window::child_test_output() const
                {
                     ImGui::TableSetBgColor(
                       ImGuiTableBgTarget_RowBg0,
-                      ImU32{ colors::TableDarkGreen.fade(-0.4F) });// Dark red
+                      ff_8::Colors::to_imU32(
+                        ff_8::Colors::TableDarkGreen.fade(-0.4F)));// Dark red
                }
                else
                {
                     ImGui::TableSetBgColor(
                       ImGuiTableBgTarget_RowBg0,
-                      ImU32{ colors::TableLightDarkGreen.fade(
-                        -0.4F) });// Slightly lighter dark red
+                      ff_8::Colors::to_imU32(
+                        ff_8::Colors::TableLightDarkGreen.fade(
+                          -0.4F)));// Slightly lighter dark red
                }
                bg_color = !bg_color;
           }
           ImGui::TableNextColumn();
-          const auto pop_id = PushPopID();
+          const auto pop_id = imgui_utils::ImGuiPushId();
           (void)ImGui::Selectable(test_str.data());
           if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
           {

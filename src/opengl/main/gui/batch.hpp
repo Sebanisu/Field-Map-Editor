@@ -4,16 +4,17 @@
 
 #ifndef FIELD_MAP_EDITOR_BATCH_HPP
 #define FIELD_MAP_EDITOR_BATCH_HPP
-#include "archives_group.hpp"
 #include "cstdint"
 #include "filebrowser.hpp"
 #include "format_imgui_text.hpp"
 #include "generic_combo.hpp"
 #include "gui_labels.hpp"
+#include "map_sprite.hpp"
 #include "RangeConsumer.hpp"
-#include "safedir.hpp"
 #include "Selections.hpp"
 #include <array>
+#include <ff_8/ArchivesGroup.hpp>
+#include <ff_8/SafeDir.hpp>
 #include <imgui.h>
 #include <memory>
 namespace fme
@@ -26,21 +27,21 @@ class batch
           input_map_mode,
           output_mode,
      };
-     std::weak_ptr<Selections>       m_selections             = {};
-     std::weak_ptr<archives_group>   m_archives_group         = {};
-     bool                            m_input_path_valid       = { false };
-     bool                            m_input_map_path_valid   = { false };
-     bool                            m_output_path_valid      = { false };
-     static constexpr std::size_t    m_buffer_size            = { 256U };
-     std::array<char, m_buffer_size> m_input_path             = {};
-     std::array<char, m_buffer_size> m_input_map_path         = {};
-     std::array<char, m_buffer_size> m_output_path            = {};
-     std::optional<open_viii::LangT> m_coo                    = {};
-     std::string                     m_status                 = {};
-     map_sprite                      m_map_sprite             = {};
-     std::uint8_t                    m_num_columns            = { 5 };
-     directory_mode                  m_directory_browser_mode = {};
-     ImGui::FileBrowser              m_directory_browser{
+     std::weak_ptr<Selections>          m_selections             = {};
+     std::weak_ptr<ff_8::ArchivesGroup> m_archives_group         = {};
+     bool                               m_input_path_valid       = { false };
+     bool                               m_input_map_path_valid   = { false };
+     bool                               m_output_path_valid      = { false };
+     static constexpr std::size_t       m_buffer_size            = { 256U };
+     std::array<char, m_buffer_size>    m_input_path             = {};
+     std::array<char, m_buffer_size>    m_input_map_path         = {};
+     std::array<char, m_buffer_size>    m_output_path            = {};
+     std::optional<open_viii::LangT>    m_coo                    = {};
+     std::string                        m_status                 = {};
+     map_sprite                         m_map_sprite             = {};
+     std::uint8_t                       m_num_columns            = { 5 };
+     directory_mode                     m_directory_browser_mode = {};
+     ImGui::FileBrowser                 m_directory_browser{
           ImGuiFileBrowserFlags_SelectDirectory
           | ImGuiFileBrowserFlags_CreateNewDir
           | ImGuiFileBrowserFlags_EditPathString
@@ -116,11 +117,11 @@ class batch
      void update(float elapsed_time);
      batch() = default;
      explicit batch(
-       std::weak_ptr<Selections>     existing_selections,
-       std::weak_ptr<archives_group> existing_group);
+       std::weak_ptr<Selections>          existing_selections,
+       std::weak_ptr<ff_8::ArchivesGroup> existing_group);
      bool   in_progress() const;
      void   stop();
-     batch &operator=(std::weak_ptr<archives_group> new_group);
+     batch &operator=(std::weak_ptr<ff_8::ArchivesGroup> new_group);
      batch &operator=(std::weak_ptr<Selections> new_selections);
      void   draw_window();
 };

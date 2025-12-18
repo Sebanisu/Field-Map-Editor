@@ -28,13 +28,7 @@ add_executable(
   ff8/MapHistory.cpp
   ff8/MapTileAdjustments.hpp
   ff8/SimilarAdjustments.cpp
-  ff8/Configuration.cpp
   ff8/MenuSaveToggles.hpp
-  ff8/PupuID.hpp
-  ImGuiDisabled.cpp
-  ImGuiPushItemWidth.cpp
-  ImGuiPushID.cpp
-  ImGuiPushStyleVar.cpp
   ImGuiViewPortWindow.cpp
   main.cpp
   Menu.cpp
@@ -47,16 +41,17 @@ add_executable(
   test/TestBatchRenderingTexture2DDynamic.cpp
   test/TestMenu.cpp
   test/TestTexture2D.cpp
-  ff8/UniquifyPupu.hpp
   Window.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_EXPERIMENTAL
+  PRIVATE ${PROJECT_NAME}_ff_8
   PRIVATE glengine
   PRIVATE project_warnings
   PRIVATE Threads::Threads
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
+  PRIVATE ${PROJECT_NAME}_imgui_utils
   PRIVATE imgui::imgui
   PRIVATE GLEW::GLEW
   PRIVATE glfw
@@ -75,8 +70,6 @@ add_custom_command(
           $<TARGET_FILE_DIR:${PROJECT_NAME}_EXPERIMENTAL>/res
   VERBATIM)
 
-target_compile_definitions(${PROJECT_NAME}_EXPERIMENTAL
-                           PUBLIC TOML_EXCEPTIONS=0)
 if(MSVC)
   target_compile_definitions(
     ${PROJECT_NAME}_EXPERIMENTAL PUBLIC _CRT_SECURE_NO_WARNINGS) # required by
@@ -92,6 +85,15 @@ string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)
 set_target_properties(${PROJECT_NAME}_EXPERIMENTAL PROPERTIES
     OUTPUT_NAME "${experimental_exec}"
 )
+
+
+target_compile_definitions(
+  ${PROJECT_NAME}_EXPERIMENTAL
+  PUBLIC NOMINMAX # imgui uses unguarded min and max.
+  PUBLIC DEFAULT_CONFIG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}.toml"
+  PUBLIC DEFAULT_IMGUI_INI_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}_imgui.ini"
+  PUBLIC DEFAULT_LOG_PATH="${DEFAULT_CONFIG_ROOT_PATH}/${experimental_exec}.log"
+  )
 if(supported)
   message(STATUS "IPO / LTO enabled")
   set_target_properties(${PROJECT_NAME}_EXPERIMENTAL

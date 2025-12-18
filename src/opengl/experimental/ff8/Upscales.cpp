@@ -3,7 +3,7 @@
 //
 
 #include "Upscales.hpp"
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 #include <tl/string.hpp>
 static constexpr auto swizzle_paths_index
   = std::string_view("swizzle_paths_index");
@@ -11,14 +11,14 @@ static constexpr auto upscale_paths_vector
   = std::string_view("upscale_paths_vector");
 bool ff_8::Upscales::on_im_gui_update() const
 {
-     if (glengine::GenericCombo(
+     if (imgui_utils::GenericCombo(
            "Swizzle Path", m_current,
            m_paths
              | std::ranges::views::transform(
                [](auto &&value) -> decltype(auto)
                { return value.template ref<std::string>(); })))
      {
-          auto config = Configuration{};
+          auto config = ff_8::Configuration{};
           config->insert_or_assign(swizzle_paths_index, m_current);
           config.save();
           return true;
@@ -137,10 +137,10 @@ static std::vector<std::string> get_default_paths()
      return paths;
 }
 ff_8::Upscales::Upscales()
-  : Upscales(Configuration{})
+  : Upscales(ff_8::Configuration{})
 {
 }
-ff_8::Upscales::Upscales(Configuration config)
+ff_8::Upscales::Upscales(ff_8::Configuration config)
   : m_current(config[swizzle_paths_index].value_or(int{}))
   , m_paths(
       [&]() -> toml::array

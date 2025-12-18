@@ -3,9 +3,9 @@
 //
 
 #include "Fields.hpp"
-#include "Configuration.hpp"
+#include <ff_8/Configuration.hpp>
 #include <fmt/chrono.h>
-#include <glengine/GenericCombo.hpp>
+#include <imgui_utils/GenericCombo.hpp>
 
 namespace ff_8
 {
@@ -117,12 +117,12 @@ bool Fields::on_archive_change() const
 
 bool Fields::on_field_change() const
 {
-     if (glengine::GenericCombo("Field", m_current_index, m_map_data))
+     if (imgui_utils::GenericCombo("Field", m_current_index, m_map_data))
      {
           m_field = load_field();
           if (std::cmp_less(m_current_index, std::ranges::size(m_map_data)))
           {
-               auto config = Configuration{};
+               auto config = ff_8::Configuration{};
                config->insert_or_assign(fields_index, m_current_index);
 
                config->insert_or_assign(
@@ -181,7 +181,7 @@ std::string_view Fields::map_name() const
      return tmp;
 }
 Fields::Fields()
-  : m_current_index(Configuration{}[fields_index].value_or(int{}))
+  : m_current_index(ff_8::Configuration{}[fields_index].value_or(int{}))
   , m_map_data(m_archive.fields().map_data())
   , m_field(load_field())
 {
