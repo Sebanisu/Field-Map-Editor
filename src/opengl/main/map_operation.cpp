@@ -394,10 +394,9 @@ QuadStrip get_triangle_strip(
      // source_position and destination_position are in TILE_SIZE cordinates.
      // TILE_SIZE default is 16x16. So we pass in the scaled up source_tile_size
      // and destination_tile_size and do the conversion.
-     constexpr static auto tile_size = static_cast<float>(map_group::TILE_SIZE);     
+     constexpr static auto tile_size = static_cast<float>(map_group::TILE_SIZE);
      const glm::vec2       base_source = source_position / tile_size;
-     return { .uv_min
-              = (base_source * source_tile_size) / source_texture_size,
+     return { .uv_min = (base_source * source_tile_size) / source_texture_size,
               .uv_max = ((base_source + glm::vec2(1)) * source_tile_size)
                         / source_texture_size,
               .draw_pos

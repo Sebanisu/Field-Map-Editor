@@ -5,9 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #include <filesystem>
+#include <fstream>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
-#include <fstream>
 class Configuration
 {
    public:
