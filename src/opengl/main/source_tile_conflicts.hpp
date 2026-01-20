@@ -447,7 +447,8 @@ class [[nodiscard]] source_tile_conflicts final
           return *m_grid
                  | v::filter([](const auto &v)
                              { return std::ranges::size(v) > 1U; })
-                 | v::join;
+                 | v::join 
+                 | std::ranges::to<std::vector>();
      }
 
      /**

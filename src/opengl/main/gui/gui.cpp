@@ -1139,7 +1139,7 @@ void gui::hovered_tiles_panel()
                  return;
             }
             const auto &conflicts_obj = m_map_sprite->working_conflicts();
-            auto conflict_range = conflicts_obj.range_of_conflicts_flattened();
+            const auto conflict_range = conflicts_obj.range_of_conflicts_flattened();
             const bool hovering_over_conflict = are_indices_in_both_ranges(
               hovered_tiles_indices, conflict_range);
 
