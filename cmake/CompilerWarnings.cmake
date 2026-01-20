@@ -68,6 +68,7 @@ function(set_project_warnings project_name)
             -Wuseless-cast # warn if you perform a cast to the same type
             -Wno-error=null-dereference # suppress error potential null pointer dereference errors
             #-Wno-error=deprecated-declarations # suppress error on deprecated things.
+            -fdiagnostics-color=never
             )
 
     if (MSVC)
