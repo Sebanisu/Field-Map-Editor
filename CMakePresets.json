@@ -133,19 +133,23 @@
 
     {
       "name": "Release-windows",
-      "configurePreset": "Release-windows"
+      "configurePreset": "Release-windows",
+      "configuration": "Release"
     },
     {
       "name": "Debug-windows",
-      "configurePreset": "Debug-windows"
+      "configurePreset": "Debug-windows",
+      "configuration": "Debug"
     },
     {
       "name": "RelWithDebInfo-windows",
-      "configurePreset": "RelWithDebInfo-windows"
+      "configurePreset": "RelWithDebInfo-windows",
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "MinSizeRel-windows",
-      "configurePreset": "MinSizeRel-windows"
+      "configurePreset": "MinSizeRel-windows",
+      "configuration": "MinSizeRel"
     }
   ]
 }
