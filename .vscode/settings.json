@@ -1,5 +1,4 @@
 {
-    "terminal.integrated.defaultProfile.windows": "Developer Command Prompt",
     "files.associations": {
         "type_traits": "cpp",
         "xiosbase": "cpp",
@@ -101,13 +100,21 @@
         "stacktrace": "cpp",
         "*.rh": "cpp"
     },
-    "C_Cpp.errorSquiggles": "disabled",
-    "emeraldwalk.runonsave": {
-        "commands": [
-            {
-                "match": ".*\\.(cpp|hpp|h|c|cc|hh)$",
-                "cmd": "powershell -ExecutionPolicy Bypass -File \"${workspaceFolder}\\format.ps1\" \"${file}\""
-            }
-        ]
-    }
+    // "achilleshr.runonsave": {
+    //     "commands": [
+    //     {
+    //         "match": "\\.(cpp|hpp|c|h)$",
+    //         "cmd": "bash ${workspaceFolder}/format.sh \"${file}\""
+    //     }
+    //     ]
+    // },
+    // "C_Cpp.errorSquiggles": "disabled",
+    // "emeraldwalk.runonsave": {
+    //     "commands": [
+    //         {
+    //             "match": ".*\\.(cpp|hpp|h|c|cc|hh)$",
+    //             "cmd": "powershell -ExecutionPolicy Bypass -File \"${workspaceFolder}\\format.ps1\" \"${file}\""
+    //         }
+    //     ]
+    // }
 }
