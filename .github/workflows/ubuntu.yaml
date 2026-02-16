@@ -79,13 +79,10 @@ jobs:
           vcpkg-${{ runner.os }}-
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -G Ninja \
-        -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/vcpkg/scripts/buildsystems/vcpkg.cmake \
-        -DCMAKE_BUILD_TYPE=${{env._RELEASE_CONFIGURATION}}
+      run: cmake --preset "${{ env._RELEASE_CONFIGURATION }}"
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --parallel
+      run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION }}"
 
     - name: Test
       working-directory: ${{github.workspace}}/build
