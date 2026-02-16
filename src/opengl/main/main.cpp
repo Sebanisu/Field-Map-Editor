@@ -120,7 +120,7 @@ int main(
   [[maybe_unused]] int    argc,
   [[maybe_unused]] char **argv)
 {
-     fme::createDirs(); //create paths first
+     fme::createDirs();// create paths first
      const auto local_now = []() -> std::chrono::system_clock::time_point
      {
           try
@@ -177,8 +177,13 @@ int main(
           // Create file logger and set as default
           const auto file_logger_path = fme::getAppLogsDir() / filename;
           spdlog::info("Created Log File: \"{}\"", file_logger_path);
-          auto file_logger
-            = spdlog::basic_logger_mt("file_logger", file_logger_path, true);
+#if defined(_WIN32) && defined(SPDLOG_WCHAR_FILENAMES)
+          auto file_logger = spdlog::basic_logger_mt(
+            "file_logger", file_logger_path.wstring(), true);
+#else
+          auto file_logger = spdlog::basic_logger_mt(
+            "file_logger", file_logger_path.string(), true);
+#endif
 
           // Remove logger name from output pattern
           file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
@@ -197,7 +202,7 @@ int main(
 
           // Now log anywhere
           spdlog::info("App started");
-          fme::createDirs(); //rerun to log paths in log file.
+          fme::createDirs();// rerun to log paths in log file.
      }
      catch (const spdlog::spdlog_ex &ex)
      {
