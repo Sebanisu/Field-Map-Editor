@@ -4,6 +4,9 @@
 #include <GLFW/glfw3.h>
 // clang-format on
 #include "gui/gui.hpp"
+#include "Paths.hpp"
+#include <chrono>
+#include <fmt/chrono.h>
 #include <glengine/BlendModeSettings.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
@@ -117,11 +120,65 @@ int main(
   [[maybe_unused]] int    argc,
   [[maybe_unused]] char **argv)
 {
+     fme::createDirs(); //create paths first
+     const auto local_now = []() -> std::chrono::system_clock::time_point
+     {
+          try
+          {
+               // get current local time
+               const std::chrono::zoned_time cur_time{
+                    std::chrono::current_zone(),
+                    std::chrono::system_clock::now()
+               };
+
+               // get local_time rounded to seconds
+               auto local_sec
+                 = std::chrono::time_point_cast<std::chrono::seconds>(
+                   cur_time.get_local_time());
+
+               // reinterpret local_time as system_clock by measuring duration
+               // since epoch
+               auto local_duration = local_sec.time_since_epoch();
+
+               // NOTE: this just treats the underlying duration as system_clock
+               // time
+               return std::chrono::time_point_cast<std::chrono::seconds>(
+                 std::chrono::system_clock::time_point{ local_duration });
+          }
+          catch (const std::runtime_error &ex)
+          {
+               spdlog::error("Failed to get time zone: {}", ex.what());
+               return std::chrono::time_point_cast<std::chrono::seconds>(
+                 std::chrono::system_clock::now());
+          }
+     };
      try
      {
+
+          const auto now      = local_now();
+
+          // YYYY_MM_DD_HH_MM_SS.log
+          const auto filename = [&]()
+          {
+               // format as usual
+               std::string tmp = fmt::format("{:%Y%m%d_%H%M%S}", now);
+
+               // find '.' and truncate if present
+               auto        pos = tmp.find('.');
+               if (pos != std::string::npos)
+               {
+                    tmp.resize(pos);
+               }
+
+               // append extension
+               tmp += ".log";
+               return tmp;
+          }();
           // Create file logger and set as default
-          auto file_logger = spdlog::basic_logger_mt(
-            "file_logger", "res/field_map_editor.log", true);
+          const auto file_logger_path = fme::getAppLogsDir() / filename;
+          spdlog::info("Created Log File: \"{}\"", file_logger_path);
+          auto file_logger
+            = spdlog::basic_logger_mt("file_logger", file_logger_path, true);
 
           // Remove logger name from output pattern
           file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
@@ -140,6 +197,7 @@ int main(
 
           // Now log anywhere
           spdlog::info("App started");
+          fme::createDirs(); //rerun to log paths in log file.
      }
      catch (const spdlog::spdlog_ex &ex)
      {
