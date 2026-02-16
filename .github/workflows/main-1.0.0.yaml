@@ -8,7 +8,6 @@ on:
     paths-ignore:
     - '**/*.md'
     #- '**/*.toml'
-    - '.github/workflows/ubuntu.yaml'
     branches:
     - main
     tags:
@@ -17,7 +16,6 @@ on:
     paths-ignore:
     - '**/*.md'
     #- '**/*.toml'
-    - '.github/workflows/ubuntu.yaml'
     branches:
     - main
 
@@ -34,8 +32,69 @@ env:
   GIT_REDIRECT_STDERR: 2>&1
 
 jobs:
-  Field-Map-Editor:
+  linux-build:
+    runs-on: ubuntu-latest
+    env:
+      _RELEASE_CONFIGURATION_PRESET: Release-linux   # override for Linux
+    timeout-minutes: 1440
+    steps:
+    - name: Check Ubuntu Version
+      run: lsb_release -a    
+    - name: Set Git Config
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.filemode false
+        git config --global core.longpaths true
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo add-apt-repository universe -y
+        sudo apt-get update
+        sudo apt-get install -y ninja-build libxmu-dev libxi-dev libgl-dev libxrandr-dev libxinerama-dev libxcursor-dev gcc-14 g++-14 \
+        mono-complete
+        # GCC 14
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+        # GCC 13
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 50
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 50
+        g++ --version
+        
+    - name: Check Disk Space
+      run: df -h
+    - name: Bootstrap vcpkg
+      run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
+
+    - name: Cache vcpkg binaries
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/vcpkg/archives
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-
+
+    - name: Integrate vcpkg
+      run: ${{ github.workspace }}/vcpkg/vcpkg integrate install
+
+    - name: Configure CMake
+      run: cmake --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}"
+
+    - name: Build
+      run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}"
+
+    - name: Test
+      run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}" --target test
+
+  windows-build:
     runs-on: windows-latest
+    needs: linux-build
+    env:
+      _RELEASE_CONFIGURATION_PRESET: Release-windows  # override for Windows
     timeout-minutes: 1440
     steps:
     - name: Set Git Config
