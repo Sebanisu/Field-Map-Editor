@@ -78,9 +78,6 @@ jobs:
         restore-keys: |
           vcpkg-${{ runner.os }}-
 
-    - name: Bootstrap vcpkg
-      run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
-
     - name: Integrate vcpkg
       run: ${{ github.workspace }}/vcpkg/vcpkg integrate install
 
