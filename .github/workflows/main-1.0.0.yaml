@@ -203,7 +203,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: linux-appimages
-        path: ${{ github.workspace }}/.dist/*.AppImage
+        path: ${{ github.workspace }}/.dist/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage
         if-no-files-found: error
 
 
