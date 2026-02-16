@@ -195,11 +195,14 @@ jobs:
         # --- final list of DIST_DIR ---
         echo "=== DIST_DIR after move ==="
         ls -lh "$DIST_DIR"
+
     - name: Upload Linux AppImages
       uses: actions/upload-artifact@v4
       with:
         name: linux-appimages
-        path: .dist/*.AppImage
+        path: ${{ github.workspace }}/.dist/*.AppImage
+        if-no-files-found: error
+
 
 
 
