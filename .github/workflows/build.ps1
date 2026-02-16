@@ -37,7 +37,7 @@ $vcpkgTagName = &"git" -C $vcpkgRoot describe --exact-match --tags
 $releasePath = [string](jq -r '.configurePresets[0].binaryDir' CMakePresets.json).Replace('${sourceDir}/', '')
 
 Write-Output "--------------------------------------------------"
-Write-Output "BUILD CONFIGURATION: $env:_RELEASE_CONFIGURATION"
+Write-Output "BUILD CONFIGURATION: $env:_RELEASE_CONFIGURATION_PRESET"
 Write-Output "RELEASE VERSION: $env:_RELEASE_VERSION"
 Write-Output "VCPKG ORIGIN: $vcpkgOriginUrl"
 Write-Output "VCPKG TAG: $vcpkgTagName"
@@ -113,9 +113,9 @@ cmd.exe /c "call $vcpkgRoot\bootstrap-vcpkg.bat"
 vcpkg integrate install
 
 # Start the build
-cmake --preset "${env:_RELEASE_CONFIGURATION}"
-cmake --build --preset "${env:_RELEASE_CONFIGURATION}"
+cmake --preset "${env:_RELEASE_CONFIGURATION_PRESET}"
+cmake --build --preset "${env:_RELEASE_CONFIGURATION_PRESET}"
 
 # Start the packaging
-7z a ".\.dist\${env:_RELEASE_NAME}-${env:_RELEASE_VERSION}.zip" ".\$releasePath\bin\${env:_RELEASE_CONFIGURATION}\*"
+7z a ".\.dist\${env:_RELEASE_NAME}-${env:_RELEASE_VERSION}.zip" ".\$releasePath\bin\${env:_RELEASE_CONFIGURATION_RAW}\*"
 
