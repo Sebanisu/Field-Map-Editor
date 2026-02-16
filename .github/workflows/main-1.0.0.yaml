@@ -26,7 +26,7 @@ env:
   _IS_GITHUB_RELEASE: false
   _RELEASE_NAME: Field-Map-Editor
   _RELEASE_VERSION: v0
-  _RELEASE_CONFIGURATION: Release
+  _RELEASE_CONFIGURATION: Release-windows
   _BUILD_BRANCH: "${{ github.ref }}"
   _CHANGELOG_VERSION: "0"
   # GIT: Fix reporting from stderr to stdout
