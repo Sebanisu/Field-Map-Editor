@@ -4157,8 +4157,10 @@ gui::gui(GLFWwindow *const window)
      // static const auto path = (std::filesystem::current_path(error_code) / "res"
      //                           / "field-map-editor_imgui.ini")
      //                            .string();
+                auto console_logger = spdlog::get("");
      static const auto path = (getAppConfigDir() / "imgui.ini").string();
      spdlog::info("Imgui Confg: \"{}\"", path);
+     console_logger->info("Imgui Confg: \"{}\"", path);
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      imgui_io.ConfigFlags

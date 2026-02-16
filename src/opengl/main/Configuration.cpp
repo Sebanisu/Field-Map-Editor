@@ -3,10 +3,13 @@
 //
 
 #include "Configuration.hpp"
+#include "Paths.hpp"
 #include "safedir.hpp"
 #include <glengine/ScopeGuard.hpp>
 #include <iostream>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <stacktrace>
+
 
 fme::Configuration::Configuration(std::filesystem::path in_path)
   : m_path(std::move(in_path))
@@ -45,19 +48,23 @@ fme::Configuration::Configuration()
 
            if (!initialized)
            {
-                std::error_code error_code{};
-                path = std::filesystem::current_path(error_code) / "res"
-                       / "field-map-editor.toml";
-                if (error_code)
-                {
-                     spdlog::warn(
-                       "{}:{} - {}: {} path: \"{}\"",
-                       __FILE__,
-                       __LINE__,
-                       error_code.value(),
-                       error_code.message(),
-                       path.string());
-                }
+                path                = getAppConfigDir() / "config.toml";
+                auto console_logger = spdlog::get("");
+                spdlog::info("Config path: \"{}\"", path.string());
+                console_logger->info("Config path: \"{}\"", path.string());
+                //  std::error_code error_code{};
+                //  path = std::filesystem::current_path(error_code) / "res"
+                //         / "field-map-editor.toml";
+                //  if (error_code)
+                //  {
+                //       spdlog::warn(
+                //         "{}:{} - {}: {} path: \"{}\"",
+                //         __FILE__,
+                //         __LINE__,
+                //         error_code.value(),
+                //         error_code.message(),
+                //         path.string());
+                //  }
                 initialized = true;
            }
 
