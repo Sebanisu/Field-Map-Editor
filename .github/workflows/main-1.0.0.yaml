@@ -194,8 +194,11 @@ jobs:
 
         # --- final list of DIST_DIR ---
         echo "=== DIST_DIR after move ==="
-        ls -lh "$(pwd)/.dist/"
+        cd "$DIST_DIR"
+        pwd
+        ls -lh
         
+
     - name: Upload Linux AppImages
       uses: actions/upload-artifact@v4
       with:
