@@ -452,3 +452,5 @@ compile_commands.json
 .install
 .DS_Store
 fonts/
+*.AppImage
+AppDir/*
