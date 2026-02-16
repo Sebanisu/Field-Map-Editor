@@ -166,8 +166,35 @@ jobs:
           -e "$APPDIR/usr/bin/$EXECUTABLE" \
           --output appimage
 
-        # Move AppImage into .dist and rename
-        mv Field-Map-Editor-x86_64.AppImage "$DIST_DIR/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage"
+        # --- debug: list current directory ---
+        echo "=== Current directory files ==="
+        ls -lh
+
+        # --- debug: list APPDIR ---
+        echo "=== AppDir files ==="
+        ls -lh "$APPDIR"
+
+        # --- debug: list DIST_DIR before move ---
+        echo "=== DIST_DIR before move ==="
+        ls -lh "$DIST_DIR"
+
+        # # Move AppImage into .dist and rename
+        # mv Field-Map-Editor-x86_64.AppImage "$DIST_DIR/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage"
+
+        # --- move and rename ---
+        if [ -f "Field-Map-Editor-x86_64.AppImage" ]; then
+          mv Field-Map-Editor-x86_64.AppImage "$DIST_DIR/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage"
+          echo "Moved AppImage to $DIST_DIR"
+        else
+          echo "❌ AppImage not found in current directory!"
+          echo "Check linuxdeploy output above"
+          ls -lh
+          exit 1
+        fi
+
+        # --- final list of DIST_DIR ---
+        echo "=== DIST_DIR after move ==="
+        ls -lh "$DIST_DIR"
     - name: Upload Linux AppImages
       uses: actions/upload-artifact@v4
       with:
