@@ -90,7 +90,7 @@ jobs:
     - name: Test
       run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}" --target test
 
-          - name: Build AppImage
+    - name: Build AppImage
       run: |
         set -euo pipefail
 
