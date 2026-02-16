@@ -10,6 +10,7 @@
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
 #include "path_search.hpp"
+#include "Paths.hpp"
 #include "push_pop_id.hpp"
 #include "safedir.hpp"
 #include "tool_tip.hpp"
@@ -4151,9 +4152,13 @@ gui::gui(GLFWwindow *const window)
      // 2. Configure ImGui (optional but common)
      ImGuiIO          &imgui_io   = ImGui::GetIO();
      std::error_code   error_code = {};
-     static const auto path = (std::filesystem::current_path(error_code) / "res"
-                               / "field-map-editor_imgui.ini")
-                                .string();
+     
+
+     // static const auto path = (std::filesystem::current_path(error_code) / "res"
+     //                           / "field-map-editor_imgui.ini")
+     //                            .string();
+     static const auto path = (getAppConfigDir() / "imgui.ini").string();
+     spdlog::info("Imgui Confg: \"{}\"", path);
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      imgui_io.ConfigFlags
