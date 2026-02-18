@@ -259,6 +259,22 @@ jobs:
         name: linux-appimages
         path: .dist/
 
+    - name: Debug list .dist contents
+      shell: pwsh
+      run: |
+        Write-Host "=== CURRENT DIR ==="
+        Get-Location
+
+        Write-Host "=== DIST DIR EXISTS? ==="
+        if (Test-Path ".dist") {
+            Write-Host "YES"
+        } else {
+            Write-Host "NO"
+        }
+
+        Write-Host "=== DIST CONTENTS ==="
+        Get-ChildItem -Recurse .dist | Format-Table -AutoSize
+
     - name: Publish Canary release
       uses: ncipollo/release-action@v1
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'true' && success()
