@@ -8,7 +8,6 @@ on:
     paths-ignore:
     - '**/*.md'
     #- '**/*.toml'
-    - '.github/workflows/ubuntu.yaml'
     branches:
     - main
     tags:
@@ -17,7 +16,6 @@ on:
     paths-ignore:
     - '**/*.md'
     #- '**/*.toml'
-    - '.github/workflows/ubuntu.yaml'
     branches:
     - main
 
@@ -34,8 +32,235 @@ env:
   GIT_REDIRECT_STDERR: 2>&1
 
 jobs:
-  Field-Map-Editor:
+  prepare:
+    runs-on: ubuntu-latest
+
+    outputs:
+      build_version: ${{ steps.vars.outputs.build_version }}
+      release_version: ${{ steps.vars.outputs.release_version }}
+      is_canary: ${{ steps.vars.outputs.is_canary }}
+      is_release: ${{ steps.vars.outputs.is_release }}
+      changelog_version: ${{ steps.vars.outputs.changelog_version }}
+
+    steps:
+      - id: vars
+        shell: bash
+        run: |
+          BRANCH="${GITHUB_REF}"
+          BUILD_VERSION="1.0.5.${GITHUB_RUN_NUMBER}"
+
+          IS_CANARY=false
+          IS_RELEASE=false
+          CHANGELOG_VERSION="0"
+
+          if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/tags/canary" ]]; then
+            IS_CANARY=true
+            IS_RELEASE=true
+
+          elif [[ "$BRANCH" == refs/tags/* ]]; then
+            # emulate your substring logic
+            BASE="${BUILD_VERSION%.*}"
+            CHANGELOG_VERSION="${BASE//./}"
+            BUILD_VERSION="${BASE}.0"
+            IS_RELEASE=true
+          fi
+
+          RELEASE_VERSION="$BUILD_VERSION"
+
+          echo "Branch: $BUILD_BRANCH"
+          echo "Build Version: $BUILD_VERSION"
+          echo "Release Version: $RELEASE_VERSION"
+          echo "Is Canary: $IS_CANARY"
+          echo "Is Release: $IS_RELEASE"
+          echo "Changelog Version: $CHANGELOG_VERSION"
+          echo "build_version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+          echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "is_canary=$IS_CANARY" >> $GITHUB_OUTPUT
+          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+          echo "changelog_version=$CHANGELOG_VERSION" >> $GITHUB_OUTPUT
+  linux-build:
+    runs-on: ubuntu-latest
+    needs: prepare
+    env:
+      _RELEASE_CONFIGURATION_PRESET: Release-linux   # override for Linux
+    timeout-minutes: 1440
+    steps:
+    - name: Check Ubuntu Version
+      run: lsb_release -a    
+    - name: Set Git Config
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.filemode false
+        git config --global core.longpaths true
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo add-apt-repository universe -y
+        sudo apt-get update
+        sudo apt-get install -y ninja-build libxmu-dev libxi-dev libgl-dev libxrandr-dev libxinerama-dev libxcursor-dev gcc-14 g++-14 \
+        mono-complete
+        # GCC 14
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+        # GCC 13
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 50
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 50
+        g++ --version
+        
+    - name: Check Disk Space
+      run: df -h
+    - name: Bootstrap vcpkg
+      run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
+
+    - name: Cache vcpkg binaries
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/vcpkg/archives
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-
+
+    - name: Integrate vcpkg
+      run: ${{ github.workspace }}/vcpkg/vcpkg integrate install
+
+    - name: Configure CMake
+      run: cmake --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}"
+
+    - name: Build
+      run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}"
+
+    - name: Test
+      run: cmake --build --preset "${{ env._RELEASE_CONFIGURATION_PRESET }}" --target test
+
+    - name: Build AppImage
+      run: |
+        set -euo pipefail
+
+        APPDIR=".appdir"
+        DIST_DIR=".dist"
+        BUILD_DIR=".build/bin"
+        EXECUTABLE="field-map-editor"
+        DESKTOP_FILE="field-map-editor.desktop"
+        ICON_FILE="res/icon.png"
+        RESOURCE_DIRS=("res" "fonts")
+
+        mkdir -p "$APPDIR/usr/bin"
+        mkdir -p "$APPDIR/usr/share/applications"
+        mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+        mkdir -p "$DIST_DIR"
+
+        # Copy executable
+        cp "$BUILD_DIR/$EXECUTABLE" "$APPDIR/usr/bin/"
+
+        # Copy resources
+        for dir in "${RESOURCE_DIRS[@]}"; do
+          if [ -d "$dir" ]; then
+            cp -r "$dir" "$APPDIR/usr/bin/"
+          else
+            echo "Warning: resource directory '$dir' not found"
+          fi
+        done
+
+        # Desktop file
+        cat > "$APPDIR/usr/share/applications/$DESKTOP_FILE" <<EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Field-Map-Editor
+        Exec=$EXECUTABLE
+        Icon=field-map-editor
+        Categories=Graphics;
+        EOF
+
+        # Icon
+        if [ -f "$ICON_FILE" ]; then
+          cp "$ICON_FILE" "$APPDIR/usr/share/icons/hicolor/256x256/apps/field-map-editor.png"
+        else
+          echo "Warning: icon file '$ICON_FILE' not found"
+        fi
+
+        # AppRun
+        cat > "$APPDIR/AppRun" <<EOF
+        #!/bin/sh
+        HERE="\$(dirname "\$(readlink -f "\$0")")"
+        cd "\$HERE/usr/bin"
+        exec "\$HERE/usr/bin/$EXECUTABLE" "\$@"
+        EOF
+        chmod +x "$APPDIR/AppRun"
+
+        # Download linuxdeploy and plugin if missing
+        LINUXDEPLOY="linuxdeploy-x86_64.AppImage"
+        LINUXDEPLOY_PLUGIN="linuxdeploy-plugin-appimage-x86_64.AppImage"
+
+        if [ ! -f "$LINUXDEPLOY" ]; then
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/$LINUXDEPLOY
+          chmod +x "$LINUXDEPLOY"
+        fi
+
+        if [ ! -f "$LINUXDEPLOY_PLUGIN" ]; then
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/$LINUXDEPLOY_PLUGIN
+          chmod +x "$LINUXDEPLOY_PLUGIN"
+        fi
+
+        # Build AppImage
+        ./$LINUXDEPLOY \
+          --appdir "$APPDIR" \
+          -d "$APPDIR/usr/share/applications/$DESKTOP_FILE" \
+          -e "$APPDIR/usr/bin/$EXECUTABLE" \
+          --output appimage
+
+        # --- debug: list current directory ---
+        echo "=== Current directory files ==="
+        ls -lh
+
+        # --- debug: list APPDIR ---
+        echo "=== AppDir files ==="
+        ls -lh "$APPDIR"
+
+        # --- debug: list DIST_DIR before move ---
+        echo "=== DIST_DIR before move ==="
+        ls -lh "$DIST_DIR"
+
+        # # Move AppImage into .dist and rename
+        # mv Field-Map-Editor-x86_64.AppImage "$DIST_DIR/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage"
+
+        # --- move and rename ---
+        if [ -f "Field-Map-Editor-x86_64.AppImage" ]; then
+          mv Field-Map-Editor-x86_64.AppImage "$DIST_DIR/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage"
+          echo "Moved AppImage to $DIST_DIR"
+        else
+          echo "❌ AppImage not found in current directory!"
+          echo "Check linuxdeploy output above"
+          ls -lh
+          exit 1
+        fi
+
+        # --- final list of DIST_DIR ---
+        echo "=== DIST_DIR after move ==="
+        cd "$DIST_DIR"
+        pwd
+        ls -lh
+        
+
+    - name: Upload Linux AppImages
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-appimages
+        path: ${{ github.workspace }}/.dist/Field-Map-Editor-1.0.5.${{ github.run_number }}-linux.AppImage
+        if-no-files-found: error
+
+
+
+
+  windows-build:
     runs-on: windows-latest
+    needs: [prepare, linux-build]
+    env:
+      _RELEASE_CONFIGURATION_PRESET: Release-windows  # override for Windows
     timeout-minutes: 1440
     steps:
     - name: Set Git Config
@@ -75,12 +300,35 @@ jobs:
           Write-Host "Deleting existing 'canary' tag"
           git push origin :refs/tags/canary
         }
+    - name: Download Linux AppImages
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-appimages
+        path: .dist/
+
+    - name: Debug list .dist contents
+      shell: pwsh
+      run: |
+        Write-Host "=== CURRENT DIR ==="
+        Get-Location
+
+        Write-Host "=== DIST DIR EXISTS? ==="
+        if (Test-Path ".dist") {
+            Write-Host "YES"
+        } else {
+            Write-Host "NO"
+        }
+
+        Write-Host "=== DIST CONTENTS ==="
+        Get-ChildItem -Recurse .dist | Format-Table -AutoSize
 
     - name: Publish Canary release
       uses: ncipollo/release-action@v1
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'true' && success()
       with:
-        artifacts: ".dist/*.zip"
+        artifacts: |
+          .dist/*.zip
+          .dist/*.AppImage
         allowUpdates: true
         generateReleaseNotes: true
         generateReleaseNotesPreviousTag: ${{ steps.build_step.outputs.prev_tag }}
@@ -94,7 +342,9 @@ jobs:
       uses: ncipollo/release-action@v1
       if: env._IS_GITHUB_RELEASE == 'true' && env._IS_BUILD_CANARY == 'false' && success()
       with:
-        artifacts: ".dist/*.zip"
+        artifacts: |
+          .dist/*.zip
+          .dist/*.AppImage
         allowUpdates: true
         generateReleaseNotes: true
         generateReleaseNotesPreviousTag: ${{ steps.build_step.outputs.prev_tag }}
