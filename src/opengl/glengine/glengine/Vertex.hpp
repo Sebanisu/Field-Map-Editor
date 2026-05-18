@@ -39,6 +39,8 @@ static_assert(
   && std::default_initializable<Vertex>);
 
 using Quad = std::array<Vertex, 4U>;
+inline constexpr std::size_t VerticesPerQuad =
+  std::tuple_size_v<Quad>;
 static constexpr auto QuadIndicesInit
   = std::array<std::uint32_t, 6U>{ 0, 1, 2, 2, 3, 0 };
 
@@ -51,7 +53,6 @@ constexpr inline std::array<
 {
      using std::ranges::size;
      std::array<std::uint32_t, count * size(QuadIndicesInit)> indices{};
-     constexpr auto quad_size = size(Quad{});
      for (std::size_t i{}; i != count; ++i)
      {
           using std::ranges::range_difference_t;
@@ -67,7 +68,7 @@ constexpr inline std::array<
             QuadIndicesInit,
             f,
             [&](std::uint32_t index)
-            { return static_cast<std::uint32_t>(index + i * quad_size); });
+            { return static_cast<std::uint32_t>(index + i * VerticesPerQuad); });
      }
      return indices;
 }
@@ -79,15 +80,14 @@ Quad CreateQuad(
   const float     tiling_factor = 1.F,
   const std::array<
     glm::vec2,
-    4U> uv
-  = { glm::vec2{ 0.F,
-                 0.F },
-      glm::vec2{ 1.F,
-                 0.F },
-      glm::vec2{ 1.F,
-                 1.F },
-      glm::vec2{ 0.F,
-                 1.F } },
+    4U>               uv      = { glm::vec2{ 0.F,
+                                             0.F },
+                                  glm::vec2{ 1.F,
+                                             0.F },
+                                  glm::vec2{ 1.F,
+                                             1.F },
+                                  glm::vec2{ 0.F,
+                                             1.F } },
   const glm::vec2     size    = { 1.F,
                                   1.F },
   const int           id      = -1,
