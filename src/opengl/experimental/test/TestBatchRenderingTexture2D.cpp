@@ -37,8 +37,7 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
                    glm::vec3{ 4.F, 0.F, 0.F } + offset, colors[2], 3);
 
      m_vertex_buffer           = glengine::VertexBuffer{ vertices };
-     constexpr auto quad_size  = std::size(glengine::Quad{});
-     const auto     quad_count = std::size(vertices) / quad_size;
+     const auto     quad_count = std::size(vertices) / glengine::VerticesPerQuad;
      m_index_buffer
        = glengine::IndexBuffer{ glengine::QuadIndices(quad_count) };
 

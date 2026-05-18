@@ -52,7 +52,7 @@ class VertexBufferDynamic
               * sizeof(std::ranges::range_value_t<T>)),
             std::ranges::data(vertices));
           return glengine::IndexBufferDynamicSize(
-            (std::ranges::size(vertices) / std::size(Quad{}) * IndicesPerQuad));
+            (std::ranges::size(vertices) / VerticesPerQuad * IndicesPerQuad));
      }
 };
 static_assert(Bindable<VertexBufferDynamic>);
