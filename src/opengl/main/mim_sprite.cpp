@@ -128,9 +128,7 @@ void mim_sprite::save(const std::filesystem::path &dest_path) const
             m_colors,
             width(),
             height(),
-            dest_path.string(),
-            dest_path.stem().string(),
-            "");
+            { .filename = dest_path.string(), .prefix = "" });
      }
 }
 
