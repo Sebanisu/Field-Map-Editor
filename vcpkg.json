@@ -1,10 +1,11 @@
 {
   "name": "field-map-editor",
   "version": "1.0.5",
-  "builtin-baseline": "4334d8b4c8916018600212ab4dd4bbdc343065d1",
+  "builtin-baseline": "4f1406d8f7923c3fff34738b6177f72b143ad5b6",
   "dependencies": [
     "lz4",
     "spdlog",
+    "fmt",
     "glfw3",
     "glew",
     "glm",
@@ -34,6 +35,11 @@
     {
       "name": "spdlog",
       "version": "1.15.3",
+      "port-version": 0
+    },
+    {
+      "name": "fmt",
+      "version": "12.0.0",
       "port-version": 0
     },
     {
