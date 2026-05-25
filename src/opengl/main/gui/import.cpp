@@ -202,8 +202,9 @@ open_viii::graphics::background::Map::variant_tile &
      const auto pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
 
-     if (ImGui::BeginCombo(
-           "##Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
+     if (
+       ImGui::BeginCombo(
+         "##Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
      {
           static constexpr int columnWidth = 100;// Adjust as needed
           const auto           num_columns = std::max(
@@ -228,43 +229,44 @@ open_viii::graphics::background::Map::variant_tile &
                       bool is_selected
                         = (selections->get<ConfigKey::ImportSelectedTile>() == tile_id);// You can store your selection however you
                                                                                         // want, outside or inside your objects
-                      if (std::ranges::any_of(
-                            std::array{
-                              [&]() -> bool
-                              {
-                                   bool const selected
-                                     = ImGui::Selectable("", is_selected);
-                                   tool_tip(
-                                     [&]()
-                                     {
-                                          format_imgui_text("{}", tile_id);
-                                          const tile_button_options options
-                                            = { .size = { tooltips_size,
-                                                          tooltips_size } };
-                                          (void)create_tile_button(
-                                            map_sprite, tile, options);
-                                          // map_sprite->enable_square(tile);
-                                          was_hovered = true;
-                                     });
-                                   return selected;
-                              }(),
-                              []() -> bool
-                              {
-                                   ImGui::SameLine();
-                                   return false;
-                              }(),
-                              create_tile_button(map_sprite, tile),
-                              []() -> bool
-                              {
-                                   ImGui::SameLine();
-                                   return false;
-                              }(),
-                              [&tile_id]() -> bool
-                              {
-                                   format_imgui_text("{}", tile_id);
-                                   return false;
-                              }() },
-                            std::identity{}))
+                      if (
+                        std::ranges::any_of(
+                          std::array{
+                            [&]() -> bool
+                            {
+                                 bool const selected
+                                   = ImGui::Selectable("", is_selected);
+                                 tool_tip(
+                                   [&]()
+                                   {
+                                        format_imgui_text("{}", tile_id);
+                                        const tile_button_options options
+                                          = { .size = { tooltips_size,
+                                                        tooltips_size } };
+                                        (void)create_tile_button(
+                                          map_sprite, tile, options);
+                                        // map_sprite->enable_square(tile);
+                                        was_hovered = true;
+                                   });
+                                 return selected;
+                            }(),
+                            []() -> bool
+                            {
+                                 ImGui::SameLine();
+                                 return false;
+                            }(),
+                            create_tile_button(map_sprite, tile),
+                            []() -> bool
+                            {
+                                 ImGui::SameLine();
+                                 return false;
+                            }(),
+                            [&tile_id]() -> bool
+                            {
+                                 format_imgui_text("{}", tile_id);
+                                 return false;
+                            }() },
+                          std::identity{}))
                       {
                            selections->get<ConfigKey::ImportSelectedTile>()
                              = tile_id;
@@ -437,9 +439,10 @@ bool import::browse_for_image_display_preview() const
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
               m_loaded_image_texture.id()),
             ImVec2(width, height));
-          if (ImGui::Checkbox(
-                gui_labels::draw_grid.data(),
-                &selections->get<ConfigKey::ImportImageGrid>()))
+          if (
+            ImGui::Checkbox(
+              gui_labels::draw_grid.data(),
+              &selections->get<ConfigKey::ImportImageGrid>()))
           {
                selections->update<ConfigKey::ImportImageGrid>();
           }
@@ -512,7 +515,7 @@ bool import::combo_tile_size() const
                      tile_sizes::x_16_size };
      static const auto strings = values | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
-     const auto gcc = GenericCombo(
+     const auto        gcc     = GenericCombo(
        gui_labels::tile_size,
        values,
        strings,
@@ -570,8 +573,8 @@ void import::generate_map_for_imported_image(
                       [&](auto tile)
                         -> open_viii::graphics::background::Map::variant_tile
                       {
-                           if constexpr (is_tile<
-                                           std::remove_cvref_t<decltype(tile)>>)
+                           if constexpr (
+                             is_tile<std::remove_cvref_t<decltype(tile)>>)
                            {
                                 if (x_tile == tiles_wide)
                                 {
@@ -840,7 +843,7 @@ void import::reset_imported_image() const
           return;
      }
      map_sprite->update_render_texture(nullptr, {}, tile_sizes::default_size);
-     m_import_image_map                                = {};
+     m_import_image_map.reset();
      m_loaded_image_texture                            = {};
      // m_loaded_image_cpu                = {};
      m_import_image_path                               = {};
@@ -885,15 +888,17 @@ void import::find_selected_tile_for_import(
             std::visit(
               [&](const auto &tile)
               {
-                   if (std::cmp_less(
-                         selections->get<ConfigKey::ImportSelectedTile>(),
-                         tiles.size()))
+                   if (
+                     std::cmp_less(
+                       selections->get<ConfigKey::ImportSelectedTile>(),
+                       tiles.size()))
                    {
                         const auto &tmp_tile = tiles[static_cast<size_t>(
                           selections->get<ConfigKey::ImportSelectedTile>())];
-                        if constexpr (std::is_same_v<
-                                        std::decay_t<decltype(tile)>,
-                                        std::decay_t<decltype(tmp_tile)>>)
+                        if constexpr (
+                          std::is_same_v<
+                            std::decay_t<decltype(tile)>,
+                            std::decay_t<decltype(tmp_tile)>>)
                         {
                              if (tile != tmp_tile)
                              {
@@ -982,9 +987,10 @@ bool import::checkbox_render_imported_image() const
                return false;
           }
 
-          if (ImGui::Checkbox(
-                gui_labels::render_imported_image.data(),
-                &selections->get<ConfigKey::RenderImportedImage>()))
+          if (
+            ImGui::Checkbox(
+              gui_labels::render_imported_image.data(),
+              &selections->get<ConfigKey::RenderImportedImage>()))
           {
                selections->update<ConfigKey::RenderImportedImage>();
                // Pass texture and map and tile_size

@@ -119,42 +119,6 @@ struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
 };
 
 template<>
-struct fmt::formatter<open_viii::graphics::background::BlendModeT>
-  : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       open_viii::graphics::background::BlendModeT blend_mode_t,
-       FormatContext                              &ctx) const
-     {
-          using namespace open_viii::graphics::background;
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (blend_mode_t)
-          {
-               case BlendModeT::add:
-                    name = "add"sv;
-                    break;
-               case BlendModeT::half_add:
-                    name = "half add"sv;
-                    break;
-               case BlendModeT::none:
-                    name = "none"sv;
-                    break;
-               case BlendModeT::quarter_add:
-                    name = "quarter add"sv;
-                    break;
-               case BlendModeT::subtract:
-                    name = "subtract"sv;
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
-
-
-template<>
 struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
@@ -265,23 +229,6 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
      }
 };
 
-template<open_viii::Number numT>
-struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>
-{
-     // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-     template<typename FormatContext>
-     constexpr auto format(
-       open_viii::graphics::Point<numT> point,
-       FormatContext                   &ctx) const
-     {
-          fmt::format_to(ctx.out(), "{}", '(');
-          fmt::formatter<numT>::format(point.x(), ctx);
-          fmt::format_to(ctx.out(), "{}", ", ");
-          fmt::formatter<numT>::format(point.y(), ctx);
-          return fmt::format_to(ctx.out(), "{}", ')');
-     }
-};
-
 template<>
 struct fmt::formatter<fme::BackgroundSettings>
 {
@@ -349,35 +296,6 @@ struct fmt::formatter<open_viii::graphics::Rectangle<numT>>
             ctx);
      }
 };
-
-template<>
-struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(
-       open_viii::graphics::BPPT bppt,
-       FormatContext            &ctx) const
-     {
-          using namespace open_viii::graphics;
-          using namespace std::string_view_literals;
-
-          if (bppt.bpp8())
-          {
-               return fmt::formatter<std::uint32_t>::format(BPPT::BPP8, ctx);
-          }
-          if (bppt.bpp16())
-          {
-               return fmt::formatter<std::uint32_t>::format(BPPT::BPP16, ctx);
-          }
-          if (bppt.bpp24())
-          {
-               return fmt::formatter<std::uint32_t>::format(BPPT::BPP24, ctx);
-          }
-          return fmt::formatter<std::uint32_t>::format(BPPT::BPP4, ctx);
-     }
-};
-
 
 template<open_viii::graphics::background::is_tile tileT>
 struct fmt::formatter<tileT> : fmt::formatter<std::string>
