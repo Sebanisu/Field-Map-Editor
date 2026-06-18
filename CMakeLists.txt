@@ -5,6 +5,10 @@ cmake_policy(SET CMP0042 NEW)
 cmake_policy(SET CMP0074 NEW)
 cmake_policy(SET CMP0091 NEW)
 
+if(MSVC)
+    set(CMAKE_GENERATOR_TOOLSET "preview")
+endif()
+
 set(VCPKG_DISABLE_COMPILER_TRACKING 1)
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build")
 set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
