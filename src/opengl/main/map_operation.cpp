@@ -4,16 +4,17 @@
 
 #include "map_operation.hpp"
 #include "formatters.hpp"
-#include "tile_operations.hpp"
 #include <algorithm>
 #include <functional>
 #include <glm/common.hpp>
 #include <glm/glm.hpp>
+#include <open_viii/graphics/background/TileOperations.hpp>
 #include <ranges>
 namespace ff_8
 {
-static constexpr auto not_invalid = tile_operations::NotInvalidTile{};
-void                  flatten_bpp(map_group::Map &map)
+static constexpr auto not_invalid
+  = open_viii::graphics::background::NotInvalidTile{};
+void flatten_bpp(map_group::Map &map)
 {
      map.visit_tiles(
        [](auto &tiles)
@@ -63,11 +64,10 @@ void compact_map_order_ffnx(map_group::Map &map)
             auto       filtered_tiles = tiles | std::views::filter(not_invalid);
             const auto size_of_tiles  = std::ranges::distance(filtered_tiles);
             using tile_t              = std::remove_cvref_t<
-                           std::ranges::range_value_t<decltype(tiles)>>;
+              std::ranges::range_value_t<decltype(tiles)>>;
             const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+              = open_viii::graphics::background::tile_operations::WithDepth<
+                tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
             for (auto &&[tile_index, tile] : filtered_and_enumerated_tiles)
             {
 
@@ -79,19 +79,19 @@ void compact_map_order_ffnx(map_group::Map &map)
                    = dest_coords_for_horizontal_tile_index_swizzle(
                      tile_index, size_of_tiles);
                  const auto source_x
-                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
+                   = static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceXT<tile_t>>(
                      new_pos.source_xy.x);
                  const auto source_y
-                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
+                   = static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceYT<tile_t>>(
                      new_pos.source_xy.y);
                  const auto with_texture_id_operation
-                   = ff_8::tile_operations::WithTextureId<tile_t>{
-                          new_pos.texture_page
-                     };
+                   = open_viii::graphics::background::tile_operations::
+                     WithTextureId<tile_t>{ new_pos.texture_page };
                  const auto with_source_xy_operation
-                   = ff_8::tile_operations::WithSourceXY<tile_t>{
-                          { source_x, source_y }
-                     };
+                   = open_viii::graphics::background::tile_operations::
+                     WithSourceXY<tile_t>{ { source_x, source_y } };
                  tile = tile | with_depth_operation | with_source_xy_operation
                         | with_texture_id_operation;
             }
@@ -113,11 +113,10 @@ void compact_move_conflicts_only(
             // auto filtered_tiles             = tiles |
             // std::views::filter(not_invalid);
             using tile_t            = std::remove_cvref_t<
-                         std::ranges::range_value_t<decltype(tiles)>>;
+              std::ranges::range_value_t<decltype(tiles)>>;
             const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+              = open_viii::graphics::background::tile_operations::WithDepth<
+                tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
 
             for (const auto &indieces : range_of_conflicts)
             {
@@ -139,19 +138,25 @@ void compact_move_conflicts_only(
                                 // filter out any locations you don't want here.
 
                                 const auto texture_page = static_cast<
-                                  ff_8::tile_operations::TextureIdT<tile_t>>(
+                                  open_viii::graphics::background::
+                                    tile_operations::TextureIdT<tile_t>>(
                                   location.t);
                                 const auto source_x = static_cast<
-                                  ff_8::tile_operations::SourceXT<tile_t>>(
+                                  open_viii::graphics::background::
+                                    tile_operations::SourceXT<tile_t>>(
                                   location.x);
                                 const auto source_y = static_cast<
-                                  ff_8::tile_operations::SourceYT<tile_t>>(
+                                  open_viii::graphics::background::
+                                    tile_operations::SourceYT<tile_t>>(
                                   location.y);
                                 const auto with_texture_id_operation
-                                  = ff_8::tile_operations::WithTextureId<
-                                    tile_t>{ texture_page };
+                                  = open_viii::graphics::background::
+                                    tile_operations::WithTextureId<tile_t>{
+                                         texture_page
+                                    };
                                 const auto with_source_xy_operation
-                                  = ff_8::tile_operations::WithSourceXY<tile_t>{
+                                  = open_viii::graphics::background::
+                                    tile_operations::WithSourceXY<tile_t>{
                                          { source_x, source_y }
                                     };
                                 tile = tile | with_depth_operation
@@ -178,34 +183,34 @@ void compact_map_order(map_group::Map &map)
        {
             auto filtered_tiles = tiles | std::views::filter(not_invalid);
             using tile_t        = std::remove_cvref_t<
-                     std::ranges::range_value_t<decltype(tiles)>>;
+              std::ranges::range_value_t<decltype(tiles)>>;
             const auto with_depth_operation
-              = ff_8::tile_operations::WithDepth<tile_t>{
-                     open_viii::graphics::BPPT::BPP4_CONST()
-                };
+              = open_viii::graphics::background::tile_operations::WithDepth<
+                tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
             for (std::size_t tile_index = {}; tile_t &tile : filtered_tiles)
             {
                  const auto texture_page
-                   = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(
+                   = static_cast<open_viii::graphics::background::
+                                   tile_operations::TextureIdT<tile_t>>(
                      tile_index / 256);
                  const auto file_tile_index = tile_index % 256;
                  const auto source_x
-                   = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(
+                   = static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceXT<tile_t>>(
                      (file_tile_index % ff_8::map_group::TILE_SIZE)
                      * ff_8::map_group::TILE_SIZE);
                  const auto source_y
-                   = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(
+                   = static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceYT<tile_t>>(
                      (file_tile_index / ff_8::map_group::TILE_SIZE)
                      * ff_8::map_group::TILE_SIZE);
                  ++tile_index;
                  const auto with_texture_id_operation
-                   = ff_8::tile_operations::WithTextureId<tile_t>{
-                          texture_page
-                     };
+                   = open_viii::graphics::background::tile_operations::
+                     WithTextureId<tile_t>{ texture_page };
                  const auto with_source_xy_operation
-                   = ff_8::tile_operations::WithSourceXY<tile_t>{
-                          { source_x, source_y }
-                     };
+                   = open_viii::graphics::background::tile_operations::
+                     WithSourceXY<tile_t>{ { source_x, source_y } };
                  tile = tile | with_depth_operation | with_source_xy_operation
                         | with_texture_id_operation;
             }
@@ -290,8 +295,8 @@ template<
                            row_weight = {};
                       }
 
-                      if (std::cmp_greater_equal(
-                            row, ff_8::map_group::TILE_SIZE))
+                      if (
+                        std::cmp_greater_equal(row, ff_8::map_group::TILE_SIZE))
                       {
                            ++page;
                            row = {};
@@ -427,9 +432,10 @@ bool test_if_map_same(
             saved_map.visit_tiles(
               [&](const auto &saved_tiles)
               {
-                   if constexpr (std::is_same_v<
-                                   std::remove_cvref_t<decltype(raw_tiles)>,
-                                   std::remove_cvref_t<decltype(saved_tiles)>>)
+                   if constexpr (
+                     std::is_same_v<
+                       std::remove_cvref_t<decltype(raw_tiles)>,
+                       std::remove_cvref_t<decltype(saved_tiles)>>)
                    {
                         if (
                           std::ranges::size(raw_tiles)

@@ -21,7 +21,6 @@
 #include "MouseToTilePos.h"
 #include "OrthographicCameraController.hpp"
 #include "SimilarAdjustments.hpp"
-#include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueTileValues.hpp"
 #include "Window.hpp"
@@ -37,6 +36,7 @@
 #include <glengine/GenericCombo.hpp>
 #include <glengine/OrthographicCamera.hpp>
 #include <glengine/PixelBuffer.hpp>
+#include <open_viii/graphics/background/TileOperations.hpp>
 #include <source_location>
 #include <type_traits>
 namespace ff_8
@@ -67,43 +67,74 @@ class [[nodiscard]] MoveTiles
           using TileT
             = std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>;
           std::vector<std::function<TileT(const TileT &)>> operations{};
-          if constexpr (std::is_same_v<
-                          typename TileFunctions::X,
-                          tile_operations::X>)
+          if constexpr (
+            std::is_same_v<
+              typename TileFunctions::X,
+              open_viii::graphics::background::tile_operations::X>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithX{ m_released.x, m_pressed.x });
+                 open_viii::graphics::background::tile_operations::
+                   TranslateWithX<TileT>{
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::XT<TileT>>(m_released.x),
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::XT<TileT>>(m_pressed.x) });
           }
-          if constexpr (std::is_same_v<
-                          typename TileFunctions::Y,
-                          tile_operations::Y>)
+          if constexpr (
+            std::is_same_v<
+              typename TileFunctions::Y,
+              open_viii::graphics::background::tile_operations::Y>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithY{ m_released.y, m_pressed.y });
+                 open_viii::graphics::background::tile_operations::
+                   TranslateWithY<TileT>{
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::YT<TileT>>(m_released.y),
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::YT<TileT>>(m_pressed.y) });
           }
-          if constexpr (std::is_same_v<
-                          typename TileFunctions::X,
-                          tile_operations::SourceX>)
+          if constexpr (
+            std::is_same_v<
+              typename TileFunctions::X,
+              open_viii::graphics::background::tile_operations::SourceX>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithSourceX{ m_released.x,
-                                                        m_pressed.x });
+                 open_viii::graphics::background::tile_operations::
+                   TranslateWithSourceX<TileT>{
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceXT<TileT>>(
+                       m_released.x),
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceXT<TileT>>(
+                       m_pressed.x) });
           }
-          if constexpr (std::is_same_v<
-                          typename TileFunctions::Y,
-                          tile_operations::SourceY>)
+          if constexpr (
+            std::is_same_v<
+              typename TileFunctions::Y,
+              open_viii::graphics::background::tile_operations::SourceY>)
           {
                operations.push_back(
-                 tile_operations::TranslateWithSourceY{ m_released.y,
-                                                        m_pressed.y });
+                 open_viii::graphics::background::tile_operations::
+                   TranslateWithSourceY<TileT>{
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceYT<TileT>>(
+                       m_released.y),
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::SourceYT<TileT>>(
+                       m_pressed.y) });
           }
 
-          if constexpr (std::is_same_v<
-                          typename TileFunctions::TexturePage,
-                          tile_operations::TextureId>)
+          if constexpr (
+            std::is_same_v<
+              typename TileFunctions::TexturePage,
+              open_viii::graphics::background::tile_operations::TextureId>)
           {
                operations.push_back(
-                 tile_operations::WithTextureId{ m_released.z });
+                 open_viii::graphics::background::tile_operations::
+                   WithTextureId<TileT>{
+                     static_cast<open_viii::graphics::background::
+                                   tile_operations::TextureIdT<TileT>>(
+                       m_released.z) });
           }
           GetMapHistory()->copy_working_perform_operation<TileT>(
             m_indexes,
@@ -148,9 +179,9 @@ class Map
                const auto stem = std::filesystem::path(GetMapHistory().path)
                                    .parent_path()
                                    .stem();
-               m_swizzle_path = (std::filesystem::path(m_swizzle_path)
-                                 / stem.string().substr(0, 2) / stem)
-                                  .string();
+               m_swizzle_path  = (std::filesystem::path(m_swizzle_path)
+                                  / stem.string().substr(0, 2) / stem)
+                                   .string();
                spdlog::debug(
                  "Swizzle Location: \"{}\"", m_swizzle_path.string());
           }
@@ -342,11 +373,11 @@ class Map
                           .c_str());
 
                       tile_button_state = &m_tile_button_state_hover;
-                      if (visit_unsorted_unfiltered_tiles(
-                            common_operation,
-                            MouseTileOverlap<
-                              TileFunctions,
-                              decltype(m_filters)>(tp, m_filters)))
+                      if (
+                        visit_unsorted_unfiltered_tiles(
+                          common_operation,
+                          MouseTileOverlap<TileFunctions, decltype(m_filters)>(
+                            tp, m_filters)))
                       {
                            GetWindow().trigger_refresh_image();
                            // m_changed();
@@ -403,8 +434,9 @@ class Map
                       tile_button_state = &m_tile_button_state;
                       last_pos          = ImGui::GetCursorPos();
                       text_width        = ImGui::GetItemRectMax().x;
-                      if (visit_unsorted_unfiltered_tiles(
-                            common_operation, m_filters))
+                      if (
+                        visit_unsorted_unfiltered_tiles(
+                          common_operation, m_filters))
                       {
                            GetWindow().trigger_refresh_image();
                            // m_changed();
@@ -750,7 +782,7 @@ class Map
             = glm::vec2{ texture.width(), texture.height() };
           const float tile_scale = static_cast<float>(texture.height())
                                    / static_cast<float>(GetMim()->get_height());
-          const float tile_size = tile_scale * map_dims_statics::TileSize;
+          const float tile_size  = tile_scale * map_dims_statics::TileSize;
           // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
           return GetMapHistory()->get_original_version_of_working_tile(
             tile,
@@ -794,7 +826,8 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{})
+                     | std::views::filter(
+                       open_viii::graphics::background::NotInvalidTile{})
                      | std::views::filter(
                        []([[maybe_unused]] const auto &tile) -> bool
                        {
@@ -814,7 +847,7 @@ class Map
                       std::ranges::transform(
                         f_tiles,
                         std::back_inserter(unique_z),
-                        tile_operations::Z{});
+                        open_viii::graphics::background::tile_operations::Z{});
                       std::ranges::sort(unique_z);
                       auto [begin, end] = std::ranges::unique(unique_z);
                       unique_z.erase(begin, end);
@@ -825,7 +858,9 @@ class Map
                  {
                       auto f_tiles_reverse_filter_z
                         = f_tiles | std::views::reverse
-                          | std::views::filter(tile_operations::ZMatch{ z });
+                          | std::views::filter(
+                            open_viii::graphics::background::tile_operations::
+                              ZMatch{ z });
                       for (const auto &tile : f_tiles_reverse_filter_z)
                       {
                            if (!lambda(tile))
@@ -1060,7 +1095,8 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{});
+                     | std::views::filter(
+                       open_viii::graphics::background::NotInvalidTile{});
                  return static_cast<std::size_t>(std::ranges::count_if(
                    f_tiles, [](auto &&) { return true; }));
             });
@@ -1074,7 +1110,8 @@ class Map
             {
                  auto f_tiles
                    = tiles
-                     | std::views::filter(tile_operations::NotInvalidTile{})
+                     | std::views::filter(
+                       open_viii::graphics::background::NotInvalidTile{})
                      | std::views::filter(filter);
                  bool       changed     = false;
                  VisitState visit_state = {};

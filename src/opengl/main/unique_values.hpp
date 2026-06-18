@@ -5,13 +5,13 @@
 #ifndef FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
 #include "formatters.hpp"
-#include "tile_operations.hpp"
 #include <concepts>
 #include <cstdint>
 #include <fmt/format.h>
 #include <map>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/PupuID.hpp>
+#include <open_viii/graphics/background/TileOperations.hpp>
 #include <open_viii/graphics/background/UniquifyPupu.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <ranges>
@@ -153,39 +153,41 @@ struct all_unique_values_and_strings
      explicit all_unique_values_and_strings(const tilesT &tiles)
        : m_z(
            tiles,
-           ff_8::tile_operations::Z{},
+           open_viii::graphics::background::tile_operations::Z{},
            std::greater<>{})
        , m_layer_id(
            tiles,
-           ff_8::tile_operations::LayerId{})
+           open_viii::graphics::background::tile_operations::LayerId{})
        , m_texture_page_id(
            tiles,
-           ff_8::tile_operations::TextureId{})
+           open_viii::graphics::background::tile_operations::TextureId{})
        , m_animation_id(
            tiles,
-           ff_8::tile_operations::AnimationId{})
+           open_viii::graphics::background::tile_operations::AnimationId{})
        , m_blend_other(
            tiles,
-           ff_8::tile_operations::Blend{})
+           open_viii::graphics::background::tile_operations::Blend{})
        , m_blend_mode(
            tiles,
-           ff_8::tile_operations::BlendMode{})
+           open_viii::graphics::background::tile_operations::BlendMode{})
        , m_bpp(
            tiles,
-           ff_8::tile_operations::Depth{})
+           open_viii::graphics::background::tile_operations::Depth{})
        , m_animation_frame(
            get_map<
              std::uint8_t,
              std::uint8_t>(
              tiles,
              m_animation_id,
-             ff_8::tile_operations::AnimationState{},
+             open_viii::graphics::background::tile_operations::AnimationState{},
              {},
              [](
                const auto  key,
                const auto &tile) -> bool
              {
-                  return ff_8::tile_operations::AnimationIdMatch{ key } == tile;
+                  return open_viii::graphics::background::tile_operations::
+                           AnimationIdMatch{ key }
+                         == tile;
              }))
        , m_palette(
            get_map<
@@ -193,12 +195,16 @@ struct all_unique_values_and_strings
              open_viii::graphics::BPPT>(
              tiles,
              m_bpp,
-             ff_8::tile_operations::PaletteId{},
+             open_viii::graphics::background::tile_operations::PaletteId{},
              {},
              [](
                const auto  key,
                const auto &tile) -> bool
-             { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
+             {
+                  return open_viii::graphics::background::tile_operations::
+                           DepthMatch{ tile }
+                         == key;
+             }))
      {
      }
      [[nodiscard]] const auto &z() const

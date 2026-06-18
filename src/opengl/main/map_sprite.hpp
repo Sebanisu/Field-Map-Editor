@@ -911,12 +911,20 @@ struct [[nodiscard]] map_sprite// final
      auto find_conflicting_tiles(const TilesT &tiles) const
      {
           using TileT = std::ranges::range_value_t<std::remove_cvref_t<TilesT>>;
-          using TextureIdT = ff_8::tile_operations::TextureIdT<TileT>;
-          using PaletteIdT = ff_8::tile_operations::PaletteIdT<TileT>;
-          static constexpr auto SourceX   = ff_8::tile_operations::SourceX{};
-          static constexpr auto SourceY   = ff_8::tile_operations::SourceY{};
-          static constexpr auto TextureId = ff_8::tile_operations::TextureId{};
-          static constexpr auto PaletteId = ff_8::tile_operations::PaletteId{};
+          using TextureIdT
+            = open_viii::graphics::background::tile_operations::TextureIdT<
+              TileT>;
+          using PaletteIdT
+            = open_viii::graphics::background::tile_operations::PaletteIdT<
+              TileT>;
+          static constexpr auto SourceX
+            = open_viii::graphics::background::tile_operations::SourceX{};
+          static constexpr auto SourceY
+            = open_viii::graphics::background::tile_operations::SourceY{};
+          static constexpr auto TextureId
+            = open_viii::graphics::background::tile_operations::TextureId{};
+          static constexpr auto PaletteId
+            = open_viii::graphics::background::tile_operations::PaletteId{};
           std::map<TextureIdT, std::vector<PaletteIdT>> conflicts;
 
           // Process each pair of matching tiles and insert their palette IDs

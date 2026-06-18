@@ -7,12 +7,12 @@
 #include "MapDims.hpp"
 #include "MapFilters.hpp"
 #include "SimilarAdjustments.hpp"
-#include "tile_operations.hpp"
 #include "VisitState.hpp"
 #include <glengine/GenericCombo.hpp>
 #include <glengine/SubTexture.hpp>
 #include <ImGuiDisabled.hpp>
 #include <ImGuiPushItemWidth.hpp>
+#include <open_viii/graphics/background/TileOperations.hpp>
 namespace ff_8
 {
 template<typename TileFunctions>
@@ -111,7 +111,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           bool draw = tile.draw();
           if (ImGui::Checkbox("draw?", &draw))
           {
@@ -287,7 +287,7 @@ class MapTileAdjustments
        bool        &changed,
        const int    current_bpp_selection) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           const float                   checkbox_width = get_checkbox_width(3U);
           const std::pair<float, float> item_width
             = generate_inner_width(2, checkbox_width);
@@ -342,7 +342,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           const float                   checkbox_width = get_checkbox_width(5U);
           const std::pair<float, float> item_width
             = generate_inner_width(3, checkbox_width);
@@ -405,7 +405,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           const auto disabled
             = glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
           const auto blend_mode            = tile.blend_mode();
@@ -447,7 +447,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           using namespace open_viii::graphics::background;
           int        layer_id = tile.layer_id();
           const auto disabled
@@ -488,7 +488,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           int         texture_page_id = static_cast<int>(tile.texture_id());
           const float checkbox_width  = get_checkbox_width(1U);
           const float width           = ImGui::CalcItemWidth();
@@ -525,7 +525,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
           const auto  pop_width
@@ -562,7 +562,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           int         blend          = tile.blend();
           const float checkbox_width = get_checkbox_width(1U);
           const float width          = ImGui::CalcItemWidth();
@@ -597,7 +597,7 @@ class MapTileAdjustments
        const TileT &tile,
        bool        &changed) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           using namespace open_viii::graphics::background;
           int         animation_id    = tile.animation_id();
           int         animation_state = tile.animation_state();
