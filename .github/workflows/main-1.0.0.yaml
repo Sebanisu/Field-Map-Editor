@@ -257,7 +257,7 @@ jobs:
 
 
   windows-build:
-    runs-on: windows-latest
+    runs-on: windows-2025
     needs: [prepare, linux-build]
     env:
       _RELEASE_CONFIGURATION_PRESET: Release-windows  # override for Windows
