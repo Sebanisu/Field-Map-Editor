@@ -5,13 +5,13 @@
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "normalized_source_tile.hpp"
-#include "PupuID.hpp"
 #include "source_tile_conflicts.hpp"
-#include "UniquifyPupu.hpp"
 #include <glengine/ScopeGuard.hpp>
 #include <glm/glm.hpp>
 #include <map>
 #include <open_viii/graphics/background/Map.hpp>
+#include <open_viii/graphics/background/PupuID.hpp>
+#include <open_viii/graphics/background/UniquifyPupu.hpp>
 #include <ranges>
 #include <spdlog/spdlog.h>
 /**
@@ -66,7 +66,7 @@ class [[nodiscard]] MapHistory
       * until `end_multi_frame_working` is called, which sets it back to
       * `false`.
       */
-     mutable bool                   m_in_multi_frame_operation   = { false };
+     mutable bool m_in_multi_frame_operation = { false };
      /**
       * @brief Indicates whether the original state has been changed.
       *
@@ -79,7 +79,7 @@ class [[nodiscard]] MapHistory
       * @note This flag is used to track modifications to the original tile
       * data.
       */
-     mutable bool                   m_original_changed           = { false };
+     mutable bool m_original_changed         = { false };
 
      /**
       * @brief Indicates whether the working state has been changed.
@@ -92,43 +92,47 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the working tile data.
       */
-     mutable bool                   m_working_changed            = { false };
+     mutable bool m_working_changed          = { false };
 
 
      // Current states
      /**
       * @brief The active original map state.
       */
-     map_t                          m_original                   = {};
+     map_t        m_original                 = {};
 
 
      /**
       * @brief The active working map state.
       */
-     map_t                          m_working                    = {};
+     map_t        m_working                  = {};
 
      // Corresponding PupuIDs
      /**
       * @brief PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>    m_original_pupu              = {};
+     mutable std::vector<open_viii::graphics::background::PupuID>
+       m_original_pupu = {};
 
      /**
       * @brief PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>    m_working_pupu               = {};
+     mutable std::vector<open_viii::graphics::background::PupuID> m_working_pupu
+       = {};
 
 
      // Corresponding PupuIDs
      /**
       * @brief Unique PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>    m_original_unique_pupu       = {};
+     mutable std::vector<open_viii::graphics::background::PupuID>
+       m_original_unique_pupu = {};
 
      /**
       * @brief Unique PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>    m_working_unique_pupu        = {};
+     mutable std::vector<open_viii::graphics::background::PupuID>
+                                    m_working_unique_pupu        = {};
 
 
      /**
@@ -250,10 +254,11 @@ class [[nodiscard]] MapHistory
           return original().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto front_tile = tiles.cbegin();
                       if (
@@ -312,10 +317,11 @@ class [[nodiscard]] MapHistory
           return working().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto tile = tiles.begin();
                       std::ranges::advance(tile, pos);
@@ -632,14 +638,16 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to the vector of PupuIDs for the original
       * map.
       */
-     [[nodiscard]] const std::vector<PupuID> &original_pupu() const noexcept;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       original_pupu() const noexcept;
 
      /**
       * @brief Retrieves the PupuIDs for the working map.
       * @return A constant reference to the vector of PupuIDs for the working
       * map.
       */
-     [[nodiscard]] const std::vector<PupuID> &working_pupu() const noexcept;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       working_pupu() const noexcept;
 
 
      /**
@@ -654,7 +662,8 @@ class [[nodiscard]] MapHistory
       * the original state.
       * @note The returned vector is guaranteed to contain only unique values.
       */
-     const std::vector<ff_8::PupuID> &original_unique_pupu() const noexcept;
+     const std::vector<open_viii::graphics::background::PupuID> &
+       original_unique_pupu() const noexcept;
 
      /**
       * @brief Retrieves the unique PupuIDs for the working state of the map.
@@ -669,7 +678,8 @@ class [[nodiscard]] MapHistory
       * the working state.
       * @note The returned vector is guaranteed to contain only unique values.
       */
-     const std::vector<ff_8::PupuID> &working_unique_pupu() const noexcept;
+     const std::vector<open_viii::graphics::background::PupuID>                             &
+       working_unique_pupu() const noexcept;
 
      /**
       * @brief Retrieves the unique colors associated with the original PupuIDs.
@@ -736,19 +746,20 @@ class [[nodiscard]] MapHistory
       * the input color matches exactly a generated working color; otherwise,
       *          the lookup will fail.
       */
-     std::optional<PupuID>
+     std::optional<open_viii::graphics::background::PupuID>
        working_color_to_pupu_id(const glm::vec4 &in_color) const noexcept
      {
           auto color_and_ids = std::views::zip(
             working_unique_pupu_color(), working_unique_pupu());
-          if (auto &&it = std::ranges::find_if(
-                color_and_ids,
-                [&](const auto &current_pair)
-                {
-                     auto &&[color, _] = current_pair;
-                     return in_color == color;
-                });
-              it != std::ranges::end(color_and_ids))
+          if (
+            auto &&it = std::ranges::find_if(
+              color_and_ids,
+              [&](const auto &current_pair)
+              {
+                   auto &&[color, _] = current_pair;
+                   return in_color == color;
+              });
+            it != std::ranges::end(color_and_ids))
           {
                return std::get<1>(*it);
           }
@@ -825,7 +836,8 @@ class [[nodiscard]] MapHistory
       * @return The corresponding PupuID.
       */
      template<open_viii::graphics::background::is_tile TileT>
-     [[nodiscard]] PupuID get_pupu_from_working(const TileT &tile) const;
+     [[nodiscard]] open_viii::graphics::background::PupuID
+       get_pupu_from_working(const TileT &tile) const;
 
      /**
       * @brief Calculates the offset of the given tile in the working map.
@@ -921,10 +933,11 @@ class [[nodiscard]] MapHistory
           working().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto filtered_tiles = tiles | std::views::filter(filter);
                       for (auto &tile : filtered_tiles)

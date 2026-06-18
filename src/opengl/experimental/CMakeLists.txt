@@ -30,7 +30,6 @@ add_executable(
   ff8/SimilarAdjustments.cpp
   ff8/Configuration.cpp
   ff8/MenuSaveToggles.hpp
-  ff8/PupuID.hpp
   ImGuiDisabled.cpp
   ImGuiPushItemWidth.cpp
   ImGuiPushID.cpp
@@ -47,7 +46,6 @@ add_executable(
   test/TestBatchRenderingTexture2DDynamic.cpp
   test/TestMenu.cpp
   test/TestTexture2D.cpp
-  ff8/UniquifyPupu.hpp
   Window.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_EXPERIMENTAL

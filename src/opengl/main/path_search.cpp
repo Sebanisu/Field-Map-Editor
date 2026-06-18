@@ -39,8 +39,8 @@ std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(
 }
 
 std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(
-  const ff_8::PupuID pupu,
-  const std::string &ext) const
+  const open_viii::graphics::background::PupuID pupu,
+  const std::string                            &ext) const
 {
 
      return generate_paths(
@@ -218,8 +218,8 @@ std::vector<std::filesystem::path> path_search::generate_map_paths(
 
 
 bool path_search::has_deswizzle_path(
-  const ff_8::PupuID pupu,
-  const std::string &ext) const
+  const open_viii::graphics::background::PupuID pupu,
+  const std::string                            &ext) const
 {
      return has_deswizzle_path(filters_deswizzle_value_string, pupu, ext);
 }
@@ -229,13 +229,13 @@ bool path_search::has_deswizzle_path(
 {
      return std::ranges::any_of(
        working_unique_pupu,
-       [&](const ff_8::PupuID pupu)
+       [&](const open_viii::graphics::background::PupuID pupu)
        { return has_deswizzle_path(filter_path, pupu, ext); });
 }
 bool path_search::has_deswizzle_path(
-  const std::filesystem::path &filter_path,
-  const ff_8::PupuID           pupu,
-  const std::string           &ext) const
+  const std::filesystem::path                  &filter_path,
+  const open_viii::graphics::background::PupuID pupu,
+  const std::string                            &ext) const
 {
      return path_search::has_path(
        filter_path,
@@ -335,8 +335,9 @@ bool path_search::has_swizzle_path(
                {
                     for (const auto &texture_page : texture_page_id.values())
                     {
-                         if (has_swizzle_path(
-                               filter_path, texture_page, palette, ext))
+                         if (
+                           has_swizzle_path(
+                             filter_path, texture_page, palette, ext))
                          {
                               return true;
                          }
@@ -412,18 +413,18 @@ bool path_search::has_swizzle_as_one_image_path(
                }
                for (const auto &palette : palette_set.values())
                {
-                    if (has_path(
-                          filter_path,
-                          { .field_name = field_name,
-                            .ext        = ext,
-                            .language_code
-                            = opt_coo.has_value()
-                                  && opt_coo.value()
-                                       != open_viii::LangT::generic
-                                ? opt_coo
-                                : std::nullopt,
-                            .palette = palette },
-                          selections))
+                    if (
+                      has_path(
+                        filter_path,
+                        { .field_name = field_name,
+                          .ext        = ext,
+                          .language_code
+                          = opt_coo.has_value()
+                                && opt_coo.value() != open_viii::LangT::generic
+                              ? opt_coo
+                              : std::nullopt,
+                          .palette = palette },
+                        selections))
                     {
                          return true;
                     }
@@ -506,8 +507,9 @@ std::vector<std::filesystem::path> path_search::generate_paths(
           }
           auto temp
             = cpm.replace_tags(*output_pattern, selections, filter_path);
-          if (const auto test = safedir{ temp };
-              !test.is_dir() && test.is_exists())
+          if (
+            const auto test = safedir{ temp };
+            !test.is_dir() && test.is_exists())
           {
                paths.push_back(std::move(temp));
           }

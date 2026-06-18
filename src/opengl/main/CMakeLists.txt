@@ -53,13 +53,11 @@ set(MAIN_SOURCES
     mim_sprite.cpp
     open_file_explorer.cpp
     path_search.cpp
-    PupuID.cpp
     safedir.cpp
     save_image_pbo.cpp
     source_tile_conflicts.cpp
     tile_sizes.cpp
     unique_values.cpp
-    UniquifyPupu.cpp
     utilities.cpp)
 
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

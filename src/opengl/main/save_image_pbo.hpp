@@ -5,12 +5,12 @@
 #ifndef FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 
-#include "PupuID.hpp"
 #include <filesystem>
 #include <future>
 #include <GL/glew.h>
 #include <glengine/FrameBuffer.hpp>
 #include <glm/glm.hpp>
+#include <open_viii/graphics/background/PupuID.hpp>
 namespace fme
 {
 /*
@@ -30,13 +30,12 @@ namespace fme
  */
 
 [[nodiscard]] std::future<void> save_image_pbo(
-  std::filesystem::path in_path,
-  glengine::FrameBuffer in_fbo,
-  const GLenum          attachment = GL_COLOR_ATTACHMENT0,
+  std::filesystem::path                       in_path,
+  glengine::FrameBuffer                       in_fbo,
+  const GLenum                                attachment = GL_COLOR_ATTACHMENT0,
   std::vector<std::tuple<
     glm::vec4,
-    ff_8::PupuID>>      in_pupu_ids
-  = {});
+    open_viii::graphics::background::PupuID>> in_pupu_ids = {});
 
 /*
  *  @brief Asynchronously saves an OpenGL texture to an PNG file using a Pixel

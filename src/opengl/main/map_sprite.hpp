@@ -39,12 +39,12 @@ namespace fme
 
 struct PupuOpEntry
 {
-     ff_8::PupuID         pupu;
-     int                  color_index;
-     glengine::SubTexture main_texture;
-     glengine::SubTexture mask_texture;
-     std::uint32_t        count;
-     float                distance;
+     open_viii::graphics::background::PupuID pupu;
+     int                                     color_index;
+     glengine::SubTexture                    main_texture;
+     glengine::SubTexture                    mask_texture;
+     std::uint32_t                           count;
+     float                                   distance;
 };
 
 enum class DrawError
@@ -219,7 +219,8 @@ struct [[nodiscard]] map_sprite// final
                                                 m_cache_framebuffer = {};
      mutable std::map<std::string, std::string> m_cache_framebuffer_tooltips
        = {};
-     mutable std::map<std::string, std::vector<ff_8::PupuID>>
+     mutable std::
+       map<std::string, std::vector<open_viii::graphics::background::PupuID>>
                                          m_cache_framebuffer_pupuids = {};
      mutable ff_8::map_group             m_map_group                 = {};
      map_sprite_settings                 m_settings                  = {};
@@ -331,11 +332,11 @@ struct [[nodiscard]] map_sprite// final
      std::pair<
        std::vector<PupuOpEntry>,
        std::vector<std::string>>
-       collect_post_op_entries(
-         std::tuple<
-           glengine::PaletteBuffer,
-           glengine::HistogramBuffer,
-           glengine::DistanceBuffer> &buffers) const;
+          collect_post_op_entries(
+            std::tuple<
+              glengine::PaletteBuffer,
+              glengine::HistogramBuffer,
+              glengine::DistanceBuffer> &buffers) const;
 
      void process_post_op_entries(
        const std::vector<PupuOpEntry> &multi_pupu_post_op,
@@ -380,10 +381,10 @@ struct [[nodiscard]] map_sprite// final
        BPPT         bpp,
        std::uint8_t palette,
        std::uint8_t texture_page) const;
-     [[nodiscard]] glengine::Texture *
-       get_texture_mutable(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] glengine::Texture *get_texture_mutable(
+       const open_viii::graphics::background::PupuID &pupu) const;
      [[nodiscard]] const glengine::Texture *
-       get_texture(const ff_8::PupuID &pupu) const;
+       get_texture(const open_viii::graphics::background::PupuID &pupu) const;
      [[nodiscard]] glm::uvec2
        get_tile_texture_size(const glengine::Texture *const texture) const;
      std::expected<
@@ -394,21 +395,24 @@ struct [[nodiscard]] map_sprite// final
      std::expected<
        void,
        std::set<DrawFailure>>
-       local_draw(
-         const glengine::FrameBuffer   &target_framebuffer,
-         const glengine::BatchRenderer &target_renderer) const;
+                        local_draw(
+                          const glengine::FrameBuffer   &target_framebuffer,
+                          const glengine::BatchRenderer &target_renderer) const;
      [[nodiscard]] bool draw_imported(const glengine::FrameBuffer &) const;
      [[nodiscard]] std::string get_base_name() const;
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID> &working_unique_pupu() const;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       working_unique_pupu() const;
      [[nodiscard]] std::vector<std::tuple<
        glm::vec4,
-       ff_8::PupuID>>
+       open_viii::graphics::background::PupuID>>
        working_unique_color_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID> &
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
        original_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID> &original_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID> &working_pupu() const;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       original_pupu() const;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       working_pupu() const;
      [[nodiscard]] const ff_8::source_tile_conflicts &
        original_conflicts() const;
      [[nodiscard]] const ff_8::source_tile_conflicts &working_conflicts() const;
@@ -422,14 +426,14 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::uint32_t height() const;
      [[nodiscard]] map_sprite    with_coo(open_viii::LangT coo) const;
      [[nodiscard]] map_sprite    with_field(
-          WeakField        field,
-          open_viii::LangT coo) const;
+       WeakField        field,
+       open_viii::LangT coo) const;
      [[nodiscard]] map_sprite with_filters(ff_8::filters filters) const;
      [[nodiscard]] bool       empty() const;
      [[nodiscard]] const ff_8::filters &filter() const;
      [[nodiscard]] map_sprite           update(
-                 ff_8::map_group map_group,
-                 bool            draw_swizzle) const;
+       ff_8::map_group map_group,
+       bool            draw_swizzle) const;
      [[nodiscard]] ff_8::all_unique_values_and_strings
                                       get_all_unique_values_and_strings() const;
      [[nodiscard]] glm::uvec2         get_tile_texture_size_for_import() const;
@@ -496,19 +500,19 @@ struct [[nodiscard]] map_sprite// final
        get_deswizzle_combined_textures_tooltips();
      [[nodiscard]] const std::map<
        std::string,
-       std::vector<ff_8::PupuID>> &
+       std::vector<open_viii::graphics::background::PupuID>> &
        get_deswizzle_combined_textures_pupuids();
      [[nodiscard]] std::expected<
        std::map<
          std::string,
          std::optional<glengine::FrameBuffer>> *,
        std::string>
-       get_deswizzle_combined_textures(
-         const int  scale      = {},
-         const bool force_load = false);
+                               get_deswizzle_combined_textures(
+                                 const int  scale      = {},
+                                 const bool force_load = false);
      [[nodiscard]] std::string generate_deswizzle_combined_tool_tip(
        const toml::table *file_table) const;
-     [[nodiscard]] std::vector<ff_8::PupuID>
+     [[nodiscard]] std::vector<open_viii::graphics::background::PupuID>
        generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
      [[nodiscard]] open_viii::LangT
        get_used_coo(const fme::FailOverLevels max_failover) const;
@@ -549,8 +553,8 @@ struct [[nodiscard]] map_sprite// final
        load_swizzle_as_one_image_textures(
          std::optional<std::uint8_t> palette = std::nullopt) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(
-       const ff_8::PupuID pupu,
-       const size_t       pos) const;
+       const open_viii::graphics::background::PupuID pupu,
+       const size_t                                  pos) const;
      [[nodiscard]] std::future<std::future<void>>
        load_full_filename_textures(const std::string filename) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(
@@ -642,10 +646,10 @@ struct [[nodiscard]] map_sprite// final
      //    fmt::format_string<
      //      std::string_view,
      //      std::string_view,
-     //      ff_8::PupuID>              pattern,
+     //      open_viii::graphics::background::PupuID>              pattern,
      //    const std::filesystem::path &path,
      //    const std::string_view      &field_name,
-     //    const ff_8::PupuID           pupu,
+     //    const open_viii::graphics::background::PupuID           pupu,
      //    const open_viii::LangT       coo);
      //  static std::filesystem::path save_path(
      //    fmt::format_string<
@@ -666,10 +670,10 @@ struct [[nodiscard]] map_sprite// final
      //  static std::filesystem::path save_path(
      //    fmt::format_string<
      //      std::string_view,
-     //      ff_8::PupuID>              pattern,
+     //      open_viii::graphics::background::PupuID>              pattern,
      //    const std::filesystem::path &path,
      //    const std::string_view      &field_name,
-     //    ff_8::PupuID                 pupu);
+     //    open_viii::graphics::background::PupuID                 pupu);
 
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const open_viii::graphics::background::Map &map,
@@ -753,10 +757,11 @@ struct [[nodiscard]] map_sprite// final
                            const auto distance = std::ranges::distance(
                              tiles.begin(), found_iterator);
 
-                           if (std::cmp_greater(
-                                 std::ranges::ssize(
-                                   m_map_group.maps.original_pupu()),
-                                 distance))
+                           if (
+                             std::cmp_greater(
+                               std::ranges::ssize(
+                                 m_map_group.maps.original_pupu()),
+                               distance))
                            {
                                 auto pupu_it
                                   = m_map_group.maps.original_pupu().cbegin();
@@ -1072,9 +1077,9 @@ std::move_only_function<std::vector<std::filesystem::path>()>
 
 std::move_only_function<std::vector<std::filesystem::path>()>
   generate_deswizzle_paths(
-    std::shared_ptr<const Selections> in_selections,
-    const map_sprite                 &in_map_sprite,
-    const ff_8::PupuID                pupu_id);
+    std::shared_ptr<const Selections>             in_selections,
+    const map_sprite                             &in_map_sprite,
+    const open_viii::graphics::background::PupuID pupu_id);
 
 std::move_only_function<std::vector<std::filesystem::path>()>
   generate_full_filename_paths(

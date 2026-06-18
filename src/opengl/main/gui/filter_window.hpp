@@ -21,10 +21,12 @@ struct table_move
 };
 struct filter_window
 {
-     using OuterFilter = std::move_only_function<
-       bool(const ff_8::PupuID &, const std::span<const ff_8::PupuID>)>;
-     using PupuMatchPredicate = std::move_only_function<
-       bool(const ff_8::PupuID &, const ff_8::PupuID &)>;
+     using OuterFilter        = std::move_only_function<bool(
+       const open_viii::graphics::background::PupuID &,
+       const std::span<const open_viii::graphics::background::PupuID>)>;
+     using PupuMatchPredicate = std::move_only_function<bool(
+       const open_viii::graphics::background::PupuID &,
+       const open_viii::graphics::background::PupuID &)>;
      filter_window(
        std::weak_ptr<Selections>,
        std::weak_ptr<map_sprite>);
@@ -55,8 +57,8 @@ struct filter_window
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
      [[nodiscard]] bool contains_key_recursive(const toml::table *tbl) const;
      void               handle_remove_queue(
-                     const std::shared_ptr<Selections> &,
-                     const std::shared_ptr<map_sprite> &) const;
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
      void handle_rename_queue(
        const std::shared_ptr<Selections> &,
        const std::shared_ptr<map_sprite> &) const;
@@ -73,9 +75,10 @@ struct filter_window
        const std::shared_ptr<map_sprite> &) const;
      [[nodiscard]] int calc_column_count(float) const;
      void              select_file(
-                    const std::string &,
-                    const std::shared_ptr<map_sprite> &) const;
-     [[nodiscard]] std::vector<ff_8::PupuID>  get_unused_ids() const;
+       const std::string &,
+       const std::shared_ptr<map_sprite> &) const;
+     [[nodiscard]] std::vector<open_viii::graphics::background::PupuID>
+                                              get_unused_ids() const;
      [[nodiscard]] std::optional<std::string> prev_key() const;
      [[nodiscard]] std::optional<std::string> next_key() const;
      void draw_thumbnail_label(const std::string &) const;
@@ -163,13 +166,14 @@ struct filter_window
        const std::shared_ptr<map_sprite> &,
        const std::string &) const;
 
-     [[nodiscard]] bool is_excluded(const ff_8::PupuID &) const;
-     void               process_combine(
-                     const std::shared_ptr<Selections> &,
-                     const std::shared_ptr<map_sprite> &) const;
+     [[nodiscard]] bool
+          is_excluded(const open_viii::graphics::background::PupuID &) const;
+     void process_combine(
+       const std::shared_ptr<Selections> &,
+       const std::shared_ptr<map_sprite> &) const;
      void process_combine(
        toml::table *,
-       const std::vector<ff_8::PupuID> &,
+       const std::vector<open_viii::graphics::background::PupuID> &,
        OuterFilter,
        PupuMatchPredicate) const;
 

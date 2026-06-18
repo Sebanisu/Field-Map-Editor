@@ -57,7 +57,7 @@ struct UniqueTileValues
           const auto not_unique = std::ranges::unique(pupu_values);
           pupu_values.erase(not_unique.begin(), not_unique.end());
           const auto removal
-            = std::ranges::remove(pupu_values, PupuID{ 0x8000'0000 });
+            = std::ranges::remove(pupu_values, open_viii::graphics::background::PupuID{ 0x8000'0000 });
           pupu_values.erase(removal.begin(), removal.end());
           return pupu_values;
      }
@@ -237,7 +237,7 @@ struct UniqueTileValues
      UniqueValues<std::uint8_t>  blend_other                              = {};
      UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode = {};
      UniqueValues<open_viii::graphics::BPPT>                   bpp        = {};
-     UniqueValues<PupuID>                                      pupu       = {};
+     UniqueValues<open_viii::graphics::background::PupuID>     pupu       = {};
 };
 struct TilePossibleValues
 {

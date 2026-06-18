@@ -61,13 +61,14 @@ namespace ff_8
 }
 
 
-std::vector<PupuID> MapHistory::calculate_pupu(const map_t &map)
+std::vector<open_viii::graphics::background::PupuID>
+  MapHistory::calculate_pupu(const map_t &map)
 {
      return map.visit_tiles(
        [](const auto &tiles)
        {
-            std::vector<PupuID> pupu_ids = {};
-            UniquifyPupu        pupu_map = {};
+            std::vector<open_viii::graphics::background::PupuID> pupu_ids = {};
+            open_viii::graphics::background::UniquifyPupu        pupu_map = {};
             pupu_ids.reserve(std::ranges::size(tiles));
             std::ranges::transform(
               tiles, std::back_insert_iterator(pupu_ids), pupu_map);
@@ -81,7 +82,8 @@ MapHistory::MapHistory(map_t map)
   , m_front_pupu(calculate_pupu(m_front))
 {
 }
-[[nodiscard]] const std::vector<PupuID> &MapHistory::pupu() const noexcept
+[[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+  MapHistory::pupu() const noexcept
 {
      return m_front_pupu;
 }

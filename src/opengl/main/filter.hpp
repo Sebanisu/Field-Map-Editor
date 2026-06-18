@@ -9,9 +9,6 @@
 #include "formatters.hpp"
 #include "gui/colors.hpp"
 #include "gui/compact_type.hpp"
-#include "open_viii/graphics/background/BlendModeT.hpp"
-#include "open_viii/graphics/BPPT.hpp"
-#include "PupuID.hpp"
 #include "tile_operations.hpp"
 #include "utilities.hpp"
 #include <cstdint>
@@ -19,6 +16,9 @@
 #include <fmt/format.h>
 #include <glengine/concepts.hpp>
 #include <map>
+#include <open_viii/graphics/background/BlendModeT.hpp>
+#include <open_viii/graphics/background/PupuID.hpp>
+#include <open_viii/graphics/BPPT.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -142,7 +142,7 @@ struct ConfigKeys;
 template<>
 struct ConfigKeys<FilterTag::Pupu>
 {
-     using value_type                                   = PupuID;
+     using value_type = open_viii::graphics::background::PupuID;
      static constexpr std::string_view key_name         = "filter_pupu";
      static constexpr std::string_view enabled_key_name = "filter_pupu_enabled";
 };
@@ -150,7 +150,7 @@ struct ConfigKeys<FilterTag::Pupu>
 template<>
 struct ConfigKeys<FilterTag::MultiPupu>
 {
-     using value_type                           = std::vector<PupuID>;
+     using value_type = std::vector<open_viii::graphics::background::PupuID>;
      static constexpr std::string_view key_name = "filter_multi_pupu";
      static constexpr std::string_view enabled_key_name
        = "filter_multi_pupu_enabled";
@@ -493,8 +493,8 @@ struct FilterLoadStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<
-                               glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (
+                 std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
                {
                     (void)fme::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -502,17 +502,19 @@ struct FilterLoadStrategy
                         glengine::vector_elem_type_t<ValueT>>>(
                       config, id, value);
                }
-               else if constexpr (std::same_as<
-                                    glengine::vector_elem_type_t<ValueT>,
-                                    open_viii::graphics::BPPT>)
+               else if constexpr (
+                 std::same_as<
+                   glengine::vector_elem_type_t<ValueT>,
+                   open_viii::graphics::BPPT>)
                {
                     (void)fme::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint8_t>(config, id, value);
                }
-               else if constexpr (std::same_as<
-                                    glengine::vector_elem_type_t<ValueT>,
-                                    PupuID>)
+               else if constexpr (
+                 std::same_as<
+                   glengine::vector_elem_type_t<ValueT>,
+                   open_viii::graphics::background::PupuID>)
                {
                     (void)fme::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -591,8 +593,8 @@ struct FilterUpdateStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<
-                               glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (
+                 std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
                {
                     fme::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -600,17 +602,19 @@ struct FilterUpdateStrategy
                         glengine::vector_elem_type_t<ValueT>>>(
                       config, id, value);
                }
-               else if constexpr (std::same_as<
-                                    glengine::vector_elem_type_t<ValueT>,
-                                    open_viii::graphics::BPPT>)
+               else if constexpr (
+                 std::same_as<
+                   glengine::vector_elem_type_t<ValueT>,
+                   open_viii::graphics::BPPT>)
                {
                     fme::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
                       std::uint8_t>(config, id, value);
                }
-               else if constexpr (std::same_as<
-                                    glengine::vector_elem_type_t<ValueT>,
-                                    PupuID>)
+               else if constexpr (
+                 std::same_as<
+                   glengine::vector_elem_type_t<ValueT>,
+                   open_viii::graphics::background::PupuID>)
                {
                     fme::Configuration::update_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -875,10 +879,10 @@ struct filter
                return *this;
           }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
-          if constexpr (std::same_as<
-                          std::remove_cvref_t<
-                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
-                          std::string_view>)
+          if constexpr (
+            std::same_as<
+              std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>,
+              std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
@@ -897,10 +901,10 @@ struct filter
                return *this;
           }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
-          if constexpr (std::same_as<
-                          std::remove_cvref_t<
-                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
-                          std::string_view>)
+          if constexpr (
+            std::same_as<
+              std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>,
+              std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
@@ -1174,10 +1178,10 @@ struct filter<Tag>
      filter &enable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
-          if constexpr (std::same_as<
-                          std::remove_cvref_t<
-                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
-                          std::string_view>)
+          if constexpr (
+            std::same_as<
+              std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>,
+              std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
@@ -1192,10 +1196,10 @@ struct filter<Tag>
      filter &disable()
      {
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
-          if constexpr (std::same_as<
-                          std::remove_cvref_t<
-                            decltype(ConfigKeys<Tag>::enabled_key_name)>,
-                          std::string_view>)
+          if constexpr (
+            std::same_as<
+              std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>,
+              std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {

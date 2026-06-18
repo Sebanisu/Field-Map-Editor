@@ -605,12 +605,13 @@ void gui::tile_conflicts_panel()
                  }
                  format_imgui_text(
                    "index count: {}", std::ranges::size(conflict_group));
-                 if (ImGui::BeginTable(
-                       "##table_overlaps",
-                       count_per_row,
-                       ImGuiTableFlags_SizingStretchProp
-                         | ImGuiTableFlags_NoPadOuterX
-                         | ImGuiTableFlags_NoPadInnerX))
+                 if (
+                   ImGui::BeginTable(
+                     "##table_overlaps",
+                     count_per_row,
+                     ImGuiTableFlags_SizingStretchProp
+                       | ImGuiTableFlags_NoPadOuterX
+                       | ImGuiTableFlags_NoPadInnerX))
                  {
 
                       for (const auto index : conflict_group)
@@ -758,12 +759,13 @@ void gui::selected_tiles_panel()
                         {
                              const auto &original_tile = original_tiles[i];
                              const auto &working_tile  = working_tiles[i];
-                             if (collapsing_tile_info(
-                                   m_map_sprite,
-                                   original_tile,
-                                   working_tile,
-                                   {},
-                                   i))
+                             if (
+                               collapsing_tile_info(
+                                 m_map_sprite,
+                                 original_tile,
+                                 working_tile,
+                                 {},
+                                 i))
                              {
                                   remove_index = i;
                              }
@@ -912,8 +914,9 @@ void gui::background_color_picker()
      static constexpr const auto flags =
        /*ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV |*/
        ImGuiColorEditFlags_DisplayHex;
-     if (ImGui::ColorEdit3(
-           gui_labels::background.data(), clear_color_f.data(), flags))
+     if (
+       ImGui::ColorEdit3(
+         gui_labels::background.data(), clear_color_f.data(), flags))
      {
           m_selections->get<ConfigKey::BackgroundColor>()
             = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
@@ -926,8 +929,9 @@ void gui::background_color_picker()
        HasFlag(bg_settings, BackgroundSettings::TwoColors)
        && !HasFlag(bg_settings, BackgroundSettings::Solid))
      {
-          if (ImGui::ColorEdit3(
-                gui_labels::background2.data(), clear_color_f2.data(), flags))
+          if (
+            ImGui::ColorEdit3(
+              gui_labels::background2.data(), clear_color_f2.data(), flags))
           {
                m_selections->get<ConfigKey::BackgroundColor2>()
                  = { clear_color_f2[0], clear_color_f2[1], clear_color_f2[2] };
@@ -1215,8 +1219,8 @@ void gui::combo_coo()
      }
      constexpr static auto values  = open_viii::LangCommon::to_array();
      static const auto     strings = values | std::views::transform(AsString{})
-                                 | std::ranges::to<std::vector>();
-     const auto gcc = GenericCombo(
+                                     | std::ranges::to<std::vector>();
+     const auto            gcc     = GenericCombo(
        gui_labels::language,
        values,
        strings,
@@ -1295,8 +1299,9 @@ void gui::combo_field()
                 {
                      return {};
                 }
-                if (const auto it = std::ranges::find(maplist, name);
-                    it == std::ranges::end(maplist))
+                if (
+                  const auto it = std::ranges::find(maplist, name);
+                  it == std::ranges::end(maplist))
                 {
                      return fmt::format("{:<8}", name);
                 }
@@ -1401,9 +1406,10 @@ void gui::refresh_map_swizzle()
 }
 void gui::checkbox_map_swizzle()
 {
-     if (ImGui::Checkbox(
-           gui_labels::swizzle.data(),
-           &m_selections->get<ConfigKey::DrawSwizzle>()))
+     if (
+       ImGui::Checkbox(
+         gui_labels::swizzle.data(),
+         &m_selections->get<ConfigKey::DrawSwizzle>()))
      {
           refresh_map_swizzle();
      }
@@ -1428,9 +1434,10 @@ void gui::checkbox_map_disable_blending()
 {
      if (!m_selections->get<ConfigKey::DrawSwizzle>())
      {
-          if (ImGui::Checkbox(
-                gui_labels::disable_blending.data(),
-                &m_selections->get<ConfigKey::DrawDisableBlending>()))
+          if (
+            ImGui::Checkbox(
+              gui_labels::disable_blending.data(),
+              &m_selections->get<ConfigKey::DrawDisableBlending>()))
           {
                refresh_map_disable_blending();
           }
@@ -1449,9 +1456,10 @@ void gui::checkbox_map_disable_blending()
           tool_tip(gui_labels::forced_on_while_swizzled);
           ImGui::EndDisabled();
      }
-     if (ImGui::Checkbox(
-           gui_labels::force_reloading_of_textures.data(),
-           &m_selections->get<ConfigKey::ForceReloadingOfTextures>()))
+     if (
+       ImGui::Checkbox(
+         gui_labels::force_reloading_of_textures.data(),
+         &m_selections->get<ConfigKey::ForceReloadingOfTextures>()))
      {
           m_selections->update<ConfigKey::ForceReloadingOfTextures>();
      }
@@ -1462,9 +1470,10 @@ void gui::checkbox_map_disable_blending()
 
      if (!m_selections->get<ConfigKey::ForceReloadingOfTextures>())
      {
-          if (ImGui::Checkbox(
-                gui_labels::force_rendering_of_map.data(),
-                &m_selections->get<ConfigKey::ForceRenderingOfMap>()))
+          if (
+            ImGui::Checkbox(
+              gui_labels::force_rendering_of_map.data(),
+              &m_selections->get<ConfigKey::ForceRenderingOfMap>()))
           {
                m_selections->update<ConfigKey::ForceRenderingOfMap>();
           }
@@ -1485,8 +1494,9 @@ void gui::checkbox_map_disable_blending()
      }
 
 
-     if (ImGui::Checkbox(
-           "Draw Pupu Mask", &m_selections->get<ConfigKey::DrawPupuMask>()))
+     if (
+       ImGui::Checkbox(
+         "Draw Pupu Mask", &m_selections->get<ConfigKey::DrawPupuMask>()))
      {
           m_selections->update<ConfigKey::DrawPupuMask>();
      }
@@ -1508,9 +1518,10 @@ void gui::refresh_mim_palette_texture()
 }
 void gui::checkbox_mim_palette_texture()
 {
-     if (ImGui::Checkbox(
-           gui_labels::draw_palette_texture.data(),
-           &m_selections->get<ConfigKey::DrawPalette>()))
+     if (
+       ImGui::Checkbox(
+         gui_labels::draw_palette_texture.data(),
+         &m_selections->get<ConfigKey::DrawPalette>()))
      {
           refresh_mim_palette_texture();
      }
@@ -1622,10 +1633,11 @@ void gui::help_menu()
           return;
      }
      const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
-     if (ImGui::MenuItem(
-           gui_labels::DisplayKeyboardShortcutsWindow.data(),
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::DisplayKeyboardShortcutsWindow.data(),
+         nullptr,
+         &m_selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>()))
      {
           m_selections->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
      }
@@ -1638,22 +1650,25 @@ void gui::windows_menu()
           return;
      }
      const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
-     if (ImGui::MenuItem(
-           gui_labels::display_control_panel_window.data(),
-           "Control + P",
-           &m_selections->get<ConfigKey::DisplayControlPanelWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::display_control_panel_window.data(),
+         "Control + P",
+         &m_selections->get<ConfigKey::DisplayControlPanelWindow>()))
      {
           m_selections->update<ConfigKey::DisplayControlPanelWindow>();
      }
-     if (ImGui::MenuItem(
-           "ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
+     if (
+       ImGui::MenuItem(
+         "ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
      {
      }
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_field_file_window.data(),
-           "Control + F",
-           &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::display_field_file_window.data(),
+         "Control + F",
+         &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
      {
           m_selections->update<ConfigKey::DisplayFieldFileWindow>();
      }
@@ -1661,10 +1676,11 @@ void gui::windows_menu()
      {
           return;
      }
-     if (ImGui::MenuItem(
-           gui_labels::batch_operation_window.data(),
-           "Control + B",
-           &m_selections->get<ConfigKey::DisplayBatchWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::batch_operation_window.data(),
+         "Control + B",
+         &m_selections->get<ConfigKey::DisplayBatchWindow>()))
      {
           m_selections->update<ConfigKey::DisplayBatchWindow>();
      }
@@ -1675,52 +1691,58 @@ void gui::windows_menu()
      //       m_selections->update<ConfigKey::DisplayImportImageWindow>();
      //  }
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_history.data(),
-           "Control + H",
-           &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::display_history.data(),
+         "Control + H",
+         &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
      {
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
 
-     if (ImGui::MenuItem(
-           "Display Textures",
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayTexturesWindow>()))
+     if (
+       ImGui::MenuItem(
+         "Display Textures",
+         nullptr,
+         &m_selections->get<ConfigKey::DisplayTexturesWindow>()))
      {
           m_selections->update<ConfigKey::DisplayTexturesWindow>();
      }
 
-     if (ImGui::MenuItem(
-           "Display Image Compare",
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayImageCompareWindow>()))
+     if (
+       ImGui::MenuItem(
+         "Display Image Compare",
+         nullptr,
+         &m_selections->get<ConfigKey::DisplayImageCompareWindow>()))
      {
           m_selections->update<ConfigKey::DisplayImageCompareWindow>();
      }
 
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_draw_window.data(),
-           "Control + D",
-           &m_selections->get<ConfigKey::DisplayDrawWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::display_draw_window.data(),
+         "Control + D",
+         &m_selections->get<ConfigKey::DisplayDrawWindow>()))
      {
           m_selections->update<ConfigKey::DisplayDrawWindow>();
      }
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_custom_paths_window.data(),
-           "Control + U",
-           &m_selections->get<ConfigKey::DisplayCustomPathsWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::display_custom_paths_window.data(),
+         "Control + U",
+         &m_selections->get<ConfigKey::DisplayCustomPathsWindow>()))
      {
           m_selections->update<ConfigKey::DisplayCustomPathsWindow>();
      }
 
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::deswizzle_toml_editor.data(),
-           nullptr,
-           &m_selections->get<ConfigKey::DisplayFiltersWindow>()))
+     if (
+       ImGui::MenuItem(
+         gui_labels::deswizzle_toml_editor.data(),
+         nullptr,
+         &m_selections->get<ConfigKey::DisplayFiltersWindow>()))
      {
           m_selections->update<ConfigKey::DisplayFiltersWindow>();
      }
@@ -1738,11 +1760,12 @@ void gui::edit_menu()
      const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (map_test())
      {
-          if (ImGui::MenuItem(
-                gui_labels::undo.data(),
-                "Control + Z",
-                false,
-                m_map_sprite->undo_enabled()))
+          if (
+            ImGui::MenuItem(
+              gui_labels::undo.data(),
+              "Control + Z",
+              false,
+              m_map_sprite->undo_enabled()))
           {
                m_map_sprite->undo();
           }
@@ -1753,11 +1776,12 @@ void gui::edit_menu()
                  = m_map_sprite->current_undo_description();
                tool_tip(description);
           }
-          if (ImGui::MenuItem(
-                gui_labels::redo.data(),
-                "Control + Y",
-                false,
-                m_map_sprite->redo_enabled()))
+          if (
+            ImGui::MenuItem(
+              gui_labels::redo.data(),
+              "Control + Y",
+              false,
+              m_map_sprite->redo_enabled()))
           {
                m_map_sprite->redo();
           }
@@ -1768,27 +1792,30 @@ void gui::edit_menu()
                tool_tip(description);
           }
           ImGui::Separator();
-          if (ImGui::MenuItem(
-                gui_labels::undo_all.data(),
-                "Shift + Control + Z",
-                false,
-                m_map_sprite->undo_enabled()))
+          if (
+            ImGui::MenuItem(
+              gui_labels::undo_all.data(),
+              "Shift + Control + Z",
+              false,
+              m_map_sprite->undo_enabled()))
           {
                m_map_sprite->undo_all();
           }
-          if (ImGui::MenuItem(
-                gui_labels::redo_all.data(),
-                "Shift + Control + Y",
-                false,
-                m_map_sprite->redo_enabled()))
+          if (
+            ImGui::MenuItem(
+              gui_labels::redo_all.data(),
+              "Shift + Control + Y",
+              false,
+              m_map_sprite->redo_enabled()))
           {
                m_map_sprite->redo_all();
           }
           ImGui::Separator();
-          if (ImGui::MenuItem(
-                gui_labels::display_history.data(),
-                "Control + H",
-                &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
+          if (
+            ImGui::MenuItem(
+              gui_labels::display_history.data(),
+              "Control + H",
+              &m_selections->get<ConfigKey::DisplayHistoryWindow>()))
           {
                m_selections->update<ConfigKey::DisplayHistoryWindow>();
           }
@@ -1817,8 +1844,9 @@ void gui::edit_menu()
                     {
                          bool care_not
                            = m_selections->get<ConfigKey::DrawMode>() == mode;
-                         if (ImGui::MenuItem(
-                               str.data(), nullptr, &care_not, !care_not))
+                         if (
+                           ImGui::MenuItem(
+                             str.data(), nullptr, &care_not, !care_not))
                          {
                               if (
                                 m_selections->get<ConfigKey::DrawMode>()
@@ -1853,8 +1881,9 @@ void gui::edit_menu()
                          bool care_not
                            = m_selections->get<ConfigKey::DrawSwizzle>()
                              == mode;
-                         if (ImGui::MenuItem(
-                               str.data(), nullptr, &care_not, !care_not))
+                         if (
+                           ImGui::MenuItem(
+                             str.data(), nullptr, &care_not, !care_not))
                          {
                               if (
                                 m_selections->get<ConfigKey::DrawSwizzle>()
@@ -1906,11 +1935,12 @@ void gui::edit_menu()
                          ImGui::EndDisabled();
                     }
 
-                    if (ImGui::MenuItem(
-                          gui_labels::force_reloading_of_textures.data(),
-                          nullptr,
-                          &m_selections
-                             ->get<ConfigKey::ForceReloadingOfTextures>()))
+                    if (
+                      ImGui::MenuItem(
+                        gui_labels::force_reloading_of_textures.data(),
+                        nullptr,
+                        &m_selections
+                           ->get<ConfigKey::ForceReloadingOfTextures>()))
                     {
                          m_selections
                            ->update<ConfigKey::ForceReloadingOfTextures>();
@@ -1924,11 +1954,12 @@ void gui::edit_menu()
                     if (!m_selections
                            ->get<ConfigKey::ForceReloadingOfTextures>())
                     {
-                         if (ImGui::MenuItem(
-                               gui_labels::force_rendering_of_map.data(),
-                               nullptr,
-                               &m_selections
-                                  ->get<ConfigKey::ForceRenderingOfMap>()))
+                         if (
+                           ImGui::MenuItem(
+                             gui_labels::force_rendering_of_map.data(),
+                             nullptr,
+                             &m_selections
+                                ->get<ConfigKey::ForceRenderingOfMap>()))
                          {
                               m_selections
                                 ->update<ConfigKey::ForceRenderingOfMap>();
@@ -1954,10 +1985,11 @@ void gui::edit_menu()
 
                if (mim_test())
                {
-                    if (ImGui::MenuItem(
-                          gui_labels::draw_palette_texture.data(),
-                          nullptr,
-                          &m_selections->get<ConfigKey::DrawPalette>()))
+                    if (
+                      ImGui::MenuItem(
+                        gui_labels::draw_palette_texture.data(),
+                        nullptr,
+                        &m_selections->get<ConfigKey::DrawPalette>()))
                     {
                          refresh_mim_palette_texture();
                     }
@@ -1969,10 +2001,11 @@ void gui::edit_menu()
 
                ImGui::Separator();
 
-               if (ImGui::MenuItem(
-                     gui_labels::draw_tile_grid.data(),
-                     nullptr,
-                     &m_selections->get<ConfigKey::DrawGrid>()))
+               if (
+                 ImGui::MenuItem(
+                   gui_labels::draw_tile_grid.data(),
+                   nullptr,
+                   &m_selections->get<ConfigKey::DrawGrid>()))
                {
                     spdlog::info(
                       "selections_draw_grid: {}",
@@ -1985,10 +2018,11 @@ void gui::edit_menu()
                  (map_test() && m_selections->get<ConfigKey::DrawSwizzle>())
                  || (mim_test() && !m_selections->get<ConfigKey::DrawPalette>()))
                {
-                    if (ImGui::MenuItem(
-                          gui_labels::draw_texture_page_grid.data(),
-                          nullptr,
-                          &m_selections->get<ConfigKey::DrawTexturePageGrid>()))
+                    if (
+                      ImGui::MenuItem(
+                        gui_labels::draw_texture_page_grid.data(),
+                        nullptr,
+                        &m_selections->get<ConfigKey::DrawTexturePageGrid>()))
                     {
                          spdlog::info(
                            "selections_draw_texture_page_grid: {}",
@@ -2001,11 +2035,11 @@ void gui::edit_menu()
 
                if (map_test())
                {
-                    if (ImGui::MenuItem(
-                          gui_labels::draw_tile_conflict_rects.data(),
-                          nullptr,
-                          &m_selections
-                             ->get<ConfigKey::DrawTileConflictRects>()))
+                    if (
+                      ImGui::MenuItem(
+                        gui_labels::draw_tile_conflict_rects.data(),
+                        nullptr,
+                        &m_selections->get<ConfigKey::DrawTileConflictRects>()))
                     {
                          spdlog::info(
                            "selections_draw_tile_conflict_rects: {}",
@@ -2032,8 +2066,9 @@ void gui::edit_menu()
                    - 1;
                static constexpr int max_power = 8;
                static constexpr int min_power = 0;
-               if (ImGui::SliderInt(
-                     "Checkerboard Scale", &exponent, min_power, max_power))
+               if (
+                 ImGui::SliderInt(
+                   "Checkerboard Scale", &exponent, min_power, max_power))
                {
                     m_selections->get<ConfigKey::BackgroundCheckerboardScale>()
                       = static_cast<std::uint16_t>(1 << exponent);
@@ -2064,10 +2099,9 @@ void gui::edit_menu()
                constexpr int columns = 2;
                format_imgui_wrapped_text(
                  "Hold Control to set Secondary Background Color");
-               if (ImGui::BeginTable(
-                     "##ColorTable",
-                     columns,
-                     ImGuiTableFlags_SizingStretchSame))
+               if (
+                 ImGui::BeginTable(
+                   "##ColorTable", columns, ImGuiTableFlags_SizingStretchSame))
                {
                     for (auto &&[color_value, color_name] : zip_view)
                     {
@@ -2129,10 +2163,11 @@ void gui::edit_menu()
                  /*ImGuiColorEditFlags_DisplayRGB |
                     ImGuiColorEditFlags_DisplayHSV |*/
                  ImGuiColorEditFlags_DisplayHex;
-               if (ImGui::ColorPicker3(
-                     "##Choose Primary Background Color",
-                     clear_color_f.data(),
-                     flags))
+               if (
+                 ImGui::ColorPicker3(
+                   "##Choose Primary Background Color",
+                   clear_color_f.data(),
+                   flags))
                {
                     m_selections->get<ConfigKey::BackgroundColor>()
                       = { clear_color_f[0], clear_color_f[1],
@@ -2146,10 +2181,11 @@ void gui::edit_menu()
                  HasFlag(bg_settings, BackgroundSettings::TwoColors)
                  && !HasFlag(bg_settings, BackgroundSettings::Solid))
                {
-                    if (ImGui::ColorPicker3(
-                          "##Choose Secondary Background Color",
-                          clear_color_f2.data(),
-                          flags))
+                    if (
+                      ImGui::ColorPicker3(
+                        "##Choose Secondary Background Color",
+                        clear_color_f2.data(),
+                        flags))
                     {
                          m_selections->get<ConfigKey::BackgroundColor2>()
                            = { clear_color_f2[0], clear_color_f2[1],
@@ -2184,8 +2220,8 @@ void gui::edit_menu()
                          {
                               const bool selected = filter.value() == value;
                               bool       checked = selected && filter.enabled();
-                              if (ImGui::MenuItem(
-                                    str.data(), nullptr, &checked))
+                              if (
+                                ImGui::MenuItem(str.data(), nullptr, &checked))
                               {
                                    if (selected)
                                    {
@@ -2309,8 +2345,9 @@ void gui::browse_buttons()
                m_selections->update<ConfigKey::FF8DirectoryPaths>();
                if (selected)
                {
-                    if (std::ranges::empty(
-                          m_selections->get<ConfigKey::FF8DirectoryPaths>()))
+                    if (
+                      std::ranges::empty(
+                        m_selections->get<ConfigKey::FF8DirectoryPaths>()))
                     {
                          m_selections->get<ConfigKey::FF8Path>() = "";
                     }
@@ -2338,12 +2375,13 @@ void gui::file_menu()
      {
           const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           menuitem_locate_ff8();
-          if (ImGui::MenuItem(
-                gui_labels::explore.data(),
-                nullptr,
-                nullptr,
-                !std::ranges::empty(
-                  m_selections->get<ConfigKey::FF8DirectoryPaths>())))
+          if (
+            ImGui::MenuItem(
+              gui_labels::explore.data(),
+              nullptr,
+              nullptr,
+              !std::ranges::empty(
+                m_selections->get<ConfigKey::FF8DirectoryPaths>())))
           {
                open_directory(m_selections->get<ConfigKey::FF8Path>());
           }
@@ -2351,8 +2389,9 @@ void gui::file_menu()
           {
                tool_tip(gui_labels::explore_tooltip);
           }
-          if (std::ranges::empty(
-                m_selections->get<ConfigKey::FF8DirectoryPaths>()))
+          if (
+            std::ranges::empty(
+              m_selections->get<ConfigKey::FF8DirectoryPaths>()))
           {
                return;
           }
@@ -2370,11 +2409,12 @@ void gui::file_menu()
                       = path == m_selections->get<ConfigKey::FF8Path>();
                     ImGui::TableNextColumn();
                     ImGui::SetNextItemAllowOverlap();
-                    if (ImGui::MenuItem(
-                          path.string().data(),
-                          nullptr,
-                          &is_checked,
-                          !is_checked))
+                    if (
+                      ImGui::MenuItem(
+                        path.string().data(),
+                        nullptr,
+                        &is_checked,
+                        !is_checked))
                     {
                          m_selections->get<ConfigKey::FF8Path>() = path;
                          refresh_path();
@@ -2384,9 +2424,10 @@ void gui::file_menu()
 
                     const float button_size = ImGui::GetFrameHeight();
                     const auto  _           = PushPopID();
-                    if (ImGui::Button(
-                          ICON_FA_FOLDER_OPEN,
-                          ImVec2{ button_size, button_size }))
+                    if (
+                      ImGui::Button(
+                        ICON_FA_FOLDER_OPEN,
+                        ImVec2{ button_size, button_size }))
                     {
                          open_directory(path);
                     }
@@ -2396,8 +2437,9 @@ void gui::file_menu()
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::Button(
-                          ICON_FA_TRASH, ImVec2{ button_size, button_size }))
+                    if (
+                      ImGui::Button(
+                        ICON_FA_TRASH, ImVec2{ button_size, button_size }))
                     {
                          delete_me = index;
                          // ImGui::CloseCurrentPopup();
@@ -2426,9 +2468,9 @@ void gui::file_menu()
                     m_selections->update<ConfigKey::FF8DirectoryPaths>();
                     if (selected)
                     {
-                         if (std::ranges::empty(
-                               m_selections
-                                 ->get<ConfigKey::FF8DirectoryPaths>()))
+                         if (
+                           std::ranges::empty(
+                             m_selections->get<ConfigKey::FF8DirectoryPaths>()))
                          {
                               m_selections->get<ConfigKey::FF8Path>() = "";
                          }
@@ -2461,8 +2503,9 @@ void gui::file_menu()
           {
 
                bool is_checked = value == m_selections->get<ConfigKey::Coo>();
-               if (ImGui::MenuItem(
-                     string.data(), nullptr, &is_checked, !is_checked))
+               if (
+                 ImGui::MenuItem(
+                   string.data(), nullptr, &is_checked, !is_checked))
                {
                     m_selections->get<ConfigKey::Coo>() = value;
                     refresh_coo();
@@ -2530,8 +2573,9 @@ void gui::file_menu()
                std::uint8_t             i          = 0;
                const auto table_cell = [&](const auto &index, const auto &str)
                {
-                    if (const auto temp = std::string_view(str).substr(0, 2);
-                        start != temp || (i % cols == 0))
+                    if (
+                      const auto temp = std::string_view(str).substr(0, 2);
+                      start != temp || (i % cols == 0))
                     {
                          start = temp;
                          ImGui::TableNextRow();
@@ -2567,11 +2611,12 @@ void gui::file_menu()
                            ImU32{ colors::Button });// Make the selected field
                                                     // stand out more.
                     }
-                    if (ImGui::MenuItem(
-                          str.c_str(),
-                          nullptr,
-                          const_cast<bool *>(&checked),
-                          !checked))
+                    if (
+                      ImGui::MenuItem(
+                        str.c_str(),
+                        nullptr,
+                        const_cast<bool *>(&checked),
+                        !checked))
                     {
                          m_field_index = static_cast<int>(index);
                          refresh_field();
@@ -2669,8 +2714,9 @@ void gui::file_menu()
                          bool selected = TomlPath == path;
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
-                         if (ImGui::MenuItem(
-                               path.string().c_str(), nullptr, &selected))
+                         if (
+                           ImGui::MenuItem(
+                             path.string().c_str(), nullptr, &selected))
                          {
                               m_map_sprite->clear_toml_cached_framebuffers();
                               if (selected)
@@ -2687,9 +2733,9 @@ void gui::file_menu()
                          }
                          ImGui::TableNextColumn();
                          const auto _ = PushPopID();
-                         if (ImGui::Button(
-                               ICON_FA_TRASH,
-                               ImVec2{ button_size, button_size }))
+                         if (
+                           ImGui::Button(
+                             ICON_FA_TRASH, ImVec2{ button_size, button_size }))
                          {
                               delete_me = index;
                               // ImGui::CloseCurrentPopup();
@@ -2835,8 +2881,9 @@ void gui::menu_swizzle_as_one_image_paths()
        },
        [&]()
        {
-            if (m_map_sprite->filter()
-                  .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
+            if (
+              m_map_sprite->filter()
+                .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
             {
                  m_map_sprite->filter()
                    .update<ff_8::FilterTag::CompactOnLoadOriginal>(
@@ -3040,9 +3087,10 @@ void gui::menu_map_paths()
        {
             if (m_map_sprite->filter().enabled<ff_8::FilterTag::Map>())
             {
-                 if (const auto paths
-                     = fme::generate_map_paths(m_selections, *m_map_sprite)();
-                     !std::ranges::empty(paths))
+                 if (
+                   const auto paths
+                   = fme::generate_map_paths(m_selections, *m_map_sprite)();
+                   !std::ranges::empty(paths))
                  {
                       m_map_sprite->load_map(
                         paths.front());// grab the first match.
@@ -3371,8 +3419,9 @@ void gui::directory_browser_display()
                update_path();
                if (changed)
                {
-                    if (m_map_sprite->filter()
-                          .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
+                    if (
+                      m_map_sprite->filter()
+                        .enabled<ff_8::FilterTag::SwizzleAsOneImage>())
                     {
                          m_map_sprite->filter()
                            .get<ff_8::FilterTag::CompactOnLoadOriginal>()
@@ -3907,9 +3956,10 @@ void gui::bind_shortcuts()
                  || test.starts_with("ma"sv) || test == "ggroad4"sv;
      };
 
-     if (const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);
-         ImGui::Shortcut(escapeChord, flags)
-         || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
+     if (
+       const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);
+       ImGui::Shortcut(escapeChord, flags)
+       || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
      {
           if (!m_filter_window.shortcut(escapeChord))
           {
@@ -3991,14 +4041,14 @@ void gui::bind_shortcuts()
 
 
      // Undo All: Ctrl+Shift+Z
-     else if (ImGui::Shortcut(
-                ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
+     else if (
+       ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
      {
           m_map_sprite->undo_all();
      }
      // Redo All: Ctrl+Shift+Y
-     else if (ImGui::Shortcut(
-                ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Y, flags))
+     else if (
+       ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Y, flags))
      {
           m_map_sprite->redo_all();
      }
@@ -4018,8 +4068,9 @@ void gui::bind_shortcuts()
           m_selections->get<ConfigKey::DisplayHistoryWindow>() ^= true;
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
-     else if (const ImGuiKeyChord selectAllChord = (ImGuiMod_Ctrl | ImGuiKey_A);
-              ImGui::Shortcut(selectAllChord, flags))
+     else if (
+       const ImGuiKeyChord selectAllChord = (ImGuiMod_Ctrl | ImGuiKey_A);
+       ImGui::Shortcut(selectAllChord, flags))
      {
           if (!m_filter_window.shortcut(selectAllChord))
           {
@@ -4027,8 +4078,9 @@ void gui::bind_shortcuts()
           }
      }
      // todo imports window conflicts with inverse selection
-     else if (const ImGuiKeyChord invertChord = (ImGuiMod_Ctrl | ImGuiKey_I);
-              ImGui::Shortcut(invertChord, flags))
+     else if (
+       const ImGuiKeyChord invertChord = (ImGuiMod_Ctrl | ImGuiKey_I);
+       ImGui::Shortcut(invertChord, flags))
      {
           if (!m_filter_window.shortcut(invertChord))
           {
@@ -4150,21 +4202,24 @@ gui::gui(GLFWwindow *const window)
      IM_ASSERT(ImGui::GetCurrentContext() != nullptr);
 
      // 2. Configure ImGui (optional but common)
-     ImGuiIO          &imgui_io   = ImGui::GetIO();
-     std::error_code   error_code = {};
-     
+     ImGuiIO          &imgui_io       = ImGui::GetIO();
+     std::error_code   error_code     = {};
 
-     // static const auto path = (std::filesystem::current_path(error_code) / "res"
+
+     // static const auto path = (std::filesystem::current_path(error_code) /
+     // "res"
      //                           / "field-map-editor_imgui.ini")
      //                            .string();
-                auto console_logger = spdlog::get("");
+     auto              console_logger = spdlog::get("");
      static const auto path = (getAppConfigDir() / "imgui.ini").string();
      spdlog::info("Imgui Confg: \"{}\"", path);
      console_logger->info("Imgui Confg: \"{}\"", path);
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
+#ifdef _MSC_VER
      imgui_io.ConfigFlags
        = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
+#endif
      imgui_io.IniFilename = path.c_str();
      if (error_code)
      {
@@ -4508,9 +4563,10 @@ void gui::combo_map_path()
      // below if changed
      if (m_map_sprite->filter().enabled<ff_8::FilterTag::Map>())
      {
-          if (const auto paths
-              = fme::generate_map_paths(m_selections, *m_map_sprite)();
-              !std::ranges::empty(paths))
+          if (
+            const auto paths
+            = fme::generate_map_paths(m_selections, *m_map_sprite)();
+            !std::ranges::empty(paths))
           {
                m_map_sprite->load_map(paths.front());// grab the first match.
           }

@@ -6,8 +6,8 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "MouseToTilePos.h"
 #include "SimilarAdjustments.hpp"
-#include "UniquifyPupu.hpp"
 #include <glengine/ScopeGuard.hpp>
+#include <open_viii/graphics/background/UniquifyPupu.hpp>
 #include <source_location>
 namespace ff_8
 {
@@ -18,10 +18,11 @@ class [[nodiscard]] MapHistory
           Front,
           Back
      };
-     using map_t                         = open_viii::graphics::background::Map;
-     mutable map_t               m_front = {};
-     mutable map_t               m_back  = {};
-     mutable std::vector<PupuID> m_front_pupu         = {};
+     using map_t = open_viii::graphics::background::Map;
+     mutable map_t                                                m_front = {};
+     mutable map_t                                                m_back  = {};
+     mutable std::vector<open_viii::graphics::background::PupuID> m_front_pupu
+       = {};
      mutable std::vector<map_t>  m_front_history      = {};
      mutable std::vector<map_t>  m_back_history       = {};
      mutable std::vector<map_t>  m_redo_history       = {};
@@ -55,8 +56,8 @@ class [[nodiscard]] MapHistory
      [[nodiscard]] const map_t  &undo_original(bool skip_redo = false) const;
 
      auto                        debug_count_print(
-                              std::source_location source_location
-                              = std::source_location::current()) const
+       std::source_location source_location
+       = std::source_location::current()) const
      {
           return glengine::ScopeGuard(
             [=, this]()
@@ -80,10 +81,11 @@ class [[nodiscard]] MapHistory
           return front().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto front_tile = tiles.cbegin();
 
@@ -129,10 +131,11 @@ class [[nodiscard]] MapHistory
           return back().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto tile = tiles.begin();
                       std::ranges::advance(tile, pos);
@@ -154,7 +157,8 @@ class [[nodiscard]] MapHistory
             });
      }
 
-     static std::vector<PupuID> calculate_pupu(const map_t &map);
+     static std::vector<open_viii::graphics::background::PupuID>
+       calculate_pupu(const map_t &map);
 
    public:
      MapHistory() = default;
@@ -162,13 +166,15 @@ class [[nodiscard]] MapHistory
      explicit MapHistory(map_t map);
 
      template<typename TileT>
-     [[nodiscard]] PupuID get_pupu_from_working(const TileT &tile) const
+     [[nodiscard]] open_viii::graphics::background::PupuID
+       get_pupu_from_working(const TileT &tile) const
      {
           return m_front_pupu[static_cast<std::size_t>(
             get_offset_from_working(tile))];
      }
 
-     [[nodiscard]] const std::vector<PupuID> &pupu() const noexcept;
+     [[nodiscard]] const std::vector<open_viii::graphics::background::PupuID> &
+       pupu() const noexcept;
 
      template<typename TileT>
      [[nodiscard]] auto get_offset_from_working(const TileT &tile) const
@@ -176,10 +182,11 @@ class [[nodiscard]] MapHistory
           return back().visit_tiles(
             [&](const auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       return std::ranges::distance(&tiles.front(), &tile);
                  }
@@ -239,10 +246,11 @@ class [[nodiscard]] MapHistory
           back().visit_tiles(
             [&](auto &tiles)
             {
-                 if constexpr (std::is_same_v<
-                                 std::ranges::range_value_t<
-                                   std::remove_cvref_t<decltype(tiles)>>,
-                                 TileT>)
+                 if constexpr (
+                   std::is_same_v<
+                     std::ranges::range_value_t<
+                       std::remove_cvref_t<decltype(tiles)>>,
+                     TileT>)
                  {
                       auto filtered_tiles = tiles | std::views::filter(filter);
                       for (auto &tile : filtered_tiles)
@@ -313,8 +321,8 @@ class [[nodiscard]] MapHistory
       * @return
       */
      [[nodiscard]] bool   redo(
-         std::source_location source_location
-         = std::source_location::current()) const;
+       std::source_location source_location
+       = std::source_location::current()) const;
 
      /**
       * Deletes the most recent back or front

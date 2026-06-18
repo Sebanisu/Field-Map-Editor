@@ -127,11 +127,12 @@ class MapFilters
                                    {
                                         const auto push_id_1
                                           = glengine::ImGuiPushId();
-                                        if (ImGui::Selectable(
-                                              string.c_str(),
-                                              static_cast<bool>(*boolptr),
-                                              0,
-                                              size))
+                                        if (
+                                          ImGui::Selectable(
+                                            string.c_str(),
+                                            static_cast<bool>(*boolptr),
+                                            0,
+                                            size))
                                         {
                                              *boolptr
                                                = !static_cast<bool>(*boolptr);
@@ -247,7 +248,8 @@ class MapFilters
           }
           return ret_changed;
      }
-     bool operator()(const PupuID &pupu_id) const
+     bool
+       operator()(const open_viii::graphics::background::PupuID &pupu_id) const
      {
           return filter(
             // todo get pupu ID from map history? Map filters currently has no

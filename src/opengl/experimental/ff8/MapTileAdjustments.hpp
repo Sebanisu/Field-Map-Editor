@@ -80,8 +80,8 @@ class MapTileAdjustments
      MapFilters         &m_filters;
      SimilarAdjustments &m_matching;
      static auto         generate_inner_width(
-               int   components,
-               float neg_width = {})
+       int   components,
+       float neg_width = {})
        -> std::pair<
          float,
          float>
@@ -166,12 +166,7 @@ class MapTileAdjustments
                  ImGuiInputTextFlags_ReadOnly);
           }
           {
-               const std::string hex = [&]() -> std::string
-               {
-                    std::stringstream ss = {};
-                    tile.to_hex(ss);
-                    return ss.str();
-               }();
+               const std::string hex = tile.to_hex();
                ImGui::InputText(
                  "Raw Hex",
                  const_cast<char *>(hex.data()),
@@ -203,8 +198,8 @@ class MapTileAdjustments
           const float width = ImGui::CalcItemWidth();
           const auto  pop_width
             = glengine::ImGuiPushItemWidth(width - checkbox_width);
-          if (ImGui::Combo(
-                "BPP", &current_bpp_selection, bpp_options.data(), 3))
+          if (
+            ImGui::Combo("BPP", &current_bpp_selection, bpp_options.data(), 3))
           {
                m_map_history.copy_working_perform_operation(
                  tile,
@@ -263,14 +258,15 @@ class MapTileAdjustments
           {
                assert(step > 0);
                int current_int = static_cast<int>(group.current) / step;
-               if (ImGui::SliderInt(
-                     "##",
-                     &current_int,
-                     static_cast<int>(group.min_value) / step,
-                     override_max ? *override_max
-                                  : static_cast<int>(group.max_value) / step,
-                     {},
-                     ImGuiSliderFlags_AlwaysClamp))
+               if (
+                 ImGui::SliderInt(
+                   "##",
+                   &current_int,
+                   static_cast<int>(group.min_value) / step,
+                   override_max ? *override_max
+                                : static_cast<int>(group.max_value) / step,
+                   {},
+                   ImGuiSliderFlags_AlwaysClamp))
                {
                     group.current = static_cast<typename GroupT::value_type>(
                       current_int * step);
@@ -302,12 +298,13 @@ class MapTileAdjustments
           checkbox_tool_tip(
             "##matching source_x", "Matching Source X", m_matching.source_x);
           auto x = SourceXGroup(tile);
-          if (generic_slider_int(
-                x,
-                item_width.first,
-                tile.width(),
-                (static_cast<int>(
-                  std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
+          if (
+            generic_slider_int(
+              x,
+              item_width.first,
+              tile.width(),
+              (static_cast<int>(
+                std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
           {
                changed       = true;
                const auto op = [&](TileT &new_tile)
@@ -421,11 +418,12 @@ class MapTileAdjustments
             "##matching blend mode",
             "Matching Blend Mode",
             m_matching.blend_mode);
-          if (glengine::GenericCombo(
-                "Blend Mode",
-                current_blend_mode_selection,
-                blend_mode_str,
-                checkbox_width))
+          if (
+            glengine::GenericCombo(
+              "Blend Mode",
+              current_blend_mode_selection,
+              blend_mode_str,
+              checkbox_width))
           {
                if constexpr (has_with_blend_mode<TileT>)
                {
@@ -460,13 +458,14 @@ class MapTileAdjustments
             = glengine::ImGuiPushItemWidth(width - checkbox_width);
           checkbox_tool_tip(
             "##matching layer_id", "Matching Layer ID", m_matching.layer_id);
-          if (ImGui::SliderInt(
-                "Layer ID",
-                &layer_id,
-                LayerIdT<TileT>{},
-                LayerIdT<TileT>{ 0b0111'1111U },
-                {},
-                ImGuiSliderFlags_AlwaysClamp))
+          if (
+            ImGui::SliderInt(
+              "Layer ID",
+              &layer_id,
+              LayerIdT<TileT>{},
+              LayerIdT<TileT>{ 0b0111'1111U },
+              {},
+              ImGuiSliderFlags_AlwaysClamp))
           {
                if constexpr (has_with_layer_id<TileT>)
                {
@@ -499,14 +498,14 @@ class MapTileAdjustments
             "##matching texture_page_id",
             "Matching Texture Page ID",
             m_matching.texture_id);
-          if (ImGui::SliderInt(
-                "Texture Page ID",
-                &texture_page_id,
-                TextureIdT<TileT>{},
-                TextureIdT<TileT>{
-                  12U },// 15 is max val but 12 or 11 is max used
-                {},
-                ImGuiSliderFlags_AlwaysClamp))
+          if (
+            ImGui::SliderInt(
+              "Texture Page ID",
+              &texture_page_id,
+              TextureIdT<TileT>{},
+              TextureIdT<TileT>{ 12U },// 15 is max val but 12 or 11 is max used
+              {},
+              ImGuiSliderFlags_AlwaysClamp))
           {
                changed = true;
                m_map_history.copy_working_perform_operation(
@@ -536,13 +535,14 @@ class MapTileAdjustments
             "Matching Palette ID",
             m_matching.palette_id);
           int palette_id = static_cast<int>(tile.palette_id());
-          if (ImGui::SliderInt(
-                "Palette ID",
-                &palette_id,
-                PaletteIdT<TileT>{},
-                PaletteIdT<TileT>{ 0b1111U },
-                {},
-                ImGuiSliderFlags_AlwaysClamp))
+          if (
+            ImGui::SliderInt(
+              "Palette ID",
+              &palette_id,
+              PaletteIdT<TileT>{},
+              PaletteIdT<TileT>{ 0b1111U },
+              {},
+              ImGuiSliderFlags_AlwaysClamp))
 
           {
                changed = true;
@@ -570,13 +570,14 @@ class MapTileAdjustments
             "##matching blend other", "Matching Blend Other", m_matching.blend);
           const auto pop_width
             = glengine::ImGuiPushItemWidth(width - checkbox_width);
-          if (ImGui::SliderInt(
-                "Blend Other",
-                &blend,
-                BlendT<TileT>{},
-                BlendT<TileT>{ 0b0011U },
-                {},
-                ImGuiSliderFlags_AlwaysClamp))
+          if (
+            ImGui::SliderInt(
+              "Blend Other",
+              &blend,
+              BlendT<TileT>{},
+              BlendT<TileT>{ 0b0011U },
+              {},
+              ImGuiSliderFlags_AlwaysClamp))
           {
                changed = true;
                m_map_history.copy_working_perform_operation(
@@ -612,13 +613,14 @@ class MapTileAdjustments
                  = glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
                const auto pop_width
                  = glengine::ImGuiPushItemWidth(item_width.first);
-               if (ImGui::SliderInt(
-                     "##Animation ID",
-                     &animation_id,
-                     std::numeric_limits<AnimationIdT<TileT>>::min(),
-                     std::numeric_limits<AnimationIdT<TileT>>::max(),
-                     {},
-                     ImGuiSliderFlags_AlwaysClamp))
+               if (
+                 ImGui::SliderInt(
+                   "##Animation ID",
+                   &animation_id,
+                   std::numeric_limits<AnimationIdT<TileT>>::min(),
+                   std::numeric_limits<AnimationIdT<TileT>>::max(),
+                   {},
+                   ImGuiSliderFlags_AlwaysClamp))
                {
                     if constexpr (has_with_animation_id<TileT>)
                     {
@@ -647,13 +649,14 @@ class MapTileAdjustments
                  = glengine::ImGuiDisabled(!has_with_animation_state<TileT>);
                const auto pop_width
                  = glengine::ImGuiPushItemWidth(item_width.second);
-               if (ImGui::SliderInt(
-                     "##Animation State",
-                     &animation_state,
-                     std::numeric_limits<AnimationStateT<TileT>>::min(),
-                     std::numeric_limits<AnimationStateT<TileT>>::max(),
-                     {},
-                     ImGuiSliderFlags_AlwaysClamp))
+               if (
+                 ImGui::SliderInt(
+                   "##Animation State",
+                   &animation_state,
+                   std::numeric_limits<AnimationStateT<TileT>>::min(),
+                   std::numeric_limits<AnimationStateT<TileT>>::max(),
+                   {},
+                   ImGuiSliderFlags_AlwaysClamp))
                {
                     if constexpr (has_with_animation_state<TileT>)
                     {

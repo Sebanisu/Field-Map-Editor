@@ -3,10 +3,10 @@
 //
 #include "save_image_pbo.hpp"
 #include "formatters.hpp"
-#include "PupuID.hpp"
 #include <clip.h>
 #include <glengine/ScopeGuard.hpp>
 #include <map>
+#include <open_viii/graphics/background/PupuID.hpp>
 #include <ranges>
 #include <set>
 #include <spdlog/spdlog.h>
@@ -43,12 +43,12 @@ struct Vec4Less
  * data is read back.
  */
 std::future<void> save_image_pbo(
-  std::filesystem::path in_path,
-  glengine::FrameBuffer in_fbo,
-  const GLenum          attachment,
+  std::filesystem::path                       in_path,
+  glengine::FrameBuffer                       in_fbo,
+  const GLenum                                attachment,
   std::vector<std::tuple<
     glm::vec4,
-    ff_8::PupuID>>      in_color_ids)
+    open_viii::graphics::background::PupuID>> in_color_ids)
 {
      // Backup currently bound framebuffer (restored by your helper)
      const auto backup_fbo = in_fbo.backup();
@@ -192,10 +192,12 @@ std::future<void> save_image_pbo(
               reinterpret_cast<const fme::color *>(pixels.get()),
               static_cast<std::size_t>(w * h));
             // For each unique PupuID, create a vector of masks
-            std::map<ff_8::PupuID, std::vector<fme::color>>  masks;
+            std::map<
+              open_viii::graphics::background::PupuID, std::vector<fme::color>>
+                                                             masks;
             std::set<std::pair<fme::color, fme::color>>      logged_colors;
             static std::map<glm::vec4, fme::color, Vec4Less> conv_cache;
-            std::map<fme::color, ff_8::PupuID>
+            std::map<fme::color, open_viii::graphics::background::PupuID>
               best_id_cache;// memoizes best id for each pixel color
 
             for (const auto &[i, color_in] : span | std::views::enumerate)
@@ -203,7 +205,8 @@ std::future<void> save_image_pbo(
                  if (color_in == fme::colors::Transparent)
                       continue;
 
-                 const auto best_id = [&]() -> ff_8::PupuID
+                 const auto best_id
+                   = [&]() -> open_viii::graphics::background::PupuID
                  {
                       auto cache_it = best_id_cache.find(color_in);
                       if (cache_it != best_id_cache.end())
@@ -281,7 +284,7 @@ std::future<void> save_image_pbo(
                                              path.stem().string(),
                                              id,
                                              path.extension().string());
-                 int ok = stbi_write_png(
+                 int        ok           = stbi_write_png(
                    current_path.string().c_str(),
                    w,
                    h,
@@ -312,7 +315,7 @@ std::future<void> save_image_texture_pbo(
                                     * channels;
 
      // Create PBO
-     GLuint pbo_id = 0;
+     GLuint           pbo_id      = 0;
      glengine::GlCall{}(glGenBuffers, 1, &pbo_id);
      glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
      glengine::GlCall{}(
@@ -383,7 +386,7 @@ std::future<void> save_image_texture_pbo(
                                           * static_cast<std::size_t>(channels);
 
             // Save PNG
-            int ok = stbi_write_png(
+            int               ok        = stbi_write_png(
               path.string().c_str(),
               w,
               h,
@@ -406,7 +409,7 @@ void copy_image_texture_pbo(const glengine::SubTexture &texture)
                                     * channels;
 
      // Create PBO
-     GLuint pbo_id = 0;
+     GLuint           pbo_id      = 0;
      glengine::GlCall{}(glGenBuffers, 1, &pbo_id);
      glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
      glengine::GlCall{}(
