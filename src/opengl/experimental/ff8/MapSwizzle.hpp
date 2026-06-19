@@ -5,14 +5,15 @@
 #ifndef FIELD_MAP_EDITOR_MAPSWIZZLE_HPP
 #define FIELD_MAP_EDITOR_MAPSWIZZLE_HPP
 #include "Map.hpp"
-#include "tile_operations.hpp"
+#include <open_viii/graphics/background/TileOperations.hpp>
 namespace ff_8
 {
 struct TileFunctionsSwizzle
 {
-     using X                                  = tile_operations::SourceX;
-     using Y                                  = tile_operations::SourceY;
-     using TexturePage                        = tile_operations::TextureId;
+     using X = open_viii::graphics::background::tile_operations::SourceX;
+     using Y = open_viii::graphics::background::tile_operations::SourceY;
+     using TexturePage
+       = open_viii::graphics::background::tile_operations::TextureId;
      using UseTexturePage                     = std::false_type;
      using UseBlending                        = std::false_type;
      static constexpr const char *const label = "Map (Swizzle)";

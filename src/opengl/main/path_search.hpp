@@ -2,10 +2,10 @@
 #define D32D9952_25B7_4925_A5EB_B8672C65F70C
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
-#include "PupuID.hpp"
 #include "unique_values.hpp"
 #include <filesystem>
 #include <map>
+#include <open_viii/graphics/background/PupuID.hpp>
 #include <string>
 #include <vector>
 namespace ff_8
@@ -18,12 +18,13 @@ struct path_search
      OptCoo                                 opt_coo    = {};
      std::string                            field_name = {};
      std::filesystem::path                  filters_deswizzle_value_string = {};
-     std::filesystem::path     filters_full_filename_value_string          = {};
-     std::filesystem::path     filters_swizzle_value_string                = {};
-     std::filesystem::path     filters_swizzle_as_one_image_string         = {};
-     std::filesystem::path     filters_map_value_string                    = {};
-     std::vector<ff_8::PupuID> working_unique_pupu                         = {};
-     std::vector<std::string>  current_filenames                           = {};
+     std::filesystem::path filters_full_filename_value_string              = {};
+     std::filesystem::path filters_swizzle_value_string                    = {};
+     std::filesystem::path filters_swizzle_as_one_image_string             = {};
+     std::filesystem::path filters_map_value_string                        = {};
+     std::vector<open_viii::graphics::background::PupuID> working_unique_pupu
+       = {};
+     std::vector<std::string> current_filenames = {};
      std::
        map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>>
                                              bpp_palette     = {};
@@ -36,8 +37,8 @@ struct path_search
        const std::filesystem::path &path,
        const std::string           &ext) const;
      [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(
-       const ff_8::PupuID pupu,
-       const std::string &ext = ".png") const;
+       const open_viii::graphics::background::PupuID pupu,
+       const std::string                            &ext = ".png") const;
 
      [[nodiscard]] std::vector<std::filesystem::path>
        generate_full_filename_paths(const std::string &) const;
@@ -76,8 +77,8 @@ struct path_search
        const std::string           &ext                      = ".map",
        const std::string           &secondary_output_pattern = "") const;
      [[nodiscard]] bool has_deswizzle_path(
-       const ff_8::PupuID pupu,
-       const std::string &ext = ".png") const;
+       const open_viii::graphics::background::PupuID pupu,
+       const std::string                            &ext = ".png") const;
      [[nodiscard]] bool has_deswizzle_path(
        const std::filesystem::path &filter_path,
        const std::string           &ext = ".png") const;
@@ -89,9 +90,9 @@ struct path_search
        const std::filesystem::path &,
        const std::string &) const;
      [[nodiscard]] bool has_deswizzle_path(
-       const std::filesystem::path &filter_path,
-       const ff_8::PupuID           pupu,
-       const std::string           &ext = ".png") const;
+       const std::filesystem::path                  &filter_path,
+       const open_viii::graphics::background::PupuID pupu,
+       const std::string                            &ext = ".png") const;
      [[nodiscard]] bool has_swizzle_path(
        const std::uint8_t texture_page,
        std::uint8_t       palette,

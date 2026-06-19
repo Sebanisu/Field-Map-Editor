@@ -157,14 +157,14 @@ void fme::filter_window::render() const
           const char *button_text = "Fix Name(s)";
           const char *input_text  = "Filter";
           float       buttonWidth = ImGui::CalcTextSize(button_text).x
-                              + ImGui::GetStyle().FramePadding.x * 2.0f;
+                                    + ImGui::GetStyle().FramePadding.x * 2.0f;
           float inputWidth = ImGui::GetContentRegionAvail().x - buttonWidth
                              - ImGui::GetStyle().ItemSpacing.x
                              - ImGui::CalcTextSize(input_text).x;
 
           ImGui::SetNextItemWidth(inputWidth);
-          if (ImGui::InputText(
-                input_text, filter_buf.data(), filter_buf.size()))
+          if (
+            ImGui::InputText(input_text, filter_buf.data(), filter_buf.size()))
           {
                m_search_field = filter_buf.data();
           }
@@ -331,8 +331,9 @@ void fme::filter_window::render() const
      cleanup_invalid_selections();
      handle_thumbnail_size_adjustment();
 
-     if (const auto temp = lock_map_sprite->get_deswizzle_combined_textures();
-         temp.has_value())
+     if (
+       const auto temp = lock_map_sprite->get_deswizzle_combined_textures();
+       temp.has_value())
           m_textures_map = temp.value();
      else
      {
@@ -626,13 +627,14 @@ bool fme::filter_window::contains_key_recursive(const toml::table *tbl) const
           return true;
 
      // Check current level keys
-     if (std::ranges::any_of(
-           *tbl,
-           [&](auto const &node)
-           {
-                const auto &[key, _] = node;
-                return open_viii::tools::i_find(key, m_search_field);
-           }))
+     if (
+       std::ranges::any_of(
+         *tbl,
+         [&](auto const &node)
+         {
+              const auto &[key, _] = node;
+              return open_viii::tools::i_find(key, m_search_field);
+         }))
      {
           return true;
      }
@@ -906,7 +908,7 @@ void fme::filter_window::combo_failover(
      static const auto strings = FailOverLevelsArray
                                  | std::views::transform(AsString{})
                                  | std::ranges::to<std::vector>();
-     const auto gcc = GenericCombo(
+     const auto        gcc     = GenericCombo(
        "Fail Over",
        FailOverLevelsArray,
        strings,
@@ -1133,8 +1135,8 @@ int fme::filter_window::calc_column_count(float width) const
 {
      const ImVec2 region_size = ImGui::GetContentRegionAvail();
      const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f
-                           + ImGui::GetStyle().ItemSpacing.x;
-     const int count = static_cast<int>(region_size.x / (width + padding));
+                                + ImGui::GetStyle().ItemSpacing.x;
+     const int    count = static_cast<int>(region_size.x / (width + padding));
      return count > 0 ? count : 1;
 }
 
@@ -1147,9 +1149,10 @@ void fme::filter_window::select_file(
      {
           return;
      }
-     if (auto *ptr
-         = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
-         ptr)
+     if (
+       auto *ptr
+       = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+       ptr)
      {
           if (ImGui::GetIO().KeyCtrl)
           {
@@ -1424,8 +1427,8 @@ std::string fme::filter_window::generate_file_name(
      auto now = std::chrono::system_clock::now();
      auto sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
      auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
-                 now.time_since_epoch())
-               % 1000;
+                  now.time_since_epoch())
+                % 1000;
      if (index.has_value())
      {
           return fmt::format(
@@ -1473,10 +1476,9 @@ void fme::filter_window::draw_filename_controls(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     if (ImGui::InputText(
-           "##Empty",
-           m_file_name_buffer.data(),
-           m_file_name_buffer.size() - 1U))
+     if (
+       ImGui::InputText(
+         "##Empty", m_file_name_buffer.data(), m_file_name_buffer.size() - 1U))
      {
      }
 
@@ -1541,9 +1543,10 @@ void fme::filter_window::draw_filename_controls(
      ImGui::BeginDisabled(!can_undo_rename);
      if (ImGui::Button("Undo Rename"))
      {
-          if (const auto node_ptr = m_selected_toml_table->find("old_key");
-              node_ptr != m_selected_toml_table->end()
-              && node_ptr->second.is_string())
+          if (
+            const auto node_ptr = m_selected_toml_table->find("old_key");
+            node_ptr != m_selected_toml_table->end()
+            && node_ptr->second.is_string())
           {
                std::string new_file_name = node_ptr->second.as_string()->get();
                m_selected_toml_table
@@ -1564,9 +1567,10 @@ void fme::filter_window::draw_filename_controls(
      }
      else if (m_selected_toml_table)
      {
-          if (const auto node_ptr = m_selected_toml_table->find("old_key");
-              node_ptr != m_selected_toml_table->end()
-              && node_ptr->second.is_string())
+          if (
+            const auto node_ptr = m_selected_toml_table->find("old_key");
+            node_ptr != m_selected_toml_table->end()
+            && node_ptr->second.is_string())
           {
                tool_tip(node_ptr->second.as_string()->get());
           }
@@ -1659,7 +1663,8 @@ void fme::filter_window::draw_filter_controls(
      combo_filtered_draw_bit(lock_map_sprite);
 }
 
-std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
+std::vector<open_viii::graphics::background::PupuID>
+  fme::filter_window::get_unused_ids() const
 {
      if (!m_textures_map)
      {
@@ -1671,7 +1676,7 @@ std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return {};
      }
-     std::set<ff_8::PupuID> used_pupu{};
+     std::set<open_viii::graphics::background::PupuID> used_pupu{};
 
      // collect used IDs from textures_map
      for (const auto &[current_file_name, _] : *m_textures_map)
@@ -1686,10 +1691,10 @@ std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
      }
 
      // get all possible IDs
-     const auto               &all_ids = lock_map_sprite->working_unique_pupu();
+     const auto &all_ids = lock_map_sprite->working_unique_pupu();
 
      // compute unused
-     std::vector<ff_8::PupuID> unused_ids;
+     std::vector<open_viii::graphics::background::PupuID> unused_ids;
      unused_ids.reserve(all_ids.size());
 
      for (const auto &id : all_ids)
@@ -1705,8 +1710,9 @@ void fme::filter_window::popup_combo_filtered_pupu(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     if (ImGui::BeginPopupModal(
-           "Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+     if (
+       ImGui::BeginPopupModal(
+         "Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
      {
           const auto strings = lock_map_sprite->working_unique_pupu()
                                | std::views::transform(AsString{})
@@ -1714,8 +1720,8 @@ void fme::filter_window::popup_combo_filtered_pupu(
           const auto tooltips
             = lock_map_sprite->working_unique_pupu()
               | std::views::transform(
-                [](const ff_8::PupuID &pupu_id) -> decltype(auto)
-                { return pupu_id.create_summary(); })
+                [](const open_viii::graphics::background::PupuID &pupu_id)
+                  -> decltype(auto) { return pupu_id.create_summary(); })
               | std::ranges::to<std::vector>();
           const auto gcc = GenericComboWithMultiFilter(
             gui_labels::pupu_id,
@@ -1760,11 +1766,12 @@ void fme::filter_window::combo_filtered_pupu(
      const auto strings = lock_map_sprite->working_unique_pupu()
                           | std::views::transform(AsString{})
                           | std::ranges::to<std::vector>();
-     const auto tooltips = lock_map_sprite->working_unique_pupu()
-                           | std::views::transform(
-                             [](const ff_8::PupuID &pupu_id) -> decltype(auto)
-                             { return pupu_id.create_summary(); })
-                           | std::ranges::to<std::vector>();
+     const auto tooltips
+       = lock_map_sprite->working_unique_pupu()
+         | std::views::transform(
+           [](const open_viii::graphics::background::PupuID &pupu_id)
+             -> decltype(auto) { return pupu_id.create_summary(); })
+         | std::ranges::to<std::vector>();
      const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
        lock_map_sprite->working_unique_pupu(),
@@ -1810,7 +1817,7 @@ void fme::filter_window::combo_filtered_palettes(
           auto transform_pairs = pairs
                                  | std::views::transform(
                                    [](const auto &pair) { return pair.zip(); });
-          auto join_pairs = std::ranges::join_view(transform_pairs);
+          auto join_pairs      = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -1851,16 +1858,16 @@ void fme::filter_window::combo_filtered_palettes(
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      // Extract values and strings into separate views
-     const auto values = value_string_pairs
-                         | std::views::transform([](const auto &pair)
-                                                 { return std::get<0>(pair); })
-                         | std::ranges::to<std::vector>();
+     const auto values  = value_string_pairs
+                          | std::views::transform([](const auto &pair)
+                                                  { return std::get<0>(pair); })
+                          | std::ranges::to<std::vector>();
      const auto strings = value_string_pairs
                           | std::views::transform([](const auto &pair)
                                                   { return std::get<1>(pair); })
                           | std::ranges::to<std::vector>();
 
-     const auto gcc = fme::GenericComboWithMultiFilter(
+     const auto gcc     = fme::GenericComboWithMultiFilter(
        gui_labels::palette,
        values,
        strings,
@@ -1995,7 +2002,7 @@ void fme::filter_window::combo_filtered_animation_states(
           auto transform_pairs = pairs
                                  | std::views::transform(
                                    [](const auto &pair) { return pair.zip(); });
-          auto join_pairs = std::ranges::join_view(transform_pairs);
+          auto join_pairs      = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -2034,15 +2041,15 @@ void fme::filter_window::combo_filtered_animation_states(
        [](const auto &pair) { return std::get<0>(pair); });
      value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
-     const auto values = value_string_pairs
-                         | std::views::transform([&](const auto &pair)
-                                                 { return std::get<0>(pair); })
-                         | std::ranges::to<std::vector>();
+     const auto values  = value_string_pairs
+                          | std::views::transform([&](const auto &pair)
+                                                  { return std::get<0>(pair); })
+                          | std::ranges::to<std::vector>();
      const auto strings = value_string_pairs
                           | std::views::transform([&](const auto &pair)
                                                   { return std::get<1>(pair); })
                           | std::ranges::to<std::vector>();
-     const auto gcc = fme::GenericComboWithMultiFilter(
+     const auto gcc     = fme::GenericComboWithMultiFilter(
        gui_labels::animation_state,
        values,
        strings,
@@ -2081,8 +2088,8 @@ void fme::filter_window::combo_filtered_draw_bit(
      static constexpr auto values
        = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled,
                      ff_8::draw_bitT::disabled };
-     static const auto strings = values | std::views::transform(AsString{})
-                                 | std::ranges::to<std::vector>();
+     static const auto     strings = values | std::views::transform(AsString{})
+                                     | std::ranges::to<std::vector>();
      static constexpr auto tooltips
        = std::array{ gui_labels::draw_bit_all_tooltip,
                      gui_labels::draw_bit_enabled_tooltip,
@@ -2115,8 +2122,8 @@ struct map_pupu_id
      {
           return m_map_sprite->working_unique_pupu()
                  | std::views::transform(
-                   [](const ff_8::PupuID &pupu_id) -> decltype(auto)
-                   { return pupu_id.create_summary(); });
+                   [](const open_viii::graphics::background::PupuID &pupu_id)
+                     -> decltype(auto) { return pupu_id.create_summary(); });
      }
      auto zip() const
      {
@@ -2164,7 +2171,7 @@ void fme::filter_window::menu_filtered_palettes(
           auto transform_pairs = pairs
                                  | std::views::transform(
                                    [](const auto &pair) { return pair.zip(); });
-          auto join_pairs = std::ranges::join_view(transform_pairs);
+          auto join_pairs      = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -2296,17 +2303,17 @@ void fme::filter_window::menu_filtered_animation_ids(
 void fme::filter_window::menu_filtered_animation_states(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     const auto &map  = lock_map_sprite->uniques().animation_state();
-     const auto &keys = lock_map_sprite->filter()
-                          .get<ff_8::FilterTag::MultiAnimationId>()
-                          .value();
+     const auto &map         = lock_map_sprite->uniques().animation_state();
+     const auto &keys        = lock_map_sprite->filter()
+                                 .get<ff_8::FilterTag::MultiAnimationId>()
+                                 .value();
 
-     const auto join_vector = [](auto &&pairs)
+     const auto  join_vector = [](auto &&pairs)
      {
           auto transform_pairs = pairs
                                  | std::views::transform(
                                    [](const auto &pair) { return pair.zip(); });
-          auto join_pairs = std::ranges::join_view(transform_pairs);
+          auto join_pairs      = std::ranges::join_view(transform_pairs);
           return join_pairs | std::ranges::to<std::vector>();
      };
 
@@ -2478,8 +2485,9 @@ const std::string &fme::filter_window::get_thumbnail_tooltip(
   const std::string                 &file_name) const
 {
      static const std::string empty_msg = "No filters are enabled...";
-     if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(
-           file_name))
+     if (
+       lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(
+         file_name))
      {
           const std::string &tmp
             = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(
@@ -2501,7 +2509,7 @@ void fme::filter_window::render_thumbnail_button(
                             : glengine::ConvertGliDtoImTextureId<ImTextureID>(
                                 framebuffer.value().color_attachment_id());
      m_aspect_ratio     = static_cast<float>(framebuffer.value().height())
-                      / static_cast<float>(framebuffer.value().width());
+                          / static_cast<float>(framebuffer.value().width());
      const ImVec2 thumb_size
        = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
 
@@ -2539,24 +2547,24 @@ void fme::filter_window::render_thumbnail_popup(
      {
           return;
      }
-     if (ImGui::MenuItem(
-           ICON_FA_SQUARE_PLUS " Add to selected",
-           nullptr,
-           nullptr,
-           std::ranges::find(m_multi_select, file_name)
-             == m_multi_select.end()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_SQUARE_PLUS " Add to selected",
+         nullptr,
+         nullptr,
+         std::ranges::find(m_multi_select, file_name) == m_multi_select.end()))
      {
           m_multi_select.push_back(file_name);
           std::ranges::sort(m_multi_select);
           m_last_selected = file_name;
      }
      tool_tip("Add hovered item to selected.");
-     if (ImGui::MenuItem(
-           ICON_FA_SQUARE_MINUS " Remove from selected",
-           nullptr,
-           nullptr,
-           std::ranges::find(m_multi_select, file_name)
-             != m_multi_select.end()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_SQUARE_MINUS " Remove from selected",
+         nullptr,
+         nullptr,
+         std::ranges::find(m_multi_select, file_name) != m_multi_select.end()))
      {
           const auto remove_range
             = std::ranges::remove(m_multi_select, file_name);
@@ -2568,11 +2576,12 @@ void fme::filter_window::render_thumbnail_popup(
      }
      tool_tip("Remove hovered item from selected.");
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           ICON_FA_LAYER_GROUP " Combine (New)",
-           nullptr,
-           nullptr,
-           !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_LAYER_GROUP " Combine (New)",
+         nullptr,
+         nullptr,
+         !m_multi_select.empty()))
      {
           (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
             m_multi_select, generate_file_name(lock_map_sprite));
@@ -2582,11 +2591,12 @@ void fme::filter_window::render_thumbnail_popup(
      tool_tip(
        "Combine selected entries into a new entry without "
        "removing the originals.");
-     if (ImGui::MenuItem(
-           ICON_FA_OBJECT_GROUP " Combine (Replace)",
-           nullptr,
-           nullptr,
-           !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_OBJECT_GROUP " Combine (Replace)",
+         nullptr,
+         nullptr,
+         !m_multi_select.empty()))
      {
           std::string temp_name = generate_file_name(lock_map_sprite);
           (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(
@@ -2602,8 +2612,9 @@ void fme::filter_window::render_thumbnail_popup(
        "originals.");
      ImGui::Separator();
 
-     if (ImGui::MenuItem(
-           ICON_FA_COPY " Copy", nullptr, nullptr, !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_COPY " Copy", nullptr, nullptr, !m_multi_select.empty()))
      {
           lock_map_sprite->copy_deswizzle_combined_toml_table(
             m_multi_select,
@@ -2616,29 +2627,32 @@ void fme::filter_window::render_thumbnail_popup(
      tool_tip(
        "Copy selected entries into new entries with generated "
        "names.");
-     if (ImGui::MenuItem(
-           ICON_FA_TRASH " Remove", nullptr, nullptr, !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_TRASH " Remove", nullptr, nullptr, !m_multi_select.empty()))
      {
           std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
           m_multi_select.clear();
      }
      tool_tip("Remove selected entries.");
 
-     if (ImGui::MenuItem(
-           ICON_FA_FILTER " Pupu Filter",
-           nullptr,
-           nullptr,
-           !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_FILTER " Pupu Filter",
+         nullptr,
+         nullptr,
+         !m_multi_select.empty()))
      {
           ImGui::OpenPopup("Pupu Filter Popup");
      }
      tool_tip("Bulk enable or disable pupu.");
      ImGui::Separator();
-     if (ImGui::MenuItem(
-           ICON_FA_BROOM " Clear Selection",
-           nullptr,
-           nullptr,
-           !m_multi_select.empty()))
+     if (
+       ImGui::MenuItem(
+         ICON_FA_BROOM " Clear Selection",
+         nullptr,
+         nullptr,
+         !m_multi_select.empty()))
      {
           m_multi_select.clear();
      }
@@ -2646,7 +2660,8 @@ void fme::filter_window::render_thumbnail_popup(
      ImGui::EndPopup();
 }
 
-bool fme::filter_window::is_excluded(const ff_8::PupuID &pupu_id) const
+bool fme::filter_window::is_excluded(
+  const open_viii::graphics::background::PupuID &pupu_id) const
 {
      return m_excluded_animation_id_from_state.enabled()
             && std::ranges::any_of(
@@ -2678,8 +2693,10 @@ void fme::filter_window::process_combine(
                       coo_table, unique_pupu_ids,
                       [](auto &&...) { return true; },
                       [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const open_viii::graphics::background::PupuID
+                          &i_pupu_id)
                       { return u_pupu_id.same_base(i_pupu_id); });
                }
                if (m_checkanimation_id)
@@ -2688,8 +2705,10 @@ void fme::filter_window::process_combine(
                       coo_table, unique_pupu_ids,
                       [](auto &&...) { return true; },
                       [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const open_viii::graphics::background::PupuID
+                          &i_pupu_id)
                       { return u_pupu_id.same_animation_id_base(i_pupu_id); });
                }
                if (m_checkanimation_state)
@@ -2698,8 +2717,10 @@ void fme::filter_window::process_combine(
                       coo_table, unique_pupu_ids,
                       [](auto &&...) { return true; },
                       [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const open_viii::graphics::background::PupuID
+                          &i_pupu_id)
                       {
                            return u_pupu_id.same_animation_state_base(i_pupu_id)
                                   && i_pupu_id.animation_id() != 0xFFU
@@ -2711,19 +2732,26 @@ void fme::filter_window::process_combine(
                     process_combine(
                       coo_table, unique_pupu_ids,
                       [](
-                        const ff_8::PupuID                 &u_pupu_id,
-                        const std::span<const ff_8::PupuID> temp_pupus)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const std::span<
+                          const open_viii::graphics::background::PupuID>
+                          temp_pupus)
                       {
                            return u_pupu_id.animation_state() != 0u
                                   || std::ranges::any_of(
                                     temp_pupus,
-                                    [&](const ff_8::PupuID &pupu_id)
+                                    [&](
+                                      const open_viii::graphics::background::
+                                        PupuID &pupu_id)
                                     {
                                          return u_pupu_id
                                            .same_animation_id_base(pupu_id);
                                     });
                       },
-                      [](const ff_8::PupuID &, const ff_8::PupuID &)
+                      [](
+                        const open_viii::graphics::background::PupuID &,
+                        const open_viii::graphics::background::PupuID &)
                       { return true; });
                }
                if (m_checklayer_id)
@@ -2732,15 +2760,20 @@ void fme::filter_window::process_combine(
                       coo_table, unique_pupu_ids,
                       [](auto &&...) { return true; },
                       [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const open_viii::graphics::background::PupuID
+                          &i_pupu_id)
                       { return u_pupu_id.same_layer_base(i_pupu_id); });
                }
 
 
-               auto cmp = [](
-                            std::vector<ff_8::PupuID> const &a,
-                            std::vector<ff_8::PupuID> const &b)
+               auto cmp
+                 = [](
+                     std::vector<open_viii::graphics::background::PupuID> const
+                       &a,
+                     std::vector<open_viii::graphics::background::PupuID> const
+                       &b)
                {
                     if (a.size() != b.size())
                          return a.size() < b.size();// size first
@@ -2748,7 +2781,10 @@ void fme::filter_window::process_combine(
                       a, b);// then lexicographically
                };
                // Assuming value() is hashable/comparable
-               std::set<std::vector<ff_8::PupuID>, decltype(cmp)> seen(cmp);
+               std::set<
+                 std::vector<open_viii::graphics::background::PupuID>,
+                 decltype(cmp)>
+                 seen(cmp);
 
 
                for (auto &&[key, value] : *coo_table)
@@ -2776,8 +2812,10 @@ void fme::filter_window::process_combine(
                       coo_table, unique_pupu_ids,
                       [](auto &&...) { return true; },
                       [](
-                        const ff_8::PupuID &u_pupu_id,
-                        const ff_8::PupuID &i_pupu_id)
+                        const open_viii::graphics::background::PupuID
+                          &u_pupu_id,
+                        const open_viii::graphics::background::PupuID
+                          &i_pupu_id)
                       {
                            return u_pupu_id.same_animation_base(i_pupu_id)
                                   && i_pupu_id.animation_id() != 0xFFU
@@ -2795,10 +2833,10 @@ void fme::filter_window::process_combine(
 }
 
 void fme::filter_window::process_combine(
-  toml::table                           *coo_table,
-  const std::vector<ff_8::PupuID>       &unique_pupu_ids,
-  fme::filter_window::OuterFilter        outer_filter,
-  fme::filter_window::PupuMatchPredicate match_pred) const
+  toml::table                                                *coo_table,
+  const std::vector<open_viii::graphics::background::PupuID> &unique_pupu_ids,
+  fme::filter_window::OuterFilter                             outer_filter,
+  fme::filter_window::PupuMatchPredicate                      match_pred) const
 {
      if (!coo_table)
      {
@@ -2827,7 +2865,7 @@ void fme::filter_window::process_combine(
             !m_checkallow_same_blend
             && std::ranges::any_of(
               temp_filter.value(),
-              [](const ff_8::PupuID &pupu_id)
+              [](const open_viii::graphics::background::PupuID &pupu_id)
               {
                    return pupu_id.blend_mode()
                           != open_viii::graphics::background::BlendModeT::none;
@@ -2837,16 +2875,17 @@ void fme::filter_window::process_combine(
           }
 
           // debating on this being here.
-          if (std::ranges::all_of(
-                temp_filter.value(),
-                [&](const ff_8::PupuID &pupu_id)
-                {
-                     if (is_excluded(pupu_id))
-                     {
-                          return false;
-                     }
-                     return pupu_id.offset() > 0;
-                }))
+          if (
+            std::ranges::all_of(
+              temp_filter.value(),
+              [&](const open_viii::graphics::background::PupuID &pupu_id)
+              {
+                   if (is_excluded(pupu_id))
+                   {
+                        return false;
+                   }
+                   return pupu_id.offset() > 0;
+              }))
           {
                // mark for deletion
                m_remove_queue.emplace_back(key);

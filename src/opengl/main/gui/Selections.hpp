@@ -1285,8 +1285,8 @@ struct SelectionLoadStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::is_enum_v<
-                               glengine::vector_elem_type_t<ValueT>>)
+               if constexpr (
+                 std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
                {
                     return fme::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -1294,9 +1294,10 @@ struct SelectionLoadStrategy
                         glengine::vector_elem_type_t<ValueT>>>(
                       config, id, value);
                }
-               else if constexpr (std::same_as<
-                                    glengine::vector_elem_type_t<ValueT>,
-                                    ff_8::PupuID>)
+               else if constexpr (
+                 std::same_as<
+                   glengine::vector_elem_type_t<ValueT>,
+                   open_viii::graphics::background::PupuID>)
                {
                     return fme::Configuration::load_array<
                       glengine::vector_elem_type_t<ValueT>,
@@ -1360,8 +1361,9 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
      {
           const toml::array *index_array = nullptr;
 
-          if (auto it_base = root_table.find(index_id);
-              it_base != root_table.end() && it_base->second.is_array())
+          if (
+            auto it_base = root_table.find(index_id);
+            it_base != root_table.end() && it_base->second.is_array())
           {
                index_array = it_base->second.as_array();
           }
@@ -1389,9 +1391,10 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                }
                std::string entry_name = [&]() -> std::string
                {
-                    if (const auto *name_ptr
-                        = value_table->get_as<std::string>("name");
-                        name_ptr)
+                    if (
+                      const auto *name_ptr
+                      = value_table->get_as<std::string>("name");
+                      name_ptr)
                     {
                          return name_ptr->get();
                     }
@@ -1399,9 +1402,10 @@ struct SelectionLoadStrategy<SelectionInfo<ConfigKey::BatchQueue>::value_type>
                }();
                const bool entry_enabled = [&]() -> bool
                {
-                    if (const auto *enabled_ptr
-                        = value_table->get_as<bool>("enabled");
-                        enabled_ptr)
+                    if (
+                      const auto *enabled_ptr
+                      = value_table->get_as<bool>("enabled");
+                      enabled_ptr)
                     {
                          return enabled_ptr->get();
                     }
@@ -1502,9 +1506,8 @@ struct SelectionUpdateStrategy
           {
                Configuration::update_array(config, id, value);
           }
-          else if constexpr (std::same_as<
-                               ValueT,
-                               std::vector<std::filesystem::path>>)
+          else if constexpr (
+            std::same_as<ValueT, std::vector<std::filesystem::path>>)
           {
                Configuration::update_array(config, id, value);
           }
@@ -1969,7 +1972,7 @@ struct Selections
 
                       const auto *src_value = std::get_if<Is>(&src);
                       auto       *dst_value = std::get_if<
-                              std::to_underlying(BatchConfigKeys[Is]) + 1U>(&dst);
+                        std::to_underlying(BatchConfigKeys[Is]) + 1U>(&dst);
                       if (dst_value && src_value)
                       {
                            dst_value->value = *src_value;

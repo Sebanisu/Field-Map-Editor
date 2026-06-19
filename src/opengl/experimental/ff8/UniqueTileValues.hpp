@@ -5,10 +5,10 @@
 #ifndef FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
 #include "MapHistory.hpp"
-#include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueValues.hpp"
 #include <open_viii/graphics/background/Map.hpp>
+#include <open_viii/graphics/background/TileOperations.hpp>
 namespace ff_8
 {
 struct UniqueTileValues
@@ -17,7 +17,9 @@ struct UniqueTileValues
      using MapT = MapHistory;
      static auto filtered(const auto &tiles)
      {
-          return tiles | std::views::filter(tile_operations::NotInvalidTile{});
+          return tiles
+                 | std::views::filter(
+                   open_viii::graphics::background::NotInvalidTile{});
      };
      static auto visit(
        const MapT &map,
@@ -56,48 +58,63 @@ struct UniqueTileValues
           std::ranges::sort(pupu_values);
           const auto not_unique = std::ranges::unique(pupu_values);
           pupu_values.erase(not_unique.begin(), not_unique.end());
-          const auto removal
-            = std::ranges::remove(pupu_values, PupuID{ 0x8000'0000 });
+          const auto removal = std::ranges::remove(
+            pupu_values,
+            open_viii::graphics::background::PupuID{ 0x8000'0000 });
           pupu_values.erase(removal.begin(), removal.end());
           return pupu_values;
      }
      static auto gen_z(const MapT &map)
      {
-          return visit(map, tile_operations::Z{});
+          return visit(
+            map, open_viii::graphics::background::tile_operations::Z{});
      }
      static auto gen_layer_id(const MapT &map)
      {
-          return visit(map, tile_operations::LayerId{});
+          return visit(
+            map, open_viii::graphics::background::tile_operations::LayerId{});
      }
      static auto gen_palette_id(const MapT &map)
      {
-          return visit(map, tile_operations::PaletteId{});
+          return visit(
+            map, open_viii::graphics::background::tile_operations::PaletteId{});
      }
      static auto gen_texture_page_id(const MapT &map)
      {
-          return visit(map, tile_operations::TextureId{});
+          return visit(
+            map, open_viii::graphics::background::tile_operations::TextureId{});
      }
      static auto gen_animation_id(const MapT &map)
      {
-          return visit(map, tile_operations::AnimationId{});
+          return visit(
+            map,
+            open_viii::graphics::background::tile_operations::AnimationId{});
      }
      static auto gen_animation_frame(const MapT &map)
      {
-          return visit(map, tile_operations::AnimationState{});
+          return visit(
+            map,
+            open_viii::graphics::background::tile_operations::AnimationState{});
      }
      static auto gen_blend_other(const MapT &map)
      {
-          return visit(map, tile_operations::Blend{});
+          return visit(
+            map, open_viii::graphics::background::tile_operations::Blend{});
      }
      static auto gen_blend_mode(const MapT &map)
      {
           return UniqueValues<open_viii::graphics::background::BlendModeT>(
-            visit(map, tile_operations::BlendMode{}), blendmode_to_string);
+            visit(
+              map,
+              open_viii::graphics::background::tile_operations::BlendMode{}),
+            blendmode_to_string);
      }
      static auto gen_bpp(const MapT &map)
      {
           return UniqueValues<open_viii::graphics::BPPT>(
-            visit(map, tile_operations::Depth{}), bpp_to_string);
+            visit(
+              map, open_viii::graphics::background::tile_operations::Depth{}),
+            bpp_to_string);
      }
      static void refresh(
        const MapT &map,
@@ -237,7 +254,7 @@ struct UniqueTileValues
      UniqueValues<std::uint8_t>  blend_other                              = {};
      UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode = {};
      UniqueValues<open_viii::graphics::BPPT>                   bpp        = {};
-     UniqueValues<PupuID>                                      pupu       = {};
+     UniqueValues<open_viii::graphics::background::PupuID>     pupu       = {};
 };
 struct TilePossibleValues
 {

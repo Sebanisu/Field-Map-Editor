@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_SIMILARADJUSTMENTS_HPP
 #define FIELD_MAP_EDITOR_SIMILARADJUSTMENTS_HPP
-#include "tile_operations.hpp"
+#include <open_viii/graphics/background/TileOperations.hpp>
 namespace ff_8
 {
 struct SimilarAdjustments
@@ -29,7 +29,7 @@ struct SimilarAdjustments
      template<typename TileT>
      auto operator()(const TileT &tile) const
      {
-          using namespace tile_operations;
+          using namespace open_viii::graphics::background::tile_operations;
           static constexpr auto xy_f = XY{};
           static constexpr auto z_f  = Z{};
           return [=, this](const TileT &other_tile) -> bool

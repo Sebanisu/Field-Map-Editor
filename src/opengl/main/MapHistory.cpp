@@ -311,9 +311,10 @@ static void disambiguate_normalized_tiles(
        working_similar_counts,
        [&](auto &similar)
        {
-            if (std::cmp_equal(
-                  similar.first.m_animation_id,
-                  (std::numeric_limits<std::uint8_t>::max)()))
+            if (
+              std::cmp_equal(
+                similar.first.m_animation_id,
+                (std::numeric_limits<std::uint8_t>::max)()))
             {
                  if (similar.second > 1)
                  {
@@ -434,24 +435,25 @@ void ff_8::MapHistory::refresh_working_conflicts() const
        m_working_similar_counts, m_working_animation_counts);
 }
 
-const std::vector<ff_8::PupuID> &
+const std::vector<open_viii::graphics::background::PupuID> &
   ff_8::MapHistory::original_pupu() const noexcept
 {
      return m_original_pupu;
 }
 
-const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
+const std::vector<open_viii::graphics::background::PupuID> &
+  ff_8::MapHistory::working_pupu() const noexcept
 {
      return m_working_pupu;
 }
 
-const std::vector<ff_8::PupuID> &
+const std::vector<open_viii::graphics::background::PupuID> &
   ff_8::MapHistory::original_unique_pupu() const noexcept
 {
      return m_original_unique_pupu;
 }
 
-const std::vector<ff_8::PupuID> &
+const std::vector<open_viii::graphics::background::PupuID> &
   ff_8::MapHistory::working_unique_pupu() const noexcept
 {
      return m_working_unique_pupu;
@@ -733,7 +735,7 @@ const map_t &ff_8::MapHistory::const_working() const
 }
 
 template<is_tile TileT>
-[[nodiscard]] ff_8::PupuID
+[[nodiscard]] open_viii::graphics::background::PupuID
   ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
 {
      return m_original_pupu[static_cast<std::size_t>(
@@ -741,11 +743,11 @@ template<is_tile TileT>
 }
 
 // Explicit instantiation for Tiles
-template ff_8::PupuID
+template open_viii::graphics::background::PupuID
   ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
-template ff_8::PupuID
+template open_viii::graphics::background::PupuID
   ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
-template ff_8::PupuID
+template open_viii::graphics::background::PupuID
   ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
 
 template<open_viii::graphics::background::is_tile TileT>
@@ -755,10 +757,11 @@ std::vector<TileT>::difference_type
      return working().visit_tiles(
        [&](const auto &tiles) -> std::vector<TileT>::difference_type
        {
-            if constexpr (std::is_same_v<
-                            std::ranges::range_value_t<
-                              std::remove_cvref_t<decltype(tiles)>>,
-                            TileT>)
+            if constexpr (
+              std::is_same_v<
+                std::ranges::range_value_t<
+                  std::remove_cvref_t<decltype(tiles)>>,
+                TileT>)
             {
                  return static_cast<std::vector<TileT>::difference_type>(
                    std::ranges::distance(&tiles.front(), &tile));

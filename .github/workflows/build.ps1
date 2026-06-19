@@ -114,7 +114,7 @@ vcpkg integrate install
 
 # Start the build
 cmake --preset "${env:_RELEASE_CONFIGURATION_PRESET}"
-cmake --build --preset "${env:_RELEASE_CONFIGURATION_PRESET}"
+cmake --build --preset "${env:_RELEASE_CONFIGURATION_PRESET}" --verbose
 
 # Start the packaging
 7z a ".\.dist\${env:_RELEASE_NAME}-${env:_RELEASE_VERSION}.zip" ".\$releasePath\bin\${env:_RELEASE_CONFIGURATION_RAW}\*"
